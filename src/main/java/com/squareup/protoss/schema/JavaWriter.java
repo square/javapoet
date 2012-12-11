@@ -290,7 +290,13 @@ final class JavaWriter implements Closeable {
     indent();
     out.write("@");
     type(annotation);
-    if (!attributes.isEmpty()) {
+    if (attributes.size() == 1 && attributes.containsKey("value")) {
+      out.write("(");
+      pushScope(Scope.ANNOTATION_ATTRIBUTE);
+      annotationValue(attributes.get("value"));
+      popScope(Scope.ANNOTATION_ATTRIBUTE);
+      out.write(")");
+    } else if (!attributes.isEmpty()) {
       out.write("(");
       pushScope(Scope.ANNOTATION_ATTRIBUTE);
       boolean firstAttribute = true;
