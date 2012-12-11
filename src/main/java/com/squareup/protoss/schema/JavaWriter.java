@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
  *
  * @author Jesse Wilson
  */
-public final class JavaWriter implements Closeable {
+final class JavaWriter implements Closeable {
   private static final Pattern TYPE_PATTERN = Pattern.compile("(?:[\\w$]+\\.)*([\\w$]+)");
   private static final String INDENT = "  ";
 
