@@ -211,6 +211,15 @@ public final class JavaWriter implements Closeable {
   }
 
   /**
+   * Emits an enum constant.
+   */
+  public void enumValue(String name) throws IOException {
+    indent();
+    out.write(name);
+    out.write(",\n");
+  }
+
+  /**
    * Emit a method declaration.
    *
    * @param returnType the method's return type, or null for constructors.
