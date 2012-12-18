@@ -382,8 +382,24 @@ final class JavaWriter implements Closeable {
   public void statement(String pattern, Object... args) throws IOException {
     checkInMethod();
     indent();
-    out.write(String.format(pattern, args));
+    String statement = String.format(pattern, args);
+    out.write(reindentStatement(statement));
     out.write(";\n");
+  }
+
+  /**
+   * Adds appropriate indenting after each newline in {@code statement}.
+   */
+  private String reindentStatement(String statement) {
+    if (!statement.contains("\n")) {
+      return statement;
+    }
+    StringBuilder indent = new StringBuilder().append('\n');
+    for (int i = 0; i < scopes.size() + 2; i++) {
+      indent.append(INDENT);
+    }
+    statement = statement.replaceAll("\n", indent.toString());
+    return statement;
   }
 
   /**
