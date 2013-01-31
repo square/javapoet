@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.protoss.schema;
+package com.squareup.java;
 
 import com.example.Binding;
 import java.io.IOException;
@@ -25,7 +25,6 @@ import java.util.Set;
 import org.junit.Test;
 
 import static org.fest.assertions.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 public final class JavaWriterTest {
   private final StringWriter stringWriter = new StringWriter();
@@ -327,14 +326,14 @@ public final class JavaWriterTest {
     javaWriter.emitPackage("blah");
     javaWriter.emitImports(Set.class.getName(), Binding.class.getName());
     String actual = javaWriter.compressType("java.util.Set<com.example.Binding<blah.Foo.Blah>>");
-    assertEquals("Set<Binding<Foo.Blah>>", actual);
+    assertThat(actual).isEqualTo("Set<Binding<Foo.Blah>>");
   }
 
   @Test public void compressDeeperType() throws IOException {
     javaWriter.emitPackage("blah");
     javaWriter.emitImports(Binding.class.getName());
     String actual = javaWriter.compressType("com.example.Binding<blah.foo.Foo.Blah>");
-    assertEquals("Binding<blah.foo.Foo.Blah>", actual);
+    assertThat(actual).isEqualTo("Binding<blah.foo.Foo.Blah>");
   }
 
   private void assertCode(String expected) {
