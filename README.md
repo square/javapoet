@@ -1,7 +1,60 @@
-JavaSourceWriter
-================
+Java Writer
+===========
 
-TODO
+`JavaWriter` is a utility class which aids in generating Java source files.
+
+Source file generation can useful when doing things such as annotation processing or interacting
+with metadata files (e.g., database schemas, protocol formats). By generating code, you eliminate
+the need to write boilerplate while also keeping a single source of truth for the metadata.
+
+
+
+Example
+-------
+
+```java
+writer.emitPackage("com.example")
+    .beginType("com.example.Person", "class", PUBLIC | FINAL)
+    .emitField("String", "firstName", PRIVATE)
+    .emitField("String", "lastName", PRIVATE)
+    .emitJavadoc("Returns the person's full name.")
+    .beginMethod("String", "getName", PUBLIC)
+    .emitStatement("return firstName + \" \" + lastName;")
+    .endMethod()
+    .endType();
+```
+
+Would produce the following source output:
+
+```java
+package com.example;
+public final class Person {
+  private String firstName;
+  private String lastName;
+  /**
+   * Returns the person's full name.
+   */
+  public String getName() {
+    return firstName + " " + lastName;;
+  }
+}
+```
+
+
+
+Download
+--------
+
+Download [the latest .jar][dl] or depend via Maven:
+
+```xml
+<dependency>
+  <groupId>com.squareup</groupId>
+  <artifactId>javawriter</artifactId>
+  <version>(insert latest version)</version>
+</dependency>
+```
+
 
 
 License
@@ -20,3 +73,7 @@ License
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
+
+
+
+ [dl]: http://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.squareup&a=javawriter&v=LATEST
