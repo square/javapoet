@@ -12,9 +12,9 @@ import org.junit.Test;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 
-public final class JavaWriterTest {
+public final class JavaSourceWriterTest {
   private final StringWriter stringWriter = new StringWriter();
-  private final JavaWriter javaWriter = new JavaWriter(stringWriter);
+  private final JavaSourceWriter javaWriter = new JavaSourceWriter(stringWriter);
 
   @Test public void typeDeclaration() throws IOException {
     javaWriter.emitPackage("com.squareup");
@@ -207,7 +207,8 @@ public final class JavaWriterTest {
     javaWriter.emitPackage("com.squareup");
     javaWriter.emitImports("javax.inject.Singleton");
     javaWriter.emitAnnotation("javax.inject.Singleton");
-    javaWriter.emitAnnotation(SuppressWarnings.class, JavaWriter.stringLiteral("unchecked"));
+    javaWriter.emitAnnotation(SuppressWarnings.class,
+        JavaSourceWriter.stringLiteral("unchecked"));
     javaWriter.beginType("com.squareup.Foo", "class", 0);
     javaWriter.endType();
     assertCode(""
@@ -300,12 +301,12 @@ public final class JavaWriterTest {
   }
 
   @Test public void testStringLiteral() {
-    assertThat(JavaWriter.stringLiteral("")).isEqualTo("\"\"");
-    assertThat(JavaWriter.stringLiteral("JavaWriter")).isEqualTo("\"JavaWriter\"");
-    assertThat(JavaWriter.stringLiteral("\\")).isEqualTo("\"\\\\\"");
-    assertThat(JavaWriter.stringLiteral("\"")).isEqualTo("\"\\\"\"");
-    assertThat(JavaWriter.stringLiteral("\t")).isEqualTo("\"\\\t\"");
-    assertThat(JavaWriter.stringLiteral("\n")).isEqualTo("\"\\\n\"");
+    assertThat(JavaSourceWriter.stringLiteral("")).isEqualTo("\"\"");
+    assertThat(JavaSourceWriter.stringLiteral("JavaWriter")).isEqualTo("\"JavaWriter\"");
+    assertThat(JavaSourceWriter.stringLiteral("\\")).isEqualTo("\"\\\\\"");
+    assertThat(JavaSourceWriter.stringLiteral("\"")).isEqualTo("\"\\\"\"");
+    assertThat(JavaSourceWriter.stringLiteral("\t")).isEqualTo("\"\\\t\"");
+    assertThat(JavaSourceWriter.stringLiteral("\n")).isEqualTo("\"\\\n\"");
   }
 
   @Test public void compressType() throws IOException {

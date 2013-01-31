@@ -18,7 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /** Emits Java source files. */
-public final class JavaWriter implements Closeable {
+public final class JavaSourceWriter implements Closeable {
   private static final Pattern TYPE_PATTERN = Pattern.compile("(?:[\\w$]+\\.)*([\\w$]+)");
   private static final String INDENT = "  ";
 
@@ -32,7 +32,7 @@ public final class JavaWriter implements Closeable {
   /**
    * @param out the stream to which Java source will be written. This should be a buffered stream.
    */
-  public JavaWriter(Writer out) {
+  public JavaSourceWriter(Writer out) {
     this.out = out;
   }
 
