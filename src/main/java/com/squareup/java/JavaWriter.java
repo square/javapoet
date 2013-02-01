@@ -36,7 +36,7 @@ public final class JavaWriter implements Closeable {
     this.out = out;
   }
 
-  /** Emit a package declaration. */
+  /** Emit a package declaration and empty line. */
   public JavaWriter emitPackage(String packageName) throws IOException {
     if (this.packagePrefix != null) {
       throw new IllegalStateException();
@@ -46,7 +46,7 @@ public final class JavaWriter implements Closeable {
     } else {
       out.write("package ");
       out.write(packageName);
-      out.write(";\n");
+      out.write(";\n\n");
       this.packagePrefix = packageName + ".";
     }
     return this;
@@ -77,7 +77,6 @@ public final class JavaWriter implements Closeable {
       out.write(type);
       out.write(";\n");
     }
-    emitEmptyLine();
     return this;
   }
 
@@ -251,6 +250,7 @@ public final class JavaWriter implements Closeable {
   /** Emits some Javadoc comments with line separated by {@code \n}. */
   public JavaWriter emitJavadoc(String javadoc, Object... params) throws IOException {
     String formatted = String.format(javadoc, params);
+
     indent();
     out.write("/**\n");
     for (String line : formatted.split("\n")) {
@@ -277,6 +277,13 @@ public final class JavaWriter implements Closeable {
     return this;
   }
 
+  public JavaWriter emitEnumValue(String name) throws IOException {
+    indent();
+    out.write(name);
+    out.write(",\n");
+    return this;
+  }
+
   /** Equivalent to {@code annotation(annotation, emptyMap())}. */
   public JavaWriter emitAnnotation(String annotation) throws IOException {
     return emitAnnotation(annotation, Collections.<String, Object>emptyMap());
@@ -288,17 +295,28 @@ public final class JavaWriter implements Closeable {
   }
 
   /**
+   * Annotates the next element with {@code annotationType} and a {@code value}.
+   *
+   * @param value an object used as the default (value) parameter of the annotation. The value will
+   *     be encoded using Object.toString(); use {@link #stringLiteral} for String values. Object
+   *     arrays are written one element per line.
+   */
+  public JavaWriter emitAnnotation(Class<? extends Annotation> annotationType, Object value)
+      throws IOException {
+    return emitAnnotation(annotationType.getName(), value);
+  }
+
+  /**
    * Annotates the next element with {@code annotation} and a {@code value}.
    *
    * @param value an object used as the default (value) parameter of the annotation. The value will
    *     be encoded using Object.toString(); use {@link #stringLiteral} for String values. Object
    *     arrays are written one element per line.
    */
-  public JavaWriter emitAnnotation(Class<? extends Annotation> annotation, Object value)
-      throws IOException {
+  public JavaWriter emitAnnotation(String annotation, Object value) throws IOException {
     indent();
     out.write("@");
-    emitType(annotation.getName());
+    emitType(annotation);
     out.write("(");
     emitAnnotationValue(value);
     out.write(")");
@@ -380,13 +398,19 @@ public final class JavaWriter implements Closeable {
   }
 
   /**
-   * @param pattern a code pattern like "int i = %s". Shouldn't contain a trailing semicolon or
-   *     newline character.
+   * @param pattern a code pattern like "int i = %s". Newlines will be further indented. Should not
+   *     contain trailing semicolon.
    */
   public JavaWriter emitStatement(String pattern, Object... args) throws IOException {
     checkInMethod();
+    String[] lines = String.format(pattern, args).split("\n", -1);
     indent();
-    out.write(String.format(pattern, args));
+    out.write(lines[0]);
+    for (int i = 1; i < lines.length; i++) {
+      out.write("\n");
+      hangingIndent();
+      out.write(lines[i]);
+    }
     out.write(";\n");
     return this;
   }
@@ -525,7 +549,13 @@ public final class JavaWriter implements Closeable {
   }
 
   private void indent() throws IOException {
-    for (int i = 0; i < scopes.size(); i++) {
+    for (int i = 0, count = scopes.size(); i < count; i++) {
+      out.write(INDENT);
+    }
+  }
+
+  private void hangingIndent() throws IOException {
+    for (int i = 0, count = scopes.size() + 2; i < count; i++) {
       out.write(INDENT);
     }
   }
