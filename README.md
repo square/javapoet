@@ -28,6 +28,7 @@ Would produce the following source output:
 
 ```java
 package com.example;
+
 public final class Person {
   private String firstName;
   private String lastName;
