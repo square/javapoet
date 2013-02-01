@@ -5,6 +5,7 @@ import com.example.Binding;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Modifier;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -22,7 +23,23 @@ public final class JavaWriterTest {
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
+        + "\n"
         + "public final class Foo {\n"
+        + "}\n");
+  }
+
+  @Test public void enumDeclaration() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Foo", "enum", Modifier.PUBLIC);
+    javaWriter.emitEnumValue("BAR");
+    javaWriter.emitEnumValue("BAZ");
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "public enum Foo {\n"
+        + "  BAR,\n"
+        + "  BAZ,\n"
         + "}\n");
   }
 
@@ -33,6 +50,7 @@ public final class JavaWriterTest {
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
+        + "\n"
         + "class Foo {\n"
         + "  private static String string;\n"
         + "}\n");
@@ -45,6 +63,7 @@ public final class JavaWriterTest {
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
+        + "\n"
         + "class Foo {\n"
         + "  String string = \"bar\" + \"baz\";\n"
         + "}\n");
@@ -59,6 +78,7 @@ public final class JavaWriterTest {
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
+        + "\n"
         + "class Foo {\n"
         + "  public abstract String foo(Object object, String s);\n"
         + "}\n");
@@ -72,6 +92,7 @@ public final class JavaWriterTest {
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
+        + "\n"
         + "class Foo {\n"
         + "  int foo(String s) {\n"
         + "  }\n"
@@ -86,6 +107,7 @@ public final class JavaWriterTest {
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
+        + "\n"
         + "class Foo {\n"
         + "  public Foo(String s) {\n"
         + "  }\n"
@@ -101,9 +123,30 @@ public final class JavaWriterTest {
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
+        + "\n"
         + "class Foo {\n"
         + "  int foo(String s) {\n"
         + "    int j = s.length() + 13;\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void multiLineStatement() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Triangle", "class", 0);
+    javaWriter.beginMethod("double", "pythagorean", 0, "int", "a", "int", "b");
+    javaWriter.emitStatement("int cSquared = a * a\n+ b * b");
+    javaWriter.emitStatement("return Math.sqrt(cSquared)");
+    javaWriter.endMethod();
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "class Triangle {\n"
+        + "  double pythagorean(int a, int b) {\n"
+        + "    int cSquared = a * a\n"
+        + "        + b * b;\n"
+        + "    return Math.sqrt(cSquared);\n"
         + "  }\n"
         + "}\n");
   }
@@ -116,10 +159,22 @@ public final class JavaWriterTest {
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
-        + "import java.util.ArrayList;\n"
         + "\n"
+        + "import java.util.ArrayList;\n"
         + "public final class Foo {\n"
         + "  ArrayList list = new java.util.ArrayList();\n"
+        + "}\n");
+  }
+
+  @Test public void emptyImports() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.emitImports(Collections.<String>emptyList());
+    javaWriter.beginType("com.squareup.Foo", "class", Modifier.PUBLIC | Modifier.FINAL);
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "public final class Foo {\n"
         + "}\n");
   }
 
@@ -130,6 +185,7 @@ public final class JavaWriterTest {
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
+        + "\n"
         + "public final class Foo {\n"
         + "  com.squareup.bar.Baz baz;\n"
         + "}\n");
@@ -146,6 +202,7 @@ public final class JavaWriterTest {
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
+        + "\n"
         + "class Foo {\n"
         + "  int foo(String s) {\n"
         + "    if (s.isEmpty()) {\n"
@@ -166,6 +223,7 @@ public final class JavaWriterTest {
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
+        + "\n"
         + "class Foo {\n"
         + "  int foo(String s) {\n"
         + "    do {\n"
@@ -190,6 +248,7 @@ public final class JavaWriterTest {
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
+        + "\n"
         + "class Foo {\n"
         + "  int foo(String s) {\n"
         + "    try {\n"
@@ -213,8 +272,8 @@ public final class JavaWriterTest {
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
-        + "import javax.inject.Singleton;\n"
         + "\n"
+        + "import javax.inject.Singleton;\n"
         + "@Singleton\n"
         + "@SuppressWarnings(\"unchecked\")\n"
         + "class Foo {\n"
@@ -229,6 +288,7 @@ public final class JavaWriterTest {
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
+        + "\n"
         + "class Foo {\n"
         + "  @Deprecated\n"
         + "  String s;\n"
@@ -247,6 +307,7 @@ public final class JavaWriterTest {
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
+        + "\n"
         + "@Module(\n"
         + "  overrides = true,\n"
         + "  entryPoints = {\n"
@@ -268,9 +329,9 @@ public final class JavaWriterTest {
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
+        + "\n"
         + "import java.util.Date;\n"
         + "import java.util.Map;\n"
-        + "\n"
         + "class Foo {\n"
         + "  Map<String, Date> map;\n"
         + "}\n");
