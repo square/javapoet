@@ -265,9 +265,9 @@ public final class JavaWriter implements Closeable {
   }
 
   /** Emits some Javadoc comments. */
-  public JavaWriter emitEndOfLineComment(String comment) throws IOException {
+  public JavaWriter emitEndOfLineComment(String comment, Object... args) throws IOException {
     out.write("// ");
-    out.write(comment);
+    out.write(String.format(comment, args));
     out.write("\n");
     return this;
   }
