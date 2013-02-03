@@ -89,8 +89,9 @@ public final class JavaWriter implements Closeable {
     return this;
   }
 
-  String compressType(String type) {
-    StringBuffer sb = new StringBuffer();
+  /** Try to compress a fully-qualified class name to only the class name. */
+  public String compressType(String type) {
+    StringBuilder sb = new StringBuilder();
     if (this.packagePrefix == null) {
       throw new IllegalStateException();
     }
