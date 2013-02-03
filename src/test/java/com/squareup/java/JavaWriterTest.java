@@ -372,14 +372,14 @@ public final class JavaWriterTest {
 
   @Test public void compressType() throws IOException {
     javaWriter.emitPackage("blah");
-    javaWriter.emitImports(Set.class.getName(), Binding.class.getName());
+    javaWriter.emitImports(Set.class.getCanonicalName(), Binding.class.getCanonicalName());
     String actual = javaWriter.compressType("java.util.Set<com.example.Binding<blah.Foo.Blah>>");
     assertThat(actual).isEqualTo("Set<Binding<Foo.Blah>>");
   }
 
   @Test public void compressDeeperType() throws IOException {
     javaWriter.emitPackage("blah");
-    javaWriter.emitImports(Binding.class.getName());
+    javaWriter.emitImports(Binding.class.getCanonicalName());
     String actual = javaWriter.compressType("com.example.Binding<blah.foo.Foo.Blah>");
     assertThat(actual).isEqualTo("Binding<blah.foo.Foo.Blah>");
   }
