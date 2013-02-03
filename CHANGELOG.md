@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-Version 1.0.1 *(In Development)*
---------------------------------
+Version 1.0.1 *(02-03-2013)*
+----------------------------
 
  * Expose `compressType` API.
 
