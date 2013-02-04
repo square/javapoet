@@ -157,7 +157,7 @@ public final class JavaWriter implements Closeable {
   public JavaWriter beginType(String type, String kind, int modifiers, String extendsType,
       String... implementsTypes) throws IOException {
     indent();
-    out.write(modifiers(modifiers).toString());
+    out.write(modifiers(modifiers));
     out.write(kind);
     out.write(" ");
     emitType(type);
@@ -197,7 +197,7 @@ public final class JavaWriter implements Closeable {
   public JavaWriter emitField(String type, String name, int modifiers, String initialValue)
       throws IOException {
     indent();
-    out.write(modifiers(modifiers).toString());
+    out.write(modifiers(modifiers));
     emitType(type);
     out.write(" ");
     out.write(name);
@@ -220,7 +220,7 @@ public final class JavaWriter implements Closeable {
   public JavaWriter beginMethod(String returnType, String name, int modifiers, String... parameters)
       throws IOException {
     indent();
-    out.write(modifiers(modifiers).toString());
+    out.write(modifiers(modifiers));
     if (returnType != null) {
       emitType(returnType);
       out.write(" ");
@@ -517,8 +517,8 @@ public final class JavaWriter implements Closeable {
   }
 
   /** Emit modifier names. */
-  static StringBuffer modifiers(int modifiers) {
-    StringBuffer out = new StringBuffer();
+  static String modifiers(int modifiers) {
+    StringBuilder out = new StringBuilder();
     if ((modifiers & Modifier.PUBLIC) != 0) {
       out.append("public ");
     }
@@ -546,7 +546,7 @@ public final class JavaWriter implements Closeable {
     if ((modifiers & Modifier.VOLATILE) != 0) {
       out.append("volatile ");
     }
-    return out;
+    return out.toString();
   }
 
   private void indent() throws IOException {
