@@ -292,7 +292,7 @@ public final class JavaWriter implements Closeable {
 
   /** Equivalent to {@code annotation(annotationType.getName(), emptyMap())}. */
   public JavaWriter emitAnnotation(Class<? extends Annotation> annotationType) throws IOException {
-    return emitAnnotation(annotationType.getName(), Collections.<String, Object>emptyMap());
+    return emitAnnotation(type(annotationType), Collections.<String, Object>emptyMap());
   }
 
   /**
@@ -304,7 +304,7 @@ public final class JavaWriter implements Closeable {
    */
   public JavaWriter emitAnnotation(Class<? extends Annotation> annotationType, Object value)
       throws IOException {
-    return emitAnnotation(annotationType.getName(), value);
+    return emitAnnotation(type(annotationType), value);
   }
 
   /**
@@ -328,7 +328,7 @@ public final class JavaWriter implements Closeable {
   /** Equivalent to {@code annotation(annotationType.getName(), attributes)}. */
   public JavaWriter emitAnnotation(Class<? extends Annotation> annotationType,
       Map<String, ?> attributes) throws IOException {
-    return emitAnnotation(annotationType.getName(), attributes);
+    return emitAnnotation(type(annotationType), attributes);
   }
 
   /**
@@ -509,6 +509,26 @@ public final class JavaWriter implements Closeable {
       }
     }
     result.append('"');
+    return result.toString();
+  }
+
+  /** Build a string representation of a type and optionally its generic type arguments. */
+  public static String type(Class<?> raw, String... parameters) {
+    if (parameters.length == 0) {
+      return raw.getCanonicalName();
+    }
+    if (raw.getTypeParameters().length != parameters.length) {
+      throw new IllegalArgumentException();
+    }
+    StringBuilder result = new StringBuilder();
+    result.append(raw.getCanonicalName());
+    result.append("<");
+    result.append(parameters[0]);
+    for (int i = 1; i < parameters.length; i++) {
+      result.append(", ");
+      result.append(parameters[i]);
+    }
+    result.append(">");
     return result.toString();
   }
 
