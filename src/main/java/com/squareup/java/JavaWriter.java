@@ -292,7 +292,7 @@ public final class JavaWriter implements Closeable {
 
   /** Equivalent to {@code annotation(annotationType.getName(), emptyMap())}. */
   public JavaWriter emitAnnotation(Class<? extends Annotation> annotationType) throws IOException {
-    return emitAnnotation(annotationType.getName(), Collections.<String, Object>emptyMap());
+    return emitAnnotation(type(annotationType), Collections.<String, Object>emptyMap());
   }
 
   /**
@@ -304,7 +304,7 @@ public final class JavaWriter implements Closeable {
    */
   public JavaWriter emitAnnotation(Class<? extends Annotation> annotationType, Object value)
       throws IOException {
-    return emitAnnotation(annotationType.getName(), value);
+    return emitAnnotation(type(annotationType), value);
   }
 
   /**
@@ -328,7 +328,7 @@ public final class JavaWriter implements Closeable {
   /** Equivalent to {@code annotation(annotationType.getName(), attributes)}. */
   public JavaWriter emitAnnotation(Class<? extends Annotation> annotationType,
       Map<String, ?> attributes) throws IOException {
-    return emitAnnotation(annotationType.getName(), attributes);
+    return emitAnnotation(type(annotationType), attributes);
   }
 
   /**
