@@ -512,6 +512,26 @@ public final class JavaWriter implements Closeable {
     return result.toString();
   }
 
+  /** Build a string representation of a type and optionally its generic type arguments. */
+  public static String type(Class<?> raw, String... parameters) {
+    if (parameters.length == 0) {
+      return raw.getCanonicalName();
+    }
+    if (raw.getTypeParameters().length != parameters.length) {
+      throw new IllegalArgumentException();
+    }
+    StringBuilder result = new StringBuilder();
+    result.append(raw.getCanonicalName());
+    result.append("<");
+    result.append(parameters[0]);
+    for (int i = 1; i < parameters.length; i++) {
+      result.append(", ");
+      result.append(parameters[i]);
+    }
+    result.append(">");
+    return result.toString();
+  }
+
   @Override public void close() throws IOException {
     out.close();
   }

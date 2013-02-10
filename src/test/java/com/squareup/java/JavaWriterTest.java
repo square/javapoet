@@ -12,6 +12,7 @@ import java.util.Set;
 import org.junit.Test;
 
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.fest.assertions.api.Assertions.failBecauseExceptionWasNotThrown;;
 
 public final class JavaWriterTest {
   private final StringWriter stringWriter = new StringWriter();
@@ -368,6 +369,33 @@ public final class JavaWriterTest {
     assertThat(JavaWriter.stringLiteral("\"")).isEqualTo("\"\\\"\"");
     assertThat(JavaWriter.stringLiteral("\t")).isEqualTo("\"\\\t\"");
     assertThat(JavaWriter.stringLiteral("\n")).isEqualTo("\"\\\n\"");
+  }
+
+  @Test public void testType() {
+    assertThat(JavaWriter.type(String.class)).as("simple type").isEqualTo("java.lang.String");
+    assertThat(JavaWriter.type(Set.class)).as("raw type").isEqualTo("java.util.Set");
+    assertThat(JavaWriter.type(Set.class, "?")).as("wildcard type").isEqualTo("java.util.Set<?>");
+    assertThat(JavaWriter.type(Map.class, JavaWriter.type(String.class), "?"))
+        .as("mixed type and wildcard generic type parameters")
+        .isEqualTo("java.util.Map<java.lang.String, ?>");
+    try {
+      JavaWriter.type(String.class, "foo");
+      failBecauseExceptionWasNotThrown(IllegalArgumentException.class);
+    } catch (Throwable e) {
+      assertThat(e).as("parameterized non-generic").isInstanceOf(IllegalArgumentException.class);
+    }
+    try {
+      JavaWriter.type(Map.class, "foo");
+      failBecauseExceptionWasNotThrown(IllegalArgumentException.class);
+    } catch (Throwable e) {
+      assertThat(e).as("too few type arguments").isInstanceOf(IllegalArgumentException.class);
+    }
+    try {
+      JavaWriter.type(Set.class, "foo", "bar");
+      failBecauseExceptionWasNotThrown(IllegalArgumentException.class);
+    } catch (Throwable e) {
+      assertThat(e).as("too many type arguments").isInstanceOf(IllegalArgumentException.class);
+    }
   }
 
   @Test public void compressType() throws IOException {
