@@ -412,6 +412,13 @@ public final class JavaWriterTest {
     assertThat(actual).isEqualTo("Binding<blah.foo.Foo.Blah>");
   }
 
+  @Test public void compressWildcardType() throws IOException {
+    javaWriter.emitPackage("blah");
+    javaWriter.emitImports(Binding.class.getCanonicalName());
+    String actual = javaWriter.compressType("com.example.Binding<? extends blah.Foo.Blah>");
+    assertThat(actual).isEqualTo("Binding<? extends Foo.Blah>");
+  }
+
   private void assertCode(String expected) {
     assertThat(stringWriter.toString()).isEqualTo(expected);
   }
