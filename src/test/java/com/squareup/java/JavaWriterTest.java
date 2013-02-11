@@ -12,7 +12,7 @@ import java.util.Set;
 import org.junit.Test;
 
 import static org.fest.assertions.api.Assertions.assertThat;
-import static org.fest.assertions.api.Assertions.failBecauseExceptionWasNotThrown;;
+import static org.fest.assertions.api.Assertions.failBecauseExceptionWasNotThrown;
 
 public final class JavaWriterTest {
   private final StringWriter stringWriter = new StringWriter();
