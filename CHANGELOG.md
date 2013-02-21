@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 1.0.3 *(2013-02-21)*
+-----------------------------
+
+ * Add support for emitting static imports.
+
+
 Version 1.0.2 *(2013-02-11)*
 ----------------------------
 
