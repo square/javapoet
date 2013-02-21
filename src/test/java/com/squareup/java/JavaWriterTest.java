@@ -167,9 +167,36 @@ public final class JavaWriterTest {
         + "}\n");
   }
 
+  @Test public void addStaticImport() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.emitStaticImports("java.util.ArrayList");
+    javaWriter.beginType("com.squareup.Foo", "class", Modifier.PUBLIC | Modifier.FINAL);
+    javaWriter.emitField("java.util.ArrayList", "list", 0, "new java.util.ArrayList()");
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "import static java.util.ArrayList;\n"
+        + "public final class Foo {\n"
+        + "  ArrayList list = new java.util.ArrayList();\n"
+        + "}\n");
+  }
+
   @Test public void emptyImports() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.emitImports(Collections.<String>emptyList());
+    javaWriter.beginType("com.squareup.Foo", "class", Modifier.PUBLIC | Modifier.FINAL);
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "public final class Foo {\n"
+        + "}\n");
+  }
+
+  @Test public void emptyStaticImports() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.emitStaticImports(Collections.<String>emptyList());
     javaWriter.beginType("com.squareup.Foo", "class", Modifier.PUBLIC | Modifier.FINAL);
     javaWriter.endType();
     assertCode(""

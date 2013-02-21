@@ -81,6 +81,34 @@ public final class JavaWriter implements Closeable {
   }
 
   /**
+   * Emit a static import for each {@code type} provided. For the duration of the file,
+   * all references to these classes will be automatically shortened.
+   */
+  public JavaWriter emitStaticImports(String... types) throws IOException {
+    return emitStaticImports(Arrays.asList(types));
+  }
+
+  /**
+   * Emit a static import for each {@code type} in the provided {@code Collection}. For the
+   * duration of the file, all references to these classes will be automatically shortened.
+   */
+  public JavaWriter emitStaticImports(Collection<String> types) throws IOException {
+    for (String type : new TreeSet<String>(types)) {
+      Matcher matcher = TYPE_PATTERN.matcher(type);
+      if (!matcher.matches()) {
+        throw new IllegalArgumentException(type);
+      }
+      if (importedTypes.put(type, matcher.group(1)) != null) {
+        throw new IllegalArgumentException(type);
+      }
+      out.write("import static ");
+      out.write(type);
+      out.write(";\n");
+    }
+    return this;
+  }
+
+  /**
    * Emits a name like {@code java.lang.String} or {@code java.util.List<java.lang.String>},
    * shorting it with imports if possible.
    */
