@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 
 /** A utility class which aids in generating Java source files. */
 public final class JavaWriter implements Closeable {
-  private static final Pattern TYPE_PATTERN = Pattern.compile("(?:[\\w$]+\\.)*([\\w$]+)");
+  private static final Pattern TYPE_PATTERN = Pattern.compile("(?:[\\w$]+\\.)*([\\w\\.*$]+)");
   private static final String INDENT = "  ";
 
   /** Map fully qualified type names to their short names. */

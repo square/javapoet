@@ -169,16 +169,31 @@ public final class JavaWriterTest {
 
   @Test public void addStaticImport() throws IOException {
     javaWriter.emitPackage("com.squareup");
-    javaWriter.emitStaticImports("java.util.ArrayList");
+    javaWriter.emitStaticImports("java.lang.System.getProperty");
     javaWriter.beginType("com.squareup.Foo", "class", Modifier.PUBLIC | Modifier.FINAL);
-    javaWriter.emitField("java.util.ArrayList", "list", 0, "new java.util.ArrayList()");
+    javaWriter.emitField("String", "bar", 0, "getProperty(\"bar\")");
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
         + "\n"
-        + "import static java.util.ArrayList;\n"
+        + "import static java.lang.System.getProperty;\n"
         + "public final class Foo {\n"
-        + "  ArrayList list = new java.util.ArrayList();\n"
+        + "  String bar = getProperty(\"bar\");\n"
+        + "}\n");
+  }
+
+  @Test public void addStaticWildcardImport() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.emitStaticImports("java.lang.System.*");
+    javaWriter.beginType("com.squareup.Foo", "class", Modifier.PUBLIC | Modifier.FINAL);
+    javaWriter.emitField("String", "bar", 0, "getProperty(\"bar\")");
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "import static java.lang.System.*;\n"
+        + "public final class Foo {\n"
+        + "  String bar = getProperty(\"bar\");\n"
         + "}\n");
   }
 
