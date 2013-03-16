@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 1.0.4 *(2013-03-15)*
+----------------------------
+
+ * Fix: Static import emit now properly supports method imports.
+
+
 Version 1.0.3 *(2013-02-21)*
 -----------------------------
 
