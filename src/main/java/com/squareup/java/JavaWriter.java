@@ -170,12 +170,16 @@ public final class JavaWriter implements Closeable {
   /**
    * Emits an initializer declaration.
    *
-   * @param type such as "static".
+   * @param isStatic true if it should be an static initializer, false for an instance initializer.
    */
-  public JavaWriter beginInitializer(String type) throws IOException {
+  public JavaWriter beginInitializer(Boolean isStatic) throws IOException {
     indent();
-    out.write(type);
-    out.write(" {\n");
+    if (isStatic) {
+      out.write("static");
+      out.write(" {\n");
+    } else {
+      out.write("{\n");
+    }
     pushScope(Scope.INITIALIZER);
     return this;
   }
