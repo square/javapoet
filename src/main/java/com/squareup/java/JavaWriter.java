@@ -170,7 +170,7 @@ public final class JavaWriter implements Closeable {
   /**
    * Emits an initializer declaration.
    *
-   * @param kind such as "static".
+   * @param type such as "static".
    */
   public JavaWriter beginInitializer(String type) throws IOException {
     indent();
@@ -180,7 +180,7 @@ public final class JavaWriter implements Closeable {
     return this;
   }
 
-  /** Ends the current initializer declaration */
+  /** Ends the current initializer declaration. */
   public JavaWriter endInitializer() throws IOException {
     popScope(Scope.INITIALIZER);
     indent();
