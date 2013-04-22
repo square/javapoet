@@ -172,7 +172,7 @@ public final class JavaWriter implements Closeable {
    *
    * @param isStatic true if it should be an static initializer, false for an instance initializer.
    */
-  public JavaWriter beginInitializer(Boolean isStatic) throws IOException {
+  public JavaWriter beginInitializer(boolean isStatic) throws IOException {
     indent();
     if (isStatic) {
       out.write("static");
