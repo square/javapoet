@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 1.0.5 *(2013-05-08)*
+----------------------------
+
+ * Fix: Fully qualify types whose simple name matches an import.
+
+
 Version 1.0.4 *(2013-03-15)*
 ----------------------------
 
