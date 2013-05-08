@@ -143,7 +143,12 @@ public final class JavaWriter implements Closeable {
       if (imported != null) {
         sb.append(imported);
       } else if (isClassInPackage(name)) {
-        sb.append(name.substring(packagePrefix.length()));
+        String compressed = name.substring(packagePrefix.length());
+        if (isAmbiguous(compressed)) {
+          sb.append(name);
+        } else {
+          sb.append(compressed);
+        }
       } else if (name.startsWith("java.lang.")) {
         sb.append(name.substring("java.lang.".length()));
       } else {
@@ -165,6 +170,15 @@ public final class JavaWriter implements Closeable {
       }
     }
     return false;
+  }
+
+  /**
+   * Returns true if the imports contain a class with same simple name as {@code compressed}.
+   *
+   * @param compressed simple name of the type
+   */
+  private boolean isAmbiguous(String compressed) {
+    return importedTypes.values().contains(compressed);
   }
 
   /**
