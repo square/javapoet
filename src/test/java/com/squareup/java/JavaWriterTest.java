@@ -461,6 +461,13 @@ public final class JavaWriterTest {
     assertThat(actual).isEqualTo("Binding<? extends Foo.Blah>");
   }
 
+  @Test public void compressSimpleNameCollisionInSamePackage() throws IOException {
+    javaWriter.emitPackage("denominator");
+    javaWriter.emitImports("javax.inject.Provider", "dagger.internal.Binding");
+    String actual = javaWriter.compressType("dagger.internal.Binding<denominator.Provider>");
+    assertThat(actual).isEqualTo("Binding<denominator.Provider>");
+  }
+
   private void assertCode(String expected) {
     assertThat(stringWriter.toString()).isEqualTo(expected);
   }
