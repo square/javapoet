@@ -182,6 +182,31 @@ public final class JavaWriter implements Closeable {
   }
 
   /**
+   * Emits an initializer declaration.
+   *
+   * @param isStatic true if it should be an static initializer, false for an instance initializer.
+   */
+  public JavaWriter beginInitializer(boolean isStatic) throws IOException {
+    indent();
+    if (isStatic) {
+      out.write("static");
+      out.write(" {\n");
+    } else {
+      out.write("{\n");
+    }
+    pushScope(Scope.INITIALIZER);
+    return this;
+  }
+
+  /** Ends the current initializer declaration. */
+  public JavaWriter endInitializer() throws IOException {
+    popScope(Scope.INITIALIZER);
+    indent();
+    out.write("}\n");
+    return this;
+  }
+
+  /**
    * Emits a type declaration.
    *
    * @param kind such as "class", "interface" or "enum".
@@ -625,7 +650,8 @@ public final class JavaWriter implements Closeable {
 
   private void checkInMethod() {
     Scope scope = peekScope();
-    if (scope != Scope.NON_ABSTRACT_METHOD && scope != Scope.CONTROL_FLOW) {
+    if (scope != Scope.NON_ABSTRACT_METHOD && scope != Scope.CONTROL_FLOW
+        && scope != Scope.INITIALIZER) {
       throw new IllegalArgumentException();
     }
   }
@@ -655,5 +681,6 @@ public final class JavaWriter implements Closeable {
     CONTROL_FLOW,
     ANNOTATION_ATTRIBUTE,
     ANNOTATION_ARRAY_VALUE,
+    INITIALIZER
   }
 }
