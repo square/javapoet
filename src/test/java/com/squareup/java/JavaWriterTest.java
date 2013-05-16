@@ -132,6 +132,25 @@ public final class JavaWriterTest {
         + "}\n");
   }
 
+  @Test public void statementFollowedByComment() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Foo", "class", 0);
+    javaWriter.beginMethod("int", "foo", 0, "java.lang.String", "s");
+    javaWriter.emitStatement("int j = s.length() + %s", 13);
+    javaWriter.emitEndOfLineComment("foo");
+    javaWriter.endMethod();
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "class Foo {\n"
+        + "  int foo(String s) {\n"
+        + "    int j = s.length() + 13;\n"
+        + "    // foo\n"
+        + "  }\n"
+        + "}\n");
+  }
+
   @Test public void multiLineStatement() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Triangle", "class", 0);
