@@ -136,7 +136,7 @@ public final class JavaWriterTest {
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Foo", "class", 0);
     javaWriter.beginMethod("int", "foo", 0, "java.lang.String", "s");
-    javaWriter.emitEndOfLineComment("foo");
+    javaWriter.emitSingleLineCOmment("foo");
     javaWriter.emitStatement("int j = s.length() + %s", 13);
     javaWriter.endMethod();
     javaWriter.endType();
@@ -400,9 +400,8 @@ public final class JavaWriterTest {
   }
 
   @Test public void eolComment() throws IOException {
-    javaWriter.emitEndOfLineComment("foo");
-    assertCode(""
-        + "// foo\n");
+    javaWriter.emitSingleLineCOmment("foo");
+    assertCode("// foo\n");
   }
 
   @Test public void javadoc() throws IOException {
