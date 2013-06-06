@@ -5,6 +5,7 @@ import com.example.Binding;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -85,6 +86,23 @@ public final class JavaWriterTest {
         + "}\n");
   }
 
+  @Test public void abstractMethodDeclarationWithThrows() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Foo", "class", 0);
+    javaWriter.beginMethod("java.lang.String", "foo", Modifier.ABSTRACT | Modifier.PUBLIC,
+        Arrays.asList("java.lang.Object", "object", "java.lang.String", "s"),
+        Arrays.asList("IOException"));
+    javaWriter.endMethod();
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "class Foo {\n"
+        + "  public abstract String foo(Object object, String s)\n"
+        + "      throws IOException;\n"
+        + "}\n");
+  }
+
   @Test public void nonAbstractMethodDeclaration() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Foo", "class", 0);
@@ -100,6 +118,23 @@ public final class JavaWriterTest {
         + "}\n");
   }
 
+  @Test public void nonAbstractMethodDeclarationWithThrows() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Foo", "class", 0);
+    javaWriter.beginMethod("int", "foo", 0, Arrays.asList("java.lang.String", "s"),
+        Arrays.asList("IOException"));
+    javaWriter.endMethod();
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "class Foo {\n"
+        + "  int foo(String s)\n"
+        + "      throws IOException {\n"
+        + "  }\n"
+        + "}\n");
+  }
+
   @Test public void constructorDeclaration() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Foo", "class", 0);
@@ -111,6 +146,23 @@ public final class JavaWriterTest {
         + "\n"
         + "class Foo {\n"
         + "  public Foo(String s) {\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void constructorDeclarationWithThrows() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Foo", "class", 0);
+    javaWriter.beginMethod(null, "com.squareup.Foo", Modifier.PUBLIC,
+        Arrays.asList("java.lang.String", "s"), Arrays.asList("IOException"));
+    javaWriter.endMethod();
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "class Foo {\n"
+        + "  public Foo(String s)\n"
+        + "      throws IOException {\n"
         + "  }\n"
         + "}\n");
   }

@@ -286,6 +286,19 @@ public final class JavaWriter implements Closeable {
    */
   public JavaWriter beginMethod(String returnType, String name, int modifiers, String... parameters)
       throws IOException {
+    return beginMethod(returnType, name, modifiers, Arrays.asList(parameters), null);
+  }
+
+  /**
+   * Emit a method declaration.
+   *
+   * @param returnType the method's return type, or null for constructors.
+   * @param name the method name, or the fully qualified class name for constructors.
+   * @param parameters alternating parameter types and names.
+   * @param throwsTypes the classes to throw, or null for no throws clause.
+   */
+  public JavaWriter beginMethod(String returnType, String name, int modifiers,
+      List<String> parameters, List<String> throwsTypes) throws IOException {
     indent();
     out.write(modifiers(modifiers));
     if (returnType != null) {
@@ -296,15 +309,28 @@ public final class JavaWriter implements Closeable {
       emitType(name);
     }
     out.write("(");
-    for (int p = 0; p < parameters.length;) {
-      if (p != 0) {
-        out.write(", ");
+    if (parameters != null) {
+      for (int p = 0; p < parameters.size();) {
+        if (p != 0) {
+          out.write(", ");
+        }
+        emitType(parameters.get(p++));
+        out.write(" ");
+        emitType(parameters.get(p++));
       }
-      emitType(parameters[p++]);
-      out.write(" ");
-      emitType(parameters[p++]);
     }
     out.write(")");
+    if (throwsTypes != null && throwsTypes.size() > 0) {
+      out.write("\n");
+      indent();
+      out.write("    throws ");
+      for (int i = 0; i < throwsTypes.size(); i++) {
+        if (i != 0) {
+          out.write(", ");
+        }
+        emitType(throwsTypes.get(i));
+      }
+    }
     if ((modifiers & Modifier.ABSTRACT) != 0) {
       out.write(";\n");
       pushScope(Scope.ABSTRACT_METHOD);
