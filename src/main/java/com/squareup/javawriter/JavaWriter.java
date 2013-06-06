@@ -1,5 +1,5 @@
 // Copyright 2013 Square, Inc.
-package com.squareup.java;
+package com.squareup.javawriter;
 
 import java.io.Closeable;
 import java.io.IOException;
