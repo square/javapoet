@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+Version 2.0.0 *(2013-06-06)*
+----------------------------
+
+ * Package name is now `com.squareup.javawriter`.
+ * Support declaring `throws` clause on methods.
+
+
 Version 1.0.5 *(2013-05-08)*
 ----------------------------
 
