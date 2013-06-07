@@ -91,7 +91,7 @@ public final class JavaWriterTest {
     javaWriter.beginType("com.squareup.Foo", "class", 0);
     javaWriter.beginMethod("java.lang.String", "foo", Modifier.ABSTRACT | Modifier.PUBLIC,
         Arrays.asList("java.lang.Object", "object", "java.lang.String", "s"),
-        Arrays.asList("IOException"));
+        Arrays.asList("java.io.IOException"));
     javaWriter.endMethod();
     javaWriter.endType();
     assertCode(""
@@ -99,7 +99,7 @@ public final class JavaWriterTest {
         + "\n"
         + "class Foo {\n"
         + "  public abstract String foo(Object object, String s)\n"
-        + "      throws IOException;\n"
+        + "      throws java.io.IOException;\n"
         + "}\n");
   }
 
@@ -122,7 +122,7 @@ public final class JavaWriterTest {
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Foo", "class", 0);
     javaWriter.beginMethod("int", "foo", 0, Arrays.asList("java.lang.String", "s"),
-        Arrays.asList("IOException"));
+        Arrays.asList("java.io.IOException"));
     javaWriter.endMethod();
     javaWriter.endType();
     assertCode(""
@@ -130,7 +130,7 @@ public final class JavaWriterTest {
         + "\n"
         + "class Foo {\n"
         + "  int foo(String s)\n"
-        + "      throws IOException {\n"
+        + "      throws java.io.IOException {\n"
         + "  }\n"
         + "}\n");
   }
@@ -154,7 +154,7 @@ public final class JavaWriterTest {
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Foo", "class", 0);
     javaWriter.beginMethod(null, "com.squareup.Foo", Modifier.PUBLIC,
-        Arrays.asList("java.lang.String", "s"), Arrays.asList("IOException"));
+        Arrays.asList("java.lang.String", "s"), Arrays.asList("java.io.IOException"));
     javaWriter.endMethod();
     javaWriter.endType();
     assertCode(""
@@ -162,7 +162,7 @@ public final class JavaWriterTest {
         + "\n"
         + "class Foo {\n"
         + "  public Foo(String s)\n"
-        + "      throws IOException {\n"
+        + "      throws java.io.IOException {\n"
         + "  }\n"
         + "}\n");
   }
