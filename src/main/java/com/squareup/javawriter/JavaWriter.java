@@ -359,7 +359,7 @@ public final class JavaWriter implements Closeable {
   }
 
   /** Emits a single line comment. */
-  public JavaWriter emitSingleLineCOmment(String comment, Object... args) throws IOException {
+  public JavaWriter emitSingleLineComment(String comment, Object... args) throws IOException {
     indent();
     out.write("// ");
     out.write(String.format(comment, args));
