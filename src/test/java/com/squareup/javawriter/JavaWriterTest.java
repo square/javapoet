@@ -1,7 +1,10 @@
 // Copyright 2013 Square, Inc.
 package com.squareup.javawriter;
 
-import com.example.Binding;
+import static com.squareup.javawriter.JavaWriter.stringLiteral;
+import static org.fest.assertions.api.Assertions.assertThat;
+import static org.fest.assertions.api.Assertions.failBecauseExceptionWasNotThrown;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Modifier;
@@ -10,10 +13,10 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+
 import org.junit.Test;
 
-import static org.fest.assertions.api.Assertions.assertThat;
-import static org.fest.assertions.api.Assertions.failBecauseExceptionWasNotThrown;
+import com.example.Binding;
 
 public final class JavaWriterTest {
   private final StringWriter stringWriter = new StringWriter();
@@ -406,6 +409,40 @@ public final class JavaWriterTest {
         + "class Foo {\n"
         + "  @Deprecated\n"
         + "  String s;\n"
+        + "}\n");
+  }
+
+  @Test public void annotatedWithSingleAttribute() throws IOException {
+    Map<String, Object> attributes = new LinkedHashMap<String, Object>();
+    attributes.put("overrides", true);
+
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.emitAnnotation("Module", attributes);
+    javaWriter.beginType("com.squareup.FooModule", "class", 0);
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "@Module(\n"
+        + "  overrides = true\n"
+        + ")\n"
+        + "class FooModule {\n"
+        + "}\n");
+  }
+
+  @Test public void annotatedWithSingleValueAttribute() throws IOException {
+    Map<String, Object> attributes = new LinkedHashMap<String, Object>();
+    attributes.put("value", stringLiteral("blah.Generator"));
+
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.emitAnnotation("Generated", attributes);
+    javaWriter.beginType("com.squareup.FooModule", "class", 0);
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "@Generated(\"blah.Generator\")\n"
+        + "class FooModule {\n"
         + "}\n");
   }
 
