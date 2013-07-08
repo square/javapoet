@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -437,27 +438,39 @@ public final class JavaWriter implements Closeable {
     indent();
     out.write("@");
     emitType(annotation);
-    if (!attributes.isEmpty()) {
-      out.write("(");
-      pushScope(Scope.ANNOTATION_ATTRIBUTE);
-      boolean firstAttribute = true;
-      for (Map.Entry<String, ?> entry : attributes.entrySet()) {
-        if (firstAttribute) {
-          firstAttribute = false;
-          out.write("\n");
-        } else {
-          out.write(",\n");
+    switch (attributes.size()) {
+      case 0:
+        break;
+      case 1:
+        Entry<String, ?> onlyEntry = attributes.entrySet().iterator().next();
+        if ("value".equals(onlyEntry.getKey())) {
+          out.write("(");
+          emitAnnotationValue(onlyEntry.getValue());
+          out.write(")");
+          break;
         }
+      default:
+        out.write("(");
+        pushScope(Scope.ANNOTATION_ATTRIBUTE);
+        boolean firstAttribute = true;
+        for (Map.Entry<String, ?> entry : attributes.entrySet()) {
+          if (firstAttribute) {
+            firstAttribute = false;
+            out.write("\n");
+          } else {
+            out.write(",\n");
+          }
+          indent();
+          out.write(entry.getKey());
+          out.write(" = ");
+          Object value = entry.getValue();
+          emitAnnotationValue(value);
+        }
+        popScope(Scope.ANNOTATION_ATTRIBUTE);
+        out.write("\n");
         indent();
-        out.write(entry.getKey());
-        out.write(" = ");
-        Object value = entry.getValue();
-        emitAnnotationValue(value);
-      }
-      popScope(Scope.ANNOTATION_ATTRIBUTE);
-      out.write("\n");
-      indent();
-      out.write(")");
+        out.write(")");
+        break;
     }
     out.write("\n");
     return this;
