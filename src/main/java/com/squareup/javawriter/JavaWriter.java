@@ -1,22 +1,35 @@
 // Copyright 2013 Square, Inc.
 package com.squareup.javawriter;
 
+import static javax.lang.model.element.Modifier.ABSTRACT;
+import static javax.lang.model.element.Modifier.FINAL;
+import static javax.lang.model.element.Modifier.PRIVATE;
+import static javax.lang.model.element.Modifier.PROTECTED;
+import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.element.Modifier.STATIC;
+import static javax.lang.model.element.Modifier.SYNCHRONIZED;
+import static javax.lang.model.element.Modifier.TRANSIENT;
+import static javax.lang.model.element.Modifier.VOLATILE;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.lang.model.element.Modifier;
 
 /** A utility class which aids in generating Java source files. */
 public final class JavaWriter implements Closeable {
@@ -208,12 +221,29 @@ public final class JavaWriter implements Closeable {
   }
 
   /**
+   * @deprecated Use {@link #beginType(String, String, Set)}
+   */
+  @Deprecated
+  public JavaWriter beginType(String type, String kind, int modifiers) throws IOException {
+    return beginType(type, kind, modifiersAsSet(modifiers), null);
+  }
+
+  /**
    * Emits a type declaration.
    *
    * @param kind such as "class", "interface" or "enum".
    */
-  public JavaWriter beginType(String type, String kind, int modifiers) throws IOException {
+  public JavaWriter beginType(String type, String kind, Set<Modifier> modifiers) throws IOException {
     return beginType(type, kind, modifiers, null);
+  }
+
+  /**
+   * @deprecated Use {@link #beginType(String, String, Set, String, String...)}
+   */
+  @Deprecated
+  public JavaWriter beginType(String type, String kind, int modifiers, String extendsType,
+      String... implementsTypes) throws IOException {
+    return beginType(type, kind, modifiersAsSet(modifiers), extendsType, implementsTypes);
   }
 
   /**
@@ -222,10 +252,10 @@ public final class JavaWriter implements Closeable {
    * @param kind such as "class", "interface" or "enum".
    * @param extendsType the class to extend, or null for no extends clause.
    */
-  public JavaWriter beginType(String type, String kind, int modifiers, String extendsType,
+  public JavaWriter beginType(String type, String kind, Set<Modifier> modifiers, String extendsType,
       String... implementsTypes) throws IOException {
     indent();
-    out.write(modifiers(modifiers));
+    emitModifiers(modifiers);
     out.write(kind);
     out.write(" ");
     emitType(type);
@@ -233,7 +263,7 @@ public final class JavaWriter implements Closeable {
       out.write(" extends ");
       emitType(extendsType);
     }
-    if (implementsTypes.length > 0) {
+    if ((implementsTypes != null) && (implementsTypes.length > 0)) {
       out.write("\n");
       indent();
       out.write("    implements ");
@@ -257,15 +287,32 @@ public final class JavaWriter implements Closeable {
     return this;
   }
 
-  /** Emits a field declaration. */
+  /**
+   * @deprecated Use {@link #emitField(String, String, Set)}.
+   */
+  @Deprecated
   public JavaWriter emitField(String type, String name, int modifiers) throws IOException {
+    return emitField(type, name, modifiersAsSet(modifiers), null);
+  }
+
+  /** Emits a field declaration. */
+  public JavaWriter emitField(String type, String name, Set<Modifier> modifiers) throws IOException {
     return emitField(type, name, modifiers, null);
   }
 
+  /**
+   * @deprecated Use {@link #emitField(String, String, Set, String)}.
+   */
+  @Deprecated
   public JavaWriter emitField(String type, String name, int modifiers, String initialValue)
       throws IOException {
+    return emitField(type, name, modifiersAsSet(modifiers), initialValue);
+  }
+
+  public JavaWriter emitField(String type, String name, Set<Modifier> modifiers,
+      String initialValue) throws IOException {
     indent();
-    out.write(modifiers(modifiers));
+    emitModifiers(modifiers);
     emitType(type);
     out.write(" ");
     out.write(name);
@@ -279,15 +326,13 @@ public final class JavaWriter implements Closeable {
   }
 
   /**
-   * Emit a method declaration.
-   *
-   * @param returnType the method's return type, or null for constructors.
-   * @param name the method name, or the fully qualified class name for constructors.
-   * @param parameters alternating parameter types and names.
+   * @deprecated Use {@link #beginMethod(String, String, Set, String...)}.
    */
+  @Deprecated
   public JavaWriter beginMethod(String returnType, String name, int modifiers, String... parameters)
       throws IOException {
-    return beginMethod(returnType, name, modifiers, Arrays.asList(parameters), null);
+    return beginMethod(returnType, name, modifiersAsSet(modifiers), Arrays.asList(parameters),
+        null);
   }
 
   /**
@@ -295,13 +340,36 @@ public final class JavaWriter implements Closeable {
    *
    * @param returnType the method's return type, or null for constructors.
    * @param name the method name, or the fully qualified class name for constructors.
+   * @param modifiers the set of modifiers to be applied to the method
+   * @param parameters alternating parameter types and names.
+   */
+  public JavaWriter beginMethod(String returnType, String name, Set<Modifier> modifiers,
+      String... parameters) throws IOException {
+    return beginMethod(returnType, name, modifiers, Arrays.asList(parameters), null);
+  }
+
+  /**
+   * @deprecated Use {@link #beginMethod(String, String, Set, List, List)}.
+   */
+  @Deprecated
+  public JavaWriter beginMethod(String returnType, String name, int modifiers,
+      List<String> parameters, List<String> throwsTypes) throws IOException {
+    return beginMethod(returnType, name, modifiersAsSet(modifiers), parameters, throwsTypes);
+  }
+
+  /**
+   * Emit a method declaration.
+   *
+   * @param returnType the method's return type, or null for constructors.
+   * @param name the method name, or the fully qualified class name for constructors.
+   * @param modifiers the set of modifiers to be applied to the method
    * @param parameters alternating parameter types and names.
    * @param throwsTypes the classes to throw, or null for no throws clause.
    */
-  public JavaWriter beginMethod(String returnType, String name, int modifiers,
+  public JavaWriter beginMethod(String returnType, String name, Set<Modifier> modifiers,
       List<String> parameters, List<String> throwsTypes) throws IOException {
     indent();
-    out.write(modifiers(modifiers));
+    emitModifiers(modifiers);
     if (returnType != null) {
       emitType(returnType);
       out.write(" ");
@@ -332,7 +400,7 @@ public final class JavaWriter implements Closeable {
         emitType(throwsTypes.get(i));
       }
     }
-    if ((modifiers & Modifier.ABSTRACT) != 0) {
+    if (modifiers.contains(ABSTRACT)) {
       out.write(";\n");
       pushScope(Scope.ABSTRACT_METHOD);
     } else {
@@ -643,37 +711,51 @@ public final class JavaWriter implements Closeable {
     out.close();
   }
 
-  /** Emit modifier names. */
-  static String modifiers(int modifiers) {
-    StringBuilder out = new StringBuilder();
-    if ((modifiers & Modifier.PUBLIC) != 0) {
-      out.append("public ");
+  /** Emits the modifiers to the writer. */
+  private void emitModifiers(Set<Modifier> modifiers) throws IOException {
+    // Use an EnumSet to ensure the proper ordering
+    if (!(modifiers instanceof EnumSet)) {
+      modifiers = EnumSet.copyOf(modifiers);
     }
-    if ((modifiers & Modifier.PRIVATE) != 0) {
-      out.append("private ");
+    for (Modifier modifier : modifiers) {
+      out.append(modifier.toString()).append(' ');
     }
-    if ((modifiers & Modifier.PROTECTED) != 0) {
-      out.append("protected ");
+  }
+
+  /**
+   * Returns a set of modifiers for an {@code int} encoded with the values in
+   * {@link java.lang.reflect.Modifier}.
+   */
+  private static EnumSet<Modifier> modifiersAsSet(int modifiers) {
+    EnumSet<Modifier> modifierSet = EnumSet.noneOf(Modifier.class);
+    if ((modifiers & java.lang.reflect.Modifier.PUBLIC) != 0) {
+      modifierSet.add(PUBLIC);
     }
-    if ((modifiers & Modifier.STATIC) != 0) {
-      out.append("static ");
+    if ((modifiers & java.lang.reflect.Modifier.PRIVATE) != 0) {
+      modifierSet.add(PRIVATE);
     }
-    if ((modifiers & Modifier.FINAL) != 0) {
-      out.append("final ");
+    if ((modifiers & java.lang.reflect.Modifier.PROTECTED) != 0) {
+      modifierSet.add(PROTECTED);
     }
-    if ((modifiers & Modifier.ABSTRACT) != 0) {
-      out.append("abstract ");
+    if ((modifiers & java.lang.reflect.Modifier.STATIC) != 0) {
+      modifierSet.add(STATIC);
     }
-    if ((modifiers & Modifier.SYNCHRONIZED) != 0) {
-      out.append("synchronized ");
+    if ((modifiers & java.lang.reflect.Modifier.FINAL) != 0) {
+      modifierSet.add(FINAL);
     }
-    if ((modifiers & Modifier.TRANSIENT) != 0) {
-      out.append("transient ");
+    if ((modifiers & java.lang.reflect.Modifier.ABSTRACT) != 0) {
+      modifierSet.add(ABSTRACT);
     }
-    if ((modifiers & Modifier.VOLATILE) != 0) {
-      out.append("volatile ");
+    if ((modifiers & java.lang.reflect.Modifier.SYNCHRONIZED) != 0) {
+      modifierSet.add(SYNCHRONIZED);
     }
-    return out.toString();
+    if ((modifiers & java.lang.reflect.Modifier.TRANSIENT) != 0) {
+      modifierSet.add(TRANSIENT);
+    }
+    if ((modifiers & java.lang.reflect.Modifier.VOLATILE) != 0) {
+      modifierSet.add(VOLATILE);
+    }
+    return modifierSet;
   }
 
   private void indent() throws IOException {
