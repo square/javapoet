@@ -220,6 +220,15 @@ public final class JavaWriter implements Closeable {
     return this;
   }
 
+ /**
+  * Emits a type declaration.
+  *
+  * @param kind such as "class", "interface" or "enum".
+  */
+  public JavaWriter beginType(String type, String kind) throws IOException {
+    return beginType(type, kind, EnumSet.noneOf(Modifier.class), null);
+  }
+
   /**
    * @deprecated Use {@link #beginType(String, String, Set)}
    */
@@ -287,6 +296,11 @@ public final class JavaWriter implements Closeable {
     return this;
   }
 
+  /** Emits a field declaration. */
+  public JavaWriter emitField(String type, String name) throws IOException {
+    return emitField(type, name, EnumSet.noneOf(Modifier.class), null);
+  }
+
   /**
    * @deprecated Use {@link #emitField(String, String, Set)}.
    */
@@ -296,7 +310,8 @@ public final class JavaWriter implements Closeable {
   }
 
   /** Emits a field declaration. */
-  public JavaWriter emitField(String type, String name, Set<Modifier> modifiers) throws IOException {
+  public JavaWriter emitField(String type, String name, Set<Modifier> modifiers)
+      throws IOException {
     return emitField(type, name, modifiers, null);
   }
 

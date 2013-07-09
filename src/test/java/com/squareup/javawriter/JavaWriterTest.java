@@ -57,7 +57,7 @@ public final class JavaWriterTest {
 
   @Test public void fieldDeclaration() throws IOException {
     javaWriter.emitPackage("com.squareup");
-    javaWriter.beginType("com.squareup.Foo", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.beginType("com.squareup.Foo", "class");
     javaWriter.emitField("java.lang.String", "string", EnumSet.of(PRIVATE, STATIC));
     javaWriter.endType();
     assertCode(""
@@ -70,7 +70,7 @@ public final class JavaWriterTest {
 
   @Test public void fieldDeclarationWithInitialValue() throws IOException {
     javaWriter.emitPackage("com.squareup");
-    javaWriter.beginType("com.squareup.Foo", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.beginType("com.squareup.Foo", "class");
     javaWriter.emitField("java.lang.String", "string", EnumSet.noneOf(Modifier.class),
         "\"bar\" + \"baz\"");
     javaWriter.endType();
@@ -84,7 +84,7 @@ public final class JavaWriterTest {
 
   @Test public void abstractMethodDeclaration() throws IOException {
     javaWriter.emitPackage("com.squareup");
-    javaWriter.beginType("com.squareup.Foo", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.beginType("com.squareup.Foo", "class");
     javaWriter.beginMethod("java.lang.String", "foo", EnumSet.of(ABSTRACT, PUBLIC),
         "java.lang.Object", "object", "java.lang.String", "s");
     javaWriter.endMethod();
@@ -99,7 +99,7 @@ public final class JavaWriterTest {
 
   @Test public void abstractMethodDeclarationWithThrows() throws IOException {
     javaWriter.emitPackage("com.squareup");
-    javaWriter.beginType("com.squareup.Foo", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.beginType("com.squareup.Foo", "class");
     javaWriter.beginMethod("java.lang.String", "foo", EnumSet.of(ABSTRACT, PUBLIC),
         Arrays.asList("java.lang.Object", "object", "java.lang.String", "s"),
         Arrays.asList("java.io.IOException"));
@@ -116,7 +116,7 @@ public final class JavaWriterTest {
 
   @Test public void nonAbstractMethodDeclaration() throws IOException {
     javaWriter.emitPackage("com.squareup");
-    javaWriter.beginType("com.squareup.Foo", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.beginType("com.squareup.Foo", "class");
     javaWriter.beginMethod("int", "foo", EnumSet.noneOf(Modifier.class), "java.lang.String", "s");
     javaWriter.endMethod();
     javaWriter.endType();
@@ -131,7 +131,7 @@ public final class JavaWriterTest {
 
   @Test public void nonAbstractMethodDeclarationWithThrows() throws IOException {
     javaWriter.emitPackage("com.squareup");
-    javaWriter.beginType("com.squareup.Foo", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.beginType("com.squareup.Foo", "class");
     javaWriter.beginMethod("int", "foo", EnumSet.noneOf(Modifier.class),
         Arrays.asList("java.lang.String", "s"), Arrays.asList("java.io.IOException"));
     javaWriter.endMethod();
@@ -148,7 +148,7 @@ public final class JavaWriterTest {
 
   @Test public void constructorDeclaration() throws IOException {
     javaWriter.emitPackage("com.squareup");
-    javaWriter.beginType("com.squareup.Foo", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.beginType("com.squareup.Foo", "class");
     javaWriter.beginMethod(null, "com.squareup.Foo", EnumSet.of(PUBLIC), "java.lang.String", "s");
     javaWriter.endMethod();
     javaWriter.endType();
@@ -163,7 +163,7 @@ public final class JavaWriterTest {
 
   @Test public void constructorDeclarationWithThrows() throws IOException {
     javaWriter.emitPackage("com.squareup");
-    javaWriter.beginType("com.squareup.Foo", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.beginType("com.squareup.Foo", "class");
     javaWriter.beginMethod(null, "com.squareup.Foo", EnumSet.of(PUBLIC),
         Arrays.asList("java.lang.String", "s"), Arrays.asList("java.io.IOException"));
     javaWriter.endMethod();
@@ -180,7 +180,7 @@ public final class JavaWriterTest {
 
   @Test public void statement() throws IOException {
     javaWriter.emitPackage("com.squareup");
-    javaWriter.beginType("com.squareup.Foo", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.beginType("com.squareup.Foo", "class");
     javaWriter.beginMethod("int", "foo", EnumSet.noneOf(Modifier.class), "java.lang.String", "s");
     javaWriter.emitStatement("int j = s.length() + %s", 13);
     javaWriter.endMethod();
@@ -197,7 +197,7 @@ public final class JavaWriterTest {
 
   @Test public void statementPrecededByComment() throws IOException {
     javaWriter.emitPackage("com.squareup");
-    javaWriter.beginType("com.squareup.Foo", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.beginType("com.squareup.Foo", "class");
     javaWriter.beginMethod("int", "foo", EnumSet.noneOf(Modifier.class), "java.lang.String", "s");
     javaWriter.emitSingleLineComment("foo");
     javaWriter.emitStatement("int j = s.length() + %s", 13);
@@ -216,7 +216,7 @@ public final class JavaWriterTest {
 
   @Test public void multiLineStatement() throws IOException {
     javaWriter.emitPackage("com.squareup");
-    javaWriter.beginType("com.squareup.Triangle", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.beginType("com.squareup.Triangle", "class");
     javaWriter.beginMethod("double", "pythagorean", EnumSet.noneOf(Modifier.class),
         "int", "a", "int", "b");
     javaWriter.emitStatement("int cSquared = a * a\n+ b * b");
@@ -308,7 +308,7 @@ public final class JavaWriterTest {
   @Test public void addImportFromSubpackage() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Foo", "class", EnumSet.of(PUBLIC, FINAL));
-    javaWriter.emitField("com.squareup.bar.Baz", "baz", EnumSet.noneOf(Modifier.class));
+    javaWriter.emitField("com.squareup.bar.Baz", "baz");
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
@@ -320,7 +320,7 @@ public final class JavaWriterTest {
 
   @Test public void ifControlFlow() throws IOException {
     javaWriter.emitPackage("com.squareup");
-    javaWriter.beginType("com.squareup.Foo", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.beginType("com.squareup.Foo", "class");
     javaWriter.beginMethod("int", "foo", EnumSet.noneOf(Modifier.class), "java.lang.String", "s");
     javaWriter.beginControlFlow("if (s.isEmpty())");
     javaWriter.emitStatement("int j = s.length() + %s", 13);
@@ -341,7 +341,7 @@ public final class JavaWriterTest {
 
   @Test public void doWhileControlFlow() throws IOException {
     javaWriter.emitPackage("com.squareup");
-    javaWriter.beginType("com.squareup.Foo", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.beginType("com.squareup.Foo", "class");
     javaWriter.beginMethod("int", "foo", EnumSet.noneOf(Modifier.class), "java.lang.String", "s");
     javaWriter.beginControlFlow("do");
     javaWriter.emitStatement("int j = s.length() + %s", 13);
@@ -362,7 +362,7 @@ public final class JavaWriterTest {
 
   @Test public void tryCatchFinallyControlFlow() throws IOException {
     javaWriter.emitPackage("com.squareup");
-    javaWriter.beginType("com.squareup.Foo", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.beginType("com.squareup.Foo", "class");
     javaWriter.beginMethod("int", "foo", EnumSet.noneOf(Modifier.class), "java.lang.String", "s");
     javaWriter.beginControlFlow("try");
     javaWriter.emitStatement("int j = s.length() + %s", 13);
@@ -395,7 +395,7 @@ public final class JavaWriterTest {
     javaWriter.emitAnnotation("javax.inject.Singleton");
     javaWriter.emitAnnotation(SuppressWarnings.class,
         JavaWriter.stringLiteral("unchecked"));
-    javaWriter.beginType("com.squareup.Foo", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.beginType("com.squareup.Foo", "class");
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
@@ -409,9 +409,9 @@ public final class JavaWriterTest {
 
   @Test public void annotatedMember() throws IOException {
     javaWriter.emitPackage("com.squareup");
-    javaWriter.beginType("com.squareup.Foo", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.beginType("com.squareup.Foo", "class");
     javaWriter.emitAnnotation(Deprecated.class);
-    javaWriter.emitField("java.lang.String", "s", EnumSet.noneOf(Modifier.class));
+    javaWriter.emitField("java.lang.String", "s");
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
@@ -464,7 +464,7 @@ public final class JavaWriterTest {
 
     javaWriter.emitPackage("com.squareup");
     javaWriter.emitAnnotation("Module", attributes);
-    javaWriter.beginType("com.squareup.FooModule", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.beginType("com.squareup.FooModule", "class");
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
@@ -485,7 +485,7 @@ public final class JavaWriterTest {
   @Test public void parameterizedType() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.emitImports("java.util.Map", "java.util.Date");
-    javaWriter.beginType("com.squareup.Foo", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.beginType("com.squareup.Foo", "class");
     javaWriter.emitField("java.util.Map<java.lang.String, java.util.Date>", "map",
         EnumSet.noneOf(Modifier.class));
     javaWriter.endType();
