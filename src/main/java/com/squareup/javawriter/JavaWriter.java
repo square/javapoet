@@ -242,7 +242,8 @@ public final class JavaWriter implements Closeable {
    *
    * @param kind such as "class", "interface" or "enum".
    */
-  public JavaWriter beginType(String type, String kind, Set<Modifier> modifiers) throws IOException {
+  public JavaWriter beginType(String type, String kind, Set<Modifier> modifiers)
+      throws IOException {
     return beginType(type, kind, modifiers, null);
   }
 
