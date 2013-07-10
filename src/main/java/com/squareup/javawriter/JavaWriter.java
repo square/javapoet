@@ -272,7 +272,7 @@ public final class JavaWriter implements Closeable {
       out.write(" extends ");
       emitType(extendsType);
     }
-    if ((implementsTypes != null) && (implementsTypes.length > 0)) {
+    if (implementsTypes.length > 0) {
       out.write("\n");
       indent();
       out.write("    implements ");
