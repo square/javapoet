@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+Version 2.1.0 *(2013-07-15)*
+----------------------------
+
+ * New: All methods now take a `Set` of `Modifier`s rather than an `int`. The `int` methods are
+   now deprecated for removal in version 3.0.
+ * Annotations with a single "value" attribute will now omit the key.
+
+
 Version 2.0.1 *(2013-06-17)*
 ----------------------------
 
