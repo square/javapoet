@@ -14,11 +14,11 @@ Example
 
 ```java
 writer.emitPackage("com.example")
-    .beginType("com.example.Person", "class", PUBLIC | FINAL)
-    .emitField("String", "firstName", PRIVATE)
-    .emitField("String", "lastName", PRIVATE)
+    .beginType("com.example.Person", "class", EnumSet.of(PUBLIC, FINAL))
+    .emitField("String", "firstName", EnumSet.of(PRIVATE))
+    .emitField("String", "lastName", EnumSet.of(PRIVATE))
     .emitJavadoc("Returns the person's full name.")
-    .beginMethod("String", "getName", PUBLIC)
+    .beginMethod("String", "getName", EnumSet.of(PUBLIC))
     .emitStatement("return firstName + \" \" + lastName;")
     .endMethod()
     .endType();
