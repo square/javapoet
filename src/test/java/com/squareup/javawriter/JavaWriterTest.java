@@ -527,8 +527,33 @@ public final class JavaWriterTest {
     assertThat(JavaWriter.stringLiteral("JavaWriter")).isEqualTo("\"JavaWriter\"");
     assertThat(JavaWriter.stringLiteral("\\")).isEqualTo("\"\\\\\"");
     assertThat(JavaWriter.stringLiteral("\"")).isEqualTo("\"\\\"\"");
-    assertThat(JavaWriter.stringLiteral("\t")).isEqualTo("\"\\\t\"");
-    assertThat(JavaWriter.stringLiteral("\n")).isEqualTo("\"\\\n\"");
+    assertThat(JavaWriter.stringLiteral("\b")).isEqualTo("\"\\b\"");
+    assertThat(JavaWriter.stringLiteral("\t")).isEqualTo("\"\\t\"");
+    assertThat(JavaWriter.stringLiteral("\n")).isEqualTo("\"\\n\"");
+    assertThat(JavaWriter.stringLiteral("\f")).isEqualTo("\"\\f\"");
+    assertThat(JavaWriter.stringLiteral("\r")).isEqualTo("\"\\r\"");
+
+    // Control characters
+    for (char i = 0x1; i <= 0x1f; i++) {
+      checkCharEscape(i);
+    }
+    for (char i = 0x7f; i <= 0x9f; i++) {
+      checkCharEscape(i);
+    }
+  }
+
+  private void checkCharEscape(char codePoint) {
+    String test = "" + codePoint;
+    String expected;
+    switch (codePoint) {
+      case 8: expected = "\"\\b\""; break;
+      case 9: expected = "\"\\t\""; break;
+      case 10: expected = "\"\\n\""; break;
+      case 12: expected = "\"\\f\""; break;
+      case 13: expected = "\"\\r\""; break;
+      default: expected = "\"\\u" + String.format("%04x", (int) codePoint) + "\"";
+    }
+    assertThat(JavaWriter.stringLiteral(test)).isEqualTo(expected);
   }
 
   @Test public void testType() {

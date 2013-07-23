@@ -680,23 +680,27 @@ public final class JavaWriter implements Closeable {
         case '\\':
           result.append("\\\\");
           break;
-        case '\t':
-          result.append("\\\t");
-          break;
         case '\b':
-          result.append("\\\b");
+          result.append("\\b");
+          break;
+        case '\t':
+          result.append("\\t");
           break;
         case '\n':
-          result.append("\\\n");
-          break;
-        case '\r':
-          result.append("\\\r");
+          result.append("\\n");
           break;
         case '\f':
-          result.append("\\\f");
+          result.append("\\f");
+          break;
+        case '\r':
+          result.append("\\r");
           break;
         default:
-          result.append(c);
+          if (Character.isISOControl(c)) {
+            result.append(String.format("\\u%04x", (int) c));
+          } else {
+            result.append(c);
+          }
       }
     }
     result.append('"');
