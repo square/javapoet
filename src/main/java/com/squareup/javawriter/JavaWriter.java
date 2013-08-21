@@ -34,6 +34,7 @@ import javax.lang.model.element.Modifier;
 /** A utility class which aids in generating Java source files. */
 public final class JavaWriter implements Closeable {
   private static final Pattern TYPE_PATTERN = Pattern.compile("(?:[\\w$]+\\.)*([\\w\\.*$]+)");
+  private static final int MAX_SINGLE_LINE_ATTRIBUTES = 3;
   private static final String INDENT = "  ";
 
   /** Map fully qualified type names to their short names. */
@@ -527,37 +528,50 @@ public final class JavaWriter implements Closeable {
         break;
       case 1:
         Entry<String, ?> onlyEntry = attributes.entrySet().iterator().next();
-        if ("value".equals(onlyEntry.getKey())) {
-          out.write("(");
-          emitAnnotationValue(onlyEntry.getValue());
-          out.write(")");
-          break;
+        out.write("(");
+        if (!"value".equals(onlyEntry.getKey())) {
+          out.write(onlyEntry.getKey());
+          out.write(" = ");
         }
+        emitAnnotationValue(onlyEntry.getValue());
+        out.write(")");
+        break;
       default:
+        boolean split = attributes.size() > MAX_SINGLE_LINE_ATTRIBUTES
+            || containsArray(attributes.values());
         out.write("(");
         pushScope(Scope.ANNOTATION_ATTRIBUTE);
-        boolean firstAttribute = true;
+        String separator = split ? "\n" : "";
         for (Map.Entry<String, ?> entry : attributes.entrySet()) {
-          if (firstAttribute) {
-            firstAttribute = false;
-            out.write("\n");
-          } else {
-            out.write(",\n");
+          out.write(separator);
+          separator = split ? ",\n" : ", ";
+          if (split) {
+            indent();
           }
-          indent();
           out.write(entry.getKey());
           out.write(" = ");
           Object value = entry.getValue();
           emitAnnotationValue(value);
         }
         popScope(Scope.ANNOTATION_ATTRIBUTE);
-        out.write("\n");
-        indent();
+        if (split) {
+          out.write("\n");
+          indent();
+        }
         out.write(")");
         break;
     }
     out.write("\n");
     return this;
+  }
+
+  private boolean containsArray(Collection<?> values) {
+    for (Object value : values) {
+      if (value instanceof Object[]) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
