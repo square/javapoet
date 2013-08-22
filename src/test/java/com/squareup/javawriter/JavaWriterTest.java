@@ -433,9 +433,7 @@ public final class JavaWriterTest {
     assertCode(""
         + "package com.squareup;\n"
         + "\n"
-        + "@Module(\n"
-        + "  overrides = true\n"
-        + ")\n"
+        + "@Module(overrides = true)\n"
         + "class FooModule {\n"
         + "}\n");
   }
@@ -452,6 +450,41 @@ public final class JavaWriterTest {
         + "package com.squareup;\n"
         + "\n"
         + "@Generated(\"blah.Generator\")\n"
+        + "class FooModule {\n"
+        + "}\n");
+  }
+
+  @Test public void annotatedWithTwoNonArrayAttributes() throws IOException {
+    Map<String, Object> attributes = new LinkedHashMap<String, Object>();
+    attributes.put("overrides", true);
+    attributes.put("foo", "bar");
+
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.emitAnnotation("Module", attributes);
+    javaWriter.beginType("com.squareup.FooModule", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "@Module(overrides = true, foo = bar)\n"
+        + "class FooModule {\n"
+        + "}\n");
+  }
+
+  @Test public void annotatedWithThreeNonArrayAttributes() throws IOException {
+    Map<String, Object> attributes = new LinkedHashMap<String, Object>();
+    attributes.put("overrides", true);
+    attributes.put("foo", "bar");
+    attributes.put("bar", "baz");
+
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.emitAnnotation("Module", attributes);
+    javaWriter.beginType("com.squareup.FooModule", "class", EnumSet.noneOf(Modifier.class));
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "@Module(overrides = true, foo = bar, bar = baz)\n"
         + "class FooModule {\n"
         + "}\n");
   }
