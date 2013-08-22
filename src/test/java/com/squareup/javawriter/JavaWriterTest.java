@@ -21,6 +21,8 @@ import java.util.Set;
 
 import javax.lang.model.element.Modifier;
 
+import junit.framework.Assert;
+
 import org.junit.Test;
 
 import com.example.Binding;
@@ -29,6 +31,18 @@ public final class JavaWriterTest {
   private final StringWriter stringWriter = new StringWriter();
   private final JavaWriter javaWriter = new JavaWriter(stringWriter);
 
+  @Test public void importTypeswithStar() throws IOException{
+	  javaWriter.emitImports("java.lang.*");
+	  assertCode("import java.lang.*;\n");
+  }
+  
+  @Test public void testShortName() throws IOException{
+	  
+	  javaWriter.emitImports("java.util.*");
+	  String str = javaWriter.getShortName("java.util.*");
+	  Assert.assertEquals("util", str);
+  }
+  
   @Test public void typeDeclaration() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Foo", "class", EnumSet.of(PUBLIC, FINAL));
