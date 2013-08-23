@@ -33,7 +33,8 @@ import javax.lang.model.element.Modifier;
 
 /** A utility class which aids in generating Java source files. */
 public final class JavaWriter implements Closeable {
-  private static final Pattern TYPE_PATTERN = Pattern.compile("(?:[\\w$]+\\.)*([\\w]+)(?:[\\.\\*$]*)");
+  private static final Pattern TYPE_PATTERN = Pattern
+            .compile("(?:[\\w$]+\\.)*([\\w]+)(?:[\\.\\*$]*)");
   private static final int MAX_SINGLE_LINE_ATTRIBUTES = 3;
   private static final String INDENT = "  ";
 
@@ -51,11 +52,10 @@ public final class JavaWriter implements Closeable {
     this.out = out;
   }
 
-  /** Utility Class to getShortName exposed to outside the class*/
-  public String getShortName(String name){
-	  return importedTypes.get(name);
-  }
-  
+    /** Utility Class to getShortName exposed to outside the class. */
+    public String getShortName(String name) {
+        return importedTypes.get(name);
+    }
   /** Emit a package declaration and empty line. */
   public JavaWriter emitPackage(String packageName) throws IOException {
     if (this.packagePrefix != null) {
