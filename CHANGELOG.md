@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 2.1.2 *(2013-08-23)*
+----------------------------
+
+ * Attempt to keep annotations on a single line.
+
+
 Version 2.1.1 *(2013-07-23)*
 ----------------------------
 
