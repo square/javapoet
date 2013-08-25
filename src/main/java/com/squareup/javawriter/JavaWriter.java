@@ -35,6 +35,8 @@ import javax.lang.model.element.Modifier;
 public final class JavaWriter implements Closeable {
   private static final Pattern TYPE_PATTERN = Pattern
             .compile("(?:[\\w$]+\\.)*([\\w]+)(?:[\\.\\*$]*)");
+  private static final Pattern TYPE_STAR_PATTERN = Pattern
+          .compile("(([\\w$]+\\.)*)(?:[\\w]+)(?:[\\.\\*$]*)");
   private static final int MAX_SINGLE_LINE_ATTRIBUTES = 3;
   private static final String INDENT = "  ";
 
@@ -56,6 +58,7 @@ public final class JavaWriter implements Closeable {
     public String getShortName(String name) {
         return importedTypes.get(name);
     }
+
   /** Emit a package declaration and empty line. */
   public JavaWriter emitPackage(String packageName) throws IOException {
     if (this.packagePrefix != null) {
@@ -87,7 +90,16 @@ public final class JavaWriter implements Closeable {
   public JavaWriter emitImports(Collection<String> types) throws IOException {
     for (String type : new TreeSet<String>(types)) {
       Matcher matcher = TYPE_PATTERN.matcher(type);
+      Matcher generic_matcher = TYPE_STAR_PATTERN.matcher(type);
+      if (!generic_matcher.matches()) {
+          throw new IllegalArgumentException(type);
+      }
+      String importVariable = generic_matcher.group(1);
+      String qualified_name = importVariable +"*";
       if (!matcher.matches()) {
+        throw new IllegalArgumentException(type);
+      }
+      if(importedTypes.containsKey(qualified_name)) {
         throw new IllegalArgumentException(type);
       }
       if (importedTypes.put(type, matcher.group(1)) != null) {
@@ -115,8 +127,17 @@ public final class JavaWriter implements Closeable {
   public JavaWriter emitStaticImports(Collection<String> types) throws IOException {
     for (String type : new TreeSet<String>(types)) {
       Matcher matcher = TYPE_PATTERN.matcher(type);
+      Matcher generic_matcher = TYPE_STAR_PATTERN.matcher(type);
+      if (!generic_matcher.matches()) {
+          throw new IllegalArgumentException(type);
+      }
+      String importVariable = generic_matcher.group(1);
+      String qualified_name = importVariable +"*";
       if (!matcher.matches()) {
         throw new IllegalArgumentException(type);
+      }
+      if(importedTypes.containsKey(qualified_name)) {
+          throw new IllegalArgumentException(type);
       }
       if (importedTypes.put(type, matcher.group(1)) != null) {
         throw new IllegalArgumentException(type);

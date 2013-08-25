@@ -36,11 +36,31 @@ public final class JavaWriterTest {
 	  assertCode("import java.lang.*;\n");
   }
   
+  @Test public void testDuplicateImports() throws IOException{
+      try {
+          javaWriter.emitImports("java.test.*");
+          javaWriter.emitImports("java.test.Super");
+          failBecauseExceptionWasNotThrown(IllegalArgumentException.class);
+        } catch (Throwable e) {
+          assertThat(e).as("duplicate import").isInstanceOf(IllegalArgumentException.class);
+        }
+  }
+  
+  @Test public void testDuplicateStaticImports() throws IOException{
+      try {
+          javaWriter.emitStaticImports("java.test.*");
+          javaWriter.emitStaticImports("java.test.Super");
+          failBecauseExceptionWasNotThrown(IllegalArgumentException.class);
+        } catch (Throwable e) {
+          assertThat(e).as("duplicate static import").isInstanceOf(IllegalArgumentException.class);
+        }
+  }  
+  
   @Test public void testShortName() throws IOException{
 	  
-	  javaWriter.emitImports("java.util.*");
-	  String str = javaWriter.getShortName("java.util.*");
-	  Assert.assertEquals("util", str);
+	  javaWriter.emitImports("java.test.*");
+	  String str = javaWriter.getShortName("java.test.*");
+	  Assert.assertEquals("test", str);
   }
   
   @Test public void typeDeclaration() throws IOException {
