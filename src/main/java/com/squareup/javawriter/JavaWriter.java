@@ -90,16 +90,16 @@ public final class JavaWriter implements Closeable {
   public JavaWriter emitImports(Collection<String> types) throws IOException {
     for (String type : new TreeSet<String>(types)) {
       Matcher matcher = TYPE_PATTERN.matcher(type);
-      Matcher generic_matcher = TYPE_STAR_PATTERN.matcher(type);
-      if (!generic_matcher.matches()) {
+      Matcher genericMatcher = TYPE_STAR_PATTERN.matcher(type);
+      if (!genericMatcher.matches()) {
           throw new IllegalArgumentException(type);
       }
-      String importVariable = generic_matcher.group(1);
-      String qualified_name = importVariable +"*";
+      String importVariable = genericMatcher.group(1);
+      String qualifiedName = importVariable + "*";
       if (!matcher.matches()) {
         throw new IllegalArgumentException(type);
       }
-      if(importedTypes.containsKey(qualified_name)) {
+      if (importedTypes.containsKey(qualifiedName)) {
         throw new IllegalArgumentException(type);
       }
       if (importedTypes.put(type, matcher.group(1)) != null) {
@@ -127,16 +127,16 @@ public final class JavaWriter implements Closeable {
   public JavaWriter emitStaticImports(Collection<String> types) throws IOException {
     for (String type : new TreeSet<String>(types)) {
       Matcher matcher = TYPE_PATTERN.matcher(type);
-      Matcher generic_matcher = TYPE_STAR_PATTERN.matcher(type);
-      if (!generic_matcher.matches()) {
+      Matcher genericMatcher = TYPE_STAR_PATTERN.matcher(type);
+      if (!genericMatcher.matches()) {
           throw new IllegalArgumentException(type);
       }
-      String importVariable = generic_matcher.group(1);
-      String qualified_name = importVariable +"*";
+      String importVariable = genericMatcher.group(1);
+      String qualifiedName = importVariable + "*";
       if (!matcher.matches()) {
         throw new IllegalArgumentException(type);
       }
-      if(importedTypes.containsKey(qualified_name)) {
+      if (importedTypes.containsKey(qualifiedName)) {
           throw new IllegalArgumentException(type);
       }
       if (importedTypes.put(type, matcher.group(1)) != null) {
