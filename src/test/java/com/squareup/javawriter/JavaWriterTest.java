@@ -21,6 +21,8 @@ import java.util.Set;
 
 import javax.lang.model.element.Modifier;
 
+import junit.framework.Assert;
+
 import org.junit.Test;
 
 import com.example.Binding;
@@ -29,6 +31,38 @@ public final class JavaWriterTest {
   private final StringWriter stringWriter = new StringWriter();
   private final JavaWriter javaWriter = new JavaWriter(stringWriter);
 
+  @Test public void importTypeswithStar() throws IOException{
+	  javaWriter.emitImports("java.lang.*");
+	  assertCode("import java.lang.*;\n");
+  }
+  
+  @Test public void testDuplicateImports() throws IOException{
+      try {
+          javaWriter.emitImports("java.test.*");
+          javaWriter.emitImports("java.test.Super");
+          failBecauseExceptionWasNotThrown(IllegalArgumentException.class);
+        } catch (Throwable e) {
+          assertThat(e).as("duplicate import").isInstanceOf(IllegalArgumentException.class);
+        }
+  }
+  
+  @Test public void testDuplicateStaticImports() throws IOException{
+      try {
+          javaWriter.emitStaticImports("java.test.*");
+          javaWriter.emitStaticImports("java.test.Super");
+          failBecauseExceptionWasNotThrown(IllegalArgumentException.class);
+        } catch (Throwable e) {
+          assertThat(e).as("duplicate static import").isInstanceOf(IllegalArgumentException.class);
+        }
+  }  
+  
+  @Test public void testShortName() throws IOException{
+	  
+	  javaWriter.emitImports("java.test.*");
+	  String str = javaWriter.getShortName("java.test.*");
+	  Assert.assertEquals("test", str);
+  }
+  
   @Test public void typeDeclaration() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Foo", "class", EnumSet.of(PUBLIC, FINAL));
