@@ -19,7 +19,7 @@ writer.emitPackage("com.example")
     .emitField("String", "lastName", EnumSet.of(PRIVATE))
     .emitJavadoc("Returns the person's full name.")
     .beginMethod("String", "getName", EnumSet.of(PUBLIC))
-    .emitStatement("return firstName + \" \" + lastName;")
+    .emitStatement("return firstName + \" \" + lastName")
     .endMethod()
     .endType();
 ```
@@ -36,7 +36,7 @@ public final class Person {
    * Returns the person's full name.
    */
   public String getName() {
-    return firstName + " " + lastName;;
+    return firstName + " " + lastName;
   }
 }
 ```
