@@ -39,16 +39,24 @@ public final class JavaWriter implements Closeable {
 
   /** Map fully qualified type names to their short names. */
   private final Map<String, String> importedTypes = new LinkedHashMap<String, String>();
+  private final TreeSet<String> imports = new TreeSet<String>();
+  private final TreeSet<String> staticImports = new TreeSet<String>();
 
   private String packagePrefix;
   private final List<Scope> scopes = new ArrayList<Scope>();
+  private final StringBuilder sb = new StringBuilder();
   private final Writer out;
+  private int importLocation;
 
   /**
    * @param out the stream to which Java source will be written. This should be a buffered stream.
    */
   public JavaWriter(Writer out) {
     this.out = out;
+  }
+
+  private void write(String s) throws IOException {
+    sb.append(s);
   }
 
   /** Emit a package declaration and empty line. */
@@ -59,12 +67,51 @@ public final class JavaWriter implements Closeable {
     if (packageName.isEmpty()) {
       this.packagePrefix = "";
     } else {
-      out.write("package ");
-      out.write(packageName);
-      out.write(";\n\n");
+      write("package ");
+      write(packageName);
+      write(";\n\n");
       this.packagePrefix = packageName + ".";
     }
+    // Place imports here
+    this.importLocation = sb.length();
     return this;
+  }
+
+  public JavaWriter emitStaticImports(Collection<String> types) throws IOException {
+    for (String type : new TreeSet<String>(types)) {
+      Matcher matcher = TYPE_PATTERN.matcher(type);
+      if (!matcher.matches()) {
+        throw new IllegalArgumentException(type);
+      }
+      if (importedTypes.put(type, matcher.group(1)) != null) {
+        throw new IllegalArgumentException(type);
+      }
+      staticImports.add(type);
+    }
+    return this;
+  }
+
+  public JavaWriter finalizeImports() {
+    for (String type : imports) {
+      insertImport("import " + type + ";\n");
+    }
+    if (!staticImports.isEmpty()) {
+      if (!imports.isEmpty()) {
+        insertImport("\n");
+      }
+      for (String type : staticImports) {
+        insertImport("import static " + type + ";\n");
+      }
+    }
+
+    imports.clear();
+    staticImports.clear();
+    return this;
+  }
+
+  private void insertImport(String s) {
+    sb.insert(importLocation, s);
+    importLocation += s.length();
   }
 
   /**
@@ -88,9 +135,7 @@ public final class JavaWriter implements Closeable {
       if (importedTypes.put(type, matcher.group(1)) != null) {
         throw new IllegalArgumentException(type);
       }
-      out.write("import ");
-      out.write(type);
-      out.write(";\n");
+      imports.add(type);
     }
     return this;
   }
@@ -104,31 +149,11 @@ public final class JavaWriter implements Closeable {
   }
 
   /**
-   * Emit a static import for each {@code type} in the provided {@code Collection}. For the
-   * duration of the file, all references to these classes will be automatically shortened.
-   */
-  public JavaWriter emitStaticImports(Collection<String> types) throws IOException {
-    for (String type : new TreeSet<String>(types)) {
-      Matcher matcher = TYPE_PATTERN.matcher(type);
-      if (!matcher.matches()) {
-        throw new IllegalArgumentException(type);
-      }
-      if (importedTypes.put(type, matcher.group(1)) != null) {
-        throw new IllegalArgumentException(type);
-      }
-      out.write("import static ");
-      out.write(type);
-      out.write(";\n");
-    }
-    return this;
-  }
-
-  /**
    * Emits a name like {@code java.lang.String} or {@code java.util.List<java.lang.String>},
    * shorting it with imports if possible.
    */
   private JavaWriter emitType(String type) throws IOException {
-    out.write(compressType(type));
+    write(compressType(type));
     return this;
   }
 
@@ -204,10 +229,10 @@ public final class JavaWriter implements Closeable {
   public JavaWriter beginInitializer(boolean isStatic) throws IOException {
     indent();
     if (isStatic) {
-      out.write("static");
-      out.write(" {\n");
+      write("static");
+      write(" {\n");
     } else {
-      out.write("{\n");
+      write("{\n");
     }
     pushScope(Scope.INITIALIZER);
     return this;
@@ -217,7 +242,7 @@ public final class JavaWriter implements Closeable {
   public JavaWriter endInitializer() throws IOException {
     popScope(Scope.INITIALIZER);
     indent();
-    out.write("}\n");
+    write("}\n");
     return this;
   }
 
@@ -267,25 +292,25 @@ public final class JavaWriter implements Closeable {
       String... implementsTypes) throws IOException {
     indent();
     emitModifiers(modifiers);
-    out.write(kind);
-    out.write(" ");
+    write(kind);
+    write(" ");
     emitType(type);
     if (extendsType != null) {
-      out.write(" extends ");
+      write(" extends ");
       emitType(extendsType);
     }
     if (implementsTypes.length > 0) {
-      out.write("\n");
+      write("\n");
       indent();
-      out.write("    implements ");
+      write("    implements ");
       for (int i = 0; i < implementsTypes.length; i++) {
         if (i != 0) {
-          out.write(", ");
+          write(", ");
         }
         emitType(implementsTypes[i]);
       }
     }
-    out.write(" {\n");
+    write(" {\n");
     pushScope(Scope.TYPE_DECLARATION);
     return this;
   }
@@ -294,7 +319,7 @@ public final class JavaWriter implements Closeable {
   public JavaWriter endType() throws IOException {
     popScope(Scope.TYPE_DECLARATION);
     indent();
-    out.write("}\n");
+    write("}\n");
     return this;
   }
 
@@ -331,14 +356,14 @@ public final class JavaWriter implements Closeable {
     indent();
     emitModifiers(modifiers);
     emitType(type);
-    out.write(" ");
-    out.write(name);
+    write(" ");
+    write(name);
 
     if (initialValue != null) {
-      out.write(" = ");
-      out.write(initialValue);
+      write(" = ");
+      write(initialValue);
     }
-    out.write(";\n");
+    write(";\n");
     return this;
   }
 
@@ -389,39 +414,39 @@ public final class JavaWriter implements Closeable {
     emitModifiers(modifiers);
     if (returnType != null) {
       emitType(returnType);
-      out.write(" ");
-      out.write(name);
+      write(" ");
+      write(name);
     } else {
       emitType(name);
     }
-    out.write("(");
+    write("(");
     if (parameters != null) {
       for (int p = 0; p < parameters.size();) {
         if (p != 0) {
-          out.write(", ");
+          write(", ");
         }
         emitType(parameters.get(p++));
-        out.write(" ");
+        write(" ");
         emitType(parameters.get(p++));
       }
     }
-    out.write(")");
+    write(")");
     if (throwsTypes != null && throwsTypes.size() > 0) {
-      out.write("\n");
+      write("\n");
       indent();
-      out.write("    throws ");
+      write("    throws ");
       for (int i = 0; i < throwsTypes.size(); i++) {
         if (i != 0) {
-          out.write(", ");
+          write(", ");
         }
         emitType(throwsTypes.get(i));
       }
     }
     if (modifiers.contains(ABSTRACT)) {
-      out.write(";\n");
+      write(";\n");
       pushScope(Scope.ABSTRACT_METHOD);
     } else {
-      out.write(" {\n");
+      write(" {\n");
       pushScope(Scope.NON_ABSTRACT_METHOD);
     }
     return this;
@@ -432,36 +457,36 @@ public final class JavaWriter implements Closeable {
     String formatted = String.format(javadoc, params);
 
     indent();
-    out.write("/**\n");
+    write("/**\n");
     for (String line : formatted.split("\n")) {
       indent();
-      out.write(" * ");
-      out.write(line);
-      out.write("\n");
+      write(" * ");
+      write(line);
+      write("\n");
     }
     indent();
-    out.write(" */\n");
+    write(" */\n");
     return this;
   }
 
   /** Emits a single line comment. */
   public JavaWriter emitSingleLineComment(String comment, Object... args) throws IOException {
     indent();
-    out.write("// ");
-    out.write(String.format(comment, args));
-    out.write("\n");
+    write("// ");
+    write(String.format(comment, args));
+    write("\n");
     return this;
   }
 
   public JavaWriter emitEmptyLine() throws IOException {
-    out.write("\n");
+    write("\n");
     return this;
   }
 
   public JavaWriter emitEnumValue(String name) throws IOException {
     indent();
-    out.write(name);
-    out.write(",\n");
+    write(name);
+    write(",\n");
     return this;
   }
 
@@ -496,12 +521,12 @@ public final class JavaWriter implements Closeable {
    */
   public JavaWriter emitAnnotation(String annotation, Object value) throws IOException {
     indent();
-    out.write("@");
+    write("@");
     emitType(annotation);
-    out.write("(");
+    write("(");
     emitAnnotationValue(value);
-    out.write(")");
-    out.write("\n");
+    write(")");
+    write("\n");
     return this;
   }
 
@@ -521,47 +546,47 @@ public final class JavaWriter implements Closeable {
   public JavaWriter emitAnnotation(String annotation, Map<String, ?> attributes)
       throws IOException {
     indent();
-    out.write("@");
+    write("@");
     emitType(annotation);
     switch (attributes.size()) {
       case 0:
         break;
       case 1:
         Entry<String, ?> onlyEntry = attributes.entrySet().iterator().next();
-        out.write("(");
+        write("(");
         if (!"value".equals(onlyEntry.getKey())) {
-          out.write(onlyEntry.getKey());
-          out.write(" = ");
+          write(onlyEntry.getKey());
+          write(" = ");
         }
         emitAnnotationValue(onlyEntry.getValue());
-        out.write(")");
+        write(")");
         break;
       default:
         boolean split = attributes.size() > MAX_SINGLE_LINE_ATTRIBUTES
             || containsArray(attributes.values());
-        out.write("(");
+        write("(");
         pushScope(Scope.ANNOTATION_ATTRIBUTE);
         String separator = split ? "\n" : "";
         for (Map.Entry<String, ?> entry : attributes.entrySet()) {
-          out.write(separator);
+          write(separator);
           separator = split ? ",\n" : ", ";
           if (split) {
             indent();
           }
-          out.write(entry.getKey());
-          out.write(" = ");
+          write(entry.getKey());
+          write(" = ");
           Object value = entry.getValue();
           emitAnnotationValue(value);
         }
         popScope(Scope.ANNOTATION_ATTRIBUTE);
         if (split) {
-          out.write("\n");
+          write("\n");
           indent();
         }
-        out.write(")");
+        write(")");
         break;
     }
-    out.write("\n");
+    write("\n");
     return this;
   }
 
@@ -580,25 +605,25 @@ public final class JavaWriter implements Closeable {
    */
   private JavaWriter emitAnnotationValue(Object value) throws IOException {
     if (value instanceof Object[]) {
-      out.write("{");
+      write("{");
       boolean firstValue = true;
       pushScope(Scope.ANNOTATION_ARRAY_VALUE);
       for (Object o : ((Object[]) value)) {
         if (firstValue) {
           firstValue = false;
-          out.write("\n");
+          write("\n");
         } else {
-          out.write(",\n");
+          write(",\n");
         }
         indent();
-        out.write(o.toString());
+        write(o.toString());
       }
       popScope(Scope.ANNOTATION_ARRAY_VALUE);
-      out.write("\n");
+      write("\n");
       indent();
-      out.write("}");
+      write("}");
     } else {
-      out.write(value.toString());
+      write(value.toString());
     }
     return this;
   }
@@ -611,13 +636,13 @@ public final class JavaWriter implements Closeable {
     checkInMethod();
     String[] lines = String.format(pattern, args).split("\n", -1);
     indent();
-    out.write(lines[0]);
+    write(lines[0]);
     for (int i = 1; i < lines.length; i++) {
-      out.write("\n");
+      write("\n");
       hangingIndent();
-      out.write(lines[i]);
+      write(lines[i]);
     }
-    out.write(";\n");
+    write(";\n");
     return this;
   }
 
@@ -628,8 +653,8 @@ public final class JavaWriter implements Closeable {
   public JavaWriter beginControlFlow(String controlFlow) throws IOException {
     checkInMethod();
     indent();
-    out.write(controlFlow);
-    out.write(" {\n");
+    write(controlFlow);
+    write(" {\n");
     pushScope(Scope.CONTROL_FLOW);
     return this;
   }
@@ -642,9 +667,9 @@ public final class JavaWriter implements Closeable {
     popScope(Scope.CONTROL_FLOW);
     indent();
     pushScope(Scope.CONTROL_FLOW);
-    out.write("} ");
-    out.write(controlFlow);
-    out.write(" {\n");
+    write("} ");
+    write(controlFlow);
+    write(" {\n");
     return this;
   }
 
@@ -660,11 +685,11 @@ public final class JavaWriter implements Closeable {
     popScope(Scope.CONTROL_FLOW);
     indent();
     if (controlFlow != null) {
-      out.write("} ");
-      out.write(controlFlow);
-      out.write(";\n");
+      write("} ");
+      write(controlFlow);
+      write(";\n");
     } else {
-      out.write("}\n");
+      write("}\n");
     }
     return this;
   }
@@ -674,7 +699,7 @@ public final class JavaWriter implements Closeable {
     Scope popped = popScope();
     if (popped == Scope.NON_ABSTRACT_METHOD) {
       indent();
-      out.write("}\n");
+      write("}\n");
     } else if (popped != Scope.ABSTRACT_METHOD) {
       throw new IllegalStateException();
     }
@@ -742,6 +767,9 @@ public final class JavaWriter implements Closeable {
   }
 
   @Override public void close() throws IOException {
+    finalizeImports();
+    out.write(sb.toString());
+    sb.setLength(0);
     out.close();
   }
 
@@ -752,7 +780,8 @@ public final class JavaWriter implements Closeable {
       modifiers = EnumSet.copyOf(modifiers);
     }
     for (Modifier modifier : modifiers) {
-      out.append(modifier.toString()).append(' ');
+      write(modifier.toString());
+      write(" ");
     }
   }
 
@@ -794,13 +823,13 @@ public final class JavaWriter implements Closeable {
 
   private void indent() throws IOException {
     for (int i = 0, count = scopes.size(); i < count; i++) {
-      out.write(INDENT);
+      write(INDENT);
     }
   }
 
   private void hangingIndent() throws IOException {
     for (int i = 0, count = scopes.size() + 2; i < count; i++) {
-      out.write(INDENT);
+      write(INDENT);
     }
   }
 
