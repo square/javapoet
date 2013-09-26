@@ -1,6 +1,7 @@
 .classpath
 .project
 .settings
+.checkstyle
 eclipsebin
 
 bin

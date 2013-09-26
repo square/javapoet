@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 import javax.lang.model.element.Modifier;
 
 /** A utility class which aids in generating Java source files. */
-public final class JavaWriter implements Closeable {
+public class JavaWriter implements Closeable {
   private static final Pattern TYPE_PATTERN = Pattern.compile("(?:[\\w$]+\\.)*([\\w\\.*$]+)");
   private static final int MAX_SINGLE_LINE_ATTRIBUTES = 3;
   private static final String INDENT = "  ";
@@ -43,12 +43,21 @@ public final class JavaWriter implements Closeable {
   private String packagePrefix;
   private final List<Scope> scopes = new ArrayList<Scope>();
   private final Writer out;
+  private boolean isCompressingTypes = true;
 
   /**
    * @param out the stream to which Java source will be written. This should be a buffered stream.
    */
   public JavaWriter(Writer out) {
     this.out = out;
+  }
+
+  public void setCompressingTypes(boolean isCompressingTypes) {
+    this.isCompressingTypes = isCompressingTypes;
+  }
+
+  public boolean isCompressingTypes() {
+    return isCompressingTypes;
   }
 
   /** Emit a package declaration and empty line. */
@@ -125,10 +134,15 @@ public final class JavaWriter implements Closeable {
 
   /**
    * Emits a name like {@code java.lang.String} or {@code java.util.List<java.lang.String>},
-   * shorting it with imports if possible.
+   * compressing it with imports if possible. Type compression will only be enabled if
+   * {@link #isCompressingTypes} is true.
    */
-  private JavaWriter emitType(String type) throws IOException {
-    out.write(compressType(type));
+  private JavaWriter emitCompressedType(String type) throws IOException {
+    if (isCompressingTypes) {
+      out.write(compressType(type));
+    } else {
+      out.write(type);
+    }
     return this;
   }
 
@@ -269,10 +283,10 @@ public final class JavaWriter implements Closeable {
     emitModifiers(modifiers);
     out.write(kind);
     out.write(" ");
-    emitType(type);
+    emitCompressedType(type);
     if (extendsType != null) {
       out.write(" extends ");
-      emitType(extendsType);
+      emitCompressedType(extendsType);
     }
     if (implementsTypes.length > 0) {
       out.write("\n");
@@ -282,7 +296,7 @@ public final class JavaWriter implements Closeable {
         if (i != 0) {
           out.write(", ");
         }
-        emitType(implementsTypes[i]);
+        emitCompressedType(implementsTypes[i]);
       }
     }
     out.write(" {\n");
@@ -330,7 +344,7 @@ public final class JavaWriter implements Closeable {
       String initialValue) throws IOException {
     indent();
     emitModifiers(modifiers);
-    emitType(type);
+    emitCompressedType(type);
     out.write(" ");
     out.write(name);
 
@@ -388,11 +402,11 @@ public final class JavaWriter implements Closeable {
     indent();
     emitModifiers(modifiers);
     if (returnType != null) {
-      emitType(returnType);
+      emitCompressedType(returnType);
       out.write(" ");
       out.write(name);
     } else {
-      emitType(name);
+      emitCompressedType(name);
     }
     out.write("(");
     if (parameters != null) {
@@ -400,9 +414,9 @@ public final class JavaWriter implements Closeable {
         if (p != 0) {
           out.write(", ");
         }
-        emitType(parameters.get(p++));
+        emitCompressedType(parameters.get(p++));
         out.write(" ");
-        emitType(parameters.get(p++));
+        emitCompressedType(parameters.get(p++));
       }
     }
     out.write(")");
@@ -414,7 +428,7 @@ public final class JavaWriter implements Closeable {
         if (i != 0) {
           out.write(", ");
         }
-        emitType(throwsTypes.get(i));
+        emitCompressedType(throwsTypes.get(i));
       }
     }
     if (modifiers.contains(ABSTRACT)) {
@@ -497,7 +511,7 @@ public final class JavaWriter implements Closeable {
   public JavaWriter emitAnnotation(String annotation, Object value) throws IOException {
     indent();
     out.write("@");
-    emitType(annotation);
+    emitCompressedType(annotation);
     out.write("(");
     emitAnnotationValue(value);
     out.write(")");
@@ -522,7 +536,7 @@ public final class JavaWriter implements Closeable {
       throws IOException {
     indent();
     out.write("@");
-    emitType(annotation);
+    emitCompressedType(annotation);
     switch (attributes.size()) {
       case 0:
         break;
