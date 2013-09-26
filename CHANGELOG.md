@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 2.2.0 *(2013-09-25)*
+----------------------------
+
+ * `setCompressingTypes` controls whether types are emitted as fully-qualified or not.
+
+
 Version 2.1.2 *(2013-08-23)*
 ----------------------------
 
