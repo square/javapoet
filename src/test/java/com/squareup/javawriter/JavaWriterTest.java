@@ -645,7 +645,7 @@ public final class JavaWriterTest {
   }
 
   @Test public void configurableIndent() throws IOException {
-    javaWriter.setIndent(4);
+    javaWriter.setIndent("    ");
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Foo", "class");
     javaWriter.emitField("String", "bar");

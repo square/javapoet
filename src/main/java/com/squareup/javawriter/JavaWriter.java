@@ -61,12 +61,12 @@ public class JavaWriter implements Closeable {
     return isCompressingTypes;
   }
 
-  public void setIndent(int indent) {
-    this.indent = new String(new char[indent]).replace("\0", " ");
+  public void setIndent(String indent) {
+    this.indent = indent;
   }
 
-  public int getIndent() {
-    return indent.length();
+  public String getIndent() {
+    return indent;
   }
 
   /** Emit a package declaration and empty line. */
