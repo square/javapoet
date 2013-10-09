@@ -805,6 +805,72 @@ public final class JavaWriterTest {
         + "}\n");
   }
 
+  @Test public void testAnonymousInnerClassField() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("Foo", "class");
+    javaWriter.beginAnonymousInnerClass("MyType", "myType", EnumSet.of(PUBLIC, FINAL), "MyKind");
+    javaWriter.emitEmptyLine();
+    javaWriter.emitAnnotation(Override.class);
+    javaWriter.beginMethod("void", "bar", EnumSet.of(PUBLIC));
+    javaWriter.emitSingleLineComment("something awesome");
+    javaWriter.endMethod();
+    javaWriter.endAnonymousInnerClass();
+    javaWriter.endType();
+
+    assertCode("package com.squareup;\n\n" +
+               "class Foo {\n" +
+               "  public final MyType myType = new MyKind() {\n" +
+               "\n" +
+               "    @Override\n" +
+               "    public void bar() {\n" +
+               "      // something awesome\n" +
+               "    }\n" +
+               "  };\n" +
+               "}\n");
+  }
+
+  @Test public void testAnonymousInnerClassVariable() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("Foo", "class");
+    javaWriter.beginAnonymousInnerClass("MyType", "myType", null, "MyKind");
+    javaWriter.endAnonymousInnerClass();
+    javaWriter.endType();
+
+    assertCode("package com.squareup;\n\n" +
+               "class Foo {\n" +
+               "  MyType myType = new MyKind() {\n" +
+               "  };\n" +
+               "}\n");
+  }
+
+  @Test public void testAnonymousInnerClassAssignment() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("Foo", "class");
+    javaWriter.beginAnonymousInnerClass(null, "myType", null, "MyKind");
+    javaWriter.endAnonymousInnerClass();
+    javaWriter.endType();
+
+    assertCode("package com.squareup;\n\n" +
+               "class Foo {\n" +
+               "  myType = new MyKind() {\n" +
+               "  };\n" +
+               "}\n");
+  }
+
+  @Test public void testAnonymousInnerClassNoAssignment() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("Foo", "class");
+    javaWriter.beginAnonymousInnerClass(null, null, null, "MyKind");
+    javaWriter.endAnonymousInnerClass();
+    javaWriter.endType();
+
+    assertCode("package com.squareup;\n\n" +
+        "class Foo {\n" +
+        "  new MyKind() {\n" +
+        "  };\n" +
+        "}\n");
+  }
+
   private void assertCode(String expected) {
     assertThat(stringWriter.toString()).isEqualTo(expected);
   }
