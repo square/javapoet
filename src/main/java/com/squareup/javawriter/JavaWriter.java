@@ -479,6 +479,13 @@ public class JavaWriter implements Closeable {
     return this;
   }
 
+  public JavaWriter emitLastEnumValue(String name) throws IOException {
+    indent();
+    out.write(name);
+    out.write(";\n");
+    return this;
+  }
+
   /** Equivalent to {@code annotation(annotation, emptyMap())}. */
   public JavaWriter emitAnnotation(String annotation) throws IOException {
     return emitAnnotation(annotation, Collections.<String, Object>emptyMap());
