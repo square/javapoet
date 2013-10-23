@@ -552,6 +552,17 @@ public final class JavaWriterTest {
         + " */\n");
   }
 
+  @Test public void multilineJavadocDoesNotEmitTrailingSpaceForEmptyLines() throws IOException {
+    javaWriter.emitJavadoc("Foo\n\nBar");
+    assertCode(""
+        + "/**\n"
+        + " * Foo\n"
+        + " *\n"
+        + " * Bar\n"
+        + " */\n"
+    );
+  }
+
   @Test public void testStringLiteral() {
     assertThat(JavaWriter.stringLiteral("")).isEqualTo("\"\"");
     assertThat(JavaWriter.stringLiteral("JavaWriter")).isEqualTo("\"JavaWriter\"");

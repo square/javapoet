@@ -448,8 +448,11 @@ public class JavaWriter implements Closeable {
     out.write("/**\n");
     for (String line : formatted.split("\n")) {
       indent();
-      out.write(" * ");
-      out.write(line);
+      out.write(" *");
+      if (!line.isEmpty()) {
+        out.write(" ");
+        out.write(line);
+      }
       out.write("\n");
     }
     indent();
