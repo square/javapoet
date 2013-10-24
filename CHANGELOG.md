@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 2.2.1 *(2013-10-23)*
+----------------------------
+
+ * Fix: Do not emit trailing whitespace for empty Javadoc lines.
+
+
 Version 2.2.0 *(2013-09-25)*
 ----------------------------
 
