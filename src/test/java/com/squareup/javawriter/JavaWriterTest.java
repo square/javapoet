@@ -652,6 +652,20 @@ public final class JavaWriterTest {
     assertThat(actual).isEqualTo("Binding<denominator.Provider>");
   }
 
+  @Test public void configurableIndent() throws IOException {
+    javaWriter.setIndent("    ");
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Foo", "class");
+    javaWriter.emitField("String", "bar");
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "class Foo {\n"
+        + "    String bar;\n"
+        + "}\n");
+  }
+    
   private void assertCode(String expected) {
     assertThat(stringWriter.toString()).isEqualTo(expected);
   }

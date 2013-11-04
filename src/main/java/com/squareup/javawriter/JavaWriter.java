@@ -43,6 +43,7 @@ public class JavaWriter implements Closeable {
   private final List<Scope> scopes = new ArrayList<Scope>();
   private final Writer out;
   private boolean isCompressingTypes = true;
+  private String indent = INDENT;
 
   /**
    * @param out the stream to which Java source will be written. This should be a buffered stream.
@@ -57,6 +58,14 @@ public class JavaWriter implements Closeable {
 
   public boolean isCompressingTypes() {
     return isCompressingTypes;
+  }
+
+  public void setIndent(String indent) {
+    this.indent = indent;
+  }
+
+  public String getIndent() {
+    return indent;
   }
 
   /** Emit a package declaration and empty line. */
@@ -810,13 +819,13 @@ public class JavaWriter implements Closeable {
 
   private void indent() throws IOException {
     for (int i = 0, count = scopes.size(); i < count; i++) {
-      out.write(INDENT);
+      out.write(indent);
     }
   }
 
   private void hangingIndent() throws IOException {
     for (int i = 0, count = scopes.size() + 2; i < count; i++) {
-      out.write(INDENT);
+      out.write(indent);
     }
   }
 
