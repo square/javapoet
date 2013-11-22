@@ -1,18 +1,6 @@
 // Copyright 2013 Square, Inc.
 package com.squareup.javawriter;
 
-import com.example.Binding;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-import javax.lang.model.element.Modifier;
-import org.junit.Test;
-
 import static com.squareup.javawriter.JavaWriter.stringLiteral;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.FINAL;
@@ -21,6 +9,21 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Assertions.failBecauseExceptionWasNotThrown;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+
+import javax.lang.model.element.Modifier;
+
+import org.junit.Test;
+
+import com.example.Binding;
 
 public final class JavaWriterTest {
   private final StringWriter stringWriter = new StringWriter();
@@ -146,8 +149,8 @@ public final class JavaWriterTest {
   @Test public void constructorDeclaration() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Foo", "class");
-    javaWriter.beginMethod(null, "com.squareup.Foo", EnumSet.of(PUBLIC), "java.lang.String", "s");
-    javaWriter.endMethod();
+    javaWriter.beginConstructor(EnumSet.of(PUBLIC), "java.lang.String", "s");
+    javaWriter.endConstructor();
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
@@ -158,12 +161,35 @@ public final class JavaWriterTest {
         + "}\n");
   }
 
+  @Test public void constructorDeclarationInNestedTypes() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Foo", "class");
+    javaWriter.beginConstructor(EnumSet.of(PUBLIC), "java.lang.String", "s");
+    javaWriter.endConstructor();
+    javaWriter.beginType("com.squareup.Bar", "class");
+    javaWriter.beginConstructor(EnumSet.noneOf(Modifier.class));
+    javaWriter.endConstructor();
+    javaWriter.endType();
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "class Foo {\n"
+        + "  public Foo(String s) {\n"
+        + "  }\n"
+        + "  class Bar {\n"
+        + "    Bar() {\n"
+        + "    }\n"
+        + "  }\n"
+        + "}\n");
+  }
+
   @Test public void constructorDeclarationWithThrows() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Foo", "class");
-    javaWriter.beginMethod(null, "com.squareup.Foo", EnumSet.of(PUBLIC),
+    javaWriter.beginConstructor(EnumSet.of(PUBLIC),
         Arrays.asList("java.lang.String", "s"), Arrays.asList("java.io.IOException"));
-    javaWriter.endMethod();
+    javaWriter.endConstructor();
     javaWriter.endType();
     assertCode(""
         + "package com.squareup;\n"
@@ -665,7 +691,7 @@ public final class JavaWriterTest {
         + "    String bar;\n"
         + "}\n");
   }
-    
+
   private void assertCode(String expected) {
     assertThat(stringWriter.toString()).isEqualTo(expected);
   }
