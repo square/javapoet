@@ -7,10 +7,11 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,7 +34,8 @@ public class JavaWriter implements Closeable {
   private final Map<String, String> importedTypes = new LinkedHashMap<String, String>();
 
   private String packagePrefix;
-  private final List<Scope> scopes = new ArrayList<Scope>();
+  private final Deque<Scope> scopes = new ArrayDeque<Scope>();
+  private final Deque<String> types = new ArrayDeque<String>();
   private final Writer out;
   private boolean isCompressingTypes = true;
   private String indent = INDENT;
@@ -224,7 +226,7 @@ public class JavaWriter implements Closeable {
     } else {
       out.write("{\n");
     }
-    pushScope(Scope.INITIALIZER);
+    scopes.push(Scope.INITIALIZER);
     return this;
   }
 
@@ -284,13 +286,15 @@ public class JavaWriter implements Closeable {
       }
     }
     out.write(" {\n");
-    pushScope(Scope.TYPE_DECLARATION);
+    scopes.push(Scope.TYPE_DECLARATION);
+    types.push(type);
     return this;
   }
 
   /** Completes the current type declaration. */
   public JavaWriter endType() throws IOException {
     popScope(Scope.TYPE_DECLARATION);
+    types.pop();
     indent();
     out.write("}\n");
     return this;
@@ -326,7 +330,11 @@ public class JavaWriter implements Closeable {
   /**
    * Emit a method declaration.
    *
-   * @param returnType the method's return type, or null for constructors.
+   * <p>A {@code null} return type may be used to indicate a constructor, but
+   * {@link #beginConstructor(Set, String...)} should be preferred. This behavior may be removed in
+   * a future release.
+   *
+   * @param returnType the method's return type, or null for constructors
    * @param name the method name, or the fully qualified class name for constructors.
    * @param modifiers the set of modifiers to be applied to the method
    * @param parameters alternating parameter types and names.
@@ -338,6 +346,10 @@ public class JavaWriter implements Closeable {
 
   /**
    * Emit a method declaration.
+   *
+   * <p>A {@code null} return type may be used to indicate a constructor, but
+   * {@link #beginConstructor(Set, List, List)} should be preferred. This behavior may be removed in
+   * a future release.
    *
    * @param returnType the method's return type, or null for constructors.
    * @param name the method name, or the fully qualified class name for constructors.
@@ -381,11 +393,24 @@ public class JavaWriter implements Closeable {
     }
     if (modifiers.contains(ABSTRACT)) {
       out.write(";\n");
-      pushScope(Scope.ABSTRACT_METHOD);
+      scopes.push(Scope.ABSTRACT_METHOD);
     } else {
       out.write(" {\n");
-      pushScope(Scope.NON_ABSTRACT_METHOD);
+      scopes.push(returnType == null ? Scope.CONSTRUCTOR : Scope.NON_ABSTRACT_METHOD);
     }
+    return this;
+  }
+
+  public JavaWriter beginConstructor(Set<Modifier> modifiers, String... parameters)
+      throws IOException {
+    beginMethod(null, types.peekFirst(), modifiers, parameters);
+    return this;
+  }
+
+  public JavaWriter beginConstructor(Set<Modifier> modifiers,
+      List<String> parameters, List<String> throwsTypes)
+      throws IOException {
+    beginMethod(null, types.peekFirst(), modifiers, parameters, throwsTypes);
     return this;
   }
 
@@ -505,7 +530,7 @@ public class JavaWriter implements Closeable {
         boolean split = attributes.size() > MAX_SINGLE_LINE_ATTRIBUTES
             || containsArray(attributes.values());
         out.write("(");
-        pushScope(Scope.ANNOTATION_ATTRIBUTE);
+        scopes.push(Scope.ANNOTATION_ATTRIBUTE);
         String separator = split ? "\n" : "";
         for (Map.Entry<String, ?> entry : attributes.entrySet()) {
           out.write(separator);
@@ -547,7 +572,7 @@ public class JavaWriter implements Closeable {
     if (value instanceof Object[]) {
       out.write("{");
       boolean firstValue = true;
-      pushScope(Scope.ANNOTATION_ARRAY_VALUE);
+      scopes.push(Scope.ANNOTATION_ARRAY_VALUE);
       for (Object o : ((Object[]) value)) {
         if (firstValue) {
           firstValue = false;
@@ -595,7 +620,7 @@ public class JavaWriter implements Closeable {
     indent();
     out.write(controlFlow);
     out.write(" {\n");
-    pushScope(Scope.CONTROL_FLOW);
+    scopes.push(Scope.CONTROL_FLOW);
     return this;
   }
 
@@ -606,7 +631,7 @@ public class JavaWriter implements Closeable {
   public JavaWriter nextControlFlow(String controlFlow) throws IOException {
     popScope(Scope.CONTROL_FLOW);
     indent();
-    pushScope(Scope.CONTROL_FLOW);
+    scopes.push(Scope.CONTROL_FLOW);
     out.write("} ");
     out.write(controlFlow);
     out.write(" {\n");
@@ -636,13 +661,22 @@ public class JavaWriter implements Closeable {
 
   /** Completes the current method declaration. */
   public JavaWriter endMethod() throws IOException {
-    Scope popped = popScope();
-    if (popped == Scope.NON_ABSTRACT_METHOD) {
+    Scope popped = scopes.pop();
+    // support calling a constructor a "method" to support the legacy code
+    if (popped == Scope.NON_ABSTRACT_METHOD || popped == Scope.CONSTRUCTOR) {
       indent();
       out.write("}\n");
     } else if (popped != Scope.ABSTRACT_METHOD) {
       throw new IllegalStateException();
     }
+    return this;
+  }
+
+  /** Completes the current constructor declaration. */
+  public JavaWriter endConstructor() throws IOException {
+    popScope(Scope.CONSTRUCTOR);
+    indent();
+    out.write("}\n");
     return this;
   }
 
@@ -734,27 +768,15 @@ public class JavaWriter implements Closeable {
   }
 
   private void checkInMethod() {
-    Scope scope = peekScope();
+    Scope scope = scopes.peekFirst();
     if (scope != Scope.NON_ABSTRACT_METHOD && scope != Scope.CONTROL_FLOW
         && scope != Scope.INITIALIZER) {
       throw new IllegalArgumentException();
     }
   }
 
-  private void pushScope(Scope pushed) {
-    scopes.add(pushed);
-  }
-
-  private Scope peekScope() {
-    return scopes.get(scopes.size() - 1);
-  }
-
-  private Scope popScope() {
-    return scopes.remove(scopes.size() - 1);
-  }
-
   private void popScope(Scope expected) {
-    if (scopes.remove(scopes.size() - 1) != expected) {
+    if (scopes.pop() != expected) {
       throw new IllegalStateException();
     }
   }
@@ -763,6 +785,7 @@ public class JavaWriter implements Closeable {
     TYPE_DECLARATION,
     ABSTRACT_METHOD,
     NON_ABSTRACT_METHOD,
+    CONSTRUCTOR,
     CONTROL_FLOW,
     ANNOTATION_ATTRIBUTE,
     ANNOTATION_ARRAY_VALUE,
