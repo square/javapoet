@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -208,8 +209,8 @@ public class JavaWriter implements Closeable {
       if (name.indexOf('.', packagePrefix.length()) == -1) {
         return true;
       }
-      int index = name.indexOf('.');
-      if (name.substring(index + 1, index + 2).matches("[A-Z]")) {
+      // check to see if the part after the package looks like a class
+      if (Character.isUpperCase(name.charAt(packagePrefix.length()))) {
         return true;
       }
     }
