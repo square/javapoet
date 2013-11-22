@@ -668,23 +668,30 @@ public final class JavaWriterTest {
   }
 
   @Test public void compressType() throws IOException {
-    javaWriter.emitPackage("blah");
+    javaWriter.emitPackage("com.blah");
     javaWriter.emitImports(Set.class.getCanonicalName(), Binding.class.getCanonicalName());
-    String actual = javaWriter.compressType("java.util.Set<com.example.Binding<blah.Foo.Blah>>");
+    String actual =
+        javaWriter.compressType("java.util.Set<com.example.Binding<com.blah.Foo.Blah>>");
     assertThat(actual).isEqualTo("Set<Binding<Foo.Blah>>");
   }
 
   @Test public void compressDeeperType() throws IOException {
-    javaWriter.emitPackage("blah");
+    javaWriter.emitPackage("com.blah");
     javaWriter.emitImports(Binding.class.getCanonicalName());
-    String actual = javaWriter.compressType("com.example.Binding<blah.foo.Foo.Blah>");
-    assertThat(actual).isEqualTo("Binding<blah.foo.Foo.Blah>");
+    String actual = javaWriter.compressType("com.example.Binding<com.blah.foo.Foo.Blah>");
+    assertThat(actual).isEqualTo("Binding<com.blah.foo.Foo.Blah>");
+  }
+
+  @Test public void compressNestedType() throws IOException {
+    javaWriter.emitPackage("com.blah");
+    String actual = javaWriter.compressType("com.blah.Enclosing.Nested");
+    assertThat(actual).isEqualTo("Enclosing.Nested");
   }
 
   @Test public void compressWildcardType() throws IOException {
-    javaWriter.emitPackage("blah");
+    javaWriter.emitPackage("com.blah");
     javaWriter.emitImports(Binding.class.getCanonicalName());
-    String actual = javaWriter.compressType("com.example.Binding<? extends blah.Foo.Blah>");
+    String actual = javaWriter.compressType("com.example.Binding<? extends com.blah.Foo.Blah>");
     assertThat(actual).isEqualTo("Binding<? extends Foo.Blah>");
   }
 
