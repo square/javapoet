@@ -12,6 +12,7 @@ import static org.fest.assertions.api.Assertions.failBecauseExceptionWasNotThrow
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -261,6 +262,22 @@ public final class JavaWriterTest {
   @Test public void addImport() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.emitImports("java.util.ArrayList");
+    javaWriter.beginType("com.squareup.Foo", "class", EnumSet.of(PUBLIC, FINAL));
+    javaWriter.emitField("java.util.ArrayList", "list", EnumSet.noneOf(Modifier.class),
+        "new java.util.ArrayList()");
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "import java.util.ArrayList;\n"
+        + "public final class Foo {\n"
+        + "  ArrayList list = new java.util.ArrayList();\n"
+        + "}\n");
+  }
+
+  @Test public void addImportAsClass() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.emitImports(ArrayList.class);
     javaWriter.beginType("com.squareup.Foo", "class", EnumSet.of(PUBLIC, FINAL));
     javaWriter.emitField("java.util.ArrayList", "list", EnumSet.noneOf(Modifier.class),
         "new java.util.ArrayList()");

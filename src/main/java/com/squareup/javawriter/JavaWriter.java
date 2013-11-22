@@ -88,6 +88,18 @@ public class JavaWriter implements Closeable {
   }
 
   /**
+   * Emit an import for each {@code type} provided. For the duration of the file, all references to
+   * these classes will be automatically shortened.
+   */
+  public JavaWriter emitImports(Class<?>... types) throws IOException {
+    List<String> classNames = new ArrayList<String>(types.length);
+    for (Class<?> classToImport : types) {
+      classNames.add(classToImport.getName());
+    }
+    return emitImports(classNames);
+  }
+
+  /**
    * Emit an import for each {@code type} in the provided {@code Collection}. For the duration of
    * the file, all references to these classes will be automatically shortened.
    */
