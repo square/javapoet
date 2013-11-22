@@ -1,18 +1,6 @@
 // Copyright 2013 Square, Inc.
 package com.squareup.javawriter;
 
-import com.example.Binding;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-import javax.lang.model.element.Modifier;
-import org.junit.Test;
-
 import static com.squareup.javawriter.JavaWriter.stringLiteral;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.FINAL;
@@ -21,6 +9,22 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Assertions.failBecauseExceptionWasNotThrown;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+
+import javax.lang.model.element.Modifier;
+
+import org.junit.Test;
+
+import com.example.Binding;
 
 public final class JavaWriterTest {
   private final StringWriter stringWriter = new StringWriter();
@@ -235,6 +239,22 @@ public final class JavaWriterTest {
   @Test public void addImport() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.emitImports("java.util.ArrayList");
+    javaWriter.beginType("com.squareup.Foo", "class", EnumSet.of(PUBLIC, FINAL));
+    javaWriter.emitField("java.util.ArrayList", "list", EnumSet.noneOf(Modifier.class),
+        "new java.util.ArrayList()");
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "import java.util.ArrayList;\n"
+        + "public final class Foo {\n"
+        + "  ArrayList list = new java.util.ArrayList();\n"
+        + "}\n");
+  }
+
+  @Test public void addImportAsClass() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.emitImports(ArrayList.class);
     javaWriter.beginType("com.squareup.Foo", "class", EnumSet.of(PUBLIC, FINAL));
     javaWriter.emitField("java.util.ArrayList", "list", EnumSet.noneOf(Modifier.class),
         "new java.util.ArrayList()");
@@ -665,7 +685,7 @@ public final class JavaWriterTest {
         + "    String bar;\n"
         + "}\n");
   }
-    
+
   private void assertCode(String expected) {
     assertThat(stringWriter.toString()).isEqualTo(expected);
   }
