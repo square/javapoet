@@ -162,6 +162,23 @@ public final class JavaWriterTest {
         + "}\n");
   }
 
+  @Test public void simpleConstructor() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Foo", "class");
+    javaWriter.beginConstructor(EnumSet.of(PUBLIC), "java.lang.String", "s");
+    javaWriter.emitStatement("if (%s == null) throw new NullPointerException()", "s");
+    javaWriter.endConstructor();
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "class Foo {\n"
+        + "  public Foo(String s) {\n"
+        + "    if (s == null) throw new NullPointerException();\n"
+        + "  }\n"
+        + "}\n");
+  }
+
   @Test public void constructorDeclarationInNestedTypes() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Foo", "class");

@@ -780,10 +780,11 @@ public class JavaWriter implements Closeable {
     }
   }
 
+  private static final EnumSet<Scope> METHOD_SCOPES = EnumSet.of(
+      Scope.NON_ABSTRACT_METHOD, Scope.CONSTRUCTOR, Scope.CONTROL_FLOW, Scope.INITIALIZER);
+
   private void checkInMethod() {
-    Scope scope = scopes.peekFirst();
-    if (scope != Scope.NON_ABSTRACT_METHOD && scope != Scope.CONTROL_FLOW
-        && scope != Scope.INITIALIZER) {
+    if (!METHOD_SCOPES.contains(scopes.peekFirst())) {
       throw new IllegalArgumentException();
     }
   }
