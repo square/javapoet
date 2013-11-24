@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -483,6 +484,22 @@ public class JavaWriter implements Closeable {
     indent();
     out.write(name);
     out.write(";\n");
+    return this;
+  }
+
+
+  public JavaWriter emitEnumValues(Iterable<String> names) throws IOException {
+    final Iterator<String> iterator = names.iterator();
+
+    while (iterator.hasNext()) {
+      final String name = iterator.next();
+      if (iterator.hasNext()) {
+        emitEnumValue(name);
+      } else {
+        emitLastEnumValue(name);
+      }
+    }
+
     return this;
   }
 

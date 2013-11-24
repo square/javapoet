@@ -55,6 +55,20 @@ public final class JavaWriterTest {
         + "}\n");
   }
 
+  @Test public void enumDeclarationWithMultipleValues() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Foo", "enum", EnumSet.of(PUBLIC));
+    javaWriter.emitEnumValues(Arrays.asList("BAR", "BAZ"));
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "public enum Foo {\n"
+        + "  BAR,\n"
+        + "  BAZ;\n"
+        + "}\n");
+  }
+
   @Test public void enumDeclarationWithMethod() throws IOException{
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Foo", "enum", EnumSet.of(PUBLIC));
