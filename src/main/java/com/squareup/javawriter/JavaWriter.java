@@ -480,7 +480,7 @@ public class JavaWriter implements Closeable {
     return this;
   }
 
-  public JavaWriter emitLastEnumValue(String name) throws IOException {
+  private JavaWriter emitLastEnumValue(String name) throws IOException {
     indent();
     out.write(name);
     out.write(";\n");
