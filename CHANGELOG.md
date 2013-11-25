@@ -1,6 +1,16 @@
 Change Log
 ==========
 
+Version 2.3.0 *(2013-11-24)*
+----------------------------
+
+ * New: Configurable indent level via `setIndent`.
+ * New: `beginConstructor` method is a semantically clearer alternative for constructors.
+ * New: `emitEnumValues` method emits a list of values followed by semicolon.
+ * `emitImports` now supports `Class` arguments directly.
+ * Previously-deprecated, `int`-based modifier methods have been removed.
+
+
 Version 2.2.1 *(2013-10-23)*
 ----------------------------
 
