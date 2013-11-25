@@ -77,6 +77,7 @@ Document title and Copyright styles
     float:right;
     padding:0px 21px;
     font-size:.8em;
+    font-style:italic;
     z-index:200;
     margin-top:-7px;
 }
@@ -179,6 +180,12 @@ ul.subNavList li{
     margin: auto 5px;
     border:1px solid #c9aa44;
 }
+.skipNav {
+    position:absolute;
+    top:auto;
+    left:-9999px;
+    overflow:hidden;
+    }
 /*
 Page header and footer styles
 */
@@ -190,6 +197,9 @@ Page header and footer styles
 .indexHeader {
     margin:10px;
     position:relative;
+}
+.indexHeader span{
+    margin-right:15px;
 }
 .indexHeader h1 {
     font-size:1.3em;
@@ -376,13 +386,53 @@ caption a:link, caption a:hover, caption a:active, caption a:visited {
     white-space:nowrap;
     padding-top:8px;
     padding-left:8px;
-    display:block;
+    display:inline-block;
     float:left;
     background-image:url(resources/titlebar.gif);
-    height:18px;
+}
+.contentContainer ul.blockList li.blockList caption span.activeTableTab span {
+    white-space:nowrap;
+    padding-top:8px;
+    padding-left:8px;
+    display:inline-block;
+    float:left;
+    background-image:url(resources/activetitlebar.gif);
+}
+.contentContainer ul.blockList li.blockList caption span.tableTab span {
+    white-space:nowrap;
+    padding-top:8px;
+    padding-left:8px;
+    display:inline-block;
+    float:left;
+    background-image:url(resources/titlebar.gif);
+}
+.contentContainer ul.blockList li.blockList caption span.tableTab, .contentContainer ul.blockList li.blockList caption span.activeTableTab {
+    padding-top:0px;
+    padding-left:0px;
+    background-image:none;
+    float:none;
+    display:inline-block;
 }
 .overviewSummary .tabEnd, .packageSummary .tabEnd, .contentContainer ul.blockList li.blockList .tabEnd, .summary .tabEnd, .classUseContainer .tabEnd, .constantValuesContainer .tabEnd {
     width:10px;
+    background-image:url(resources/titlebar_end.gif);
+    background-repeat:no-repeat;
+    background-position:top right;
+    position:relative;
+    float:left;
+}
+.contentContainer ul.blockList li.blockList .activeTableTab .tabEnd {
+    width:10px;
+    margin-right:5px;
+    background-image:url(resources/activetitlebar_end.gif);
+    background-repeat:no-repeat;
+    background-position:top right;
+    position:relative;
+    float:left;
+}
+.contentContainer ul.blockList li.blockList .tableTab .tabEnd {
+    width:10px;
+    margin-right:5px;
     background-image:url(resources/titlebar_end.gif);
     background-repeat:no-repeat;
     background-position:top right;
@@ -471,4 +521,7 @@ h1.hidden {
 }
 .strong {
     font-weight:bold;
+}
+.italic {
+    font-style:italic;
 }
