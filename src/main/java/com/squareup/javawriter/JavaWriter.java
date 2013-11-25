@@ -1,8 +1,6 @@
 // Copyright 2013 Square, Inc.
 package com.squareup.javawriter;
 
-import static javax.lang.model.element.Modifier.ABSTRACT;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.Writer;
@@ -23,8 +21,9 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.lang.model.element.Modifier;
+
+import static javax.lang.model.element.Modifier.ABSTRACT;
 
 /** A utility class which aids in generating Java source files. */
 public class JavaWriter implements Closeable {
@@ -476,12 +475,12 @@ public class JavaWriter implements Closeable {
     return this;
   }
 
-
+  /** Emit a list of enum values followed by a semi-colon ({@code ;}). */
   public JavaWriter emitEnumValues(Iterable<String> names) throws IOException {
-    final Iterator<String> iterator = names.iterator();
+    Iterator<String> iterator = names.iterator();
 
     while (iterator.hasNext()) {
-      final String name = iterator.next();
+      String name = iterator.next();
       if (iterator.hasNext()) {
         emitEnumValue(name);
       } else {
