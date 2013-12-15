@@ -737,6 +737,18 @@ public final class JavaWriterTest {
     assertThat(actual).isEqualTo("Binding<denominator.Provider>");
   }
 
+  @Test public void compressJavaLangClass() throws IOException {
+    javaWriter.emitPackage("com.blah");
+    String actual = javaWriter.compressType("java.lang.Class");
+    assertThat(actual).isEqualTo("Class");
+  }
+
+  @Test public void compressJavaLangSubPackageClass() throws IOException {
+    javaWriter.emitPackage("com.blah");
+    String actual = javaWriter.compressType("java.lang.annotation.Annotation");
+    assertThat(actual).isEqualTo("java.lang.annotation.Annotation");
+  }
+
   @Test public void configurableIndent() throws IOException {
     javaWriter.setIndent("    ");
     javaWriter.emitPackage("com.squareup");
