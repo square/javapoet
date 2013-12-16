@@ -187,14 +187,14 @@ public class JavaWriter implements Closeable {
       String imported = importedTypes.get(name);
       if (imported != null) {
         sb.append(imported);
-      } else if (isClassInPackage(name)) {
+      } else if (isClassInPackage(name, packagePrefix)) {
         String compressed = name.substring(packagePrefix.length());
         if (isAmbiguous(compressed)) {
           sb.append(name);
         } else {
           sb.append(compressed);
         }
-      } else if (name.startsWith("java.lang.")) {
+      } else if (isClassInPackage(name, "java.lang.")) {
         sb.append(name.substring("java.lang.".length()));
       } else {
         sb.append(name);
@@ -204,7 +204,7 @@ public class JavaWriter implements Closeable {
     return sb.toString();
   }
 
-  private boolean isClassInPackage(String name) {
+  private static boolean isClassInPackage(String name, String packagePrefix) {
     if (name.startsWith(packagePrefix)) {
       if (name.indexOf('.', packagePrefix.length()) == -1) {
         return true;
