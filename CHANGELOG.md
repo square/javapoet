@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 2.3.1 *(2013-12-16)*
+----------------------------
+
+ * Fix: Properly handle subpackages of `java.lang` in `compressType`.
+
+
 Version 2.3.0 *(2013-11-24)*
 ----------------------------
 
