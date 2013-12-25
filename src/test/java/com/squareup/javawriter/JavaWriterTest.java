@@ -1,15 +1,7 @@
 // Copyright 2013 Square, Inc.
 package com.squareup.javawriter;
 
-import static com.squareup.javawriter.JavaWriter.stringLiteral;
-import static javax.lang.model.element.Modifier.ABSTRACT;
-import static javax.lang.model.element.Modifier.FINAL;
-import static javax.lang.model.element.Modifier.PRIVATE;
-import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.element.Modifier.STATIC;
-import static org.fest.assertions.api.Assertions.assertThat;
-import static org.fest.assertions.api.Assertions.failBecauseExceptionWasNotThrown;
-
+import com.example.Binding;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -19,12 +11,17 @@ import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-
 import javax.lang.model.element.Modifier;
-
 import org.junit.Test;
 
-import com.example.Binding;
+import static com.squareup.javawriter.JavaWriter.stringLiteral;
+import static javax.lang.model.element.Modifier.ABSTRACT;
+import static javax.lang.model.element.Modifier.FINAL;
+import static javax.lang.model.element.Modifier.PRIVATE;
+import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.element.Modifier.STATIC;
+import static org.fest.assertions.api.Assertions.assertThat;
+import static org.fest.assertions.api.Assertions.failBecauseExceptionWasNotThrown;
 
 public final class JavaWriterTest {
   private final StringWriter stringWriter = new StringWriter();
