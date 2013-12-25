@@ -98,6 +98,22 @@ public final class JavaWriterTest {
         + "}\n");
   }
 
+  @Test public void fieldDeclarationWithWrappingInitialValue() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Foo", "class");
+    javaWriter.emitField("java.lang.String", "string", EnumSet.noneOf(Modifier.class),
+        "\"bar\"\n+ \"baz\"\n+ \"biz\"");
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "class Foo {\n"
+        + "  String string = \"bar\"\n"
+        + "      + \"baz\"\n"
+        + "      + \"biz\";\n"
+        + "}\n");
+  }
+
   @Test public void abstractMethodDeclaration() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Foo", "class");
