@@ -476,6 +476,14 @@ public class JavaWriter implements Closeable {
     return this;
   }
 
+  /**
+   * A simple switch to emit the proper enum depending if its last causing it to be terminated
+   *    by a semi-colon ({@code ;}).
+   */
+  public JavaWriter emitEnumValue(String name, boolean isLast) throws IOException {
+    return isLast ? emitLastEnumValue(name) : emitEnumValue(name);
+  }
+
   private JavaWriter emitLastEnumValue(String name) throws IOException {
     indent();
     out.write(name);
