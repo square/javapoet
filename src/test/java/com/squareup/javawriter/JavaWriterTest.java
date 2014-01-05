@@ -4,13 +4,8 @@ package com.squareup.javawriter;
 import com.example.Binding;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
 import javax.lang.model.element.Modifier;
 import org.junit.Test;
 
@@ -69,6 +64,32 @@ public final class JavaWriterTest {
         + "  public void foo() {\n"
         + "  }\n"
         + "}\n");
+  }
+
+  @Test public void enumDeclarationWithAnnotationAndMethod() throws IOException{
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Foo", "enum", EnumSet.of(PUBLIC));
+    List<String> list = Arrays.asList("BAR", "BAZ");
+    int index = 0;
+    for (Iterator<String> i = list.iterator(); i.hasNext(); ) {
+      javaWriter.emitAnnotation("ProtoEnum", index);
+      javaWriter.emitEnumValue(i.next(), !i.hasNext());
+      index++;
+    }
+    javaWriter.beginMethod("void", "foo", EnumSet.of(PUBLIC));
+    javaWriter.endMethod();
+    javaWriter.endType();
+    assertCode(""
+            + "package com.squareup;\n"
+            + "\n"
+            + "public enum Foo {\n"
+            + "  @ProtoEnum(0)\n"
+            + "  BAR,\n"
+            + "  @ProtoEnum(1)\n"
+            + "  BAZ;\n"
+            + "  public void foo() {\n"
+            + "  }\n"
+            + "}\n");
   }
 
   @Test public void fieldDeclaration() throws IOException {
