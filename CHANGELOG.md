@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+Version 2.4.0 *(2014-01-10)*
+----------------------------
+
+ * New: Properly indent hanging lines in field initializers.
+ * New: `emitEnumValue` variant which exposes a boolean of whether the current value is the last.
+
+
 Version 2.3.1 *(2013-12-16)*
 ----------------------------
 
