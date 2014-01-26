@@ -667,10 +667,10 @@ public class JavaWriter implements Closeable {
    * @param controlFlow the control flow construct and its code, such as "if (foo == 5)". Shouldn't
    *     contain braces or newline characters.
    */
-  public JavaWriter beginControlFlow(String controlFlow) throws IOException {
+  public JavaWriter beginControlFlow(String controlFlow, Object... args) throws IOException {
     checkInMethod();
     indent();
-    out.write(controlFlow);
+    out.write(String.format(controlFlow, args));
     out.write(" {\n");
     scopes.push(Scope.CONTROL_FLOW);
     return this;
@@ -680,12 +680,12 @@ public class JavaWriter implements Closeable {
    * @param controlFlow the control flow construct and its code, such as "else if (foo == 10)".
    *     Shouldn't contain braces or newline characters.
    */
-  public JavaWriter nextControlFlow(String controlFlow) throws IOException {
+  public JavaWriter nextControlFlow(String controlFlow, Object... args) throws IOException {
     popScope(Scope.CONTROL_FLOW);
     indent();
     scopes.push(Scope.CONTROL_FLOW);
     out.write("} ");
-    out.write(controlFlow);
+    out.write(String.format(controlFlow, args));
     out.write(" {\n");
     return this;
   }
@@ -698,12 +698,12 @@ public class JavaWriter implements Closeable {
    * @param controlFlow the optional control flow construct and its code, such as
    *     "while(foo == 20)". Only used for "do/while" control flows.
    */
-  public JavaWriter endControlFlow(String controlFlow) throws IOException {
+  public JavaWriter endControlFlow(String controlFlow, Object... args) throws IOException {
     popScope(Scope.CONTROL_FLOW);
     indent();
     if (controlFlow != null) {
       out.write("} ");
-      out.write(controlFlow);
+      out.write(String.format(controlFlow, args));
       out.write(";\n");
     } else {
       out.write("}\n");
