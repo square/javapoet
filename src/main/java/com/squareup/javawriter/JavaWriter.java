@@ -251,6 +251,49 @@ public class JavaWriter implements Closeable {
     return this;
   }
 
+  /**
+   * Begins an anonymous inner class and optionally assigns it to a variable. An example output is:
+   * <pre>
+   *   public ReferenceType name = new DeclaredType() {
+   * </pre>
+   *
+   * @param referenceType The type of the variable if declaring a new variable or field. Can be
+   * null.
+   * @param name The name of the variable to which the anonymous inner class will be assigned. Can
+   * be null.
+   * @param modifiers Modifiers of the variable if declaring a new variable or field. Can be null.
+   * @param declaredType The type of the anonymous inner class.
+   * @return This JavaWriter.
+   */
+  public JavaWriter beginAnonymousInnerClass(String referenceType, String name,
+      Set<Modifier> modifiers, String declaredType) throws IOException {
+    indent();
+    if (modifiers != null) {
+      emitModifiers(modifiers);
+    }
+    if (referenceType != null) {
+      out.write(referenceType);
+      out.write(" ");
+    }
+    if (name != null) {
+      out.write(name);
+      out.write(" = ");
+    }
+    out.write("new ");
+    out.write(declaredType);
+    out.write("() {\n");
+    scopes.push(Scope.ANONYMOUS_INNER_CLASS);
+    return this;
+  }
+
+  /** Ends the current anonymous inner class. A semicolon will be inserted. */
+  public JavaWriter endAnonymousInnerClass() throws IOException {
+    popScope(Scope.ANONYMOUS_INNER_CLASS);
+    indent();
+    out.write("};\n");
+    return this;
+  }
+
  /**
   * Emits a type declaration.
   *
@@ -842,6 +885,7 @@ public class JavaWriter implements Closeable {
     CONTROL_FLOW,
     ANNOTATION_ATTRIBUTE,
     ANNOTATION_ARRAY_VALUE,
-    INITIALIZER
+    INITIALIZER,
+    ANONYMOUS_INNER_CLASS
   }
 }
