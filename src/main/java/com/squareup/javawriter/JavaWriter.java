@@ -166,6 +166,9 @@ public class JavaWriter implements Closeable {
   public String compressType(String type) {
     StringBuilder sb = new StringBuilder();
     if (this.packagePrefix == null) {
+      if (type.indexOf('.') == -1) {
+        return type; // Not a fully-qualified type.
+      }
       throw new IllegalStateException();
     }
 

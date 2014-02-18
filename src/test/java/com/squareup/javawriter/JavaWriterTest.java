@@ -41,6 +41,14 @@ public final class JavaWriterTest {
         + "}\n");
   }
 
+  @Test public void typeDeclarationNoPackage() throws IOException {
+    javaWriter.beginType("Foo", "class", EnumSet.of(PUBLIC, FINAL));
+    javaWriter.endType();
+    assertCode(""
+        + "public final class Foo {\n"
+        + "}\n");
+  }
+
   @Test public void enumDeclaration() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Foo", "enum", EnumSet.of(PUBLIC));
