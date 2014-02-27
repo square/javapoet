@@ -388,7 +388,6 @@ public class JavaWriter implements Closeable {
    *
    * @param returnType the method's return type.
    * @param name the method name.
-   * @param modifiers the set of modifiers to be applied to the method.
    * @param parameters alternating parameter types and names.
    */
   public JavaWriter declareMethod(String returnType, String name,
@@ -402,7 +401,6 @@ public class JavaWriter implements Closeable {
    * @param returnType the method's return type.
    * @param name the method name.
    * @param modifiers the set of modifiers to be applied to the method.
-   * @param parameters alternating parameter types and names.
    * @param throwsTypes the classes to throw, or null for no throws clause.
    */
   public JavaWriter declareMethod(String returnType, String name, List<String> parameters,
