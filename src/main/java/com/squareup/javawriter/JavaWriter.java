@@ -384,7 +384,7 @@ public class JavaWriter implements Closeable {
   }
 
   /**
-   * Emit a method declaration.
+   * Emit an interface method declaration.
    *
    * @param returnType the method's return type.
    * @param name the method name.
@@ -397,7 +397,7 @@ public class JavaWriter implements Closeable {
   }
 
   /**
-   * Emit a method declaration.
+   * Emit an interface method declaration.
    *
    * @param returnType the method's return type.
    * @param name the method name.
