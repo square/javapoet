@@ -299,14 +299,19 @@ public class JavaWriter implements Closeable {
       }
     }
     out.write(" {\n");
-    scopes.push(Scope.TYPE_DECLARATION);
+    scopes.push("interface".equals(kind) ? Scope.INTERFACE_DECLARATION : Scope.TYPE_DECLARATION);
     types.push(type);
     return this;
   }
 
   /** Completes the current type declaration. */
   public JavaWriter endType() throws IOException {
-    popScope(Scope.TYPE_DECLARATION);
+    Scope beginScope = scopes.getFirst();
+    if (Scope.TYPE_DECLARATION.equals(beginScope)) {
+        popScope(Scope.TYPE_DECLARATION);
+    } else {
+        popScope(Scope.INTERFACE_DECLARATION);
+    }
     types.pop();
     indent();
     out.write("}\n");
@@ -412,7 +417,7 @@ public class JavaWriter implements Closeable {
         emitCompressedType(throwsTypes.get(i));
       }
     }
-    if (modifiers.contains(ABSTRACT)) {
+    if (modifiers.contains(ABSTRACT) || Scope.INTERFACE_DECLARATION.equals(scopes.getFirst())) {
       out.write(";\n");
       scopes.push(Scope.ABSTRACT_METHOD);
     } else {
@@ -836,6 +841,7 @@ public class JavaWriter implements Closeable {
 
   private enum Scope {
     TYPE_DECLARATION,
+    INTERFACE_DECLARATION,
     ABSTRACT_METHOD,
     NON_ABSTRACT_METHOD,
     CONSTRUCTOR,

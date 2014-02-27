@@ -207,6 +207,38 @@ public final class JavaWriterTest {
         + "}\n");
   }
 
+  @Test public void interfaceMethodDeclaration() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Foo", "interface");
+    javaWriter.beginMethod("java.lang.String", "foo", EnumSet.noneOf(Modifier.class),
+        "java.lang.Object", "object", "java.lang.String", "s");
+    javaWriter.endMethod();
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "interface Foo {\n"
+        + "  String foo(Object object, String s);\n"
+        + "}\n");
+  }
+
+  @Test public void interfaceMethodDeclarationWithThrows() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Foo", "interface");
+    javaWriter.beginMethod("java.lang.String", "foo", EnumSet.noneOf(Modifier.class),
+        Arrays.asList("java.lang.Object", "object", "java.lang.String", "s"),
+        Arrays.asList("java.io.IOException"));
+    javaWriter.endMethod();
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "interface Foo {\n"
+        + "  String foo(Object object, String s)\n"
+        + "      throws java.io.IOException;\n"
+        + "}\n");
+  }
+
   @Test public void constructorDeclaration() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Foo", "class");
