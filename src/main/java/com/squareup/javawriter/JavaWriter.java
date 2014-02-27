@@ -380,6 +380,37 @@ public class JavaWriter implements Closeable {
    */
   public JavaWriter beginMethod(String returnType, String name, Set<Modifier> modifiers,
       List<String> parameters, List<String> throwsTypes) throws IOException {
+    return writeMethod(returnType, name, modifiers, parameters, throwsTypes, false);
+  }
+
+  /**
+   * Emit an interface method declaration.
+   *
+   * @param returnType the method's return type.
+   * @param name the method name.
+   * @param parameters alternating parameter types and names.
+   */
+  public JavaWriter declareMethod(String returnType, String name,
+      String... parameters) throws IOException {
+    return declareMethod(returnType, name, Arrays.asList(parameters), null);
+  }
+
+  /**
+   * Emit an interface method declaration.
+   *
+   * @param returnType the method's return type.
+   * @param name the method name.
+   * @param parameters alternating parameter types and names.
+   * @param throwsTypes the classes to throw, or null for no throws clause.
+   */
+  public JavaWriter declareMethod(String returnType, String name, List<String> parameters,
+      List<String> throwsTypes) throws IOException {
+    return writeMethod(returnType, name, EnumSet.noneOf(Modifier.class), parameters,
+        throwsTypes, true);
+  }
+
+  private JavaWriter writeMethod(String returnType, String name, Set<Modifier> modifiers,
+      List<String> parameters, List<String> throwsTypes, boolean declaration) throws IOException {
     indent();
     emitModifiers(modifiers);
     if (returnType != null) {
@@ -415,6 +446,8 @@ public class JavaWriter implements Closeable {
     if (modifiers.contains(ABSTRACT)) {
       out.write(";\n");
       scopes.push(Scope.ABSTRACT_METHOD);
+    } else if (declaration) {
+      out.write(";\n");
     } else {
       out.write(" {\n");
       scopes.push(returnType == null ? Scope.CONSTRUCTOR : Scope.NON_ABSTRACT_METHOD);
