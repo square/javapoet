@@ -308,9 +308,9 @@ public class JavaWriter implements Closeable {
   public JavaWriter endType() throws IOException {
     Scope beginScope = scopes.getFirst();
     if (Scope.TYPE_DECLARATION.equals(beginScope)) {
-        popScope(Scope.TYPE_DECLARATION);
+      popScope(Scope.TYPE_DECLARATION);
     } else {
-        popScope(Scope.INTERFACE_DECLARATION);
+      popScope(Scope.INTERFACE_DECLARATION);
     }
     types.pop();
     indent();
