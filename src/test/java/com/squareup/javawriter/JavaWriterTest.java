@@ -13,7 +13,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
 
 import javax.lang.model.element.Modifier;
 import org.junit.Test;
@@ -808,7 +807,7 @@ public final class JavaWriterTest {
 
   @Test public void emptyModifierSet() throws IOException {
     javaWriter.emitPackage("com.blah");
-    javaWriter.beginType("com.blah.Foo", "class", new HashSet<Modifier>())
+    javaWriter.beginType("com.blah.Foo", "class", Collections.<Modifier>emptySet())
               .endType();
   }
 
