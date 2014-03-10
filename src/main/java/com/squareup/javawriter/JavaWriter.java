@@ -798,6 +798,11 @@ public class JavaWriter implements Closeable {
 
   /** Emits the modifiers to the writer. */
   private void emitModifiers(Set<Modifier> modifiers) throws IOException {
+    // Preserve "natural" ordering of modifiers
+    if (!modifiers.isEmpty()) {
+      modifiers = EnumSet.copyOf(modifiers);
+    }
+
     for (Modifier modifier : modifiers) {
       out.append(modifier.toString()).append(' ');
     }

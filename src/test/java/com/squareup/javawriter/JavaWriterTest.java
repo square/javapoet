@@ -10,10 +10,10 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.lang.model.element.Modifier;
 import org.junit.Test;
 
@@ -805,10 +805,27 @@ public final class JavaWriterTest {
         + "}\n");
   }
 
+  @Test public void outOfOrderModifierSet() throws IOException {
+    Set<Modifier> modifiers = new LinkedHashSet<Modifier>(Arrays.asList(FINAL, PUBLIC));
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Foo", "class", modifiers);
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "public final class Foo {\n"
+        + "}\n");
+  }
+
   @Test public void emptyModifierSet() throws IOException {
     javaWriter.emitPackage("com.blah");
     javaWriter.beginType("com.blah.Foo", "class", Collections.<Modifier>emptySet())
               .endType();
+    assertCode(""
+        + "package com.blah;\n"
+        + "\n"
+        + "class Foo {\n"
+        + "}\n");
   }
 
   private void assertCode(String expected) {
