@@ -239,6 +239,31 @@ public final class JavaWriterTest {
         + "}\n");
   }
 
+  @Test public void genericsConstructor() throws IOException {
+      javaWriter.emitPackage("com.squareup");
+      javaWriter.beginType("com.squareup.Foo<T>", "class");
+      javaWriter.emitField("T", "fooType", EnumSet.of(PRIVATE));
+      javaWriter.beginConstructor(EnumSet.of(PUBLIC), "T", "s");
+      javaWriter.emitStatement("if (%s == null) throw new NullPointerException()", "s");
+      javaWriter.endConstructor();
+      javaWriter.beginMethod("T", "getFooType", EnumSet.of(PUBLIC));
+      javaWriter.emitStatement("return fooType");
+      javaWriter.endMethod();
+      javaWriter.endType();
+      assertCode(""
+          + "package com.squareup;\n"
+          + "\n"
+          + "class Foo<T> {\n"
+          + "  private T fooType;\n"
+          + "  public Foo(T s) {\n"
+          + "    if (s == null) throw new NullPointerException();\n"
+          + "  }\n"
+          + "  public T getFooType() {\n"
+          + "    return fooType;\n"
+          + "  }\n"
+          + "}\n");
+    }
+
   @Test public void constructorDeclarationInNestedTypes() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Foo", "class");
@@ -742,6 +767,19 @@ public final class JavaWriterTest {
     } catch (Throwable e) {
       assertThat(e).as("too many type arguments").isInstanceOf(IllegalArgumentException.class);
     }
+  }
+
+  @Test public void testRawType() {
+      assertThat(JavaWriter.rawType(JavaWriter.type(Set.class)))
+          .as("raw type").isEqualTo("java.util.Set");
+      assertThat(JavaWriter.rawType(JavaWriter.type(Set.class, "?")))
+          .as("wildcard type").isEqualTo("java.util.Set");
+      assertThat(JavaWriter.rawType(JavaWriter.type(Set.class, "String")))
+          .as("parameterized type").isEqualTo("java.util.Set");
+      assertThat(JavaWriter.rawType(JavaWriter.type(Map.class, "String", "Integer")))
+          .as("parameterized type").isEqualTo("java.util.Map");
+      assertThat(JavaWriter.rawType("java.util.Set<com.example.Binding<com.blah.Foo.Blah>>"))
+          .as("nested parameterized type").isEqualTo("java.util.Set");
   }
 
   @Test public void compressType() throws IOException {
