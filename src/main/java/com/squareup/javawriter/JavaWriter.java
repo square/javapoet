@@ -424,14 +424,14 @@ public class JavaWriter implements Closeable {
 
   public JavaWriter beginConstructor(Set<Modifier> modifiers, String... parameters)
       throws IOException {
-    beginMethod(null, types.peekFirst(), modifiers, parameters);
+    beginMethod(null, rawType(types.peekFirst()), modifiers, parameters);
     return this;
   }
 
   public JavaWriter beginConstructor(Set<Modifier> modifiers,
       List<String> parameters, List<String> throwsTypes)
       throws IOException {
-    beginMethod(null, types.peekFirst(), modifiers, parameters, throwsTypes);
+    beginMethod(null, rawType(types.peekFirst()), modifiers, parameters, throwsTypes);
     return this;
   }
 
@@ -790,6 +790,15 @@ public class JavaWriter implements Closeable {
     }
     result.append(">");
     return result.toString();
+  }
+
+  /** Build a string representation of the raw type for a (optionally generic) type. */
+  public static String rawType(String type) {
+    int lessThanIndex = type.indexOf('<');
+    if (lessThanIndex != -1) {
+      return type.substring(0, lessThanIndex);
+    }
+    return type;
   }
 
   @Override public void close() throws IOException {
