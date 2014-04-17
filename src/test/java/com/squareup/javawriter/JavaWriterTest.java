@@ -849,6 +849,17 @@ public final class JavaWriterTest {
         + "}\n");
   }
 
+  @Test public void emptyNonEnumModifierSet() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Foo", "class", new LinkedHashSet<Modifier>());
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "class Foo {\n"
+        + "}\n");
+  }
+
   private void assertCode(String expected) {
     assertThat(stringWriter.toString()).isEqualTo(expected);
   }
