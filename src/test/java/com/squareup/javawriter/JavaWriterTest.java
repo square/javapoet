@@ -887,6 +887,17 @@ public final class JavaWriterTest {
         + "}\n");
   }
 
+  @Test public void emptyModifierSet() throws IOException {
+    javaWriter.emitPackage("com.blah");
+    javaWriter.beginType("com.blah.Foo", "class", Collections.<Modifier>emptySet())
+              .endType();
+    assertCode(""
+        + "package com.blah;\n"
+        + "\n"
+        + "class Foo {\n"
+        + "}\n");
+  }
+
   private void assertCode(String expected) {
     assertThat(stringWriter.toString()).isEqualTo(expected);
   }
