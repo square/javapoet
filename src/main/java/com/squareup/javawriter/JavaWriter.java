@@ -807,6 +807,9 @@ public class JavaWriter implements Closeable {
 
   /** Emits the modifiers to the writer. */
   private void emitModifiers(Set<Modifier> modifiers) throws IOException {
+    if (modifiers.isEmpty()) {
+      return;
+    }
     // Use an EnumSet to ensure the proper ordering
     if (!(modifiers instanceof EnumSet)) {
       modifiers = EnumSet.copyOf(modifiers);
