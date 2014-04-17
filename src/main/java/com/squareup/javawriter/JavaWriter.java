@@ -299,14 +299,14 @@ public class JavaWriter implements Closeable {
       }
     }
     out.write(" {\n");
-    scopes.push(Scope.TYPE_DECLARATION);
+    scopes.push("interface".equals(kind) ? Scope.INTERFACE_DECLARATION : Scope.TYPE_DECLARATION);
     types.push(type);
     return this;
   }
 
   /** Completes the current type declaration. */
   public JavaWriter endType() throws IOException {
-    popScope(Scope.TYPE_DECLARATION);
+    popScope(Scope.TYPE_DECLARATION, Scope.INTERFACE_DECLARATION);
     types.pop();
     indent();
     out.write("}\n");
@@ -412,7 +412,7 @@ public class JavaWriter implements Closeable {
         emitCompressedType(throwsTypes.get(i));
       }
     }
-    if (modifiers.contains(ABSTRACT)) {
+    if (modifiers.contains(ABSTRACT) || Scope.INTERFACE_DECLARATION.equals(scopes.peek())) {
       out.write(";\n");
       scopes.push(Scope.ABSTRACT_METHOD);
     } else {
@@ -828,14 +828,15 @@ public class JavaWriter implements Closeable {
     }
   }
 
-  private void popScope(Scope expected) {
-    if (scopes.pop() != expected) {
+  private void popScope(Scope... expected) {
+    if (!EnumSet.copyOf(Arrays.asList(expected)).contains(scopes.pop())) {
       throw new IllegalStateException();
     }
   }
 
   private enum Scope {
     TYPE_DECLARATION,
+    INTERFACE_DECLARATION,
     ABSTRACT_METHOD,
     NON_ABSTRACT_METHOD,
     CONSTRUCTOR,
