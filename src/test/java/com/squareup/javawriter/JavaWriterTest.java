@@ -143,6 +143,24 @@ public final class JavaWriterTest {
         + "}\n");
   }
 
+  // If the initializer begins with a newline, don't emit a space after the '='.
+  @Test public void fieldDeclarationWithNewlineInitialValue() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Foo", "class");
+    javaWriter.emitField("java.lang.String", "string", EnumSet.noneOf(Modifier.class),
+        "\n\"bar\"\n+ \"baz\"\n+ \"biz\"");
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "class Foo {\n"
+        + "  String string =\n"
+        + "      \"bar\"\n"
+        + "      + \"baz\"\n"
+        + "      + \"biz\";\n"
+        + "}\n");
+  }
+
   @Test public void abstractMethodDeclaration() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Foo", "class");

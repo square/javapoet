@@ -334,7 +334,10 @@ public class JavaWriter implements Closeable {
     out.write(name);
 
     if (initialValue != null) {
-      out.write(" = ");
+      out.write(" =");
+      if (!initialValue.startsWith("\n")) {
+        out.write(" ");
+      }
 
       String[] lines = initialValue.split("\n", -1);
       out.write(lines[0]);
