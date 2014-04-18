@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+Version 2.5.0 *(2014-04-18)*
+----------------------------
+
+ * New: Methods in interfaces will always have no body declaration.
+ * New: Control flow begin declaration now supports String format arguments.
+ * Fix: Truncate any generic type when emitting constructors.
+ * Fix: Do not emit trailing whitespace after '=' at end-of-line.
+
+
 Version 2.4.0 *(2014-01-10)*
 ----------------------------
 
