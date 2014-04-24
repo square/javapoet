@@ -13,19 +13,6 @@ Example
 -------
 
 ```java
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
-import java.util.EnumSet;
-import java.util.Set;
-import java.util.TreeSet;
-
-import javax.lang.model.element.Modifier;
-
-import com.squareup.javawriter.JavaWriter;
-
-
 public class SampleGenerator {
 	public static void main(String[] args) throws IOException {
 		JavaWriter writer= new JavaWriter(new BufferedWriter(new FileWriter("D:\\git_repos\\generator\\Person.java")));

@@ -2,7 +2,6 @@
 package com.squareup.javawriter;
 
 import java.io.Closeable;
-
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.annotation.Annotation;
