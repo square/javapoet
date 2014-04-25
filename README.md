@@ -13,25 +13,15 @@ Example
 -------
 
 ```java
-public class SampleGenerator {
-	public static void main(String[] args) throws IOException {
-		JavaWriter writer= new JavaWriter(new BufferedWriter(new FileWriter("D:\\git_repos\\generator\\Person.java")));
-		
-		Set<Modifier> modifiers= new TreeSet<Modifier>();
-		modifiers.add(Modifier.PUBLIC);
-		
-		writer.emitPackage("com.example")
-	    .beginType("com.example.Person", "class")
-	    .emitField("String", "firstName")
-	    .emitField("String", "lastName")
-	    .emitJavadoc("Returns the person's full name.")
-	    .beginMethod("String", "getName", modifiers)
-	    .emitStatement("return firstName + \" \" + lastName")
-	    .endMethod()
-	    .endType();
-		writer.close();
-	}
-}
+writer.emitPackage("com.example")
+    .beginType("com.example.Person", "class", EnumSet.of(PUBLIC, FINAL))
+    .emitField("String", "firstName", EnumSet.of(PRIVATE))
+    .emitField("String", "lastName", EnumSet.of(PRIVATE))
+    .emitJavadoc("Returns the person's full name.")
+    .beginMethod("String", "getName", EnumSet.of(PUBLIC))
+    .emitStatement("return firstName + \" \" + lastName")
+    .endMethod()
+    .endType();
 ```
 
 Would produce the following source output:
