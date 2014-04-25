@@ -2,6 +2,7 @@
 package com.squareup.javawriter;
 
 import com.example.Binding;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static javax.lang.model.element.Modifier.DEFAULT;
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Assertions.failBecauseExceptionWasNotThrown;
 
@@ -915,6 +917,40 @@ public final class JavaWriterTest {
         + "class Foo {\n"
         + "}\n");
   }
+  
+  @Test public void interfaceStaticMethod() throws IOException {
+	javaWriter.emitPackage("com.squareup");
+	javaWriter.beginType("com.squareup.Foo", "interface", EnumSet.noneOf(Modifier.class));
+	javaWriter.beginMethod("Foo", "empty", EnumSet.of(STATIC));
+	javaWriter.emitStatement("return new Foo() {}");
+	javaWriter.endMethod();
+	javaWriter.endType();
+	assertCode(""
+	    + "package com.squareup;\n"
+	    + "\n"
+	    + "interface Foo {\n"
+	    + "  static Foo empty() {\n"
+	    + "    return new Foo() {};\n"
+	    + "  }\n"
+	    + "}\n");
+	  }
+
+  @Test public void interfaceDefaultMethod() throws IOException {
+	javaWriter.emitPackage("com.squareup");
+	javaWriter.beginType("com.squareup.Foo", "interface", EnumSet.noneOf(Modifier.class));
+	javaWriter.beginMethod("String", "asString", EnumSet.of(DEFAULT));
+	javaWriter.emitStatement("return toString()");
+	javaWriter.endMethod();
+	javaWriter.endType();
+	assertCode(""
+	    + "package com.squareup;\n"
+	    + "\n"
+	    + "interface Foo {\n"
+	    + "  default String asString() {\n"
+	    + "    return toString();\n"
+	    + "  }\n"
+	    + "}\n");
+	  }
 
   private void assertCode(String expected) {
     assertThat(stringWriter.toString()).isEqualTo(expected);
