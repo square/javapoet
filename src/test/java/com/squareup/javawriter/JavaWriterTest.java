@@ -247,7 +247,6 @@ public final class JavaWriterTest {
 	        "java.lang.Object", "object", "java.lang.String", "s");
 	    javaWriter.endMethod();
 	    javaWriter.endType();
-	    System.out.println(stringWriter.toString());
 	    assertCode(""
 	        + "package com.squareup;\n"
 	        + "\n"
@@ -264,7 +263,6 @@ public final class JavaWriterTest {
 	        "java.lang.Object", "object", "java.lang.String", "s");
 	    javaWriter.endMethod();
 	    javaWriter.endType();
-	    System.out.println(stringWriter.toString());
 	    assertCode(""
 	        + "package com.squareup;\n"
 	        + "\n"
