@@ -418,7 +418,7 @@ public class JavaWriter implements Closeable {
       }
     }
    if (modifiers.contains(ABSTRACT) || (Scope.INTERFACE_DECLARATION.equals(scopes.peek()) 
-    		&& !modifiers.contains(DEFAULT) && !modifiers.contains(STATIC))) {
+        && !modifiers.contains(DEFAULT) && !modifiers.contains(STATIC))) {
       out.write(";\n");
       scopes.push(Scope.ABSTRACT_METHOD);
     } else {
