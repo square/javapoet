@@ -25,7 +25,6 @@ import javax.lang.model.element.Modifier;
 
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.STATIC;
-import static javax.lang.model.element.Modifier.DEFAULT;
 
 /** A utility class which aids in generating Java source files. */
 public class JavaWriter implements Closeable {
@@ -418,7 +417,7 @@ public class JavaWriter implements Closeable {
       }
     }
     if (modifiers.contains(ABSTRACT) || (Scope.INTERFACE_DECLARATION.equals(scopes.peek())
-        && !modifiers.contains(DEFAULT) && !modifiers.contains(STATIC))) {
+        && !containsDefault(modifiers) && !modifiers.contains(STATIC))) {
       out.write(";\n");
       scopes.push(Scope.ABSTRACT_METHOD);
     } else {
@@ -426,6 +425,13 @@ public class JavaWriter implements Closeable {
       scopes.push(returnType == null ? Scope.CONSTRUCTOR : Scope.NON_ABSTRACT_METHOD);
     }
     return this;
+  }
+  
+  private boolean containsDefault(Set<Modifier> modifiers){
+    for(Modifier m : modifiers){
+      if(m.toString().equals("default")) return true;
+    }
+    return false;
   }
 
   public JavaWriter beginConstructor(Set<Modifier> modifiers, String... parameters)
