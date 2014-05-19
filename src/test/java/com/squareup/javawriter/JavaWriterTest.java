@@ -241,36 +241,36 @@ public final class JavaWriterTest {
   }
   
   @Test public void defaultMethodDeclaration() throws IOException {
-	    javaWriter.emitPackage("com.squareup");
-	    javaWriter.beginType("com.squareup.Foo", "interface");
-	    javaWriter.beginMethod("java.lang.String", "foo", EnumSet.of(Modifier.DEFAULT),
-	        "java.lang.Object", "object", "java.lang.String", "s");
-	    javaWriter.endMethod();
-	    javaWriter.endType();
-	    assertCode(""
-	        + "package com.squareup;\n"
-	        + "\n"
-	        + "interface Foo {\n"
-	        + "  default String foo(Object object, String s) {\n"
-	        + "  }\n"
-	        + "}\n");
-	  }
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Foo", "interface");
+    javaWriter.beginMethod("java.lang.String", "foo", EnumSet.of(Modifier.DEFAULT),
+    "java.lang.Object", "object", "java.lang.String", "s");
+    javaWriter.endMethod();
+    javaWriter.endType();
+    assertCode(""
+      + "package com.squareup;\n"
+      + "\n"
+      + "interface Foo {\n"
+      + "  default String foo(Object object, String s) {\n"
+      + "  }\n"
+      + "}\n");
+  }
   
   @Test public void interfaceStaticMethodDeclaration() throws IOException {//TODO
-	    javaWriter.emitPackage("com.squareup");
-	    javaWriter.beginType("com.squareup.Foo", "interface");
-	    javaWriter.beginMethod("java.lang.String", "foo", EnumSet.of(Modifier.STATIC),
-	        "java.lang.Object", "object", "java.lang.String", "s");
-	    javaWriter.endMethod();
-	    javaWriter.endType();
-	    assertCode(""
-	        + "package com.squareup;\n"
-	        + "\n"
-	        + "interface Foo {\n"
-	        + "  static String foo(Object object, String s) {\n"
-	        + "  }\n"
-	        + "}\n");
-	  }
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Foo", "interface");
+    javaWriter.beginMethod("java.lang.String", "foo", EnumSet.of(Modifier.STATIC),
+    "java.lang.Object", "object", "java.lang.String", "s");
+    javaWriter.endMethod();
+    javaWriter.endType();
+    assertCode(""
+      + "package com.squareup;\n"
+      + "\n"
+      + "interface Foo {\n"
+      + "  static String foo(Object object, String s) {\n"
+      + "  }\n"
+      + "}\n");
+  }
 
   @Test public void interfaceMethodDeclarationWithThrows() throws IOException {
     javaWriter.emitPackage("com.squareup");
