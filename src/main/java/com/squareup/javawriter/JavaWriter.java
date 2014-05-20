@@ -95,7 +95,7 @@ public class JavaWriter implements Closeable {
   public JavaWriter emitImports(Class<?>... types) throws IOException {
     List<String> classNames = new ArrayList<String>(types.length);
     for (Class<?> classToImport : types) {
-      classNames.add(classToImport.getName());
+      classNames.add(classToImport.getCanonicalName());
     }
     return emitImports(classNames);
   }

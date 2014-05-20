@@ -458,6 +458,25 @@ public final class JavaWriterTest {
         + "}\n");
   }
 
+  @Test
+  public void addNestedClassImportAsClass() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.emitImports(NestedClass.class);
+    javaWriter.beginType("com.squareup.Foo", "class", EnumSet.of(PUBLIC, FINAL));
+    javaWriter.emitField("com.squareup.javawriter.JavaWriterTest.NestedClass", "nestedClass",
+        EnumSet.noneOf(Modifier.class), "new NestedClass()");
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "import com.squareup.javawriter.JavaWriterTest.NestedClass;\n"
+        + "public final class Foo {\n"
+        + "  NestedClass nestedClass = new NestedClass();\n"
+        + "}\n");
+  }
+
+  public static class NestedClass {}
+
   @Test public void addStaticWildcardImport() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.emitStaticImports("java.lang.System.*");
