@@ -735,44 +735,14 @@ public class JavaWriter implements Closeable {
     return this;
   }
 
-  /** Returns the string literal representing {@code data}, including wrapping quotes. */
+  /**
+   * Returns the string literal representing {@code data}, including wrapping quotes.
+   *
+   * @deprecated use {@link StringLiteral} and its {@link StringLiteral#literal()} method instead.
+   */
+  @Deprecated
   public static String stringLiteral(String data) {
-    StringBuilder result = new StringBuilder();
-    result.append('"');
-    for (int i = 0; i < data.length(); i++) {
-      char c = data.charAt(i);
-      switch (c) {
-        case '"':
-          result.append("\\\"");
-          break;
-        case '\\':
-          result.append("\\\\");
-          break;
-        case '\b':
-          result.append("\\b");
-          break;
-        case '\t':
-          result.append("\\t");
-          break;
-        case '\n':
-          result.append("\\n");
-          break;
-        case '\f':
-          result.append("\\f");
-          break;
-        case '\r':
-          result.append("\\r");
-          break;
-        default:
-          if (Character.isISOControl(c)) {
-            result.append(String.format("\\u%04x", (int) c));
-          } else {
-            result.append(c);
-          }
-      }
-    }
-    result.append('"');
-    return result.toString();
+    return StringLiteral.forValue(data).literal();
   }
 
   /** Build a string representation of a type and optionally its generic type arguments. */

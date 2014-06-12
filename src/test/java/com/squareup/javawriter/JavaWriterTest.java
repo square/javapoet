@@ -17,7 +17,6 @@ import java.util.Set;
 import javax.lang.model.element.Modifier;
 import org.junit.Test;
 
-import static com.squareup.javawriter.JavaWriter.stringLiteral;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -605,7 +604,7 @@ public final class JavaWriterTest {
     javaWriter.emitImports("javax.inject.Singleton");
     javaWriter.emitAnnotation("javax.inject.Singleton");
     javaWriter.emitAnnotation(SuppressWarnings.class,
-        JavaWriter.stringLiteral("unchecked"));
+        StringLiteral.forValue("unchecked"));
     javaWriter.beginType("com.squareup.Foo", "class");
     javaWriter.endType();
     assertCode(""
@@ -651,7 +650,7 @@ public final class JavaWriterTest {
 
   @Test public void annotatedWithSingleValueAttribute() throws IOException {
     Map<String, Object> attributes = new LinkedHashMap<String, Object>();
-    attributes.put("value", stringLiteral("blah.Generator"));
+    attributes.put("value", StringLiteral.forValue("blah.Generator"));
 
     javaWriter.emitPackage("com.squareup");
     javaWriter.emitAnnotation("Generated", attributes);
@@ -775,40 +774,6 @@ public final class JavaWriterTest {
         + " * Bar\n"
         + " */\n"
     );
-  }
-
-  @Test public void testStringLiteral() {
-    assertThat(JavaWriter.stringLiteral("")).isEqualTo("\"\"");
-    assertThat(JavaWriter.stringLiteral("JavaWriter")).isEqualTo("\"JavaWriter\"");
-    assertThat(JavaWriter.stringLiteral("\\")).isEqualTo("\"\\\\\"");
-    assertThat(JavaWriter.stringLiteral("\"")).isEqualTo("\"\\\"\"");
-    assertThat(JavaWriter.stringLiteral("\b")).isEqualTo("\"\\b\"");
-    assertThat(JavaWriter.stringLiteral("\t")).isEqualTo("\"\\t\"");
-    assertThat(JavaWriter.stringLiteral("\n")).isEqualTo("\"\\n\"");
-    assertThat(JavaWriter.stringLiteral("\f")).isEqualTo("\"\\f\"");
-    assertThat(JavaWriter.stringLiteral("\r")).isEqualTo("\"\\r\"");
-
-    // Control characters
-    for (char i = 0x1; i <= 0x1f; i++) {
-      checkCharEscape(i);
-    }
-    for (char i = 0x7f; i <= 0x9f; i++) {
-      checkCharEscape(i);
-    }
-  }
-
-  private void checkCharEscape(char codePoint) {
-    String test = "" + codePoint;
-    String expected;
-    switch (codePoint) {
-      case 8: expected = "\"\\b\""; break;
-      case 9: expected = "\"\\t\""; break;
-      case 10: expected = "\"\\n\""; break;
-      case 12: expected = "\"\\f\""; break;
-      case 13: expected = "\"\\r\""; break;
-      default: expected = "\"\\u" + String.format("%04x", (int) codePoint) + "\"";
-    }
-    assertThat(JavaWriter.stringLiteral(test)).isEqualTo(expected);
   }
 
   @Test public void testType() {
