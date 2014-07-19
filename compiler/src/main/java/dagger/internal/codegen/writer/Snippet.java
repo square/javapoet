@@ -57,6 +57,9 @@ public final class Snippet implements HasClassReferences, Writable {
       if (arg instanceof TypeName) {
         types.add((TypeName) arg);
       }
+      if (arg instanceof HasTypeName) {
+        types.add(((HasTypeName) arg).name());
+      }
     }
     return new Snippet(value, types.build());
   }

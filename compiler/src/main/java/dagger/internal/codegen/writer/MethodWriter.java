@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import javax.lang.model.element.TypeElement;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -29,6 +30,10 @@ public class MethodWriter extends Modifiable implements HasClassReferences, Writ
 
   public VariableWriter addParameter(Class<?> type, String name) {
     return addParameter(ClassName.fromClass(type), name);
+  }
+
+  public VariableWriter addParameter(TypeElement type, String name) {
+    return addParameter(ClassName.fromTypeElement(type), name);
   }
 
   public VariableWriter addParameter(TypeWriter type, String name) {

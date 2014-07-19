@@ -20,6 +20,10 @@ public class FieldWriter extends VariableWriter {
     this.initializer = Optional.of(initializer);
   }
 
+  public void setInitializer(String initializer, Object... args) {
+    this.initializer = Optional.of(Snippet.format(initializer, args));
+  }
+
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
     super.write(appendable, context);
