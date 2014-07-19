@@ -11,6 +11,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
+import com.google.common.escape.Escapers;
 import com.google.common.io.Closer;
 import dagger.internal.codegen.writer.Writable.Context;
 import java.io.IOException;
@@ -249,7 +250,7 @@ public final class JavaWriter {
       StringBuffer buffer = new StringBuffer();
       while (matcher.find()) {
         matcher.appendReplacement(buffer, collidesWithVisibleClass(matcher.group(1))
-            ? matcher.group()
+            ? Escapers.builder().addEscape('$', "\\$").build().escape(matcher.group())
             : "$1$2");
       }
       matcher.appendTail(buffer);
