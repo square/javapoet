@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Set;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
 
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
@@ -22,7 +21,6 @@ public final class ClassWriter extends TypeWriter {
   private final List<TypeWriter> nestedTypeWriters;
   private final List<FieldWriter> fieldWriters;
   private final List<ConstructorWriter> constructorWriters;
-  private final List<MethodWriter> methodWriters;
   private final List<TypeVariableName> typeVariables;
 
   ClassWriter(ClassName className) {
@@ -30,7 +28,6 @@ public final class ClassWriter extends TypeWriter {
     this.nestedTypeWriters = Lists.newArrayList();
     this.fieldWriters = Lists.newArrayList();
     this.constructorWriters = Lists.newArrayList();
-    this.methodWriters = Lists.newArrayList();
     this.typeVariables = Lists.newArrayList();
   }
 
@@ -70,32 +67,6 @@ public final class ClassWriter extends TypeWriter {
     ClassWriter innerClassWriter = new ClassWriter(this.name.nestedClassNamed(name));
     nestedTypeWriters.add(innerClassWriter);
     return innerClassWriter;
-  }
-
-  public MethodWriter addMethod(TypeWriter returnType, String name) {
-    MethodWriter methodWriter = new MethodWriter(returnType.name, name);
-    methodWriters.add(methodWriter);
-    return methodWriter;
-  }
-
-  public MethodWriter addMethod(TypeMirror returnType, String name) {
-    MethodWriter methodWriter =
-        new MethodWriter(TypeNames.forTypeMirror(returnType), name);
-    methodWriters.add(methodWriter);
-    return methodWriter;
-  }
-
-  public MethodWriter addMethod(TypeName returnType, String name) {
-    MethodWriter methodWriter = new MethodWriter(returnType, name);
-    methodWriters.add(methodWriter);
-    return methodWriter;
-  }
-
-  public MethodWriter addMethod(Class<?> returnType, String name) {
-    MethodWriter methodWriter =
-        new MethodWriter(ClassName.fromClass(returnType), name);
-    methodWriters.add(methodWriter);
-    return methodWriter;
   }
 
   @Override
