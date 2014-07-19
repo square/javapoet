@@ -40,6 +40,15 @@ public class WildcardName implements TypeName {
   @Override
   public Appendable write(Appendable appendable, CompilationUnitContext context)
       throws IOException {
-    return null;
+    appendable.append('?');
+    if (extendsBound.isPresent()) {
+      appendable.append(" extends ");
+      extendsBound.get().write(appendable, context);
+    }
+    if (superBound.isPresent()) {
+      appendable.append(" super ");
+      superBound.get().write(appendable, context);
+    }
+    return appendable;
   }
 }
