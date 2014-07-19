@@ -168,7 +168,9 @@ public final class JavaWriter {
     }
   }
 
-  final class CompilationUnitContext {
+
+
+  final class CompilationUnitContext implements Writable.Context {
     private final ImmutableSortedSet<ClassName> importedClasses;
 
     CompilationUnitContext(ImmutableSet<ClassName> importedClasses) {
@@ -176,7 +178,8 @@ public final class JavaWriter {
           ImmutableSortedSet.copyOf(Ordering.natural().reverse(), importedClasses);
     }
 
-    String sourceReferenceForClassName(ClassName className) {
+    @Override
+    public String sourceReferenceForClassName(ClassName className) {
       if (isImported(className)) {
         return className.simpleName();
       }
@@ -202,7 +205,8 @@ public final class JavaWriter {
     private static final String JAVA_IDENTIFIER_REGEX =
         "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
 
-    String compressTypesWithin(String snippet) {
+    @Override
+    public String compressTypesWithin(String snippet) {
 
       // TODO(gak): deal with string literals
       for (ClassName importedClass : importedClasses) {

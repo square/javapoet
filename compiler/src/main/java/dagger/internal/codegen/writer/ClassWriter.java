@@ -6,7 +6,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import dagger.internal.codegen.writer.JavaWriter.CompilationUnitContext;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -81,7 +80,7 @@ public final class ClassWriter extends TypeWriter {
 
   public MethodWriter addMethod(TypeMirror returnType, String name) {
     MethodWriter methodWriter =
-        new MethodWriter(TypeReferences.forTypeMirror(returnType), name);
+        new MethodWriter(TypeNames.forTypeMirror(returnType), name);
     methodWriters.add(methodWriter);
     return methodWriter;
   }
@@ -100,8 +99,7 @@ public final class ClassWriter extends TypeWriter {
   }
 
   @Override
-  public Appendable write(Appendable appendable, CompilationUnitContext context)
-      throws IOException {
+  public Appendable write(Appendable appendable, Context context) throws IOException {
     writeAnnotations(appendable, context);
     writeModifiers(appendable).append("class ").append(name.simpleName());
     if (!typeVariables.isEmpty()) {

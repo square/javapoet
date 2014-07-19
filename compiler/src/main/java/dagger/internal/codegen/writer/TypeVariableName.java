@@ -2,7 +2,6 @@ package dagger.internal.codegen.writer;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
-import dagger.internal.codegen.writer.JavaWriter.CompilationUnitContext;
 import java.io.IOException;
 import java.util.Set;
 
@@ -34,8 +33,7 @@ public class TypeVariableName implements TypeName {
   }
 
   @Override
-  public Appendable write(Appendable appendable, CompilationUnitContext context)
-      throws IOException {
+  public Appendable write(Appendable appendable, Context context) throws IOException {
     appendable.append(name);
     if (extendsBound.isPresent()) {
       appendable.append(' ');
@@ -50,14 +48,7 @@ public class TypeVariableName implements TypeName {
 
   @Override
   public String toString() {
-    StringBuilder builder = new StringBuilder(name);
-    if (extendsBound.isPresent()) {
-      builder.append(' ').append(extendsBound.get());
-    }
-    if (superBound.isPresent()) {
-      builder.append(' ').append(superBound.get());
-    }
-    return builder.toString();
+    return Writables.writeToString(this);
   }
 
   static TypeVariableName named(String name) {

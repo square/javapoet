@@ -2,7 +2,6 @@ package dagger.internal.codegen.writer;
 
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableSet;
-import dagger.internal.codegen.writer.JavaWriter.CompilationUnitContext;
 import java.io.IOException;
 import java.util.Set;
 import javax.lang.model.type.PrimitiveType;
@@ -21,8 +20,7 @@ public enum PrimitiveName implements TypeName {
   }
 
   @Override
-  public Appendable write(Appendable appendable, CompilationUnitContext context)
-      throws IOException {
+  public Appendable write(Appendable appendable, Context context) throws IOException {
     return appendable.append(toString());
   }
 
@@ -47,5 +45,33 @@ public enum PrimitiveName implements TypeName {
       default:
         throw new AssertionError();
     }
+  }
+
+  static PrimitiveName forClass(Class<?> primitiveClass) {
+    if (boolean.class.equals(primitiveClass)) {
+      return BOOLEAN;
+    }
+    if (byte.class.equals(primitiveClass)) {
+      return BYTE;
+    }
+    if (short.class.equals(primitiveClass)) {
+      return SHORT;
+    }
+    if (int.class.equals(primitiveClass)) {
+      return INT;
+    }
+    if (long.class.equals(primitiveClass)) {
+      return LONG;
+    }
+    if (char.class.equals(primitiveClass)) {
+      return CHAR;
+    }
+    if (float.class.equals(primitiveClass)) {
+      return FLOAT;
+    }
+    if (double.class.equals(primitiveClass)) {
+      return DOUBLE;
+    }
+    throw new IllegalArgumentException(primitiveClass + " is not a primitive type");
   }
 }
