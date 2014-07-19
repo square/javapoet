@@ -211,9 +211,24 @@ public final class JavaWriter {
       return className.canonicalName();
     }
 
+    private boolean collidesWithVisibleClass(ClassName className) {
+      return collidesWithVisibleClass(className.simpleName());
+    }
+
+    private boolean collidesWithVisibleClass(String simpleName) {
+      return FluentIterable.from(visibleClasses)
+          .transform(new Function<ClassName, String>() {
+            @Override public String apply(ClassName input) {
+              return input.simpleName();
+            }
+          })
+          .contains(simpleName);
+    }
+
     private boolean isImported(ClassName className) {
       return (packageName.equals(className.packageName())
-              && !className.enclosingClassName().isPresent()) // need to account for scope & hiding
+              && !className.enclosingClassName().isPresent()
+              && !collidesWithVisibleClass(className)) // need to account for scope & hiding
           || visibleClasses.contains(className)
           || (className.packageName().equals("java.lang")
               && className.enclosingSimpleNames().isEmpty());
@@ -233,7 +248,9 @@ public final class JavaWriter {
       Matcher matcher = samePackagePattern.matcher(snippet);
       StringBuffer buffer = new StringBuffer();
       while (matcher.find()) {
-        matcher.appendReplacement(buffer, "$1$2");
+        matcher.appendReplacement(buffer, collidesWithVisibleClass(matcher.group(1))
+            ? matcher.group()
+            : "$1$2");
       }
       matcher.appendTail(buffer);
       return buffer.toString();
