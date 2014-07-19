@@ -9,7 +9,7 @@ import java.util.List;
  * Only named types. Doesn't cover anonymous inner classes.
  */
 public abstract class TypeWriter /* ha ha */ extends Modifiable
-    implements Writable, TypeName {
+    implements Writable, HasTypeName, HasClassReferences {
   final ClassName name;
   Optional<TypeName> supertype;
   final List<TypeName> implementedTypes;
@@ -18,5 +18,10 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
     this.name = name;
     this.supertype = Optional.absent();
     this.implementedTypes = Lists.newArrayList();
+  }
+
+  @Override
+  public TypeName name() {
+    return name;
   }
 }

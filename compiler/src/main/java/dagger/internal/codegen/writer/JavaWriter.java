@@ -10,7 +10,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
+import dagger.internal.codegen.writer.Writable.Context;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -110,11 +112,19 @@ public final class JavaWriter {
         .addAll(explicitImports)
         .addAll(classNames)
         .build();
+    ImmutableSet<ClassName> typeNames = FluentIterable.from(typeWriters)
+        .transform(new Function<TypeWriter, ClassName>() {
+          @Override public ClassName apply(TypeWriter input) {
+            return input.name;
+          }
+        })
+        .toSet();
     for (ClassName className : importCandidates) {
       if (!(className.packageName().equals(packageName)
               && !className.enclosingClassName().isPresent())
           && !(className.packageName().equals("java.lang")
-              && className.enclosingSimpleNames().isEmpty())) {
+              && className.enclosingSimpleNames().isEmpty())
+          && !typeNames.contains(className.topLevelClassName())) {
         Optional<ClassName> importCandidate = Optional.of(className);
         while (importCandidate.isPresent()
             && importedClassIndex.containsKey(importCandidate.get().simpleName())) {
@@ -130,11 +140,11 @@ public final class JavaWriter {
     appendable.append('\n');
 
     CompilationUnitContext context =
-        new CompilationUnitContext(ImmutableSet.copyOf(importedClassIndex.values()));
+        new CompilationUnitContext(packageName, ImmutableSet.copyOf(importedClassIndex.values()));
 
     // write types
     for (TypeWriter typeWriter : typeWriters) {
-      typeWriter.write(appendable, context).append('\n');
+      typeWriter.write(appendable, context.createSubcontext(typeNames)).append('\n');
     }
     return appendable;
   }
@@ -169,13 +179,19 @@ public final class JavaWriter {
   }
 
 
+  static final class CompilationUnitContext implements Writable.Context {
+    private final String packageName;
+    private final ImmutableSortedSet<ClassName> visibleClasses;
 
-  final class CompilationUnitContext implements Writable.Context {
-    private final ImmutableSortedSet<ClassName> importedClasses;
+    CompilationUnitContext(String packageName, Set<ClassName> visibleClasses) {
+      this.packageName = packageName;
+      this.visibleClasses =
+          ImmutableSortedSet.copyOf(Ordering.natural().reverse(), visibleClasses);
+    }
 
-    CompilationUnitContext(ImmutableSet<ClassName> importedClasses) {
-      this.importedClasses =
-          ImmutableSortedSet.copyOf(Ordering.natural().reverse(), importedClasses);
+    @Override
+    public Context createSubcontext(Set<ClassName> newTypes) {
+      return new CompilationUnitContext(packageName, Sets.union(visibleClasses, newTypes));
     }
 
     @Override
@@ -197,7 +213,7 @@ public final class JavaWriter {
     private boolean isImported(ClassName className) {
       return (packageName.equals(className.packageName())
               && !className.enclosingClassName().isPresent()) // need to account for scope & hiding
-          || importedClasses.contains(className)
+          || visibleClasses.contains(className)
           || (className.packageName().equals("java.lang")
               && className.enclosingSimpleNames().isEmpty());
     }
@@ -207,9 +223,8 @@ public final class JavaWriter {
 
     @Override
     public String compressTypesWithin(String snippet) {
-
       // TODO(gak): deal with string literals
-      for (ClassName importedClass : importedClasses) {
+      for (ClassName importedClass : visibleClasses) {
         snippet = snippet.replace(importedClass.canonicalName(), importedClass.simpleName());
       }
       Pattern samePackagePattern = Pattern.compile(

@@ -2,6 +2,7 @@ package dagger.internal.codegen.writer;
 
 import dagger.internal.codegen.writer.Writable.Context;
 import java.io.IOException;
+import java.util.Set;
 
 final class Writables {
   static Writable toStringWritable(final Object object) {
@@ -22,6 +23,11 @@ final class Writables {
     @Override
     public String compressTypesWithin(String snippet) {
       return snippet;
+    }
+
+    @Override
+    public Context createSubcontext(Set<ClassName> newTypes) {
+      throw new UnsupportedOperationException();
     }
   };
 

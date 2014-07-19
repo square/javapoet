@@ -100,6 +100,13 @@ public final class ClassWriter extends TypeWriter {
 
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
+    context = context.createSubcontext(FluentIterable.from(nestedTypeWriters)
+        .transform(new Function<TypeWriter, ClassName>() {
+          @Override public ClassName apply(TypeWriter input) {
+            return input.name;
+          }
+        })
+        .toSet());
     writeAnnotations(appendable, context);
     writeModifiers(appendable).append("class ").append(name.simpleName());
     if (!typeVariables.isEmpty()) {
@@ -120,22 +127,25 @@ public final class ClassWriter extends TypeWriter {
         implementedTypesIterator.next().write(appendable, context);
       }
     }
-    appendable.append(" {\n");
+    appendable.append(" {");
+    if (!fieldWriters.isEmpty()) {
+      appendable.append('\n');
+    }
     for (VariableWriter fieldWriter : fieldWriters) {
       fieldWriter.write(new IndentingAppendable(appendable), context).append("\n");
     }
-    appendable.append('\n');
     for (ConstructorWriter constructorWriter : constructorWriters) {
+      appendable.append('\n');
       if (!isDefaultConstructor(constructorWriter)) {
         constructorWriter.write(new IndentingAppendable(appendable), context);
       }
     }
-    appendable.append('\n');
     for (MethodWriter methodWriter : methodWriters) {
+      appendable.append('\n');
       methodWriter.write(new IndentingAppendable(appendable), context);
     }
-    appendable.append('\n');
     for (TypeWriter nestedTypeWriter : nestedTypeWriters) {
+      appendable.append('\n');
       nestedTypeWriter.write(new IndentingAppendable(appendable), context);
     }
     appendable.append("}\n");
