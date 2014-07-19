@@ -131,8 +131,8 @@ public final class JavaWriter {
           importCandidate = importCandidate.get().enclosingClassName();
         }
         if (importCandidate.isPresent()) {
-          appendable.append("import ").append(className.canonicalName()).append(";\n");
-          importedClassIndex.put(className.simpleName(), className);
+          appendable.append("import ").append(importCandidate.get().canonicalName()).append(";\n");
+          importedClassIndex.put(importCandidate.get().simpleName(), importCandidate.get());
         }
       }
     }
@@ -202,8 +202,9 @@ public final class JavaWriter {
       Optional<ClassName> enclosingClassName = className.enclosingClassName();
       while (enclosingClassName.isPresent()) {
         if (isImported(enclosingClassName.get())) {
-          return className.canonicalName()
-              .substring(enclosingClassName.get().canonicalName().length() + 1);
+          return enclosingClassName.get().simpleName()
+              + className.canonicalName()
+                  .substring(enclosingClassName.get().canonicalName().length());
         }
         enclosingClassName = enclosingClassName.get().enclosingClassName();
       }
