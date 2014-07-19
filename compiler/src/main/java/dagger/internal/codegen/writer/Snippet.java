@@ -3,7 +3,6 @@ package dagger.internal.codegen.writer;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
-import dagger.internal.codegen.writer.JavaWriter.CompilationUnitContext;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -44,8 +43,7 @@ public final class Snippet implements HasClassReferences, Writable {
   }
 
   @Override
-  public Appendable write(Appendable appendable, CompilationUnitContext context)
-      throws IOException {
+  public Appendable write(Appendable appendable, Context context) throws IOException {
     return appendable.append(context.compressTypesWithin(value));
   }
 

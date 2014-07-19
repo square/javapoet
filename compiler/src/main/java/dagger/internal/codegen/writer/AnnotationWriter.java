@@ -3,7 +3,6 @@ package dagger.internal.codegen.writer;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import dagger.internal.codegen.writer.JavaWriter.CompilationUnitContext;
 import java.io.IOException;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -32,8 +31,7 @@ public class AnnotationWriter implements Writable, HasClassReferences {
   }
 
   @Override
-  public Appendable write(Appendable appendable, CompilationUnitContext context)
-      throws IOException {
+  public Appendable write(Appendable appendable, Context context) throws IOException {
     appendable.append('@');
     annotationName.write(appendable, context);
     if (!memberMap.isEmpty()) {

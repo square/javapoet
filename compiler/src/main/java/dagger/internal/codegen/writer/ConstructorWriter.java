@@ -5,7 +5,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import dagger.internal.codegen.writer.JavaWriter.CompilationUnitContext;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
@@ -68,8 +67,7 @@ public class ConstructorWriter extends Modifiable implements Writable, HasClassR
   }
 
   @Override
-  public Appendable write(Appendable appendable, CompilationUnitContext context)
-      throws IOException {
+  public Appendable write(Appendable appendable, Context context) throws IOException {
     writeModifiers(appendable).append(name).append('(');
     Iterator<VariableWriter> parameterWritersIterator = parameterWriters.values().iterator();
     if (parameterWritersIterator.hasNext()) {

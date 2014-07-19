@@ -1,9 +1,8 @@
 package dagger.internal.codegen.writer;
 
-import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import dagger.internal.codegen.writer.JavaWriter.CompilationUnitContext;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Set;
@@ -31,8 +30,7 @@ public class ParameterizedTypeName implements TypeName {
   }
 
   @Override
-  public Appendable write(Appendable appendable, CompilationUnitContext context)
-      throws IOException {
+  public Appendable write(Appendable appendable, Context context) throws IOException {
     appendable.append(context.sourceReferenceForClassName(type));
     Iterator<? extends TypeName> parameterIterator = parameters.iterator();
     verify(parameterIterator.hasNext(), type.toString());
@@ -47,10 +45,24 @@ public class ParameterizedTypeName implements TypeName {
   }
 
   @Override
+  public boolean equals(Object obj) {
+    if (obj instanceof ParameterizedTypeName) {
+      ParameterizedTypeName that = (ParameterizedTypeName) obj;
+      return this.type.equals(that.type)
+          && this.parameters.equals(that.parameters);
+    } else {
+      return false;
+    }
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(type, parameters);
+  }
+
+  @Override
   public String toString() {
-    StringBuilder builder = new StringBuilder(type.toString()).append('<');
-    Joiner.on(", ").appendTo(builder, parameters);
-    return builder.append('>').toString();
+    return Writables.writeToString(this);
   }
 
   public static ParameterizedTypeName create(ClassName className,

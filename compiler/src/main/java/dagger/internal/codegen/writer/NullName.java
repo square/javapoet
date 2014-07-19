@@ -4,8 +4,8 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.Set;
 
-public enum VoidName implements TypeName {
-  VOID;
+enum NullName implements TypeName {
+  NULL;
 
   @Override
   public Set<ClassName> referencedClasses() {
@@ -13,12 +13,12 @@ public enum VoidName implements TypeName {
   }
 
   @Override
-  public String toString() {
-    return "void";
+  public Appendable write(Appendable appendable, Context context) throws IOException {
+    return appendable.append("null");
   }
 
   @Override
-  public Appendable write(Appendable appendable, Context context) throws IOException {
-    return appendable.append("void");
+  public String toString() {
+    return "null";
   }
 }

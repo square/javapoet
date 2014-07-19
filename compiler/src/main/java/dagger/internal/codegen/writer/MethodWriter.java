@@ -6,7 +6,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import dagger.internal.codegen.writer.JavaWriter.CompilationUnitContext;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
@@ -54,8 +53,7 @@ public class MethodWriter extends Modifiable implements HasClassReferences, Writ
   }
 
   @Override
-  public Appendable write(Appendable appendable, CompilationUnitContext context)
-      throws IOException {
+  public Appendable write(Appendable appendable, Context context) throws IOException {
     writeAnnotations(appendable, context);
     writeModifiers(appendable);
     returnType.write(appendable, context);

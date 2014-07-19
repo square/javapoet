@@ -1,8 +1,12 @@
 package dagger.internal.codegen.writer;
 
-import dagger.internal.codegen.writer.JavaWriter.CompilationUnitContext;
 import java.io.IOException;
 
 interface Writable {
-  Appendable write(Appendable appendable, CompilationUnitContext context) throws IOException;
+  interface Context {
+    String sourceReferenceForClassName(ClassName className);
+    String compressTypesWithin(String snippet);
+  }
+
+  Appendable write(Appendable appendable, Context context) throws IOException;
 }
