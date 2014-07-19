@@ -5,10 +5,12 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -19,14 +21,14 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 
 public final class ClassWriter extends TypeWriter {
   private final List<TypeWriter> nestedTypeWriters;
-  private final List<FieldWriter> fieldWriters;
+  private final Map<String, FieldWriter> fieldWriters;
   private final List<ConstructorWriter> constructorWriters;
   private final List<TypeVariableName> typeVariables;
 
   ClassWriter(ClassName className) {
     super(className);
     this.nestedTypeWriters = Lists.newArrayList();
-    this.fieldWriters = Lists.newArrayList();
+    this.fieldWriters = Maps.newLinkedHashMap();
     this.constructorWriters = Lists.newArrayList();
     this.typeVariables = Lists.newArrayList();
   }
@@ -40,20 +42,22 @@ public final class ClassWriter extends TypeWriter {
   }
 
   public FieldWriter addField(Class<?> type, String name) {
-    FieldWriter fieldWriter = new FieldWriter(ClassName.fromClass(type), name);
-    fieldWriters.add(fieldWriter);
-    return fieldWriter;
+    return addField(ClassName.fromClass(type), name);
   }
 
   public FieldWriter addField(TypeElement type, String name) {
-    FieldWriter fieldWriter = new FieldWriter(ClassName.fromTypeElement(type), name);
-    fieldWriters.add(fieldWriter);
-    return fieldWriter;
+    return addField(ClassName.fromTypeElement(type), name);
   }
 
   public FieldWriter addField(TypeName type, String name) {
-    FieldWriter fieldWriter = new FieldWriter(type, name);
-    fieldWriters.add(fieldWriter);
+    String candidateName = name;
+    int differentiator = 1;
+    while (fieldWriters.containsKey(candidateName)) {
+      candidateName = name + differentiator;
+      differentiator++;
+    }
+    FieldWriter fieldWriter = new FieldWriter(type, candidateName);
+    fieldWriters.put(candidateName, fieldWriter);
     return fieldWriter;
   }
 
@@ -102,7 +106,7 @@ public final class ClassWriter extends TypeWriter {
     if (!fieldWriters.isEmpty()) {
       appendable.append('\n');
     }
-    for (VariableWriter fieldWriter : fieldWriters) {
+    for (VariableWriter fieldWriter : fieldWriters.values()) {
       fieldWriter.write(new IndentingAppendable(appendable), context).append("\n");
     }
     for (ConstructorWriter constructorWriter : constructorWriters) {
@@ -135,8 +139,8 @@ public final class ClassWriter extends TypeWriter {
   @Override
   public Set<ClassName> referencedClasses() {
     Iterable<? extends HasClassReferences> concat =
-        Iterables.concat(nestedTypeWriters, fieldWriters, constructorWriters, methodWriters,
-            implementedTypes, supertype.asSet(), annotations);
+        Iterables.concat(nestedTypeWriters, fieldWriters.values(), constructorWriters,
+            methodWriters, implementedTypes, supertype.asSet(), annotations);
     return FluentIterable.from(concat)
         .transformAndConcat(new Function<HasClassReferences, Set<ClassName>>() {
           @Override
