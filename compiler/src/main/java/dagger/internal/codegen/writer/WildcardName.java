@@ -2,12 +2,11 @@ package dagger.internal.codegen.writer;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
-import dagger.internal.codegen.writer.JavaWriter.CompilationUnitContext;
 import java.io.IOException;
 import java.util.Set;
 import javax.lang.model.type.WildcardType;
 
-import static dagger.internal.codegen.writer.TypeReferences.FOR_TYPE_MIRROR;
+import static dagger.internal.codegen.writer.TypeNames.FOR_TYPE_MIRROR;
 
 public class WildcardName implements TypeName {
   private final Optional<TypeName> extendsBound;
@@ -38,8 +37,16 @@ public class WildcardName implements TypeName {
   }
 
   @Override
-  public Appendable write(Appendable appendable, CompilationUnitContext context)
-      throws IOException {
-    return null;
+  public Appendable write(Appendable appendable, Context context) throws IOException {
+    appendable.append('?');
+    if (extendsBound.isPresent()) {
+      appendable.append(" extends ");
+      extendsBound.get().write(appendable, context);
+    }
+    if (superBound.isPresent()) {
+      appendable.append(" super ");
+      superBound.get().write(appendable, context);
+    }
+    return appendable;
   }
 }

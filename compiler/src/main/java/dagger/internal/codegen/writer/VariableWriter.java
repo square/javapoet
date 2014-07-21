@@ -1,6 +1,5 @@
 package dagger.internal.codegen.writer;
 
-import dagger.internal.codegen.writer.JavaWriter.CompilationUnitContext;
 import java.io.IOException;
 import java.util.Set;
 
@@ -23,8 +22,7 @@ public class VariableWriter extends Modifiable implements Writable, HasClassRefe
   }
 
   @Override
-  public Appendable write(Appendable appendable, CompilationUnitContext context)
-      throws IOException {
+  public Appendable write(Appendable appendable, Context context) throws IOException {
     writeModifiers(appendable);
     type.write(appendable, context);
     return appendable.append(' ').append(name);

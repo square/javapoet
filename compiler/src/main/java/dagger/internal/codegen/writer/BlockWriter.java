@@ -3,7 +3,6 @@ package dagger.internal.codegen.writer;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
-import dagger.internal.codegen.writer.JavaWriter.CompilationUnitContext;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -30,8 +29,7 @@ public final class BlockWriter implements Writable, HasClassReferences {
   }
 
   @Override
-  public Appendable write(Appendable appendable, CompilationUnitContext context)
-      throws IOException {
+  public Appendable write(Appendable appendable, Context context) throws IOException {
     for (Snippet snippet : snippets) {
       appendable.append('\n');
       snippet.write(appendable, context);

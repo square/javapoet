@@ -10,7 +10,10 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
+import com.google.common.escape.Escapers;
 import com.google.common.io.Closer;
+import dagger.internal.codegen.writer.Writable.Context;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -110,19 +113,27 @@ public final class JavaWriter {
         .addAll(explicitImports)
         .addAll(classNames)
         .build();
+    ImmutableSet<ClassName> typeNames = FluentIterable.from(typeWriters)
+        .transform(new Function<TypeWriter, ClassName>() {
+          @Override public ClassName apply(TypeWriter input) {
+            return input.name;
+          }
+        })
+        .toSet();
     for (ClassName className : importCandidates) {
       if (!(className.packageName().equals(packageName)
               && !className.enclosingClassName().isPresent())
           && !(className.packageName().equals("java.lang")
-              && className.enclosingSimpleNames().isEmpty())) {
+              && className.enclosingSimpleNames().isEmpty())
+          && !typeNames.contains(className.topLevelClassName())) {
         Optional<ClassName> importCandidate = Optional.of(className);
         while (importCandidate.isPresent()
             && importedClassIndex.containsKey(importCandidate.get().simpleName())) {
           importCandidate = importCandidate.get().enclosingClassName();
         }
         if (importCandidate.isPresent()) {
-          appendable.append("import ").append(className.canonicalName()).append(";\n");
-          importedClassIndex.put(className.simpleName(), className);
+          appendable.append("import ").append(importCandidate.get().canonicalName()).append(";\n");
+          importedClassIndex.put(importCandidate.get().simpleName(), importCandidate.get());
         }
       }
     }
@@ -130,11 +141,11 @@ public final class JavaWriter {
     appendable.append('\n');
 
     CompilationUnitContext context =
-        new CompilationUnitContext(ImmutableSet.copyOf(importedClassIndex.values()));
+        new CompilationUnitContext(packageName, ImmutableSet.copyOf(importedClassIndex.values()));
 
     // write types
     for (TypeWriter typeWriter : typeWriters) {
-      typeWriter.write(appendable, context).append('\n');
+      typeWriter.write(appendable, context.createSubcontext(typeNames)).append('\n');
     }
     return appendable;
   }
@@ -168,33 +179,58 @@ public final class JavaWriter {
     }
   }
 
-  final class CompilationUnitContext {
-    private final ImmutableSortedSet<ClassName> importedClasses;
 
-    CompilationUnitContext(ImmutableSet<ClassName> importedClasses) {
-      this.importedClasses =
-          ImmutableSortedSet.copyOf(Ordering.natural().reverse(), importedClasses);
+  static final class CompilationUnitContext implements Writable.Context {
+    private final String packageName;
+    private final ImmutableSortedSet<ClassName> visibleClasses;
+
+    CompilationUnitContext(String packageName, Set<ClassName> visibleClasses) {
+      this.packageName = packageName;
+      this.visibleClasses =
+          ImmutableSortedSet.copyOf(Ordering.natural().reverse(), visibleClasses);
     }
 
-    String sourceReferenceForClassName(ClassName className) {
+    @Override
+    public Context createSubcontext(Set<ClassName> newTypes) {
+      return new CompilationUnitContext(packageName, Sets.union(visibleClasses, newTypes));
+    }
+
+    @Override
+    public String sourceReferenceForClassName(ClassName className) {
       if (isImported(className)) {
         return className.simpleName();
       }
       Optional<ClassName> enclosingClassName = className.enclosingClassName();
       while (enclosingClassName.isPresent()) {
         if (isImported(enclosingClassName.get())) {
-          return className.canonicalName()
-              .substring(enclosingClassName.get().canonicalName().length() + 1);
+          return enclosingClassName.get().simpleName()
+              + className.canonicalName()
+                  .substring(enclosingClassName.get().canonicalName().length());
         }
         enclosingClassName = enclosingClassName.get().enclosingClassName();
       }
       return className.canonicalName();
     }
 
+    private boolean collidesWithVisibleClass(ClassName className) {
+      return collidesWithVisibleClass(className.simpleName());
+    }
+
+    private boolean collidesWithVisibleClass(String simpleName) {
+      return FluentIterable.from(visibleClasses)
+          .transform(new Function<ClassName, String>() {
+            @Override public String apply(ClassName input) {
+              return input.simpleName();
+            }
+          })
+          .contains(simpleName);
+    }
+
     private boolean isImported(ClassName className) {
       return (packageName.equals(className.packageName())
-              && !className.enclosingClassName().isPresent()) // need to account for scope & hiding
-          || importedClasses.contains(className)
+              && !className.enclosingClassName().isPresent()
+              && !collidesWithVisibleClass(className)) // need to account for scope & hiding
+          || visibleClasses.contains(className)
           || (className.packageName().equals("java.lang")
               && className.enclosingSimpleNames().isEmpty());
     }
@@ -202,10 +238,10 @@ public final class JavaWriter {
     private static final String JAVA_IDENTIFIER_REGEX =
         "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
 
-    String compressTypesWithin(String snippet) {
-
+    @Override
+    public String compressTypesWithin(String snippet) {
       // TODO(gak): deal with string literals
-      for (ClassName importedClass : importedClasses) {
+      for (ClassName importedClass : visibleClasses) {
         snippet = snippet.replace(importedClass.canonicalName(), importedClass.simpleName());
       }
       Pattern samePackagePattern = Pattern.compile(
@@ -213,7 +249,9 @@ public final class JavaWriter {
       Matcher matcher = samePackagePattern.matcher(snippet);
       StringBuffer buffer = new StringBuffer();
       while (matcher.find()) {
-        matcher.appendReplacement(buffer, "$1$2");
+        matcher.appendReplacement(buffer, collidesWithVisibleClass(matcher.group(1))
+            ? Escapers.builder().addEscape('$', "\\$").build().escape(matcher.group())
+            : "$1$2");
       }
       matcher.appendTail(buffer);
       return buffer.toString();

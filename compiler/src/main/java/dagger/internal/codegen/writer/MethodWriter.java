@@ -6,11 +6,11 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import dagger.internal.codegen.writer.JavaWriter.CompilationUnitContext;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import javax.lang.model.element.TypeElement;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -30,6 +30,10 @@ public class MethodWriter extends Modifiable implements HasClassReferences, Writ
 
   public VariableWriter addParameter(Class<?> type, String name) {
     return addParameter(ClassName.fromClass(type), name);
+  }
+
+  public VariableWriter addParameter(TypeElement type, String name) {
+    return addParameter(ClassName.fromTypeElement(type), name);
   }
 
   public VariableWriter addParameter(TypeWriter type, String name) {
@@ -54,8 +58,7 @@ public class MethodWriter extends Modifiable implements HasClassReferences, Writ
   }
 
   @Override
-  public Appendable write(Appendable appendable, CompilationUnitContext context)
-      throws IOException {
+  public Appendable write(Appendable appendable, Context context) throws IOException {
     writeAnnotations(appendable, context);
     writeModifiers(appendable);
     returnType.write(appendable, context);

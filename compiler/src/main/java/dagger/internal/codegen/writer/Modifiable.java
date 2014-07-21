@@ -1,7 +1,7 @@
 package dagger.internal.codegen.writer;
 
 import com.google.common.collect.Lists;
-import dagger.internal.codegen.writer.JavaWriter.CompilationUnitContext;
+import dagger.internal.codegen.writer.Writable.Context;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.EnumSet;
@@ -36,8 +36,7 @@ public abstract class Modifiable {
     return appendable;
   }
 
-  Appendable writeAnnotations(Appendable appendable, CompilationUnitContext context)
-      throws IOException {
+  Appendable writeAnnotations(Appendable appendable, Context context) throws IOException {
     for (AnnotationWriter annotationWriter : annotations) {
       annotationWriter.write(appendable, context).append('\n');
     }

@@ -23,7 +23,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import dagger.internal.codegen.writer.JavaWriter.CompilationUnitContext;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,7 +47,7 @@ import static javax.lang.model.element.NestingKind.TOP_LEVEL;
  *
  * @since 2.0
  */
-public final class ClassName implements Comparable<ClassName>, TypeName {
+public final class ClassName implements TypeName, Comparable<ClassName> {
   private String fullyQualifiedName = null;
   private final String packageName;
   /* From top to bottom.  E.g.: this field will contian ["A", "B"] for pgk.A.B.C */
@@ -226,8 +225,7 @@ public final class ClassName implements Comparable<ClassName>, TypeName {
   }
 
   @Override
-  public Appendable write(Appendable appendable, CompilationUnitContext context)
-      throws IOException {
+  public Appendable write(Appendable appendable, Context context) throws IOException {
     appendable.append(context.sourceReferenceForClassName(this));
     return appendable;
   }

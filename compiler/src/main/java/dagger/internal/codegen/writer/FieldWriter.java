@@ -5,7 +5,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import dagger.internal.codegen.writer.JavaWriter.CompilationUnitContext;
 import java.io.IOException;
 import java.util.Set;
 
@@ -21,9 +20,12 @@ public class FieldWriter extends VariableWriter {
     this.initializer = Optional.of(initializer);
   }
 
+  public void setInitializer(String initializer, Object... args) {
+    this.initializer = Optional.of(Snippet.format(initializer, args));
+  }
+
   @Override
-  public Appendable write(Appendable appendable, CompilationUnitContext context)
-      throws IOException {
+  public Appendable write(Appendable appendable, Context context) throws IOException {
     super.write(appendable, context);
     if (initializer.isPresent()) {
       appendable.append(" = ");
