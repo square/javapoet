@@ -3,7 +3,6 @@ package dagger.internal.codegen.writer;
 import java.io.IOException;
 import java.util.Set;
 
-
 public class VariableWriter extends Modifiable implements Writable, HasClassReferences {
   private final TypeName type;
   private final String name;

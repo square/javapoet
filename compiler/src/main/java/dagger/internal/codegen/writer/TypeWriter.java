@@ -5,7 +5,6 @@ import com.google.common.collect.Lists;
 import java.util.List;
 import javax.lang.model.type.TypeMirror;
 
-
 /**
  * Only named types. Doesn't cover anonymous inner classes.
  */
