@@ -179,7 +179,6 @@ public final class JavaWriter {
     }
   }
 
-
   static final class CompilationUnitContext implements Writable.Context {
     private final String packageName;
     private final ImmutableSortedSet<ClassName> visibleClasses;

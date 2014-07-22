@@ -28,7 +28,6 @@ public abstract class Modifiable {
     return annotationWriter;
   }
 
-
   Appendable writeModifiers(Appendable appendable) throws IOException {
     for (Modifier modifier : modifiers) {
       appendable.append(modifier.toString()).append(' ');
