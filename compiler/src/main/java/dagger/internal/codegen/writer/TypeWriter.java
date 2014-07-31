@@ -23,7 +23,7 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
   }
 
   @Override
-  public TypeName name() {
+  public ClassName name() {
     return name;
   }
 
