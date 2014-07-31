@@ -1,5 +1,6 @@
 package dagger.internal.codegen.writer;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import dagger.internal.codegen.writer.Writable.Context;
 import java.io.IOException;
@@ -19,7 +20,11 @@ public abstract class Modifiable {
   }
 
   public void addModifiers(Modifier first, Modifier... rest) {
-    this.modifiers.addAll(Lists.asList(first, rest));
+    addModifiers(Lists.asList(first, rest));
+  }
+
+  public void addModifiers(Iterable<Modifier> modifiers) {
+    Iterables.addAll(this.modifiers, modifiers);
   }
 
   public AnnotationWriter annotate(Class<? extends Annotation> annotation) {

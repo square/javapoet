@@ -21,15 +21,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.tools.JavaFileObject;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static javax.lang.model.element.Modifier.PRIVATE;
-import static javax.lang.model.element.Modifier.PROTECTED;
-import static javax.lang.model.element.Modifier.STATIC;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Writes a single compilation unit.
@@ -48,7 +44,7 @@ public final class JavaWriter {
   }
 
   private final String packageName;
-  // TODO(gak): disallow multiple types in a file
+  // TODO(gak): disallow multiple types in a file?
   private final List<TypeWriter> typeWriters;
   private final List<ClassName> explicitImports;
 
@@ -58,20 +54,17 @@ public final class JavaWriter {
     this.explicitImports = Lists.newArrayList();
   }
 
+  public List<TypeWriter> getTypeWriters() {
+    return unmodifiableList(typeWriters);
+  }
+
   public JavaWriter addImport(Class<?> importedClass) {
     explicitImports.add(ClassName.fromClass(importedClass));
     return this;
   }
 
   public ClassWriter addClass(String simpleName) {
-    Set<Modifier> modifiers = ImmutableSet.<Modifier>of();
-    checkNotNull(modifiers);
     checkNotNull(simpleName);
-    checkArgument(!modifiers.contains(PROTECTED));
-    checkArgument(!modifiers.contains(PRIVATE));
-    checkArgument(!modifiers.contains(STATIC));
-    checkNotNull(Optional.<Class<?>>absent());
-    checkNotNull(ImmutableSet.<Class<?>>of());
     ClassWriter classWriter = new ClassWriter(ClassName.create(packageName, simpleName));
     typeWriters.add(classWriter);
     return classWriter;
@@ -152,8 +145,12 @@ public final class JavaWriter {
 
   public void file(Filer filer, Iterable<? extends Element> originatingElements)
       throws IOException {
-    JavaFileObject sourceFile = filer.createSourceFile(
-        Iterables.getOnlyElement(typeWriters).name.canonicalName(),
+    file(filer, Iterables.getOnlyElement(typeWriters).name.canonicalName(), originatingElements);
+  }
+
+  public void file(Filer filer, CharSequence name,  Iterable<? extends Element> originatingElements)
+      throws IOException {
+    JavaFileObject sourceFile = filer.createSourceFile(name,
         Iterables.toArray(originatingElements, Element.class));
     Closer closer = Closer.create();
     try {

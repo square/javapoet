@@ -1,9 +1,12 @@
 package dagger.internal.codegen.writer;
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -12,7 +15,7 @@ public final class Snippet implements HasClassReferences, Writable {
   private final String value;
   private final ImmutableSet<TypeName> types;
 
-  Snippet(String value, ImmutableSet<TypeName> types) {
+  private Snippet(String value, ImmutableSet<TypeName> types) {
     this.value = value;
     this.types = types;
   }
@@ -64,8 +67,13 @@ public final class Snippet implements HasClassReferences, Writable {
     return new Snippet(value, types.build());
   }
 
-  public static Snippet create(String value, Iterable<TypeName> types) {
-    return new Snippet(value, ImmutableSet.copyOf(types));
+  public static Snippet format(String format, Iterable<? extends Object> args) {
+    return format(format, Iterables.toArray(args, Object.class));
+  }
+
+  public static Snippet memberSelectSnippet(Iterable<? extends Object> selectors) {
+    return format(Joiner.on('.').join(Collections.nCopies(Iterables.size(selectors), "%s")),
+        selectors);
   }
 
   public static Snippet makeParametersSnippet(List<Snippet> parameterSnippets) {
@@ -82,6 +90,6 @@ public final class Snippet implements HasClassReferences, Writable {
       stringBuilder.append(", ").append(nextSnippet.value());
       typesBuilder.addAll(nextSnippet.types());
     }
-    return Snippet.create(stringBuilder.toString(), typesBuilder.build());
+    return new Snippet(stringBuilder.toString(), ImmutableSet.copyOf(typesBuilder.build()));
   }
 }
