@@ -21,11 +21,6 @@ final class Writables {
     }
 
     @Override
-    public String compressTypesWithin(String snippet) {
-      return snippet;
-    }
-
-    @Override
     public Context createSubcontext(Set<ClassName> newTypes) {
       throw new UnsupportedOperationException();
     }
