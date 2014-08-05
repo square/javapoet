@@ -11,14 +11,11 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-import com.google.common.escape.Escapers;
 import com.google.common.io.Closer;
 import dagger.internal.codegen.writer.Writable.Context;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
@@ -76,18 +73,6 @@ public final class JavaWriter {
     return writer;
   }
 
-  static ImmutableSet<ClassName> collectReferencedClasses(
-      Iterable<? extends HasClassReferences> iterable) {
-    return FluentIterable.from(iterable)
-        .transformAndConcat(new Function<HasClassReferences, Set<ClassName>>() {
-          @Override
-          public Set<ClassName> apply(HasClassReferences input) {
-            return input.referencedClasses();
-          }
-        })
-        .toSet();
-  }
-
   public Appendable write(Appendable appendable) throws IOException {
     appendable.append("package ").append(packageName).append(';').append("\n\n");
 
@@ -100,6 +85,7 @@ public final class JavaWriter {
           }
         })
         .toSet();
+
     BiMap<String, ClassName> importedClassIndex = HashBiMap.create();
     // TODO(gak): check for collisions with types declared in this compilation unit too
     ImmutableSortedSet<ClassName> importCandidates = ImmutableSortedSet.<ClassName>naturalOrder()
@@ -229,28 +215,6 @@ public final class JavaWriter {
           || visibleClasses.contains(className)
           || (className.packageName().equals("java.lang")
               && className.enclosingSimpleNames().isEmpty());
-    }
-
-    private static final String JAVA_IDENTIFIER_REGEX =
-        "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
-
-    @Override
-    public String compressTypesWithin(String snippet) {
-      // TODO(gak): deal with string literals
-      for (ClassName importedClass : visibleClasses) {
-        snippet = snippet.replace(importedClass.canonicalName(), importedClass.simpleName());
-      }
-      Pattern samePackagePattern = Pattern.compile(
-          packageName.replace(".", "\\.") + "\\.(" + JAVA_IDENTIFIER_REGEX + ")([^\\.])");
-      Matcher matcher = samePackagePattern.matcher(snippet);
-      StringBuffer buffer = new StringBuffer();
-      while (matcher.find()) {
-        matcher.appendReplacement(buffer, collidesWithVisibleClass(matcher.group(1))
-            ? Escapers.builder().addEscape('$', "\\$").build().escape(matcher.group())
-            : "$1$2");
-      }
-      matcher.appendTail(buffer);
-      return buffer.toString();
     }
   }
 }
