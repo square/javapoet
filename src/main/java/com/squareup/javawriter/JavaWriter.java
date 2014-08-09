@@ -164,6 +164,11 @@ public class JavaWriter implements Closeable {
 
   /** Try to compress a fully-qualified class name to only the class name. */
   public String compressType(String type) {
+    boolean appendEllipsis = false;
+    if ( type.endsWith("...")) {
+      appendEllipsis = true;
+      type = type.substring(0,type.length()-3);
+    }
     StringBuilder sb = new StringBuilder();
     if (this.packagePrefix == null) {
       throw new IllegalStateException();
@@ -200,6 +205,9 @@ public class JavaWriter implements Closeable {
         sb.append(name);
       }
       pos = m.end();
+    }
+    if ( appendEllipsis) {
+      sb.append("...");
     }
     return sb.toString();
   }
