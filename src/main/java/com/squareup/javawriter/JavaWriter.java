@@ -21,12 +21,14 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.lang.model.element.Modifier;
 
 import static javax.lang.model.element.Modifier.ABSTRACT;
 
 /** A utility class which aids in generating Java source files. */
 public class JavaWriter implements Closeable {
+  private static final String ELLIPSIS = "...";
   private static final Pattern TYPE_PATTERN = Pattern.compile("(?:[\\w$]+\\.)*([\\w\\.*$]+)");
   private static final int MAX_SINGLE_LINE_ATTRIBUTES = 3;
   private static final String INDENT = "  ";
@@ -165,9 +167,9 @@ public class JavaWriter implements Closeable {
   /** Try to compress a fully-qualified class name to only the class name. */
   public String compressType(String type) {
     boolean appendEllipsis = false;
-    if ( type.endsWith("...")) {
+    if (type.endsWith(ELLIPSIS)) {
       appendEllipsis = true;
-      type = type.substring(0,type.length()-3);
+      type = type.substring(0, type.length() - ELLIPSIS.length());
     }
     StringBuilder sb = new StringBuilder();
     if (this.packagePrefix == null) {
@@ -206,8 +208,8 @@ public class JavaWriter implements Closeable {
       }
       pos = m.end();
     }
-    if ( appendEllipsis) {
-      sb.append("...");
+    if (appendEllipsis) {
+      sb.append(ELLIPSIS);
     }
     return sb.toString();
   }
