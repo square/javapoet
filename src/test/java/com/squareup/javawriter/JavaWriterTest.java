@@ -862,6 +862,13 @@ public final class JavaWriterTest {
     String actual = javaWriter.compressType("java.lang.annotation.Annotation");
     assertThat(actual).isEqualTo("java.lang.annotation.Annotation");
   }
+  
+  @Test public void compressVarArgsArrayType() throws IOException {
+    javaWriter.emitPackage("com.blah");
+    javaWriter.emitImports("java.util.File");
+    String actual = javaWriter.compressType("java.util.File...");
+    assertThat(actual).isEqualTo("File...");
+  }
 
   @Test public void configurableIndent() throws IOException {
     javaWriter.setIndent("    ");
