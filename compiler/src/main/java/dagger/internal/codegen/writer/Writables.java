@@ -31,7 +31,7 @@ final class Writables {
     try {
       writable.write(builder, DEFAULT_CONTEXT);
     } catch (IOException e) {
-      throw new AssertionError("StringBuilder doesn't throw IOException", e);
+      throw new AssertionError("StringBuilder doesn't throw IOException" + e);
     }
     return builder.toString();
   }
