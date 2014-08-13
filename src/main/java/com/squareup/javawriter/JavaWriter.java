@@ -27,6 +27,7 @@ import static javax.lang.model.element.Modifier.ABSTRACT;
 
 /** A utility class which aids in generating Java source files. */
 public class JavaWriter implements Closeable {
+  private static final Pattern TYPE_TRAILER = Pattern.compile("(.*?)(\\.\\.\\.|(?:\\[\\])+)$");
   private static final Pattern TYPE_PATTERN = Pattern.compile("(?:[\\w$]+\\.)*([\\w\\.*$]+)");
   private static final int MAX_SINGLE_LINE_ATTRIBUTES = 3;
   private static final String INDENT = "  ";
@@ -164,6 +165,11 @@ public class JavaWriter implements Closeable {
 
   /** Try to compress a fully-qualified class name to only the class name. */
   public String compressType(String type) {
+    Matcher trailer = TYPE_TRAILER.matcher(type);
+    if (trailer.matches()) {
+      type = trailer.group(1);
+    }
+
     StringBuilder sb = new StringBuilder();
     if (this.packagePrefix == null) {
       throw new IllegalStateException();
@@ -200,6 +206,10 @@ public class JavaWriter implements Closeable {
         sb.append(name);
       }
       pos = m.end();
+    }
+
+    if (trailer.matches()) {
+      sb.append(trailer.group(2));
     }
     return sb.toString();
   }
