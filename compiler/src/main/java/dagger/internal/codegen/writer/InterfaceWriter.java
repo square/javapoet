@@ -12,12 +12,9 @@ import java.util.Set;
 
 public class InterfaceWriter extends TypeWriter {
   private final List<TypeVariableName> typeVariables;
-  private final List<TypeWriter> nestedTypeWriters;
-
   InterfaceWriter(ClassName name) {
     super(name);
     this.typeVariables = Lists.newArrayList();
-    this.nestedTypeWriters = Lists.newArrayList();
   }
 
   public void addTypeVariable(TypeVariableName typeVariable) {

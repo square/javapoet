@@ -20,14 +20,12 @@ import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
 public final class ClassWriter extends TypeWriter {
-  private final List<TypeWriter> nestedTypeWriters;
   private final Map<String, FieldWriter> fieldWriters;
   private final List<ConstructorWriter> constructorWriters;
   private final List<TypeVariableName> typeVariables;
 
   ClassWriter(ClassName className) {
     super(className);
-    this.nestedTypeWriters = Lists.newArrayList();
     this.fieldWriters = Maps.newLinkedHashMap();
     this.constructorWriters = Lists.newArrayList();
     this.typeVariables = Lists.newArrayList();
@@ -65,12 +63,6 @@ public final class ClassWriter extends TypeWriter {
     ConstructorWriter constructorWriter = new ConstructorWriter(name.simpleName());
     constructorWriters.add(constructorWriter);
     return constructorWriter;
-  }
-
-  public ClassWriter addNestedClass(String name) {
-    ClassWriter innerClassWriter = new ClassWriter(this.name.nestedClassNamed(name));
-    nestedTypeWriters.add(innerClassWriter);
-    return innerClassWriter;
   }
 
   @Override

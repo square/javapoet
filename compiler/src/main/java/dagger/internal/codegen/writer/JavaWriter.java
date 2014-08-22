@@ -10,10 +10,12 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
 import dagger.internal.codegen.writer.Writable.Context;
 import java.io.IOException;
+import java.util.Deque;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.processing.Filer;
@@ -86,8 +88,6 @@ public final class JavaWriter {
         })
         .toSet();
 
-    BiMap<String, ClassName> importedClassIndex = HashBiMap.create();
-    // TODO(gak): check for collisions with types declared in this compilation unit too
     ImmutableSortedSet<ClassName> importCandidates = ImmutableSortedSet.<ClassName>naturalOrder()
         .addAll(explicitImports)
         .addAll(classNames)
@@ -99,6 +99,18 @@ public final class JavaWriter {
           }
         })
         .toSet();
+
+    ImmutableSet.Builder<String> declaredSimpleNamesBuilder = ImmutableSet.builder();
+    Deque<TypeWriter> declaredTypes = Queues.newArrayDeque(typeWriters);
+    while (!declaredTypes.isEmpty()) {
+      TypeWriter currentType = declaredTypes.pop();
+      declaredSimpleNamesBuilder.add(currentType.name().simpleName());
+      declaredTypes.addAll(currentType.nestedTypeWriters);
+    }
+
+    ImmutableSet<String> declaredSimpleNames = declaredSimpleNamesBuilder.build();
+
+    BiMap<String, ClassName> importedClassIndex = HashBiMap.create();
     for (ClassName className : importCandidates) {
       if (!(className.packageName().equals(packageName)
               && !className.enclosingClassName().isPresent())
@@ -107,7 +119,8 @@ public final class JavaWriter {
           && !typeNames.contains(className.topLevelClassName())) {
         Optional<ClassName> importCandidate = Optional.of(className);
         while (importCandidate.isPresent()
-            && importedClassIndex.containsKey(importCandidate.get().simpleName())) {
+            && (importedClassIndex.containsKey(importCandidate.get().simpleName())
+                || declaredSimpleNames.contains(importCandidate.get().simpleName()))) {
           importCandidate = importCandidate.get().enclosingClassName();
         }
         if (importCandidate.isPresent()) {
