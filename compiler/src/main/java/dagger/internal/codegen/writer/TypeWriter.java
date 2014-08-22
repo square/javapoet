@@ -14,12 +14,14 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
   Optional<TypeName> supertype;
   final List<TypeName> implementedTypes;
   final List<MethodWriter> methodWriters;
+  final List<TypeWriter> nestedTypeWriters;
 
   TypeWriter(ClassName name) {
     this.name = name;
     this.supertype = Optional.absent();
     this.implementedTypes = Lists.newArrayList();
     this.methodWriters = Lists.newArrayList();
+    nestedTypeWriters = Lists.newArrayList();
   }
 
   @Override
@@ -51,5 +53,11 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
         new MethodWriter(ClassName.fromClass(returnType), name);
     methodWriters.add(methodWriter);
     return methodWriter;
+  }
+
+  public ClassWriter addNestedClass(String name) {
+    ClassWriter innerClassWriter = new ClassWriter(this.name.nestedClassNamed(name));
+    nestedTypeWriters.add(innerClassWriter);
+    return innerClassWriter;
   }
 }
