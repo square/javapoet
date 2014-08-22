@@ -27,6 +27,10 @@ public class MethodWriter extends Modifiable implements HasClassReferences, Writ
     this.body = Optional.absent();
   }
 
+  public String name() {
+    return name;
+  }
+
   public VariableWriter addParameter(Class<?> type, String name) {
     return addParameter(ClassName.fromClass(type), name);
   }
