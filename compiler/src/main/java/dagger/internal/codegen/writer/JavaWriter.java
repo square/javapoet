@@ -69,6 +69,13 @@ public final class JavaWriter {
     return classWriter;
   }
 
+  public EnumWriter addEnum(String simpleName) {
+    checkNotNull(simpleName);
+    EnumWriter writer = new EnumWriter(ClassName.create(simpleName, simpleName));
+    typeWriters.add(writer);
+    return writer;
+  }
+
   public InterfaceWriter addInterface(String simpleName) {
     InterfaceWriter writer = new InterfaceWriter(ClassName.create(packageName, simpleName));
     typeWriters.add(writer);
