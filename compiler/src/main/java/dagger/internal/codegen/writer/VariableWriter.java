@@ -3,13 +3,15 @@ package dagger.internal.codegen.writer;
 import java.io.IOException;
 import java.util.Set;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class VariableWriter extends Modifiable implements Writable, HasClassReferences {
   private final TypeName type;
   private final String name;
 
   VariableWriter(TypeName type, String name) {
-    this.type = type;
-    this.name = name;
+    this.type = checkNotNull(type);
+    this.name = checkNotNull(name);
   }
 
   public TypeName type() {
