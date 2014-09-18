@@ -10,26 +10,21 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
-import com.google.common.escape.Escapers;
 import com.google.common.io.Closer;
 import dagger.internal.codegen.writer.Writable.Context;
 import java.io.IOException;
+import java.util.Deque;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.tools.JavaFileObject;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static javax.lang.model.element.Modifier.PRIVATE;
-import static javax.lang.model.element.Modifier.PROTECTED;
-import static javax.lang.model.element.Modifier.STATIC;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Writes a single compilation unit.
@@ -48,7 +43,7 @@ public final class JavaWriter {
   }
 
   private final String packageName;
-  // TODO(gak): disallow multiple types in a file
+  // TODO(gak): disallow multiple types in a file?
   private final List<TypeWriter> typeWriters;
   private final List<ClassName> explicitImports;
 
@@ -58,20 +53,17 @@ public final class JavaWriter {
     this.explicitImports = Lists.newArrayList();
   }
 
+  public List<TypeWriter> getTypeWriters() {
+    return unmodifiableList(typeWriters);
+  }
+
   public JavaWriter addImport(Class<?> importedClass) {
     explicitImports.add(ClassName.fromClass(importedClass));
     return this;
   }
 
   public ClassWriter addClass(String simpleName) {
-    Set<Modifier> modifiers = ImmutableSet.<Modifier>of();
-    checkNotNull(modifiers);
     checkNotNull(simpleName);
-    checkArgument(!modifiers.contains(PROTECTED));
-    checkArgument(!modifiers.contains(PRIVATE));
-    checkArgument(!modifiers.contains(STATIC));
-    checkNotNull(Optional.<Class<?>>absent());
-    checkNotNull(ImmutableSet.<Class<?>>of());
     ClassWriter classWriter = new ClassWriter(ClassName.create(packageName, simpleName));
     typeWriters.add(classWriter);
     return classWriter;
@@ -81,18 +73,6 @@ public final class JavaWriter {
     InterfaceWriter writer = new InterfaceWriter(ClassName.create(packageName, simpleName));
     typeWriters.add(writer);
     return writer;
-  }
-
-  static ImmutableSet<ClassName> collectReferencedClasses(
-      Iterable<? extends HasClassReferences> iterable) {
-    return FluentIterable.from(iterable)
-        .transformAndConcat(new Function<HasClassReferences, Set<ClassName>>() {
-          @Override
-          public Set<ClassName> apply(HasClassReferences input) {
-            return input.referencedClasses();
-          }
-        })
-        .toSet();
   }
 
   public Appendable write(Appendable appendable) throws IOException {
@@ -107,8 +87,7 @@ public final class JavaWriter {
           }
         })
         .toSet();
-    BiMap<String, ClassName> importedClassIndex = HashBiMap.create();
-    // TODO(gak): check for collisions with types declared in this compilation unit too
+
     ImmutableSortedSet<ClassName> importCandidates = ImmutableSortedSet.<ClassName>naturalOrder()
         .addAll(explicitImports)
         .addAll(classNames)
@@ -120,6 +99,18 @@ public final class JavaWriter {
           }
         })
         .toSet();
+
+    ImmutableSet.Builder<String> declaredSimpleNamesBuilder = ImmutableSet.builder();
+    Deque<TypeWriter> declaredTypes = Queues.newArrayDeque(typeWriters);
+    while (!declaredTypes.isEmpty()) {
+      TypeWriter currentType = declaredTypes.pop();
+      declaredSimpleNamesBuilder.add(currentType.name().simpleName());
+      declaredTypes.addAll(currentType.nestedTypeWriters);
+    }
+
+    ImmutableSet<String> declaredSimpleNames = declaredSimpleNamesBuilder.build();
+
+    BiMap<String, ClassName> importedClassIndex = HashBiMap.create();
     for (ClassName className : importCandidates) {
       if (!(className.packageName().equals(packageName)
               && !className.enclosingClassName().isPresent())
@@ -128,7 +119,8 @@ public final class JavaWriter {
           && !typeNames.contains(className.topLevelClassName())) {
         Optional<ClassName> importCandidate = Optional.of(className);
         while (importCandidate.isPresent()
-            && importedClassIndex.containsKey(importCandidate.get().simpleName())) {
+            && (importedClassIndex.containsKey(importCandidate.get().simpleName())
+                || declaredSimpleNames.contains(importCandidate.get().simpleName()))) {
           importCandidate = importCandidate.get().enclosingClassName();
         }
         if (importCandidate.isPresent()) {
@@ -152,8 +144,12 @@ public final class JavaWriter {
 
   public void file(Filer filer, Iterable<? extends Element> originatingElements)
       throws IOException {
-    JavaFileObject sourceFile = filer.createSourceFile(
-        Iterables.getOnlyElement(typeWriters).name.canonicalName(),
+    file(filer, Iterables.getOnlyElement(typeWriters).name.canonicalName(), originatingElements);
+  }
+
+  public void file(Filer filer, CharSequence name,  Iterable<? extends Element> originatingElements)
+      throws IOException {
+    JavaFileObject sourceFile = filer.createSourceFile(name,
         Iterables.toArray(originatingElements, Element.class));
     Closer closer = Closer.create();
     try {
@@ -178,7 +174,6 @@ public final class JavaWriter {
       throw new AssertionError();
     }
   }
-
 
   static final class CompilationUnitContext implements Writable.Context {
     private final String packageName;
@@ -233,28 +228,6 @@ public final class JavaWriter {
           || visibleClasses.contains(className)
           || (className.packageName().equals("java.lang")
               && className.enclosingSimpleNames().isEmpty());
-    }
-
-    private static final String JAVA_IDENTIFIER_REGEX =
-        "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*";
-
-    @Override
-    public String compressTypesWithin(String snippet) {
-      // TODO(gak): deal with string literals
-      for (ClassName importedClass : visibleClasses) {
-        snippet = snippet.replace(importedClass.canonicalName(), importedClass.simpleName());
-      }
-      Pattern samePackagePattern = Pattern.compile(
-          packageName.replace(".", "\\.") + "\\.(" + JAVA_IDENTIFIER_REGEX + ")([^\\.])");
-      Matcher matcher = samePackagePattern.matcher(snippet);
-      StringBuffer buffer = new StringBuffer();
-      while (matcher.find()) {
-        matcher.appendReplacement(buffer, collidesWithVisibleClass(matcher.group(1))
-            ? Escapers.builder().addEscape('$', "\\$").build().escape(matcher.group())
-            : "$1$2");
-      }
-      matcher.appendTail(buffer);
-      return buffer.toString();
     }
   }
 }

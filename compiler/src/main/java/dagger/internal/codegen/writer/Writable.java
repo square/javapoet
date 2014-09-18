@@ -6,7 +6,6 @@ import java.util.Set;
 interface Writable {
   interface Context {
     String sourceReferenceForClassName(ClassName className);
-    String compressTypesWithin(String snippet);
     Context createSubcontext(Set<ClassName> newTypes);
   }
 

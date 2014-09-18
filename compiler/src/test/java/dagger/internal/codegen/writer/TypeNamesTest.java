@@ -12,7 +12,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import static org.truth0.Truth.ASSERT;
+import static com.google.common.truth.Truth.assert_;
 
 @RunWith(JUnit4.class)
 public class TypeNamesTest {
@@ -28,11 +28,11 @@ public class TypeNamesTest {
 
   @Test
   public void forTypeMirror_basicTypes() {
-    ASSERT.that(TypeNames.forTypeMirror(getType(Object.class)))
+    assert_().that(TypeNames.forTypeMirror(getType(Object.class)))
         .isEqualTo(ClassName.fromClass(Object.class));
-    ASSERT.that(TypeNames.forTypeMirror(getType(Charset.class)))
+    assert_().that(TypeNames.forTypeMirror(getType(Charset.class)))
         .isEqualTo(ClassName.fromClass(Charset.class));
-    ASSERT.that(TypeNames.forTypeMirror(getType(TypeNamesTest.class)))
+    assert_().that(TypeNames.forTypeMirror(getType(TypeNamesTest.class)))
         .isEqualTo(ClassName.fromClass(TypeNamesTest.class));
   }
 
@@ -40,45 +40,45 @@ public class TypeNamesTest {
   public void forTypeMirror_parameterizedType() {
     DeclaredType setType =
         compilation.getTypes().getDeclaredType(getElement(Set.class), getType(Object.class));
-    ASSERT.that(TypeNames.forTypeMirror(setType))
+    assert_().that(TypeNames.forTypeMirror(setType))
         .isEqualTo(ParameterizedTypeName.create(Set.class, ClassName.fromClass(Object.class)));
   }
 
   @Test
   public void forTypeMirror_primitive() {
-    ASSERT.that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.BOOLEAN)))
+    assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.BOOLEAN)))
         .isEqualTo(PrimitiveName.BOOLEAN);
-    ASSERT.that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.BYTE)))
+    assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.BYTE)))
         .isEqualTo(PrimitiveName.BYTE);
-    ASSERT.that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.SHORT)))
+    assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.SHORT)))
         .isEqualTo(PrimitiveName.SHORT);
-    ASSERT.that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.INT)))
+    assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.INT)))
         .isEqualTo(PrimitiveName.INT);
-    ASSERT.that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.LONG)))
+    assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.LONG)))
         .isEqualTo(PrimitiveName.LONG);
-    ASSERT.that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.CHAR)))
+    assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.CHAR)))
         .isEqualTo(PrimitiveName.CHAR);
-    ASSERT.that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.FLOAT)))
+    assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.FLOAT)))
         .isEqualTo(PrimitiveName.FLOAT);
-    ASSERT.that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.DOUBLE)))
+    assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.DOUBLE)))
         .isEqualTo(PrimitiveName.DOUBLE);
   }
 
   @Test
   public void forTypeMirror_arrays() {
-    ASSERT.that(TypeNames.forTypeMirror(compilation.getTypes().getArrayType(getType(Object.class))))
+    assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getArrayType(getType(Object.class))))
         .isEqualTo(new ArrayTypeName(ClassName.fromClass(Object.class)));
   }
 
   @Test
   public void forTypeMirror_void() {
-    ASSERT.that(TypeNames.forTypeMirror(compilation.getTypes().getNoType(TypeKind.VOID)))
+    assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getNoType(TypeKind.VOID)))
         .isEqualTo(VoidName.VOID);
   }
 
   @Test
   public void forTypeMirror_null() {
-    ASSERT.that(TypeNames.forTypeMirror(compilation.getTypes().getNullType()))
+    assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getNullType()))
         .isEqualTo(NullName.NULL);
   }
 }

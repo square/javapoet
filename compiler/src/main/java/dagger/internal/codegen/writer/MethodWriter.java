@@ -14,7 +14,6 @@ import javax.lang.model.element.TypeElement;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-
 public class MethodWriter extends Modifiable implements HasClassReferences, Writable {
   private final TypeName returnType;
   private final String name;
@@ -26,6 +25,10 @@ public class MethodWriter extends Modifiable implements HasClassReferences, Writ
     this.name = name;
     this.parameterWriters = Maps.newLinkedHashMap();
     this.body = Optional.absent();
+  }
+
+  public String name() {
+    return name;
   }
 
   public VariableWriter addParameter(Class<?> type, String name) {
