@@ -1,29 +1,36 @@
 package dagger.internal.codegen.writer;
 
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.lang.model.element.Modifier;
 
+import static com.google.common.base.Preconditions.checkState;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
-public final class ClassWriter extends TypeWriter {
-  private final List<ConstructorWriter> constructorWriters;
-  private final List<TypeVariableName> typeVariables;
+public class EnumWriter extends TypeWriter {
+  private final Map<String, ConstantWriter> constantWriters = Maps.newLinkedHashMap();
+  private final List<ConstructorWriter> constructorWriters = Lists.newArrayList();
 
-  ClassWriter(ClassName className) {
-    super(className);
-    this.constructorWriters = Lists.newArrayList();
-    this.typeVariables = Lists.newArrayList();
+  EnumWriter(ClassName name) {
+    super(name);
+  }
+
+  public ConstantWriter addConstant(String name) {
+    ConstantWriter constantWriter = new ConstantWriter(name);
+    constantWriters.put(name, constantWriter);
+    return constantWriter;
   }
 
   public ConstructorWriter addConstructor() {
@@ -42,16 +49,7 @@ public final class ClassWriter extends TypeWriter {
         })
         .toSet());
     writeAnnotations(appendable, context);
-    writeModifiers(appendable).append("class ").append(name.simpleName());
-    if (!typeVariables.isEmpty()) {
-      appendable.append('<');
-      Joiner.on(", ").appendTo(appendable, typeVariables);
-      appendable.append('>');
-    }
-    if (supertype.isPresent()) {
-      appendable.append(" extends ");
-      supertype.get().write(appendable, context);
-    }
+    writeModifiers(appendable).append("enum ").append(name.simpleName());
     Iterator<TypeName> implementedTypesIterator = implementedTypes.iterator();
     if (implementedTypesIterator.hasNext()) {
       appendable.append(" implements ");
@@ -62,6 +60,19 @@ public final class ClassWriter extends TypeWriter {
       }
     }
     appendable.append(" {");
+
+    checkState(!constantWriters.isEmpty(), "Cannot write an enum with no constants.");
+    appendable.append('\n');
+    ImmutableList<ConstantWriter> constantWriterList =
+        ImmutableList.copyOf(constantWriters.values());
+    for (ConstantWriter constantWriter :
+        constantWriterList.subList(0, constantWriterList.size() - 1)) {
+      constantWriter.write(appendable, context);
+      appendable.append(",\n");
+    }
+    constantWriterList.get(constantWriterList.size() - 1).write(appendable, context);
+    appendable.append(";\n");
+
     if (!fieldWriters.isEmpty()) {
       appendable.append('\n');
     }
@@ -99,7 +110,8 @@ public final class ClassWriter extends TypeWriter {
   public Set<ClassName> referencedClasses() {
     @SuppressWarnings("unchecked")
     Iterable<? extends HasClassReferences> concat =
-        Iterables.concat(nestedTypeWriters, fieldWriters.values(), constructorWriters,
+        Iterables.concat(nestedTypeWriters, constantWriters.values(), fieldWriters.values(),
+            constructorWriters,
             methodWriters, implementedTypes, supertype.asSet(), annotations);
     return FluentIterable.from(concat)
         .transformAndConcat(new Function<HasClassReferences, Set<ClassName>>() {
@@ -109,5 +121,48 @@ public final class ClassWriter extends TypeWriter {
           }
         })
         .toSet();
+  }
+
+  public static final class ConstantWriter implements Writable, HasClassReferences {
+    private final String name;
+    private final List<Snippet> constructorSnippets;
+
+    private ConstantWriter(String name) {
+      this.name = name;
+      this.constructorSnippets = Lists.newArrayList();
+    }
+
+    ConstantWriter addArgument(Snippet snippet) {
+      constructorSnippets.add(snippet);
+      return this;
+    }
+
+    @Override
+    public Appendable write(Appendable appendable, Context context) throws IOException {
+      appendable.append(name);
+      Iterator<Snippet> snippetIterator = constructorSnippets.iterator();
+      if (snippetIterator.hasNext()) {
+        appendable.append('(');
+        snippetIterator.next().write(appendable, context);
+        while (snippetIterator.hasNext()) {
+          appendable.append(", ");
+          snippetIterator.next().write(appendable, context);
+        }
+        appendable.append(')');
+      }
+      return appendable;
+    }
+
+    @Override
+    public Set<ClassName> referencedClasses() {
+      return FluentIterable.from(constructorSnippets)
+          .transformAndConcat(new Function<Snippet, Set<ClassName>>() {
+            @Override
+            public Set<ClassName> apply(Snippet input) {
+              return input.referencedClasses();
+            }
+          })
+          .toSet();
+    }
   }
 }
