@@ -48,7 +48,7 @@ public class ClassNameTest {
         .isEqualTo(ClassName.create("java.util", ImmutableList.of("Map"), "Entry"));
     assert_().that(ClassName.bestGuessFromString(OuterClass.InnerClass.class.getCanonicalName()))
         .isEqualTo(
-            ClassName.create("dagger.internal.codegen",
+            ClassName.create("dagger.internal.codegen.writer",
                 ImmutableList.of("ClassNameTest", "OuterClass"), "InnerClass"));
   }
 
@@ -89,7 +89,7 @@ public class ClassNameTest {
     ClassName className = ClassName.fromTypeElement(element);
     ClassName peerName = className.peerNamed("Foo");
     assert_().that(peerName.canonicalName())
-        .isEqualTo("dagger.internal.codegen.Foo");
+        .isEqualTo("dagger.internal.codegen.writer.Foo");
   }
 
   @Test public void peerNamed_nestedClass() {
@@ -98,7 +98,7 @@ public class ClassNameTest {
     ClassName className = ClassName.fromTypeElement(element);
     ClassName peerName = className.peerNamed("Foo");
     assert_().that(peerName.canonicalName())
-        .isEqualTo("dagger.internal.codegen.ClassNameTest.Foo");
+        .isEqualTo("dagger.internal.codegen.writer.ClassNameTest.Foo");
   }
 
   @Test public void peerNamed_deeplyNestedClass() {
@@ -107,6 +107,6 @@ public class ClassNameTest {
     ClassName className = ClassName.fromTypeElement(element);
     ClassName peerName = className.peerNamed("Foo");
     assert_().that(peerName.canonicalName())
-        .isEqualTo("dagger.internal.codegen.ClassNameTest.OuterClass.Foo");
+        .isEqualTo("dagger.internal.codegen.writer.ClassNameTest.OuterClass.Foo");
   }
 }
