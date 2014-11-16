@@ -15,19 +15,25 @@
  */
 package com.squareup.javawriter;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
+import java.util.Set;
 
-import static com.google.common.truth.Truth.assertThat;
+enum NullName implements TypeName {
+  NULL;
 
-@RunWith(JUnit4.class)
-public class JavaWriterTest {
-  @Test public void referencedAndDeclaredSimpleName() {
-    JavaWriter javaWriter = JavaWriter.inPackage("test");
-    ClassWriter topClass = javaWriter.addClass("Top");
-    topClass.addNestedClass("Middle").addNestedClass("Bottom");
-    topClass.addField(ClassName.create("some.other.pkg", "Bottom"), "field");
-    assertThat(topClass.toString()).doesNotContain("import some.other.pkg.Bottom;");
+  @Override
+  public Set<ClassName> referencedClasses() {
+    return ImmutableSet.of();
+  }
+
+  @Override
+  public Appendable write(Appendable appendable, Context context) throws IOException {
+    return appendable.append("null");
+  }
+
+  @Override
+  public String toString() {
+    return "null";
   }
 }
