@@ -28,7 +28,7 @@ import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.SimpleTypeVisitor6;
 
 public final class TypeNames {
-  static Function<TypeMirror, TypeName> FOR_TYPE_MIRROR =
+  static final Function<TypeMirror, TypeName> FOR_TYPE_MIRROR =
       new Function<TypeMirror, TypeName>() {
         @Override public TypeName apply(TypeMirror input) {
           return forTypeMirror(input);
@@ -95,5 +95,8 @@ public final class TypeNames {
         }
       }
     }, null);
+  }
+
+  private TypeNames() {
   }
 }

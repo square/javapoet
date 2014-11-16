@@ -29,7 +29,7 @@ final class Writables {
     };
   }
 
-  private static Context DEFAULT_CONTEXT = new Context() {
+  private static final Context DEFAULT_CONTEXT = new Context() {
     @Override
     public String sourceReferenceForClassName(ClassName className) {
       return className.canonicalName();
@@ -51,5 +51,6 @@ final class Writables {
     return builder.toString();
   }
 
-  private Writables() {}
+  private Writables() {
+  }
 }

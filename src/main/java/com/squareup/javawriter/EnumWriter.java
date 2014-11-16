@@ -80,8 +80,8 @@ public final class EnumWriter extends TypeWriter {
     appendable.append('\n');
     ImmutableList<ConstantWriter> constantWriterList =
         ImmutableList.copyOf(constantWriters.values());
-    for (ConstantWriter constantWriter :
-        constantWriterList.subList(0, constantWriterList.size() - 1)) {
+    for (ConstantWriter constantWriter
+        : constantWriterList.subList(0, constantWriterList.size() - 1)) {
       constantWriter.write(appendable, context);
       appendable.append(",\n");
     }
