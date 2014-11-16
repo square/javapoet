@@ -22,7 +22,9 @@
 
     <java.version>1.6</java.version>
     <junit.version>4.10</junit.version>
-    <fest.version>2.0M8</fest.version>
+    <guava.version>18.0</guava.version>
+    <truth.version>1.0-SNAPSHOT</truth.version>
+    <compile-testing.version>1.0-SNAPSHOT</compile-testing.version>
   </properties>
 
   <scm>
@@ -51,15 +53,26 @@
 
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.truth</groupId>
+      <artifactId>truth</artifactId>
+      <version>${truth.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.easytesting</groupId>
-      <artifactId>fest-assert-core</artifactId>
-      <version>${fest.version}</version>
+      <groupId>com.google.testing.compile</groupId>
+      <artifactId>compile-testing</artifactId>
+      <version>${compile-testing.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
