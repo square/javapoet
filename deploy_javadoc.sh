@@ -24,7 +24,7 @@ git checkout -t origin/gh-pages
 rm -rf *
 
 # Download the latest javadoc
-curl -L "http://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=$GROUP_ID&a=$ARTIFACT_ID&v=LATEST&c=javadoc" > javadoc.zip
+curl -L "https://search.maven.org/remote_content?g=$GROUP_ID&a=$ARTIFACT_ID&v=LATEST&c=javadoc" > javadoc.zip
 unzip javadoc.zip
 rm javadoc.zip
 
