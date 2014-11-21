@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 import javax.lang.model.element.Modifier;
 
 import static javax.lang.model.element.Modifier.ABSTRACT;
+import static javax.lang.model.element.Modifier.STATIC;
 
 /** A utility class which aids in generating Java source files. */
 public class JavaWriter implements Closeable {
@@ -425,7 +426,8 @@ public class JavaWriter implements Closeable {
         emitCompressedType(throwsTypes.get(i));
       }
     }
-    if (modifiers.contains(ABSTRACT) || Scope.INTERFACE_DECLARATION.equals(scopes.peek())) {
+    if (modifiers.contains(ABSTRACT) || (Scope.INTERFACE_DECLARATION.equals(scopes.peek())
+        && !containsDefault(modifiers) && !modifiers.contains(STATIC))) {
       out.write(";\n");
       scopes.push(Scope.ABSTRACT_METHOD);
     } else {
@@ -433,6 +435,13 @@ public class JavaWriter implements Closeable {
       scopes.push(returnType == null ? Scope.CONSTRUCTOR : Scope.NON_ABSTRACT_METHOD);
     }
     return this;
+  }
+  
+  private boolean containsDefault(Set<Modifier> modifiers){
+    for(Modifier m : modifiers){
+      if(m.toString().equals("default")) return true;
+    }
+    return false;
   }
 
   public JavaWriter beginConstructor(Set<Modifier> modifiers, String... parameters)
