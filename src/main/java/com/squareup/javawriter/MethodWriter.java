@@ -20,9 +20,11 @@ import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.lang.model.element.TypeElement;
@@ -30,12 +32,14 @@ import javax.lang.model.element.TypeElement;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public final class MethodWriter extends Modifiable implements HasClassReferences, Writable {
+  private final List<TypeVariableName> typeVariables;
   private final TypeName returnType;
   private final String name;
   private final Map<String, VariableWriter> parameterWriters;
   private Optional<BlockWriter> body;
 
   MethodWriter(TypeName returnType, String name) {
+    this.typeVariables = Lists.newArrayList();
     this.returnType = returnType;
     this.name = name;
     this.parameterWriters = Maps.newLinkedHashMap();
@@ -44,6 +48,10 @@ public final class MethodWriter extends Modifiable implements HasClassReferences
 
   public String name() {
     return name;
+  }
+
+  public void addTypeVariable(TypeVariableName typeVariable) {
+    this.typeVariables.add(typeVariable);
   }
 
   public VariableWriter addParameter(Class<?> type, String name) {
@@ -79,6 +87,16 @@ public final class MethodWriter extends Modifiable implements HasClassReferences
   public Appendable write(Appendable appendable, Context context) throws IOException {
     writeAnnotations(appendable, context);
     writeModifiers(appendable);
+    Iterator<TypeVariableName> typeVariablesIterator = typeVariables.iterator();
+    if (typeVariablesIterator.hasNext()) {
+      appendable.append('<');
+      typeVariablesIterator.next().write(appendable, context);
+      while (typeVariablesIterator.hasNext()) {
+        appendable.append(", ");
+        typeVariablesIterator.next().write(appendable, context);
+      }
+      appendable.append("> ");
+    }
     returnType.write(appendable, context);
     appendable.append(' ').append(name).append('(');
     Iterator<VariableWriter> parameterWritersIterator = parameterWriters.values().iterator();
@@ -102,14 +120,16 @@ public final class MethodWriter extends Modifiable implements HasClassReferences
 
   @Override
   public Set<ClassName> referencedClasses() {
-    return FluentIterable.from(
-        Iterables.concat(ImmutableList.of(returnType), parameterWriters.values(), body.asSet()))
-            .transformAndConcat(new Function<HasClassReferences, Set<ClassName>>() {
-              @Override
-              public Set<ClassName> apply(HasClassReferences input) {
-                return input.referencedClasses();
-              }
-            })
-            .toSet();
+    Iterable<? extends HasClassReferences> concat =
+        Iterables.concat(typeVariables, ImmutableList.of(returnType), parameterWriters.values(),
+            body.asSet());
+    return FluentIterable.from(concat)
+        .transformAndConcat(new Function<HasClassReferences, Set<ClassName>>() {
+          @Override
+          public Set<ClassName> apply(HasClassReferences input) {
+            return input.referencedClasses();
+          }
+        })
+        .toSet();
   }
 }

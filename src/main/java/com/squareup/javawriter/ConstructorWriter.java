@@ -19,9 +19,11 @@ import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.lang.model.element.TypeElement;
@@ -29,14 +31,20 @@ import javax.lang.model.element.TypeElement;
 import static com.google.common.base.Preconditions.checkArgument;
 
 public final class ConstructorWriter extends Modifiable implements Writable, HasClassReferences {
+  private final List<TypeVariableName> typeVariables;
   private final String name;
   private final Map<String, VariableWriter> parameterWriters;
   private final BlockWriter blockWriter;
 
   ConstructorWriter(String name) {
+    this.typeVariables = Lists.newArrayList();
     this.name = name;
     this.parameterWriters = Maps.newLinkedHashMap();
     this.blockWriter = new BlockWriter();
+  }
+
+  public void addTypeVariable(TypeVariableName typeVariable) {
+    this.typeVariables.add(typeVariable);
   }
 
   public VariableWriter addParameter(Class<?> type, String name) {
@@ -71,7 +79,7 @@ public final class ConstructorWriter extends Modifiable implements Writable, Has
   @Override
   public Set<ClassName> referencedClasses() {
     return FluentIterable.from(
-        Iterables.concat(parameterWriters.values(), ImmutableList.of(blockWriter)))
+        Iterables.concat(typeVariables, parameterWriters.values(), ImmutableList.of(blockWriter)))
             .transformAndConcat(new Function<HasClassReferences, Set<ClassName>>() {
               @Override
               public Set<ClassName> apply(HasClassReferences input) {
@@ -83,7 +91,18 @@ public final class ConstructorWriter extends Modifiable implements Writable, Has
 
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
-    writeModifiers(appendable).append(name).append('(');
+    writeModifiers(appendable);
+    Iterator<TypeVariableName> typeVariablesIterator = typeVariables.iterator();
+    if (typeVariablesIterator.hasNext()) {
+      appendable.append('<');
+      typeVariablesIterator.next().write(appendable, context);
+      while (typeVariablesIterator.hasNext()) {
+        appendable.append(", ");
+        typeVariablesIterator.next().write(appendable, context);
+      }
+      appendable.append("> ");
+    }
+    appendable.append(name).append('(');
     Iterator<VariableWriter> parameterWritersIterator = parameterWriters.values().iterator();
     if (parameterWritersIterator.hasNext()) {
       parameterWritersIterator.next().write(appendable, context);

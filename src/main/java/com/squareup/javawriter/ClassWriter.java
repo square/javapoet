@@ -16,7 +16,6 @@
 package com.squareup.javawriter;
 
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -47,6 +46,10 @@ public final class ClassWriter extends TypeWriter {
     return constructorWriter;
   }
 
+  public void addTypeVariable(TypeVariableName typeVariable) {
+    this.typeVariables.add(typeVariable);
+  }
+
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
     context = context.createSubcontext(FluentIterable.from(nestedTypeWriters)
@@ -58,10 +61,15 @@ public final class ClassWriter extends TypeWriter {
         .toSet());
     writeAnnotations(appendable, context);
     writeModifiers(appendable).append("class ").append(name.simpleName());
-    if (!typeVariables.isEmpty()) {
+    Iterator<TypeVariableName> typeVariablesIterator = typeVariables.iterator();
+    if (typeVariablesIterator.hasNext()) {
       appendable.append('<');
-      Joiner.on(", ").appendTo(appendable, typeVariables);
-      appendable.append('>');
+      typeVariablesIterator.next().write(appendable, context);
+      while (typeVariablesIterator.hasNext()) {
+        appendable.append(", ");
+        typeVariablesIterator.next().write(appendable, context);
+      }
+      appendable.append("> ");
     }
     if (supertype.isPresent()) {
       appendable.append(" extends ");
@@ -115,7 +123,7 @@ public final class ClassWriter extends TypeWriter {
     @SuppressWarnings("unchecked")
     Iterable<? extends HasClassReferences> concat =
         Iterables.concat(nestedTypeWriters, fieldWriters.values(), constructorWriters,
-            methodWriters, implementedTypes, supertype.asSet(), annotations);
+            methodWriters, implementedTypes, supertype.asSet(), typeVariables, annotations);
     return FluentIterable.from(concat)
         .transformAndConcat(new Function<HasClassReferences, Set<ClassName>>() {
           @Override
