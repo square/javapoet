@@ -16,7 +16,6 @@
 package com.squareup.javawriter;
 
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -47,10 +46,15 @@ public final class InterfaceWriter extends TypeWriter {
         .toSet());
     writeAnnotations(appendable, context);
     writeModifiers(appendable).append("interface ").append(name.simpleName());
-    if (!typeVariables.isEmpty()) {
+    Iterator<TypeVariableName> typeVariablesIterator = typeVariables.iterator();
+    if (typeVariablesIterator.hasNext()) {
       appendable.append('<');
-      Joiner.on(", ").appendTo(appendable, typeVariables);
-      appendable.append('>');
+      typeVariablesIterator.next().write(appendable, context);
+      while (typeVariablesIterator.hasNext()) {
+        appendable.append(", ");
+        typeVariablesIterator.next().write(appendable, context);
+      }
+      appendable.append("> ");
     }
     if (supertype.isPresent()) {
       appendable.append(" extends ");
@@ -83,7 +87,7 @@ public final class InterfaceWriter extends TypeWriter {
     @SuppressWarnings("unchecked")
     Iterable<? extends HasClassReferences> concat =
         Iterables.concat(nestedTypeWriters, methodWriters, implementedTypes, supertype.asSet(),
-            annotations);
+            typeVariables, annotations);
     return FluentIterable.from(concat)
         .transformAndConcat(new Function<HasClassReferences, Set<ClassName>>() {
           @Override

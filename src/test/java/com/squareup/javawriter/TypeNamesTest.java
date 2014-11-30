@@ -15,10 +15,13 @@
  */
 package com.squareup.javawriter;
 
+import com.google.common.collect.ImmutableList;
 import com.google.testing.compile.CompilationRule;
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.Set;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -57,6 +60,35 @@ public class TypeNamesTest {
         compilation.getTypes().getDeclaredType(getElement(Set.class), getType(Object.class));
     assert_().that(TypeNames.forTypeMirror(setType))
         .isEqualTo(ParameterizedTypeName.create(Set.class, ClassName.fromClass(Object.class)));
+  }
+
+  static class Parameterized<
+      Simple,
+      ExtendsClass extends Number,
+      ExtendsInterface extends Runnable,
+      ExtendsTypeVariable extends Simple,
+      Intersection extends Number & Runnable> {}
+
+  @Test
+  public void forTypeMirror_typeVariable() {
+    List<? extends TypeParameterElement> typeVariables =
+        getElement(Parameterized.class).getTypeParameters();
+
+    assert_().that(TypeNames.forTypeMirror(typeVariables.get(0).asType()))
+        .isEqualTo(TypeVariableName.named("Simple"));
+    assert_().that(TypeNames.forTypeMirror(typeVariables.get(1).asType()))
+        .isEqualTo(new TypeVariableName("ExtendsClass", ImmutableList.<TypeName>of(
+            ClassName.fromClass(Number.class))));
+    assert_().that(TypeNames.forTypeMirror(typeVariables.get(2).asType()))
+        .isEqualTo(new TypeVariableName("ExtendsInterface", ImmutableList.<TypeName>of(
+            ClassName.fromClass(Runnable.class))));
+    assert_().that(TypeNames.forTypeMirror(typeVariables.get(3).asType()))
+        .isEqualTo(new TypeVariableName("ExtendsTypeVariable", ImmutableList.<TypeName>of(
+            TypeVariableName.named("Simple"))));
+    assert_().that(TypeNames.forTypeMirror(typeVariables.get(4).asType()))
+        .isEqualTo(new TypeVariableName("Intersection", ImmutableList.<TypeName>of(
+            ClassName.fromClass(Number.class),
+            ClassName.fromClass(Runnable.class))));
   }
 
   @Test

@@ -15,20 +15,53 @@
  */
 package com.squareup.javawriter;
 
-import com.google.common.base.Optional;
+import com.google.common.base.Objects;
+import com.google.common.base.Predicates;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Set;
+import javax.lang.model.element.NestingKind;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
+
+import static com.squareup.javawriter.TypeNames.FOR_TYPE_MIRROR;
 
 public final class TypeVariableName implements TypeName {
   private final String name;
-  private final Optional<TypeName> extendsBound;
-  private final Optional<TypeName> superBound;
-  TypeVariableName(String name, Optional<TypeName> extendsBound,
-      Optional<TypeName> superBound) {
+  private final ImmutableList<TypeName> bounds;
+
+  TypeVariableName(String name, Iterable<TypeName> bounds) {
     this.name = name;
-    this.extendsBound = extendsBound;
-    this.superBound = superBound;
+    this.bounds = FluentIterable.from(bounds)
+        .filter(Predicates.not(Predicates.<TypeName>equalTo(ClassName.fromClass(Object.class))))
+        .toList();
+  }
+
+  static TypeVariableName named(String name) {
+    return new TypeVariableName(name, ImmutableList.<TypeName>of());
+  }
+
+  static TypeVariableName forTypeMirror(TypeVariable mirror) {
+    FluentIterable<TypeMirror> bounds =
+        FluentIterable.from(ImmutableList.of(mirror.getUpperBound()));
+    if (mirror.getUpperBound().getKind() == TypeKind.DECLARED) {
+      TypeElement bound = (TypeElement) ((DeclaredType) mirror.getUpperBound()).asElement();
+      if (bound.getNestingKind() == NestingKind.ANONYMOUS) {
+        // This is (likely) an intersection type.
+        bounds = FluentIterable
+            .from(ImmutableList.of(bound.getSuperclass()))
+            .append(bound.getInterfaces());
+      }
+    }
+    return new TypeVariableName(
+        mirror.asElement().getSimpleName().toString(),
+        bounds.transform(FOR_TYPE_MIRROR));
   }
 
   public String name() {
@@ -38,11 +71,8 @@ public final class TypeVariableName implements TypeName {
   @Override
   public Set<ClassName> referencedClasses() {
     ImmutableSet.Builder<ClassName> builder = new ImmutableSet.Builder<ClassName>();
-    if (extendsBound.isPresent()) {
-      builder.addAll(extendsBound.get().referencedClasses());
-    }
-    if (superBound.isPresent()) {
-      builder.addAll(superBound.get().referencedClasses());
+    for (TypeName bound : bounds) {
+      builder.addAll(bound.referencedClasses());
     }
     return builder.build();
   }
@@ -50,24 +80,36 @@ public final class TypeVariableName implements TypeName {
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
     appendable.append(name);
-    if (extendsBound.isPresent()) {
-      appendable.append(' ');
-      extendsBound.get().write(appendable, context);
-    }
-    if (superBound.isPresent()) {
-      appendable.append(' ');
-      superBound.get().write(appendable, context);
+    Iterator<TypeName> boundsIterator = bounds.iterator();
+    if (boundsIterator.hasNext()) {
+      appendable.append(" extends ");
+      boundsIterator.next().write(appendable, context);
+      while (boundsIterator.hasNext()) {
+        appendable.append(" & ");
+        boundsIterator.next().write(appendable, context);
+      }
     }
     return appendable;
   }
 
   @Override
-  public String toString() {
-    return Writables.writeToString(this);
+  public boolean equals(Object obj) {
+    if (obj instanceof TypeVariableName) {
+      TypeVariableName that = (TypeVariableName) obj;
+      return this.name.equals(that.name)
+          && this.bounds.equals(that.bounds);
+    } else {
+      return false;
+    }
   }
 
-  static TypeVariableName named(String name) {
-    return new TypeVariableName(
-        name, Optional.<TypeName>absent(), Optional.<TypeName>absent());
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(name, bounds);
+  }
+
+  @Override
+  public String toString() {
+    return Writables.writeToString(this);
   }
 }
