@@ -152,14 +152,19 @@ public final class JavaWriter {
       }
     }
 
-    appendable.append('\n');
+    if (importedClassIndex.isEmpty()) {
+      appendable.append('\n');
+    }
 
     CompilationUnitContext context =
         new CompilationUnitContext(packageName, ImmutableSet.copyOf(importedClassIndex.values()));
 
     // write types
+    String sep = "";
     for (TypeWriter typeWriter : typeWriters) {
-      typeWriter.write(appendable, context.createSubcontext(typeNames)).append('\n');
+      appendable.append(sep);
+      typeWriter.write(appendable, context.createSubcontext(typeNames));
+      sep = "\n";
     }
     return appendable;
   }
