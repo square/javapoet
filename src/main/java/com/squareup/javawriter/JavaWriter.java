@@ -152,7 +152,7 @@ public final class JavaWriter {
       }
     }
 
-    if (importedClassIndex.isEmpty()) {
+    if (!importedClassIndex.isEmpty()) {
       appendable.append('\n');
     }
 
