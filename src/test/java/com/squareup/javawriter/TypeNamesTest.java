@@ -31,6 +31,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import static com.google.common.truth.Truth.assert_;
+import static com.squareup.javawriter.TestUtil.isJava8;
+import static org.junit.Assume.assumeTrue;
 
 @RunWith(JUnit4.class)
 public class TypeNamesTest {
@@ -85,10 +87,30 @@ public class TypeNamesTest {
     assert_().that(TypeNames.forTypeMirror(typeVariables.get(3).asType()))
         .isEqualTo(new TypeVariableName("ExtendsTypeVariable", ImmutableList.<TypeName>of(
             TypeVariableName.named("Simple"))));
+  }
+
+  @Test
+  public void forTypeMirror_intersectionType() {
+    assumeTrue(!isJava8());
+
+    List<? extends TypeParameterElement> typeVariables =
+        getElement(Parameterized.class).getTypeParameters();
     assert_().that(TypeNames.forTypeMirror(typeVariables.get(4).asType()))
         .isEqualTo(new TypeVariableName("Intersection", ImmutableList.<TypeName>of(
             ClassName.fromClass(Number.class),
             ClassName.fromClass(Runnable.class))));
+  }
+
+  @Test
+  public void forTypeMirror_intersectionTypeJava8() {
+    assumeTrue(isJava8());
+
+    List<? extends TypeParameterElement> typeVariables =
+        getElement(Parameterized.class).getTypeParameters();
+    assert_().that(TypeNames.forTypeMirror(typeVariables.get(4).asType()))
+        .isEqualTo(new TypeVariableName("Intersection", ImmutableList.<TypeName>of(
+            new IntersectionTypeName(ImmutableList.<TypeName>of(ClassName.fromClass(Number.class),
+                ClassName.fromClass(Runnable.class))))));
   }
 
   @Test
