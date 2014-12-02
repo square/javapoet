@@ -57,6 +57,13 @@ public final class AnnotationWriter implements Writable, HasClassReferences {
           appendable.append(onlyEntry.getKey()).append(" = ");
         }
         onlyEntry.getValue().write(appendable, context);
+      } else {
+        String sep = "";
+        for (Entry<String, Writable> entry : memberMap.entrySet()) {
+          appendable.append(sep).append(entry.getKey()).append(" = ");
+          entry.getValue().write(appendable, context);
+          sep = ", ";
+        }
       }
       appendable.append(')');
     }
