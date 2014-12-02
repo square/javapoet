@@ -17,6 +17,9 @@ package com.squareup.javawriter;
 
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
+import java.lang.reflect.Method;
+import java.util.List;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
@@ -53,6 +56,27 @@ public final class TypeNames {
       @Override
       protected TypeName defaultAction(TypeMirror e, Void p) {
         throw new IllegalArgumentException(e.toString());
+      }
+
+      @Override
+      public TypeName visitUnknown(TypeMirror t, Void p) {
+        for (Class<?> implementedInterface : t.getClass().getInterfaces()) {
+          if ("javax.lang.model.type.IntersectionType".equals(implementedInterface.getName())) {
+            return visitIntersectionType(t);
+          }
+        }
+        return super.visitUnknown(t, p);
+      }
+
+      @SuppressWarnings("unchecked") // Gross things in support of Java 8.
+      private TypeName visitIntersectionType(TypeMirror t) {
+        try {
+          Method method = t.getClass().getMethod("getBounds");
+          List<? extends TypeMirror> bounds = (List<? extends TypeMirror>) method.invoke(t);
+          return new IntersectionTypeName(Lists.transform(bounds, FOR_TYPE_MIRROR));
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
       }
 
       @Override
