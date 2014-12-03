@@ -370,6 +370,24 @@ public final class JavaWriterTest {
         + "}\n");
   }
 
+  @Test public void statementWithFormatString() throws IOException {
+    javaWriter.emitPackage("com.squareup");
+    javaWriter.beginType("com.squareup.Foo", "class");
+    javaWriter.beginMethod("String", "name", EnumSet.noneOf(Modifier.class), "java.lang.String",
+        "first", "java.lang.String", "last");
+    javaWriter.emitStatement("return String.format(\"%s %s\", first, last)");
+    javaWriter.endMethod();
+    javaWriter.endType();
+    assertCode(""
+        + "package com.squareup;\n"
+        + "\n"
+        + "class Foo {\n"
+        + "  String name(String first, String last) {\n"
+        + "    return String.format(\"%s %s\", first, last);\n"
+        + "  }\n"
+        + "}\n");
+  }
+
   @Test public void statementPrecededByComment() throws IOException {
     javaWriter.emitPackage("com.squareup");
     javaWriter.beginType("com.squareup.Foo", "class");

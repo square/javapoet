@@ -450,7 +450,7 @@ public class JavaWriter implements Closeable {
 
   /** Emits some Javadoc comments with line separated by {@code \n}. */
   public JavaWriter emitJavadoc(String javadoc, Object... params) throws IOException {
-    String formatted = String.format(javadoc, params);
+    String formatted = params.length > 0 ? String.format(javadoc, params) : javadoc;
 
     indent();
     out.write("/**\n");
@@ -472,7 +472,7 @@ public class JavaWriter implements Closeable {
   public JavaWriter emitSingleLineComment(String comment, Object... args) throws IOException {
     indent();
     out.write("// ");
-    out.write(String.format(comment, args));
+    out.write(args.length > 0 ? String.format(comment, args) : comment);
     out.write("\n");
     return this;
   }
@@ -664,7 +664,10 @@ public class JavaWriter implements Closeable {
    */
   public JavaWriter emitStatement(String pattern, Object... args) throws IOException {
     checkInMethod();
-    String[] lines = String.format(pattern, args).split("\n", -1);
+    if (args.length > 0) {
+      pattern = String.format(pattern, args);
+    }
+    String[] lines = pattern.split("\n", -1);
     indent();
     out.write(lines[0]);
     for (int i = 1; i < lines.length; i++) {
@@ -683,7 +686,7 @@ public class JavaWriter implements Closeable {
   public JavaWriter beginControlFlow(String controlFlow, Object... args) throws IOException {
     checkInMethod();
     indent();
-    out.write(String.format(controlFlow, args));
+    out.write(args.length > 0 ? String.format(controlFlow, args) : controlFlow);
     out.write(" {\n");
     scopes.push(Scope.CONTROL_FLOW);
     return this;
@@ -698,7 +701,7 @@ public class JavaWriter implements Closeable {
     indent();
     scopes.push(Scope.CONTROL_FLOW);
     out.write("} ");
-    out.write(String.format(controlFlow, args));
+    out.write(args.length > 0 ? String.format(controlFlow, args) : controlFlow);
     out.write(" {\n");
     return this;
   }
@@ -716,7 +719,7 @@ public class JavaWriter implements Closeable {
     indent();
     if (controlFlow != null) {
       out.write("} ");
-      out.write(String.format(controlFlow, args));
+      out.write(args.length > 0 ? String.format(controlFlow, args) : controlFlow);
       out.write(";\n");
     } else {
       out.write("}\n");
