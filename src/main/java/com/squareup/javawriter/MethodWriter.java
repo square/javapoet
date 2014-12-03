@@ -55,7 +55,7 @@ public final class MethodWriter extends Modifiable implements HasClassReferences
   }
 
   public VariableWriter addParameter(Class<?> type, String name) {
-    return addParameter(ClassName.fromClass(type), name);
+    return addParameter(TypeNames.forClass(type), name);
   }
 
   public VariableWriter addParameter(TypeElement type, String name) {

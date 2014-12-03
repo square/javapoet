@@ -70,7 +70,7 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
 
   public MethodWriter addMethod(Class<?> returnType, String name) {
     MethodWriter methodWriter =
-        new MethodWriter(ClassName.fromClass(returnType), name);
+        new MethodWriter(TypeNames.forClass(returnType), name);
     methodWriters.add(methodWriter);
     return methodWriter;
   }
@@ -90,7 +90,7 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
   }
 
   public FieldWriter addField(Class<?> type, String name) {
-    return addField(ClassName.fromClass(type), name);
+    return addField(TypeNames.forClass(type), name);
   }
 
   public FieldWriter addField(TypeElement type, String name) {
