@@ -56,13 +56,9 @@ public final class InterfaceWriter extends TypeWriter {
       }
       appendable.append("> ");
     }
-    if (supertype.isPresent()) {
-      appendable.append(" extends ");
-      supertype.get().write(appendable, context);
-    }
     Iterator<TypeName> implementedTypesIterator = implementedTypes.iterator();
     if (implementedTypesIterator.hasNext()) {
-      appendable.append(" implements ");
+      appendable.append(" extends ");
       implementedTypesIterator.next().write(appendable, context);
       while (implementedTypesIterator.hasNext()) {
         appendable.append(", ");
@@ -86,8 +82,8 @@ public final class InterfaceWriter extends TypeWriter {
   public Set<ClassName> referencedClasses() {
     @SuppressWarnings("unchecked")
     Iterable<? extends HasClassReferences> concat =
-        Iterables.concat(nestedTypeWriters, methodWriters, implementedTypes, supertype.asSet(),
-            typeVariables, annotations);
+        Iterables.concat(nestedTypeWriters, methodWriters, implementedTypes, typeVariables,
+            annotations);
     return FluentIterable.from(concat)
         .transformAndConcat(new Function<HasClassReferences, Set<ClassName>>() {
           @Override
