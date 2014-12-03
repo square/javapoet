@@ -16,6 +16,7 @@
 package com.squareup.javawriter;
 
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -25,19 +26,34 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
 
+import static com.squareup.javawriter.Writables.writeToString;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
 public final class ClassWriter extends TypeWriter {
+  private Optional<TypeName> supertype;
   private final List<ConstructorWriter> constructorWriters;
   private final List<TypeVariableName> typeVariables;
 
   ClassWriter(ClassName className) {
     super(className);
+    this.supertype = Optional.absent();
     this.constructorWriters = Lists.newArrayList();
     this.typeVariables = Lists.newArrayList();
+  }
+
+  public void setSupertype(TypeName typeName) {
+    if (supertype.isPresent()) {
+      throw new IllegalStateException("Supertype already set to " + writeToString(supertype.get()));
+    }
+    supertype = Optional.of(typeName);
+  }
+
+  public void setSupertype(TypeElement typeElement) {
+    setSupertype(ClassName.fromTypeElement(typeElement));
   }
 
   public ConstructorWriter addConstructor() {

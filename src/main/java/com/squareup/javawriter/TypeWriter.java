@@ -15,7 +15,6 @@
  */
 package com.squareup.javawriter;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.List;
@@ -29,7 +28,6 @@ import javax.lang.model.type.TypeMirror;
 public abstract class TypeWriter /* ha ha */ extends Modifiable
     implements Writable, HasTypeName, HasClassReferences {
   final ClassName name;
-  Optional<TypeName> supertype;
   final List<TypeName> implementedTypes;
   final List<MethodWriter> methodWriters;
   final List<TypeWriter> nestedTypeWriters;
@@ -37,7 +35,6 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
 
   TypeWriter(ClassName name) {
     this.name = name;
-    this.supertype = Optional.absent();
     this.implementedTypes = Lists.newArrayList();
     this.methodWriters = Lists.newArrayList();
     this.nestedTypeWriters = Lists.newArrayList();
