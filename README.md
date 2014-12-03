@@ -47,13 +47,16 @@ Download
 --------
 
 Download [the latest .jar][dl] or depend via Maven:
-
 ```xml
 <dependency>
   <groupId>com.squareup</groupId>
   <artifactId>javawriter</artifactId>
-  <version>(insert latest version)</version>
+  <version>2.5.1</version>
 </dependency>
+```
+or Gradle:
+```groovy
+compile 'com.squareup:javawriter:2.5.1'
 ```
 
 

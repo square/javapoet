@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+Version 2.5.1 *(2014-12-03)*
+----------------------------
+
+ * New: `StringLiteral` type which encapsulates the behavior of `stringLiteral`.
+ * Fix: Use canonical name when emitting a class import.
+ * Fix: Apply type compression to varargs and array types.
+ * Fix: Restore binary compatibility with pre-2.5 versions.
+
+
 Version 2.5.0 *(2014-04-18)*
 ----------------------------
 
