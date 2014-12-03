@@ -48,7 +48,7 @@ public final class ConstructorWriter extends Modifiable implements Writable, Has
   }
 
   public VariableWriter addParameter(Class<?> type, String name) {
-    return addParameter(ClassName.fromClass(type), name);
+    return addParameter(TypeNames.forClass(type), name);
   }
 
   public VariableWriter addParameter(TypeElement type, String name) {
