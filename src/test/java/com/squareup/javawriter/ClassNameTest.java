@@ -108,4 +108,22 @@ public class ClassNameTest {
     assert_().that(peerName.canonicalName())
         .isEqualTo("com.squareup.javawriter.ClassNameTest.OuterClass.Foo");
   }
+
+  @Test public void fromClassRejectionTypes() {
+    try {
+      ClassName.fromClass(int.class);
+      fail();
+    } catch (IllegalArgumentException ignored) {
+    }
+    try {
+      ClassName.fromClass(void.class);
+      fail();
+    } catch (IllegalArgumentException ignored) {
+    }
+    try {
+      ClassName.fromClass(Object[].class);
+      fail();
+    } catch (IllegalArgumentException ignored) {
+    }
+  }
 }
