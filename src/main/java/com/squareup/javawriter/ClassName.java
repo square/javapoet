@@ -153,6 +153,12 @@ public final class ClassName implements TypeName, Comparable<ClassName> {
 
   public static ClassName fromClass(Class<?> clazz) {
     checkNotNull(clazz);
+    checkArgument(!clazz.isPrimitive(),
+        "Primitive types cannot be represented as a ClassName. Use TypeNames.forClass instead.");
+    checkArgument(!void.class.equals(clazz),
+        "'void' type cannot be represented as a ClassName. Use TypeNames.forClass instead.");
+    checkArgument(!clazz.isArray(),
+        "Array types cannot be represented as a ClassName. Use TypeNames.forClass instead.");
     List<String> enclosingNames = new ArrayList<String>();
     Class<?> current = clazz.getEnclosingClass();
     while (current != null) {
