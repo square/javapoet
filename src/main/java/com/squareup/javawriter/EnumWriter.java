@@ -29,12 +29,18 @@ import java.util.Map;
 import java.util.Set;
 import javax.lang.model.element.Modifier;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
 public final class EnumWriter extends TypeWriter {
+  public static EnumWriter forClassName(ClassName name) {
+    checkArgument(name.enclosingSimpleNames().isEmpty(), "%s must be top-level type.", name);
+    return new EnumWriter(name);
+  }
+
   private final Map<String, ConstantWriter> constantWriters = Maps.newLinkedHashMap();
   private final List<ConstructorWriter> constructorWriters = Lists.newArrayList();
 

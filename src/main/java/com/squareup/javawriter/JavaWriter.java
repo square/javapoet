@@ -15,246 +15,118 @@
  */
 package com.squareup.javawriter;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.Queues;
-import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
-import com.squareup.javawriter.Writable.Context;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Deque;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.PackageElement;
 import javax.tools.JavaFileObject;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.Collections.unmodifiableList;
+import static com.google.common.base.Preconditions.checkArgument;
 
-/**
- * Writes a single compilation unit.
- */
 public final class JavaWriter {
-  public static JavaWriter inPackage(String packageName) {
-    return new JavaWriter(packageName);
+  /** Create a new Java writer for writing multiple types to a single location. */
+  public static JavaWriter create() {
+    return new JavaWriter();
   }
 
-  public static JavaWriter inPackage(Package enclosingPackage) {
-    return new JavaWriter(enclosingPackage.getName());
-  }
-
-  public static JavaWriter inPackage(PackageElement packageElement) {
-    return new JavaWriter(packageElement.getQualifiedName().toString());
-  }
-
-  private final String packageName;
-  // TODO(gak): disallow multiple types in a file?
   private final List<TypeWriter> typeWriters;
-  private final List<ClassName> explicitImports;
 
-  private JavaWriter(String packageName) {
-    this.packageName = packageName;
-    this.typeWriters = Lists.newArrayList();
-    this.explicitImports = Lists.newArrayList();
+  private JavaWriter() {
+    typeWriters = Lists.newArrayList();
+    // TODO take in options! indent, what else?
   }
 
-  public List<TypeWriter> getTypeWriters() {
-    return unmodifiableList(typeWriters);
-  }
-
-  public JavaWriter addImport(Class<?> importedClass) {
-    explicitImports.add(ClassName.fromClass(importedClass));
+  public JavaWriter addTypeWriter(TypeWriter typeWriter) {
+    typeWriters.add(typeWriter);
     return this;
   }
 
-  public ClassWriter addClass(String simpleName) {
-    checkNotNull(simpleName);
-    ClassWriter classWriter = new ClassWriter(ClassName.create(packageName, simpleName));
-    typeWriters.add(classWriter);
-    return classWriter;
+  public JavaWriter addTypeWriters(Iterable<? extends TypeWriter> typeWriters) {
+    Iterables.addAll(this.typeWriters, typeWriters);
+    return this;
   }
 
-  public EnumWriter addEnum(String simpleName) {
-    checkNotNull(simpleName);
-    EnumWriter writer = new EnumWriter(ClassName.create(simpleName, simpleName));
-    typeWriters.add(writer);
-    return writer;
-  }
-
-  public InterfaceWriter addInterface(String simpleName) {
-    InterfaceWriter writer = new InterfaceWriter(ClassName.create(packageName, simpleName));
-    typeWriters.add(writer);
-    return writer;
-  }
-
-  public Appendable write(Appendable appendable) throws IOException {
-    appendable.append("package ").append(packageName).append(';').append("\n\n");
-
-    // write imports
-    ImmutableSet<ClassName> classNames = FluentIterable.from(typeWriters)
-        .transformAndConcat(new Function<HasClassReferences, Set<ClassName>>() {
-          @Override
-          public Set<ClassName> apply(HasClassReferences input) {
-            return input.referencedClasses();
-          }
-        })
-        .toSet();
-
-    ImmutableSortedSet<ClassName> importCandidates = ImmutableSortedSet.<ClassName>naturalOrder()
-        .addAll(explicitImports)
-        .addAll(classNames)
-        .build();
-    ImmutableSet<ClassName> typeNames = FluentIterable.from(typeWriters)
-        .transform(new Function<TypeWriter, ClassName>() {
-          @Override public ClassName apply(TypeWriter input) {
-            return input.name;
-          }
-        })
-        .toSet();
-
-    ImmutableSet.Builder<String> declaredSimpleNamesBuilder = ImmutableSet.builder();
-    Deque<TypeWriter> declaredTypes = Queues.newArrayDeque(typeWriters);
-    while (!declaredTypes.isEmpty()) {
-      TypeWriter currentType = declaredTypes.pop();
-      declaredSimpleNamesBuilder.add(currentType.name().simpleName());
-      declaredTypes.addAll(currentType.nestedTypeWriters);
-    }
-
-    ImmutableSet<String> declaredSimpleNames = declaredSimpleNamesBuilder.build();
-
-    BiMap<String, ClassName> importedClassIndex = HashBiMap.create();
-    for (ClassName className : importCandidates) {
-      if (!(className.packageName().equals(packageName)
-              && !className.enclosingClassName().isPresent())
-          && !(className.packageName().equals("java.lang")
-              && className.enclosingSimpleNames().isEmpty())
-          && !typeNames.contains(className.topLevelClassName())) {
-        Optional<ClassName> importCandidate = Optional.of(className);
-        while (importCandidate.isPresent()
-            && (importedClassIndex.containsKey(importCandidate.get().simpleName())
-                || declaredSimpleNames.contains(importCandidate.get().simpleName()))) {
-          importCandidate = importCandidate.get().enclosingClassName();
-        }
-        if (importCandidate.isPresent()) {
-          appendable.append("import ").append(importCandidate.get().canonicalName()).append(";\n");
-          importedClassIndex.put(importCandidate.get().simpleName(), importCandidate.get());
-        }
-      }
-    }
-
-    if (!importedClassIndex.isEmpty()) {
-      appendable.append('\n');
-    }
-
-    CompilationUnitContext context =
-        new CompilationUnitContext(packageName, ImmutableSet.copyOf(importedClassIndex.values()));
-
-    // write types
-    String sep = "";
+  public void writeTo(Path directory) throws IOException {
+    checkArgument(Files.notExists(directory) || Files.isDirectory(directory),
+        "Path %s exists but is not a directory.", directory);
     for (TypeWriter typeWriter : typeWriters) {
-      appendable.append(sep);
-      typeWriter.write(appendable, context.createSubcontext(typeNames));
-      sep = "\n";
-    }
-    return appendable;
-  }
+      ClassName typeName = typeWriter.name();
+      String packageName = typeName.packageName();
 
-  public void file(Filer filer, Iterable<? extends Element> originatingElements)
-      throws IOException {
-    file(filer, Iterables.getOnlyElement(typeWriters).name.canonicalName(), originatingElements);
-  }
-
-  public void file(Filer filer, CharSequence name,  Iterable<? extends Element> originatingElements)
-      throws IOException {
-    JavaFileObject sourceFile = filer.createSourceFile(name,
-        Iterables.toArray(originatingElements, Element.class));
-    Closer closer = Closer.create();
-    try {
-      write(closer.register(sourceFile.openWriter()));
-    } catch (Exception e) {
-      try {
-        sourceFile.delete();
-      } catch (Exception e2) {
-        // couldn't delete the file
-      }
-      throw closer.rethrow(e);
-    } finally {
-      closer.close();
-    }
-  }
-
-  @Override
-  public String toString() {
-    try {
-      return write(new StringBuilder()).toString();
-    } catch (IOException e) {
-      throw new AssertionError();
-    }
-  }
-
-  static final class CompilationUnitContext implements Writable.Context {
-    private final String packageName;
-    private final ImmutableSortedSet<ClassName> visibleClasses;
-
-    CompilationUnitContext(String packageName, Set<ClassName> visibleClasses) {
-      this.packageName = packageName;
-      this.visibleClasses =
-          ImmutableSortedSet.copyOf(Ordering.natural().reverse(), visibleClasses);
-    }
-
-    @Override
-    public Context createSubcontext(Set<ClassName> newTypes) {
-      return new CompilationUnitContext(packageName, Sets.union(visibleClasses, newTypes));
-    }
-
-    @Override
-    public String sourceReferenceForClassName(ClassName className) {
-      if (isImported(className)) {
-        return className.simpleName();
-      }
-      Optional<ClassName> enclosingClassName = className.enclosingClassName();
-      while (enclosingClassName.isPresent()) {
-        if (isImported(enclosingClassName.get())) {
-          return enclosingClassName.get().simpleName()
-              + className.canonicalName()
-                  .substring(enclosingClassName.get().canonicalName().length());
+      Path outputDirectory = directory;
+      if (!packageName.isEmpty()) {
+        for (String packageComponent : packageName.split("\\.")) {
+          outputDirectory = outputDirectory.resolve(packageComponent);
         }
-        enclosingClassName = enclosingClassName.get().enclosingClassName();
+        Files.createDirectories(outputDirectory);
       }
-      return className.canonicalName();
-    }
 
-    private boolean collidesWithVisibleClass(ClassName className) {
-      return collidesWithVisibleClass(className.simpleName());
+      Path outputFile = outputDirectory.resolve(typeName.simpleName() + ".java");
+      try (Closer closer = Closer.create()) {
+        Writer writer = new OutputStreamWriter(Files.newOutputStream(outputFile));
+        typeWriter.writeTypeToAppendable(closer.register(writer));
+      }
     }
+  }
 
-    private boolean collidesWithVisibleClass(String simpleName) {
-      return FluentIterable.from(visibleClasses)
-          .transform(new Function<ClassName, String>() {
-            @Override public String apply(ClassName input) {
-              return input.simpleName();
-            }
-          })
-          .contains(simpleName);
+  public void writeTo(File directory) throws IOException {
+    checkArgument(!directory.exists() || directory.isDirectory(),
+        "File %s exists but is not a directory.", directory);
+    for (TypeWriter typeWriter : typeWriters) {
+      ClassName typeName = typeWriter.name();
+      String packageName = typeName.packageName();
+
+      File outputDir = directory;
+      if (!packageName.isEmpty()) {
+        for (String packageComponent : packageName.split("\\.")) {
+          outputDir = new File(outputDir, packageComponent);
+        }
+        if (!outputDir.mkdirs()) {
+          throw new IOException("Unable to create directory " + outputDir);
+        }
+      }
+
+      File outputFile = new File(outputDir, typeName.simpleName() + ".java");
+      try (Closer closer = Closer.create()) {
+        typeWriter.writeTypeToAppendable(closer.register(new FileWriter(outputFile)));
+      }
     }
+  }
 
-    private boolean isImported(ClassName className) {
-      return (packageName.equals(className.packageName())
-              && !className.enclosingClassName().isPresent()
-              && !collidesWithVisibleClass(className)) // need to account for scope & hiding
-          || visibleClasses.contains(className)
-          || (className.packageName().equals("java.lang")
-              && className.enclosingSimpleNames().isEmpty());
+  public void writeTo(Filer filer) throws IOException {
+    writeTo(filer, ImmutableSet.<Element>of());
+  }
+
+  public void writeTo(Filer filer, Iterable<? extends Element> originatingElements)
+      throws IOException {
+    // TODO tack originatingElements on TypeWriter? Losing a top-level-only writer for this sucks.
+    for (TypeWriter typeWriter : typeWriters) {
+      JavaFileObject sourceFile = filer.createSourceFile(typeWriter.name().canonicalName(),
+          Iterables.toArray(originatingElements, Element.class));
+      Writer closeable = sourceFile.openWriter();
+      Closer closer = Closer.create();
+      try {
+        typeWriter.writeTypeToAppendable(closer.register(closeable));
+      } catch (Exception e) {
+        try {
+          sourceFile.delete();
+        } catch (Exception e2) {
+          // Couldn't delete the file.
+        }
+        throw closer.rethrow(e);
+      } finally {
+        closer.close();
+      }
     }
   }
 }
