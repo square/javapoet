@@ -53,7 +53,7 @@ public final class WildcardName implements TypeName {
 
   @Override
   public Set<ClassName> referencedClasses() {
-    ImmutableSet.Builder<ClassName> builder = new ImmutableSet.Builder<ClassName>();
+    ImmutableSet.Builder<ClassName> builder = ImmutableSet.builder();
     if (extendsBound.isPresent()) {
       builder.addAll(extendsBound.get().referencedClasses());
     }
