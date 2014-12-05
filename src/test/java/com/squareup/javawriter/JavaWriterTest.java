@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Google, Inc.
+ * Copyright (C) 2014 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,65 +15,107 @@
  */
 package com.squareup.javawriter;
 
-import java.util.concurrent.Executor;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.jimfs.Jimfs;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import static com.google.common.truth.Truth.assertThat;
 
 @RunWith(JUnit4.class)
-public class JavaWriterTest {
-  @Test public void referencedAndDeclaredSimpleName() {
-    JavaWriter javaWriter = JavaWriter.inPackage("test");
-    ClassWriter topClass = javaWriter.addClass("Top");
-    topClass.addNestedClass("Middle").addNestedClass("Bottom");
-    topClass.addField(ClassName.create("some.other.pkg", "Bottom"), "field");
-    assertThat(topClass.toString()).doesNotContain("import some.other.pkg.Bottom;");
+public final class JavaWriterTest {
+  private final JavaWriter javaWriter = JavaWriter.create();
+
+  // Used for testing java.io File behavior.
+  @Rule public final TemporaryFolder tmp = new TemporaryFolder();
+
+  // Used for testing java.nio.file Path behavior.
+  private final FileSystem fs = Jimfs.newFileSystem();
+  private final Path fsRoot = Iterables.getOnlyElement(fs.getRootDirectories());
+
+  @Test public void pathNotDirectory() throws IOException {
+    Path path = fs.getPath("/foo/bar");
+    Files.createDirectories(path.getParent());
+    Files.createFile(path);
+    try {
+      javaWriter.writeTo(path);
+    } catch (IllegalArgumentException e) {
+      assertThat(e.getMessage()).isEqualTo("Path /foo/bar exists but is not a directory.");
+    }
   }
 
-  @Test public void zeroImportsSingleNewline() {
-    JavaWriter javaWriter = JavaWriter.inPackage("test");
-    javaWriter.addClass("Top");
-
-    String expected = ""
-        + "package test;\n"
-        + "\n"
-        + "class Top {";
-
-    assertThat(javaWriter.toString()).startsWith(expected);
+  @Test public void fileNotDirectory() throws IOException {
+    File file = new File(tmp.newFolder("foo"), "bar");
+    try {
+      javaWriter.writeTo(file);
+    } catch (IllegalArgumentException e) {
+      assertThat(e.getMessage()).containsMatch("File .*?/foo/bar exists but is not a directory.");
+    }
   }
 
-  @Test public void newlineBetweenImports() {
-    JavaWriter javaWriter = JavaWriter.inPackage("test");
-    ClassWriter topClass = javaWriter.addClass("Top");
-    topClass.addField(Executor.class, "executor");
+  @Test public void pathDefaultPackage() throws IOException {
+    ClassName name = ClassName.create("", "Test");
+    ClassWriter test = ClassWriter.forClassName(name);
+    javaWriter.addTypeWriter(test).writeTo(fsRoot);
 
-    String expected = ""
-        + "package test;\n"
-        + "\n"
-        + "import java.util.concurrent.Executor;\n"
-        + "\n"
-        + "class Top {";
-
-    assertThat(javaWriter.toString()).startsWith(expected);
+    Path testPath = fsRoot.resolve("Test.java");
+    assertThat(Files.exists(testPath)).isTrue();
   }
 
-  @Test public void newlinesBetweenTypes() {
-    JavaWriter javaWriter = JavaWriter.inPackage("test");
-    javaWriter.addClass("Top");
-    javaWriter.addClass("Middle");
-    javaWriter.addClass("Bottom");
+  @Test public void fileDefaultPackage() throws IOException {
+    ClassName name = ClassName.create("", "Test");
+    ClassWriter test = ClassWriter.forClassName(name);
+    javaWriter.addTypeWriter(test).writeTo(tmp.getRoot());
 
-    String expected = ""
-        + "package test;\n"
-        + "\n"
-        + "class Top {}\n"
-        + "\n"
-        + "class Middle {}\n"
-        + "\n"
-        + "class Bottom {}\n";
-
-    assertThat(javaWriter.toString()).isEqualTo(expected);
+    File testFile = new File(tmp.getRoot(), "Test.java");
+    assertThat(testFile.exists()).isTrue();
   }
+
+  @Test public void pathNestedClasses() throws IOException {
+    ClassName fooName = ClassName.create("foo", "Test");
+    ClassName barName = ClassName.create("foo.bar", "Test");
+    ClassName bazName = ClassName.create("foo.bar.baz", "Test");
+    ClassWriter foo = ClassWriter.forClassName(fooName);
+    ClassWriter bar = ClassWriter.forClassName(barName);
+    ClassWriter baz = ClassWriter.forClassName(bazName);
+    javaWriter.addTypeWriters(ImmutableList.of(foo, bar, baz)).writeTo(fsRoot);
+
+    Path fooPath = fsRoot.resolve(fs.getPath("foo", "Test.java"));
+    Path barPath = fsRoot.resolve(fs.getPath("foo", "bar", "Test.java"));
+    Path bazPath = fsRoot.resolve(fs.getPath("foo", "bar", "baz", "Test.java"));
+    assertThat(Files.exists(fooPath)).isTrue();
+    assertThat(Files.exists(barPath)).isTrue();
+    assertThat(Files.exists(bazPath)).isTrue();
+  }
+
+  @Test public void fileNestedClasses() throws IOException {
+    ClassName fooName = ClassName.create("foo", "Test");
+    ClassName barName = ClassName.create("foo.bar", "Test");
+    ClassName bazName = ClassName.create("foo.bar.baz", "Test");
+    ClassWriter foo = ClassWriter.forClassName(fooName);
+    ClassWriter bar = ClassWriter.forClassName(barName);
+    ClassWriter baz = ClassWriter.forClassName(bazName);
+    javaWriter.addTypeWriters(ImmutableList.of(foo, bar, baz)).writeTo(tmp.getRoot());
+
+    File fooDir = new File(tmp.getRoot(), "foo");
+    File fooFile = new File(fooDir, "Test.java");
+    File barDir = new File(fooDir, "bar");
+    File barFile = new File(barDir, "Test.java");
+    File bazDir = new File(barDir, "baz");
+    File bazFile = new File(bazDir, "Test.java");
+    assertThat(fooFile.exists()).isTrue();
+    assertThat(barFile.exists()).isTrue();
+    assertThat(bazFile.exists()).isTrue();
+  }
+
+  // TODO Filer-based tests
 }

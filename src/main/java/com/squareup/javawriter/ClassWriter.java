@@ -28,12 +28,18 @@ import java.util.Set;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.squareup.javawriter.Writables.writeToString;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
 public final class ClassWriter extends TypeWriter {
+  public static ClassWriter forClassName(ClassName name) {
+    checkArgument(name.enclosingSimpleNames().isEmpty(), "%s must be top-level type.", name);
+    return new ClassWriter(name);
+  }
+
   private Optional<TypeName> supertype;
   private final List<ConstructorWriter> constructorWriters;
   private final List<TypeVariableName> typeVariables;

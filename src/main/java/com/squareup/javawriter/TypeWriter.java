@@ -15,10 +15,23 @@
  */
 package com.squareup.javawriter;
 
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.Queues;
+import com.google.common.collect.Sets;
+import java.io.IOException;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
@@ -78,6 +91,18 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
     return innerClassWriter;
   }
 
+  public InterfaceWriter addNestedInterface(String name) {
+    InterfaceWriter innerInterfaceWriter = new InterfaceWriter(this.name.nestedClassNamed(name));
+    nestedTypeWriters.add(innerInterfaceWriter);
+    return innerInterfaceWriter;
+  }
+
+  public EnumWriter addNestedEnum(String name) {
+    EnumWriter innerEnumWriter = new EnumWriter(this.name.nestedClassNamed(name));
+    nestedTypeWriters.add(innerEnumWriter);
+    return innerEnumWriter;
+  }
+
   public void addImplementedType(TypeName typeReference) {
     implementedTypes.add(typeReference);
   }
@@ -104,5 +129,119 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
     FieldWriter fieldWriter = new FieldWriter(type, candidateName);
     fieldWriters.put(candidateName, fieldWriter);
     return fieldWriter;
+  }
+
+  @Override public final String toString() {
+    try {
+      return writeTypeToAppendable(new StringBuilder()).toString();
+    } catch (IOException e) {
+      throw new AssertionError(e);
+    }
+  }
+
+  Appendable writeTypeToAppendable(Appendable appendable) throws IOException {
+    String packageName = name().packageName();
+    appendable.append("package ").append(packageName).append(";\n\n");
+
+    ImmutableSortedSet<ClassName> importCandidates = ImmutableSortedSet.<ClassName>naturalOrder()
+        //.addAll(explicitImports) // TODO!
+        .addAll(referencedClasses())
+        .build();
+
+    ImmutableSet.Builder<String> declaredSimpleNamesBuilder = ImmutableSet.builder();
+    Deque<TypeWriter> declaredTypes = Queues.newArrayDeque(ImmutableSet.of(this));
+    while (!declaredTypes.isEmpty()) {
+      TypeWriter currentType = declaredTypes.pop();
+      declaredSimpleNamesBuilder.add(currentType.name().simpleName());
+      declaredTypes.addAll(currentType.nestedTypeWriters);
+    }
+
+    ImmutableSet<String> declaredSimpleNames = declaredSimpleNamesBuilder.build();
+
+    BiMap<String, ClassName> importedClassIndex = HashBiMap.create();
+    for (ClassName className : importCandidates) {
+      if (!(className.packageName().equals(packageName)
+          && !className.enclosingClassName().isPresent())
+          && !(className.packageName().equals("java.lang")
+          && className.enclosingSimpleNames().isEmpty())
+          && !name().equals(className.topLevelClassName())) {
+        Optional<ClassName> importCandidate = Optional.of(className);
+        while (importCandidate.isPresent()
+            && (importedClassIndex.containsKey(importCandidate.get().simpleName())
+            || declaredSimpleNames.contains(importCandidate.get().simpleName()))) {
+          importCandidate = importCandidate.get().enclosingClassName();
+        }
+        if (importCandidate.isPresent()) {
+          appendable.append("import ").append(importCandidate.get().canonicalName()).append(";\n");
+          importedClassIndex.put(importCandidate.get().simpleName(), importCandidate.get());
+        }
+      }
+    }
+
+    if (!importedClassIndex.isEmpty()) {
+      appendable.append('\n');
+    }
+
+    CompilationUnitContext context =
+        new CompilationUnitContext(packageName, ImmutableSet.copyOf(importedClassIndex.values()));
+    write(appendable, context.createSubcontext(ImmutableSet.of(name())));
+
+    return appendable;
+  }
+
+  static final class CompilationUnitContext implements Context {
+    private final String packageName;
+    private final ImmutableSortedSet<ClassName> visibleClasses;
+
+    CompilationUnitContext(String packageName, Set<ClassName> visibleClasses) {
+      this.packageName = packageName;
+      this.visibleClasses =
+          ImmutableSortedSet.copyOf(Ordering.natural().reverse(), visibleClasses);
+    }
+
+    @Override
+    public Context createSubcontext(Set<ClassName> newTypes) {
+      return new CompilationUnitContext(packageName, Sets.union(visibleClasses, newTypes));
+    }
+
+    @Override
+    public String sourceReferenceForClassName(ClassName className) {
+      if (isImported(className)) {
+        return className.simpleName();
+      }
+      Optional<ClassName> enclosingClassName = className.enclosingClassName();
+      while (enclosingClassName.isPresent()) {
+        if (isImported(enclosingClassName.get())) {
+          return enclosingClassName.get().simpleName()
+              + className.canonicalName()
+                  .substring(enclosingClassName.get().canonicalName().length());
+        }
+        enclosingClassName = enclosingClassName.get().enclosingClassName();
+      }
+      return className.canonicalName();
+    }
+
+    private boolean collidesWithVisibleClass(ClassName className) {
+      return collidesWithVisibleClass(className.simpleName());
+    }
+
+    private boolean collidesWithVisibleClass(String simpleName) {
+      return FluentIterable.from(visibleClasses)
+          .transform(new Function<ClassName, String>() {
+            @Override public String apply(ClassName input) {
+              return input.simpleName();
+            }
+          })
+          .contains(simpleName);
+    }
+
+    private boolean isImported(ClassName className) {
+      return (packageName.equals(className.packageName())
+              && !className.enclosingClassName().isPresent()
+              && !collidesWithVisibleClass(className)) // need to account for scope & hiding
+          || visibleClasses.contains(className)
+          || (className.packageName().equals("java.lang")
+              && className.enclosingSimpleNames().isEmpty());
+    }
   }
 }

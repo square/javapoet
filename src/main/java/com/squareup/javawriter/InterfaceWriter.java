@@ -24,7 +24,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 public final class InterfaceWriter extends TypeWriter {
+  public static InterfaceWriter forClassName(ClassName name) {
+    checkArgument(name.enclosingSimpleNames().isEmpty(), "%s must be top-level type.", name);
+    return new InterfaceWriter(name);
+  }
+
   private final List<TypeVariableName> typeVariables;
   InterfaceWriter(ClassName name) {
     super(name);
