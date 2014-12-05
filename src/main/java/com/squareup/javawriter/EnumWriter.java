@@ -146,7 +146,7 @@ public final class EnumWriter extends TypeWriter {
       this.constructorSnippets = Lists.newArrayList();
     }
 
-    ConstantWriter addArgument(Snippet snippet) {
+    public ConstantWriter addArgument(Snippet snippet) {
       constructorSnippets.add(snippet);
       return this;
     }
