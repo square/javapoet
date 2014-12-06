@@ -32,13 +32,13 @@ public final class ConstructorWriter extends Modifiable implements Writable, Has
   private final List<TypeVariableName> typeVariables;
   private final String name;
   private final Map<String, VariableWriter> parameterWriters;
-  private final BlockWriter blockWriter;
+  private final BlockWriter body;
 
   ConstructorWriter(String name) {
     this.typeVariables = Lists.newArrayList();
     this.name = name;
     this.parameterWriters = Maps.newLinkedHashMap();
-    this.blockWriter = new BlockWriter();
+    this.body = new BlockWriter();
   }
 
   public void addTypeVariable(TypeVariableName typeVariable) {
@@ -64,7 +64,7 @@ public final class ConstructorWriter extends Modifiable implements Writable, Has
   }
 
   public BlockWriter body() {
-    return blockWriter;
+    return body;
   }
 
   private VariableWriter addParameter(ClassName type, String name) {
@@ -77,7 +77,7 @@ public final class ConstructorWriter extends Modifiable implements Writable, Has
   @Override
   public Set<ClassName> referencedClasses() {
     return FluentIterable.from(
-        Iterables.concat(typeVariables, parameterWriters.values(), ImmutableList.of(blockWriter)))
+        Iterables.concat(typeVariables, parameterWriters.values(), ImmutableList.of(body)))
             .transformAndConcat(GET_REFERENCED_CLASSES)
             .toSet();
   }
@@ -89,7 +89,11 @@ public final class ConstructorWriter extends Modifiable implements Writable, Has
     appendable.append(name).append('(');
     Writables.Joiner.on(", ").appendTo(appendable, context, parameterWriters.values());
     appendable.append(") {");
-    blockWriter.write(new IndentingAppendable(appendable), context);
+    if (!body.isEmpty()) {
+      appendable.append('\n');
+      body.write(new IndentingAppendable(appendable), context);
+      appendable.append('\n');
+    }
     return appendable.append("}\n");
   }
 }
