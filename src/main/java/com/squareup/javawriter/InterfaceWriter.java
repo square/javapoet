@@ -73,14 +73,10 @@ public final class InterfaceWriter extends TypeWriter {
       }
     }
     appendable.append(" {");
-    for (MethodWriter methodWriter : methodWriters) {
-      appendable.append('\n');
-      methodWriter.write(new IndentingAppendable(appendable), context);
-    }
-    for (TypeWriter nestedTypeWriter : nestedTypeWriters) {
-      appendable.append('\n');
-      nestedTypeWriter.write(new IndentingAppendable(appendable), context);
-    }
+    writeFields(appendable, context, ALL);
+    writeMethods(appendable, context, STATICS);
+    writeMethods(appendable, context, INSTANCE);
+    writeNestedTypes(appendable, context);
     appendable.append("}\n");
     return appendable;
   }

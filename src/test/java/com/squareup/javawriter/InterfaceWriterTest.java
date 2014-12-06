@@ -15,11 +15,14 @@
  */
 package com.squareup.javawriter;
 
+import com.google.common.base.Joiner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import static com.google.common.truth.Truth.assertThat;
+import static javax.lang.model.element.Modifier.ABSTRACT;
+import static javax.lang.model.element.Modifier.STATIC;
 
 @RunWith(JUnit4.class)
 public final class InterfaceWriterTest {
@@ -30,5 +33,27 @@ public final class InterfaceWriterTest {
     } catch (IllegalArgumentException e) {
       assertThat(e.getMessage()).isEqualTo("test.Foo.Bar must be top-level type.");
     }
+  }
+
+  @Test public void memberOrdering() {
+    ClassName name = ClassName.create("example", "Test");
+    InterfaceWriter writer = InterfaceWriter.forClassName(name);
+
+    writer.addField(String.class, "ONE").addModifiers(STATIC);
+    writer.addMethod(VoidName.VOID, "two").addModifiers(STATIC);
+    writer.addMethod(VoidName.VOID, "four").addModifiers(ABSTRACT);
+
+    String expected = Joiner.on('\n').join(
+        "package example;",
+        "",
+        "class Test {",
+        "  static String ONE;",
+        "",
+        "  static void two() {}",
+        "",
+        "  void four();",
+        "}"
+    );
+    assertThat(writer.toString()).isEqualTo(expected);
   }
 }

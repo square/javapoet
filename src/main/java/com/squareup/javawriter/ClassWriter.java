@@ -107,26 +107,17 @@ public final class ClassWriter extends TypeWriter {
       }
     }
     appendable.append(" {");
-    if (!fieldWriters.isEmpty()) {
-      appendable.append('\n');
-    }
-    for (VariableWriter fieldWriter : fieldWriters.values()) {
-      fieldWriter.write(new IndentingAppendable(appendable), context).append("\n");
-    }
+    writeFields(appendable, context, STATICS);
+    writeMethods(appendable, context, STATICS);
+    writeFields(appendable, context, INSTANCE);
     for (ConstructorWriter constructorWriter : constructorWriters) {
       appendable.append('\n');
       if (!isDefaultConstructor(constructorWriter)) {
         constructorWriter.write(new IndentingAppendable(appendable), context);
       }
     }
-    for (MethodWriter methodWriter : methodWriters) {
-      appendable.append('\n');
-      methodWriter.write(new IndentingAppendable(appendable), context);
-    }
-    for (TypeWriter nestedTypeWriter : nestedTypeWriters) {
-      appendable.append('\n');
-      nestedTypeWriter.write(new IndentingAppendable(appendable), context);
-    }
+    writeMethods(appendable, context, INSTANCE);
+    writeNestedTypes(appendable, context);
     appendable.append("}\n");
     return appendable;
   }
