@@ -139,10 +139,22 @@ public class TypeNamesTest {
         .isEqualTo(new ArrayTypeName(ClassName.fromClass(Object.class)));
   }
 
+  @Test public void forClass_array() {
+    assert_().that(TypeNames.forClass(Object[].class))
+        .isEqualTo(new ArrayTypeName(ClassName.fromClass(Object.class)));
+    assert_().that(TypeNames.forClass(int[].class))
+        .isEqualTo(new ArrayTypeName(PrimitiveName.INT));
+  }
+
   @Test
   public void forTypeMirror_void() {
     assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getNoType(TypeKind.VOID)))
         .isEqualTo(VoidName.VOID);
+  }
+
+  @Test public void forClass_void() {
+    assert_().that(TypeNames.forClass(void.class)).isEqualTo(VoidName.VOID);
+    assert_().that(TypeNames.forClass(Void.class)).isNotEqualTo(VoidName.VOID);
   }
 
   @Test
