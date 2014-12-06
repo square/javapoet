@@ -15,11 +15,14 @@
  */
 package com.squareup.javawriter;
 
+import com.google.common.base.Joiner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import static com.google.common.truth.Truth.assertThat;
+import static javax.lang.model.element.Modifier.PRIVATE;
+import static javax.lang.model.element.Modifier.STATIC;
 
 @RunWith(JUnit4.class)
 public final class EnumWriterTest {
@@ -30,5 +33,36 @@ public final class EnumWriterTest {
     } catch (IllegalArgumentException e) {
       assertThat(e.getMessage()).isEqualTo("test.Foo.Bar must be top-level type.");
     }
+  }
+
+  @Test public void memberOrdering() {
+    ClassName name = ClassName.create("example", "Test");
+    EnumWriter writer = EnumWriter.forClassName(name);
+
+    writer.addConstant("TEST");
+    writer.addConstructor().addModifiers(PRIVATE);
+    writer.addField(String.class, "ONE").addModifiers(STATIC);
+    writer.addField(String.class, "three");
+    writer.addMethod(VoidName.VOID, "two").addModifiers(STATIC);
+    writer.addMethod(VoidName.VOID, "four");
+
+    String expected = Joiner.on('\n').join(
+        "package example;",
+        "",
+        "enum Test {",
+        "  TEST;",
+        "",
+        "  static String ONE;",
+        "",
+        "  static void two() {}",
+        "",
+        "  String three;",
+        "",
+        "  private Test() {}",
+        "",
+        "  void four() {}",
+        "}"
+    );
+    assertThat(writer.toString()).isEqualTo(expected);
   }
 }

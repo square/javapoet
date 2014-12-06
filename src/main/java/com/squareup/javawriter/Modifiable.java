@@ -15,6 +15,8 @@
  */
 package com.squareup.javawriter;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.squareup.javawriter.Writable.Context;
@@ -26,6 +28,14 @@ import java.util.Set;
 import javax.lang.model.element.Modifier;
 
 public abstract class Modifiable {
+  static final Predicate<Modifiable> STATICS = new Predicate<Modifiable>() {
+    @Override public boolean apply(Modifiable input) {
+      return input.modifiers.contains(Modifier.STATIC);
+    }
+  };
+  static final Predicate<Modifiable> INSTANCE = Predicates.not(STATICS);
+  static final Predicate<Modifiable> ALL = Predicates.alwaysTrue();
+
   final Set<Modifier> modifiers;
   final List<AnnotationWriter> annotations;
 

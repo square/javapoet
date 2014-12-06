@@ -17,7 +17,9 @@ package com.squareup.javawriter;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.collect.BiMap;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableSet;
@@ -28,6 +30,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
@@ -187,6 +190,33 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
     write(appendable, context.createSubcontext(ImmutableSet.of(name())));
 
     return appendable;
+  }
+
+  void writeFields(Appendable appendable, Context context, Predicate<Modifiable> filter)
+      throws IOException {
+    Collection<FieldWriter> fields = Collections2.filter(fieldWriters.values(), filter);
+    if (!fields.isEmpty()) {
+      appendable.append('\n');
+      for (VariableWriter fieldWriter : fields) {
+        fieldWriter.write(new IndentingAppendable(appendable), context).append('\n');
+      }
+    }
+  }
+
+  void writeMethods(Appendable appendable, Context context, Predicate<Modifiable> filter)
+      throws IOException {
+    Collection<MethodWriter> methods = Collections2.filter(methodWriters, filter);
+    for (MethodWriter methodWriter : methods) {
+      appendable.append('\n');
+      methodWriter.write(new IndentingAppendable(appendable), context);
+    }
+  }
+
+  void writeNestedTypes(Appendable appendable, Context context) throws IOException {
+    for (TypeWriter nestedTypeWriter : nestedTypeWriters) {
+      appendable.append('\n');
+      nestedTypeWriter.write(new IndentingAppendable(appendable), context);
+    }
   }
 
   static final class CompilationUnitContext implements Context {
