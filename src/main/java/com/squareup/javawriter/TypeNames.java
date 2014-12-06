@@ -40,10 +40,10 @@ public final class TypeNames {
       };
 
   public static TypeName forClass(Class<?> clazz) {
-    if (clazz.isPrimitive()) {
-      return PrimitiveName.forClass(clazz);
-    } else if (void.class.equals(clazz)) {
+    if (void.class.equals(clazz)) {
       return VoidName.VOID;
+    } else if (clazz.isPrimitive()) {
+      return PrimitiveName.forClass(clazz);
     } else if (clazz.isArray()) {
       return new ArrayTypeName(forClass(clazz.getComponentType()));
     } else {
