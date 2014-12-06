@@ -19,7 +19,6 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -47,14 +46,9 @@ public final class ParameterizedTypeName implements TypeName {
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
     appendable.append(context.sourceReferenceForClassName(type));
-    Iterator<? extends TypeName> parameterIterator = parameters.iterator();
-    verify(parameterIterator.hasNext(), type.toString());
+    verify(!parameters.isEmpty(), type.toString());
     appendable.append('<');
-    parameterIterator.next().write(appendable, context);
-    while (parameterIterator.hasNext()) {
-      appendable.append(", ");
-      parameterIterator.next().write(appendable, context);
-    }
+    Writables.Joiner.on(", ").appendTo(appendable, context, parameters);
     appendable.append('>');
     return appendable;
   }
