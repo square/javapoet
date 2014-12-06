@@ -80,6 +80,33 @@ public final class JavaWriterTest {
     assertThat(testFile.exists()).isTrue();
   }
 
+  @Test public void pathSamePackage() throws IOException {
+    ClassName name1 = ClassName.create("example", "Test1");
+    ClassName name2 = ClassName.create("example", "Test2");
+    ClassWriter test1 = ClassWriter.forClassName(name1);
+    ClassWriter test2 = ClassWriter.forClassName(name2);
+    javaWriter.addTypeWriter(test1).addTypeWriter(test2).writeTo(fsRoot);
+
+    Path testPath1 = fsRoot.resolve("example/Test1.java");
+    assertThat(Files.exists(testPath1)).isTrue();
+    Path testPath2 = fsRoot.resolve("example/Test2.java");
+    assertThat(Files.exists(testPath2)).isTrue();
+  }
+
+  @Test public void fileSamePackage() throws IOException {
+    ClassName name1 = ClassName.create("example", "Test1");
+    ClassName name2 = ClassName.create("example", "Test2");
+    ClassWriter test1 = ClassWriter.forClassName(name1);
+    ClassWriter test2 = ClassWriter.forClassName(name2);
+    javaWriter.addTypeWriter(test1).addTypeWriter(test2).writeTo(tmp.getRoot());
+
+    File examplePackage = new File(tmp.getRoot(), "example");
+    File testFile1 = new File(examplePackage, "Test1.java");
+    assertThat(testFile1.exists()).isTrue();
+    File testFile2 = new File(examplePackage, "Test2.java");
+    assertThat(testFile2.exists()).isTrue();
+  }
+
   @Test public void pathNestedClasses() throws IOException {
     ClassName fooName = ClassName.create("foo", "Test");
     ClassName barName = ClassName.create("foo.bar", "Test");
