@@ -20,7 +20,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -53,25 +52,8 @@ public final class InterfaceWriter extends TypeWriter {
         .toSet());
     writeAnnotations(appendable, context);
     writeModifiers(appendable).append("interface ").append(name.simpleName());
-    Iterator<TypeVariableName> typeVariablesIterator = typeVariables.iterator();
-    if (typeVariablesIterator.hasNext()) {
-      appendable.append('<');
-      typeVariablesIterator.next().write(appendable, context);
-      while (typeVariablesIterator.hasNext()) {
-        appendable.append(", ");
-        typeVariablesIterator.next().write(appendable, context);
-      }
-      appendable.append("> ");
-    }
-    Iterator<TypeName> implementedTypesIterator = implementedTypes.iterator();
-    if (implementedTypesIterator.hasNext()) {
-      appendable.append(" extends ");
-      implementedTypesIterator.next().write(appendable, context);
-      while (implementedTypesIterator.hasNext()) {
-        appendable.append(", ");
-        implementedTypesIterator.next().write(appendable, context);
-      }
-    }
+    Writables.Joiner.on(", ").wrap("<", "> ").appendTo(appendable, context, typeVariables);
+    Writables.Joiner.on(", ").prefix(" extends ").appendTo(appendable, context, implementedTypes);
     appendable.append(" {");
     for (MethodWriter methodWriter : methodWriters) {
       appendable.append('\n');

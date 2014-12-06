@@ -15,11 +15,88 @@
  */
 package com.squareup.javawriter;
 
+import com.google.common.collect.Iterators;
 import com.squareup.javawriter.Writable.Context;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Set;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 final class Writables {
+
+  static class Joiner {
+    static Joiner on(String separator) {
+      return new Joiner(separator);
+    }
+
+    static Joiner on(char separator) {
+      return on(String.valueOf(separator));
+    }
+
+    private final String separator;
+
+    private Joiner(String separator) {
+      this.separator = separator;
+    }
+
+    protected Joiner(Joiner prototype) {
+      this.separator = prototype.separator;
+    }
+
+    final Appendable appendTo(Appendable appendable, Context context, Writable[] parts)
+        throws IOException {
+      return appendTo(appendable, context, Iterators.forArray(parts));
+    }
+
+    final Appendable appendTo(Appendable appendable, Context context, Writable part1,
+        Writable part2, Writable... parts) throws IOException {
+      return appendTo(appendable, context,
+          Iterators.concat(Iterators.forArray(part1, part2), Iterators.forArray(parts)));
+    }
+
+    final Appendable appendTo(Appendable appendable, Context context,
+        Iterable<? extends Writable> parts) throws IOException {
+      return appendTo(appendable, context, parts.iterator());
+    }
+
+    Appendable appendTo(Appendable appendable, Context context, Iterator<? extends Writable> parts)
+        throws IOException {
+      checkNotNull(appendable);
+      checkNotNull(context);
+      if (parts.hasNext()) {
+        parts.next().write(appendable, context);
+        while (parts.hasNext()) {
+          appendable.append(separator);
+          parts.next().write(appendable, context);
+        }
+      }
+      return appendable;
+    }
+
+    final Joiner prefix(String prefix) {
+      return wrap(prefix, "");
+    }
+
+    final Joiner wrap(final String prefix, final String suffix) {
+      return new Joiner(this) {
+        @Override
+        Appendable appendTo(Appendable appendable, Context context,
+            Iterator<? extends Writable> parts) throws IOException {
+          boolean needsWrap = parts.hasNext();
+          if (needsWrap) {
+            appendable.append(prefix);
+          }
+          super.appendTo(appendable, context, parts);
+          if (needsWrap) {
+            appendable.append(suffix);
+          }
+          return appendable;
+        }
+      };
+    }
+  }
+
   static Writable toStringWritable(final Object object) {
     return new Writable() {
       @Override

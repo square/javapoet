@@ -23,7 +23,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -71,15 +70,8 @@ public final class EnumWriter extends TypeWriter {
         .toSet());
     writeAnnotations(appendable, context);
     writeModifiers(appendable).append("enum ").append(name.simpleName());
-    Iterator<TypeName> implementedTypesIterator = implementedTypes.iterator();
-    if (implementedTypesIterator.hasNext()) {
-      appendable.append(" implements ");
-      implementedTypesIterator.next().write(appendable, context);
-      while (implementedTypesIterator.hasNext()) {
-        appendable.append(", ");
-        implementedTypesIterator.next().write(appendable, context);
-      }
-    }
+    Writables.Joiner.on(", ").prefix(" implements ")
+        .appendTo(appendable, context, implementedTypes);
     appendable.append(" {");
 
     checkState(!constantWriters.isEmpty(), "Cannot write an enum with no constants.");
@@ -160,16 +152,7 @@ public final class EnumWriter extends TypeWriter {
     @Override
     public Appendable write(Appendable appendable, Context context) throws IOException {
       appendable.append(name);
-      Iterator<Snippet> snippetIterator = constructorSnippets.iterator();
-      if (snippetIterator.hasNext()) {
-        appendable.append('(');
-        snippetIterator.next().write(appendable, context);
-        while (snippetIterator.hasNext()) {
-          appendable.append(", ");
-          snippetIterator.next().write(appendable, context);
-        }
-        appendable.append(')');
-      }
+      Writables.Joiner.on(", ").wrap("(", ")").appendTo(appendable, context, constructorSnippets);
       return appendable;
     }
 

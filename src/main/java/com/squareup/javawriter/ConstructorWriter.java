@@ -22,7 +22,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -92,25 +91,9 @@ public final class ConstructorWriter extends Modifiable implements Writable, Has
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
     writeModifiers(appendable);
-    Iterator<TypeVariableName> typeVariablesIterator = typeVariables.iterator();
-    if (typeVariablesIterator.hasNext()) {
-      appendable.append('<');
-      typeVariablesIterator.next().write(appendable, context);
-      while (typeVariablesIterator.hasNext()) {
-        appendable.append(", ");
-        typeVariablesIterator.next().write(appendable, context);
-      }
-      appendable.append("> ");
-    }
+    Writables.Joiner.on(", ").wrap("<", "> ").appendTo(appendable, context, typeVariables);
     appendable.append(name).append('(');
-    Iterator<VariableWriter> parameterWritersIterator = parameterWriters.values().iterator();
-    if (parameterWritersIterator.hasNext()) {
-      parameterWritersIterator.next().write(appendable, context);
-    }
-    while (parameterWritersIterator.hasNext()) {
-      appendable.append(", ");
-      parameterWritersIterator.next().write(appendable, context);
-    }
+    Writables.Joiner.on(", ").appendTo(appendable, context, parameterWriters.values());
     appendable.append(") {");
     blockWriter.write(new IndentingAppendable(appendable), context);
     return appendable.append("}\n");
