@@ -45,6 +45,7 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
   final List<MethodWriter> methodWriters;
   final List<TypeWriter> nestedTypeWriters;
   final Map<String, FieldWriter> fieldWriters;
+  final List<ClassName> explicitImports;
 
   TypeWriter(ClassName name) {
     this.name = name;
@@ -52,11 +53,20 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
     this.methodWriters = Lists.newArrayList();
     this.nestedTypeWriters = Lists.newArrayList();
     this.fieldWriters = Maps.newLinkedHashMap();
+    this.explicitImports = Lists.newArrayList();
   }
 
   @Override
   public ClassName name() {
     return name;
+  }
+
+  public void addImport(Class<?> clazz) {
+    addImport(ClassName.fromClass(clazz));
+  }
+
+  public void addImport(ClassName className) {
+    explicitImports.add(className);
   }
 
   public MethodWriter addMethod(TypeWriter returnType, String name) {
@@ -144,7 +154,7 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
     appendable.append("package ").append(packageName).append(";\n\n");
 
     ImmutableSortedSet<ClassName> importCandidates = ImmutableSortedSet.<ClassName>naturalOrder()
-        //.addAll(explicitImports) // TODO!
+        .addAll(explicitImports)
         .addAll(referencedClasses())
         .build();
 
