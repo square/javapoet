@@ -18,7 +18,6 @@ package com.squareup.javawriter;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -40,14 +39,7 @@ final class IntersectionTypeName implements TypeName {
   }
 
   @Override public Appendable write(Appendable appendable, Context context) throws IOException {
-    Iterator<TypeName> iterator = typeNames.iterator();
-    if (iterator.hasNext()) {
-      iterator.next().write(appendable, context);
-      while (iterator.hasNext()) {
-        appendable.append(" & ");
-        iterator.next().write(appendable, context);
-      }
-    }
+    Writables.Joiner.on(" & ").appendTo(appendable, context, typeNames);
     return appendable;
   }
 

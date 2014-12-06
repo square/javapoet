@@ -21,7 +21,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Set;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
@@ -80,15 +79,7 @@ public final class TypeVariableName implements TypeName {
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
     appendable.append(name);
-    Iterator<TypeName> boundsIterator = bounds.iterator();
-    if (boundsIterator.hasNext()) {
-      appendable.append(" extends ");
-      boundsIterator.next().write(appendable, context);
-      while (boundsIterator.hasNext()) {
-        appendable.append(" & ");
-        boundsIterator.next().write(appendable, context);
-      }
-    }
+    Writables.Joiner.on(" & ").prefix(" extends ").appendTo(appendable, context, bounds);
     return appendable;
   }
 
