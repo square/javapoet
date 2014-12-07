@@ -35,6 +35,7 @@ public final class MethodWriter extends Modifiable implements HasClassReferences
   private final TypeName returnType;
   private final String name;
   private final Map<String, VariableWriter> parameterWriters;
+  private final List<ClassName> throwsTypes;
   private Optional<BlockWriter> body;
 
   MethodWriter(TypeName returnType, String name) {
@@ -42,6 +43,7 @@ public final class MethodWriter extends Modifiable implements HasClassReferences
     this.returnType = returnType;
     this.name = name;
     this.parameterWriters = Maps.newLinkedHashMap();
+    this.throwsTypes = Lists.newArrayList();
     this.body = Optional.absent();
   }
 
@@ -72,6 +74,14 @@ public final class MethodWriter extends Modifiable implements HasClassReferences
     return parameterWriter;
   }
 
+  public void addThrowsType(Class<?> clazz) {
+    addThrowsType(ClassName.fromClass(clazz));
+  }
+
+  public void addThrowsType(ClassName throwsType) {
+    throwsTypes.add(throwsType);
+  }
+
   public BlockWriter body() {
     if (body.isPresent()) {
       return body.get();
@@ -91,6 +101,7 @@ public final class MethodWriter extends Modifiable implements HasClassReferences
     appendable.append(' ').append(name).append('(');
     Writables.Joiner.on(", ").appendTo(appendable, context, parameterWriters.values());
     appendable.append(")");
+    Writables.Joiner.on(", ").prefix(" throws ").appendTo(appendable, context, throwsTypes);
     if (body.isPresent()) {
       appendable.append(" {");
       body.get().write(new IndentingAppendable(appendable), context);
@@ -105,7 +116,7 @@ public final class MethodWriter extends Modifiable implements HasClassReferences
   public Set<ClassName> referencedClasses() {
     Iterable<? extends HasClassReferences> concat =
         Iterables.concat(typeVariables, ImmutableList.of(returnType), parameterWriters.values(),
-            body.asSet());
+            throwsTypes, body.asSet());
     return FluentIterable.from(concat)
         .transformAndConcat(new Function<HasClassReferences, Set<ClassName>>() {
           @Override
