@@ -15,7 +15,6 @@
  */
 package com.squareup.javawriter;
 
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 import java.io.IOException;
@@ -55,12 +54,7 @@ public final class BlockWriter implements Writable, HasClassReferences {
   @Override
   public Set<ClassName> referencedClasses() {
     return FluentIterable.from(snippets)
-        .transformAndConcat(new Function<HasClassReferences, Set<ClassName>>() {
-          @Override
-          public Set<ClassName> apply(HasClassReferences input) {
-            return input.referencedClasses();
-          }
-        })
+        .transformAndConcat(GET_REFERENCED_CLASSES)
         .toSet();
   }
 }

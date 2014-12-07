@@ -15,7 +15,6 @@
  */
 package com.squareup.javawriter;
 
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -68,12 +67,7 @@ public final class InterfaceWriter extends TypeWriter {
         Iterables.concat(nestedTypeWriters, methodWriters, implementedTypes, typeVariables,
             annotations);
     return FluentIterable.from(concat)
-        .transformAndConcat(new Function<HasClassReferences, Set<ClassName>>() {
-          @Override
-          public Set<ClassName> apply(HasClassReferences input) {
-            return input.referencedClasses();
-          }
-        })
+        .transformAndConcat(GET_REFERENCED_CLASSES)
         .toSet();
   }
 }

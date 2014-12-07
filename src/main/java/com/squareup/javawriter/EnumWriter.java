@@ -15,7 +15,6 @@
  */
 package com.squareup.javawriter;
 
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -120,12 +119,7 @@ public final class EnumWriter extends TypeWriter {
         Iterables.concat(nestedTypeWriters, constantWriters.values(), fieldWriters.values(),
             constructorWriters, methodWriters, implementedTypes, annotations);
     return FluentIterable.from(concat)
-        .transformAndConcat(new Function<HasClassReferences, Set<ClassName>>() {
-          @Override
-          public Set<ClassName> apply(HasClassReferences input) {
-            return input.referencedClasses();
-          }
-        })
+        .transformAndConcat(GET_REFERENCED_CLASSES)
         .toSet();
   }
 
@@ -153,12 +147,7 @@ public final class EnumWriter extends TypeWriter {
     @Override
     public Set<ClassName> referencedClasses() {
       return FluentIterable.from(constructorSnippets)
-          .transformAndConcat(new Function<Snippet, Set<ClassName>>() {
-            @Override
-            public Set<ClassName> apply(Snippet input) {
-              return input.referencedClasses();
-            }
-          })
+          .transformAndConcat(GET_REFERENCED_CLASSES)
           .toSet();
     }
   }

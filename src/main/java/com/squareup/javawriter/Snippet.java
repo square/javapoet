@@ -15,7 +15,6 @@
  */
 package com.squareup.javawriter;
 
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -59,12 +58,7 @@ public final class Snippet implements HasClassReferences, Writable {
   @Override
   public Set<ClassName> referencedClasses() {
     return FluentIterable.from(types)
-        .transformAndConcat(new Function<TypeName, Set<ClassName>>() {
-          @Override
-          public Set<ClassName> apply(TypeName input) {
-            return input.referencedClasses();
-          }
-        })
+        .transformAndConcat(GET_REFERENCED_CLASSES)
         .toSet();
   }
 

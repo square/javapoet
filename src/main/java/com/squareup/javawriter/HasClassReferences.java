@@ -15,8 +15,17 @@
  */
 package com.squareup.javawriter;
 
+import com.google.common.base.Function;
 import java.util.Set;
 
 public interface HasClassReferences {
+  Function<HasClassReferences, Set<ClassName>> GET_REFERENCED_CLASSES =
+      new Function<HasClassReferences, Set<ClassName>>() {
+        @Override
+        public Set<ClassName> apply(HasClassReferences input) {
+          return input.referencedClasses();
+        }
+      };
+
   Set<ClassName> referencedClasses();
 }

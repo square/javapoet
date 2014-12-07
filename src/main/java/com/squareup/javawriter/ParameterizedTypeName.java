@@ -16,8 +16,8 @@
 package com.squareup.javawriter;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.Set;
 
@@ -35,12 +35,10 @@ public final class ParameterizedTypeName implements TypeName {
 
   @Override
   public Set<ClassName> referencedClasses() {
-    ImmutableSet.Builder<ClassName> builder = new ImmutableSet.Builder<ClassName>()
-        .add(type);
-    for (TypeName parameter : parameters) {
-      builder.addAll(parameter.referencedClasses());
-    }
-    return builder.build();
+    return FluentIterable.from(parameters)
+        .transformAndConcat(GET_REFERENCED_CLASSES)
+        .append(type)
+        .toSet();
   }
 
   @Override

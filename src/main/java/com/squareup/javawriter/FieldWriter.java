@@ -15,7 +15,6 @@
  */
 package com.squareup.javawriter;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -55,12 +54,7 @@ public final class FieldWriter extends VariableWriter {
     Iterable<? extends HasClassReferences> concat =
         Iterables.concat(ImmutableList.of(type()), initializer.asSet(), annotations);
     return FluentIterable.from(concat)
-        .transformAndConcat(new Function<HasClassReferences, Set<ClassName>>() {
-          @Override
-          public Set<ClassName> apply(HasClassReferences input) {
-            return input.referencedClasses();
-          }
-        })
+        .transformAndConcat(GET_REFERENCED_CLASSES)
         .toSet();
   }
 }

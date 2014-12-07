@@ -19,7 +19,6 @@ import com.google.common.base.Objects;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.Set;
 import javax.lang.model.element.NestingKind;
@@ -69,11 +68,9 @@ public final class TypeVariableName implements TypeName {
 
   @Override
   public Set<ClassName> referencedClasses() {
-    ImmutableSet.Builder<ClassName> builder = new ImmutableSet.Builder<ClassName>();
-    for (TypeName bound : bounds) {
-      builder.addAll(bound.referencedClasses());
-    }
-    return builder.build();
+    return FluentIterable.from(bounds)
+        .transformAndConcat(GET_REFERENCED_CLASSES)
+        .toSet();
   }
 
   @Override
