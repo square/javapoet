@@ -189,6 +189,16 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
     return appendable;
   }
 
+  protected Context createSubcontext(Context context) {
+    return context.createSubcontext(FluentIterable.from(nestedTypeWriters)
+        .transform(new Function<TypeWriter, ClassName>() {
+          @Override public ClassName apply(TypeWriter input) {
+            return input.name();
+          }
+        })
+        .toSet());
+  }
+
   static final class CompilationUnitContext implements Context {
     private final String packageName;
     private final ImmutableSortedSet<ClassName> visibleClasses;

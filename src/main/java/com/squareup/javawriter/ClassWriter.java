@@ -73,13 +73,7 @@ public final class ClassWriter extends TypeWriter {
 
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
-    context = context.createSubcontext(FluentIterable.from(nestedTypeWriters)
-        .transform(new Function<TypeWriter, ClassName>() {
-          @Override public ClassName apply(TypeWriter input) {
-            return input.name;
-          }
-        })
-        .toSet());
+    context = createSubcontext(context);
     writeAnnotations(appendable, context);
     writeModifiers(appendable).append("class ").append(name.simpleName());
     Writables.Joiner.on(", ").wrap("<", "> ").appendTo(appendable, context, typeVariables);
