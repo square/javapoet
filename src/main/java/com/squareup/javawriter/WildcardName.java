@@ -16,7 +16,8 @@
 package com.squareup.javawriter;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.util.Set;
 import javax.lang.model.type.WildcardType;
@@ -53,14 +54,9 @@ public final class WildcardName implements TypeName {
 
   @Override
   public Set<ClassName> referencedClasses() {
-    ImmutableSet.Builder<ClassName> builder = ImmutableSet.builder();
-    if (extendsBound.isPresent()) {
-      builder.addAll(extendsBound.get().referencedClasses());
-    }
-    if (superBound.isPresent()) {
-      builder.addAll(superBound.get().referencedClasses());
-    }
-    return builder.build();
+    return FluentIterable.from(Iterables.concat(extendsBound.asSet(), superBound.asSet()))
+        .transformAndConcat(GET_REFERENCED_CLASSES)
+        .toSet();
   }
 
   @Override

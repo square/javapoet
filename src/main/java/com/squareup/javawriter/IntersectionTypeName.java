@@ -15,7 +15,6 @@
  */
 package com.squareup.javawriter;
 
-import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import java.io.IOException;
 import java.util.List;
@@ -30,11 +29,7 @@ final class IntersectionTypeName implements TypeName {
 
   @Override public Set<ClassName> referencedClasses() {
     return FluentIterable.from(typeNames)
-        .transformAndConcat(new Function<TypeName, Iterable<ClassName>>() {
-          @Override public Iterable<ClassName> apply(TypeName input) {
-            return input.referencedClasses();
-          }
-        })
+        .transformAndConcat(GET_REFERENCED_CLASSES)
         .toSet();
   }
 
