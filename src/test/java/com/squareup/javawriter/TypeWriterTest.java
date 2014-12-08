@@ -58,4 +58,18 @@ public class TypeWriterTest {
         + "}\n";
     assertThat(topClass.toString()).isEqualTo(expected);
   }
+
+  @Test public void explicitImports() {
+    ClassName name = ClassName.create("test", "Top");
+    ClassWriter topClass = ClassWriter.forClassName(name);
+    topClass.addImport(ClassName.create("other", "Thing"));
+
+    String expected = ""
+        + "package test;\n"
+        + "\n"
+        + "import other.Thing;\n"
+        + "\n"
+        + "class Top {}\n";
+    assertThat(topClass.toString()).isEqualTo(expected);
+  }
 }
