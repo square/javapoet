@@ -16,6 +16,9 @@
 package com.squareup.javawriter;
 
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -45,5 +48,9 @@ final class IntersectionTypeName implements TypeName {
   @Override public boolean equals(Object obj) {
     return obj instanceof IntersectionTypeName
         && ((IntersectionTypeName) obj).typeNames.equals(typeNames);
+  }
+
+  public static IntersectionTypeName create(TypeName bound1, TypeName bound2, TypeName... rest) {
+    return new IntersectionTypeName(ImmutableList.copyOf(Lists.asList(bound1, bound2, rest)));
   }
 }

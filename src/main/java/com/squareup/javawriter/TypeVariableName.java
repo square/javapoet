@@ -41,8 +41,12 @@ public final class TypeVariableName implements TypeName {
         .toList();
   }
 
-  static TypeVariableName named(String name) {
+  public static TypeVariableName create(String name) {
     return new TypeVariableName(name, ImmutableList.<TypeName>of());
+  }
+
+  public static TypeVariableName create(String name, TypeName... bounds) {
+    return new TypeVariableName(name, ImmutableList.copyOf(bounds));
   }
 
   static TypeVariableName forTypeMirror(TypeVariable mirror) {
