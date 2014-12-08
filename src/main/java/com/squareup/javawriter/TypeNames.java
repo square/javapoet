@@ -60,10 +60,8 @@ public final class TypeNames {
 
       @Override
       public TypeName visitUnknown(TypeMirror t, Void p) {
-        for (Class<?> implementedInterface : t.getClass().getInterfaces()) {
-          if ("javax.lang.model.type.IntersectionType".equals(implementedInterface.getName())) {
-            return visitIntersectionType(t);
-          }
+        if ("INTERSECTION".equals(t.getKind().name())) {
+          return visitIntersectionType(t);
         }
         return super.visitUnknown(t, p);
       }
