@@ -28,7 +28,7 @@ public final class MethodWriterTest {
   @Test public void empty() {
     MethodWriter test = new MethodWriter(VoidName.VOID, "test");
     String actual = Writables.writeToString(test);
-    assertThat(actual).isEqualTo("void test() {}\n");
+    assertThat(actual).isEqualTo("void test() {\n}\n");
   }
 
   @Test public void multilineBody() {
@@ -48,7 +48,7 @@ public final class MethodWriterTest {
     method.addThrowsType(ClassName.fromClass(IOException.class));
 
     assertThat(Writables.writeToString(method)) //
-        .isEqualTo("void test() throws java.io.IOException {}\n");
+        .isEqualTo("void test() throws java.io.IOException {\n}\n");
   }
 
   @Test public void singleThrowsClass() {
@@ -56,7 +56,7 @@ public final class MethodWriterTest {
     method.addThrowsType(ClassName.fromClass(IOException.class));
 
     assertThat(Writables.writeToString(method)) //
-        .isEqualTo("void test() throws java.io.IOException {}\n");
+        .isEqualTo("void test() throws java.io.IOException {\n}\n");
   }
 
   @Test public void throwsWithBody() {
@@ -77,6 +77,6 @@ public final class MethodWriterTest {
     method.addThrowsType(ClassName.create("example", "ExampleException"));
 
     assertThat(Writables.writeToString(method)) //
-        .isEqualTo("void test() throws java.io.IOException, example.ExampleException {}\n");
+        .isEqualTo("void test() throws java.io.IOException, example.ExampleException {\n}\n");
   }
 }

@@ -98,11 +98,9 @@ public final class MethodWriter extends Modifiable implements HasClassReferences
     if (modifiers.contains(Modifier.ABSTRACT)) {
       appendable.append(";\n");
     } else {
-      appendable.append(" {");
+      appendable.append(" {\n");
       if (!body.isEmpty()) {
-        appendable.append('\n');
-        body.write(new IndentingAppendable(appendable), context);
-        appendable.append('\n');
+        body.write(new IndentingAppendable(appendable), context).append('\n');
       }
       appendable.append("}\n");
     }

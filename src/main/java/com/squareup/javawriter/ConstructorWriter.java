@@ -88,11 +88,9 @@ public final class ConstructorWriter extends Modifiable implements Writable, Has
     Writables.Joiner.on(", ").wrap("<", "> ").appendTo(appendable, context, typeVariables);
     appendable.append(name).append('(');
     Writables.Joiner.on(", ").appendTo(appendable, context, parameterWriters.values());
-    appendable.append(") {");
+    appendable.append(") {\n");
     if (!body.isEmpty()) {
-      appendable.append('\n');
-      body.write(new IndentingAppendable(appendable), context);
-      appendable.append('\n');
+      body.write(new IndentingAppendable(appendable), context).append('\n');
     }
     return appendable.append("}\n");
   }
