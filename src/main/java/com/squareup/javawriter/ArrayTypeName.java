@@ -50,4 +50,8 @@ final class ArrayTypeName implements TypeName {
   public String toString() {
     return Writables.writeToString(this);
   }
+
+  public static ArrayTypeName create(TypeName componentType) {
+    return new ArrayTypeName(componentType);
+  }
 }
