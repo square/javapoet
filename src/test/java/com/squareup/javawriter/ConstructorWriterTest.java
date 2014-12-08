@@ -27,7 +27,7 @@ public final class ConstructorWriterTest {
   @Test public void empty() {
     ConstructorWriter test = new ConstructorWriter("Test");
     String actual = Writables.writeToString(test);
-    assertThat(actual).isEqualTo("Test() {}\n");
+    assertThat(actual).isEqualTo("Test() {\n}\n");
   }
 
   @Test public void multilineBody() {
