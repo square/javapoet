@@ -91,7 +91,7 @@ public final class JavaWriter {
         for (String packageComponent : packageName.split("\\.")) {
           outputDir = new File(outputDir, packageComponent);
         }
-        if (!outputDir.mkdirs()) {
+        if (!outputDir.exists() && !outputDir.mkdirs()) {
           throw new IOException("Unable to create directory " + outputDir);
         }
       }
