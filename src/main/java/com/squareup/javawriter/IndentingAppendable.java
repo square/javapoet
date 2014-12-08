@@ -43,22 +43,25 @@ final class IndentingAppendable implements Appendable {
     Iterator<CharSequence> lines = lines(csq, start, end);
     while (lines.hasNext()) {
       CharSequence line = lines.next();
-      maybeIndent();
-      delegate.append(line);
+      if (line.length() > 1 || line.charAt(0) != '\n') {
+        maybeIndent();
+      }
       if (line.charAt(line.length() - 1) == '\n') {
         requiresIndent = true;
       }
+      delegate.append(line);
     }
     return this;
   }
 
   @Override
   public Appendable append(char c) throws IOException {
-    maybeIndent();
-    delegate.append(c);
     if (c == '\n') {
       requiresIndent = true;
+    } else {
+      maybeIndent();
     }
+    delegate.append(c);
     return this;
   }
 

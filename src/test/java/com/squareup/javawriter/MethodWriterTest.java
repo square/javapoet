@@ -25,12 +25,30 @@ import static com.google.common.truth.Truth.assertThat;
 
 @RunWith(JUnit4.class)
 public final class MethodWriterTest {
+  @Test public void empty() {
+    MethodWriter test = new MethodWriter(VoidName.VOID, "test");
+    String actual = Writables.writeToString(test);
+    assertThat(actual).isEqualTo("void test() {}\n");
+  }
+
+  @Test public void multilineBody() {
+    MethodWriter test = new MethodWriter(VoidName.VOID, "test");
+    test.body().addSnippet("String firstName;\nString lastName;");
+    String actual = Writables.writeToString(test);
+    assertThat(actual).isEqualTo(Joiner.on('\n').join(
+        "void test() {",
+        "  String firstName;",
+        "  String lastName;",
+        "}\n"
+    ));
+  }
+
   @Test public void singleThrowsTypeName() {
     MethodWriter method = new MethodWriter(VoidName.VOID, "test");
     method.addThrowsType(ClassName.fromClass(IOException.class));
 
     assertThat(Writables.writeToString(method)) //
-        .isEqualTo("void test() throws java.io.IOException;\n");
+        .isEqualTo("void test() throws java.io.IOException {}\n");
   }
 
   @Test public void singleThrowsClass() {
@@ -38,7 +56,7 @@ public final class MethodWriterTest {
     method.addThrowsType(ClassName.fromClass(IOException.class));
 
     assertThat(Writables.writeToString(method)) //
-        .isEqualTo("void test() throws java.io.IOException;\n");
+        .isEqualTo("void test() throws java.io.IOException {}\n");
   }
 
   @Test public void throwsWithBody() {
@@ -47,7 +65,7 @@ public final class MethodWriterTest {
     method.body().addSnippet("return 0;");
 
     assertThat(Writables.writeToString(method)).isEqualTo(Joiner.on('\n').join(
-        "int test() throws java.io.IOException {  ",
+        "int test() throws java.io.IOException {",
         "  return 0;",
         "}\n"
     ));
@@ -59,6 +77,6 @@ public final class MethodWriterTest {
     method.addThrowsType(ClassName.create("example", "ExampleException"));
 
     assertThat(Writables.writeToString(method)) //
-        .isEqualTo("void test() throws java.io.IOException, example.ExampleException;\n");
+        .isEqualTo("void test() throws java.io.IOException, example.ExampleException {}\n");
   }
 }

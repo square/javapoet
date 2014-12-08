@@ -15,7 +15,6 @@
  */
 package com.squareup.javawriter;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -25,6 +24,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -35,7 +35,7 @@ public final class MethodWriter extends Modifiable implements HasClassReferences
   private final String name;
   private final Map<String, VariableWriter> parameterWriters;
   private final List<ClassName> throwsTypes;
-  private Optional<BlockWriter> body;
+  private BlockWriter body;
 
   MethodWriter(TypeName returnType, String name) {
     this.typeVariables = Lists.newArrayList();
@@ -43,7 +43,7 @@ public final class MethodWriter extends Modifiable implements HasClassReferences
     this.name = name;
     this.parameterWriters = Maps.newLinkedHashMap();
     this.throwsTypes = Lists.newArrayList();
-    this.body = Optional.absent();
+    this.body = new BlockWriter();
   }
 
   public String name() {
@@ -82,13 +82,7 @@ public final class MethodWriter extends Modifiable implements HasClassReferences
   }
 
   public BlockWriter body() {
-    if (body.isPresent()) {
-      return body.get();
-    } else {
-      BlockWriter blockWriter = new BlockWriter();
-      body = Optional.of(blockWriter);
-      return blockWriter;
-    }
+    return body;
   }
 
   @Override
@@ -101,12 +95,16 @@ public final class MethodWriter extends Modifiable implements HasClassReferences
     Writables.Joiner.on(", ").appendTo(appendable, context, parameterWriters.values());
     appendable.append(")");
     Writables.Joiner.on(", ").prefix(" throws ").appendTo(appendable, context, throwsTypes);
-    if (body.isPresent()) {
-      appendable.append(" {");
-      body.get().write(new IndentingAppendable(appendable), context);
-      appendable.append("}\n");
-    } else {
+    if (modifiers.contains(Modifier.ABSTRACT)) {
       appendable.append(";\n");
+    } else {
+      appendable.append(" {");
+      if (!body.isEmpty()) {
+        appendable.append('\n');
+        body.write(new IndentingAppendable(appendable), context);
+        appendable.append('\n');
+      }
+      appendable.append("}\n");
     }
     return appendable;
   }
@@ -114,8 +112,8 @@ public final class MethodWriter extends Modifiable implements HasClassReferences
   @Override
   public Set<ClassName> referencedClasses() {
     Iterable<? extends HasClassReferences> concat =
-        Iterables.concat(typeVariables, ImmutableList.of(returnType), parameterWriters.values(),
-            throwsTypes, body.asSet());
+        Iterables.concat(typeVariables, ImmutableList.of(returnType, body),
+            parameterWriters.values(), throwsTypes);
     return FluentIterable.from(concat)
         .transformAndConcat(GET_REFERENCED_CLASSES)
         .toSet();

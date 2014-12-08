@@ -44,11 +44,7 @@ public final class BlockWriter implements Writable, HasClassReferences {
 
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
-    for (Snippet snippet : snippets) {
-      appendable.append('\n');
-      snippet.write(appendable, context);
-    }
-    return appendable.append('\n');
+    return Writables.Joiner.on('\n').appendTo(appendable, context, snippets);
   }
 
   @Override
