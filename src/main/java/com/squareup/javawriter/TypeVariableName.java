@@ -16,9 +16,12 @@
 package com.squareup.javawriter;
 
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.util.Set;
 import javax.lang.model.element.NestingKind;
@@ -32,28 +35,31 @@ import static com.squareup.javawriter.TypeNames.FOR_TYPE_MIRROR;
 
 public final class TypeVariableName implements TypeName {
   private final String name;
-  private final ImmutableList<TypeName> bounds;
+  private final Optional<TypeName> upperBound;
 
-  TypeVariableName(String name, Iterable<TypeName> bounds) {
+  TypeVariableName(String name, Optional<TypeName> upperBound) {
     this.name = name;
-    this.bounds = FluentIterable.from(bounds)
-        .filter(Predicates.not(Predicates.<TypeName>equalTo(ClassName.fromClass(Object.class))))
-        .toList();
+    this.upperBound = upperBound;
   }
 
   public static TypeVariableName create(String name) {
-    return new TypeVariableName(name, ImmutableList.<TypeName>of());
+    return new TypeVariableName(name, Optional.<TypeName>absent());
   }
 
-  public static TypeVariableName create(String name, TypeName... bounds) {
-    return new TypeVariableName(name, ImmutableList.copyOf(bounds));
+  public static TypeVariableName create(String name, TypeName upperBound) {
+    return new TypeVariableName(name, Optional.of(upperBound));
   }
 
   static TypeVariableName forTypeMirror(TypeVariable mirror) {
-    FluentIterable<TypeMirror> bounds =
-        FluentIterable.from(ImmutableList.of(mirror.getUpperBound()));
-    if (mirror.getUpperBound().getKind() == TypeKind.DECLARED) {
-      TypeElement bound = (TypeElement) ((DeclaredType) mirror.getUpperBound()).asElement();
+    String name = mirror.asElement().getSimpleName().toString();
+
+    TypeMirror upperBound = mirror.getUpperBound();
+    FluentIterable<TypeMirror> bounds = FluentIterable.from(ImmutableList.of(upperBound));
+    // Try to detect intersection types for Java 7 (Java 8+ has a new TypeKind for that)
+    // Unfortunately, we can't put this logic into TypeNames.forTypeMirror() as this heuristic
+    // only really works in the context of a TypeVariable's upper bound.
+    if (upperBound.getKind() == TypeKind.DECLARED) {
+      TypeElement bound = (TypeElement) ((DeclaredType) upperBound).asElement();
       if (bound.getNestingKind() == NestingKind.ANONYMOUS) {
         // This is (likely) an intersection type.
         bounds = FluentIterable
@@ -61,9 +67,15 @@ public final class TypeVariableName implements TypeName {
             .append(bound.getInterfaces());
       }
     }
-    return new TypeVariableName(
-        mirror.asElement().getSimpleName().toString(),
-        bounds.transform(FOR_TYPE_MIRROR));
+    ImmutableList<TypeName> typeNames = bounds.transform(FOR_TYPE_MIRROR)
+        .filter(Predicates.not(Predicates.<TypeName>equalTo(ClassName.fromClass(Object.class))))
+        .toList();
+    if (typeNames.size() == 1) {
+      return new TypeVariableName(name, Optional.of(Iterables.getOnlyElement(typeNames)));
+    } else if (!typeNames.isEmpty()) {
+      return new TypeVariableName(name, Optional.<TypeName>of(new IntersectionTypeName(typeNames)));
+    }
+    return new TypeVariableName(name, Optional.<TypeName>absent());
   }
 
   public String name() {
@@ -72,15 +84,16 @@ public final class TypeVariableName implements TypeName {
 
   @Override
   public Set<ClassName> referencedClasses() {
-    return FluentIterable.from(bounds)
-        .transformAndConcat(GET_REFERENCED_CLASSES)
-        .toSet();
+    return upperBound.transform(GET_REFERENCED_CLASSES).or(ImmutableSet.<ClassName>of());
   }
 
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
     appendable.append(name);
-    Writables.Joiner.on(" & ").prefix(" extends ").appendTo(appendable, context, bounds);
+    if (upperBound.isPresent()) {
+      appendable.append(" extends ");
+      upperBound.get().write(appendable, context);
+    }
     return appendable;
   }
 
@@ -89,7 +102,7 @@ public final class TypeVariableName implements TypeName {
     if (obj instanceof TypeVariableName) {
       TypeVariableName that = (TypeVariableName) obj;
       return this.name.equals(that.name)
-          && this.bounds.equals(that.bounds);
+          && this.upperBound.equals(that.upperBound);
     } else {
       return false;
     }
@@ -97,7 +110,7 @@ public final class TypeVariableName implements TypeName {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(name, bounds);
+    return Objects.hashCode(name, upperBound);
   }
 
   @Override
