@@ -43,8 +43,12 @@ public abstract class Modifiable {
   }
 
   public AnnotationWriter annotate(Class<? extends Annotation> annotation) {
-    AnnotationWriter annotationWriter = new AnnotationWriter(ClassName.fromClass(annotation));
-    this.annotations.add(annotationWriter);
+    return annotate(ClassName.fromClass(annotation));
+  }
+
+  public AnnotationWriter annotate(ClassName className) {
+    AnnotationWriter annotationWriter = new AnnotationWriter(className);
+    annotations.add(annotationWriter);
     return annotationWriter;
   }
 
