@@ -114,7 +114,7 @@ final class Writables {
 
     @Override
     public Context createSubcontext(Set<ClassName> newTypes) {
-      throw new UnsupportedOperationException();
+      return this;
     }
   };
 

@@ -20,6 +20,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
 
 @RunWith(JUnit4.class)
 public final class ClassWriterTest {
@@ -27,6 +28,7 @@ public final class ClassWriterTest {
     ClassName name = ClassName.bestGuessFromString("test.Foo.Bar");
     try {
       ClassWriter.forClassName(name);
+      fail();
     } catch (IllegalArgumentException e) {
       assertThat(e.getMessage()).isEqualTo("test.Foo.Bar must be top-level type.");
     }

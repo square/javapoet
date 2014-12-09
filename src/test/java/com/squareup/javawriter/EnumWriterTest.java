@@ -20,6 +20,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
 
 @RunWith(JUnit4.class)
 public final class EnumWriterTest {
@@ -27,8 +28,32 @@ public final class EnumWriterTest {
     ClassName name = ClassName.bestGuessFromString("test.Foo.Bar");
     try {
       EnumWriter.forClassName(name);
+      fail();
     } catch (IllegalArgumentException e) {
       assertThat(e.getMessage()).isEqualTo("test.Foo.Bar must be top-level type.");
     }
+  }
+
+  @Test public void constantsAreRequired() {
+    EnumWriter enumWriter = EnumWriter.forClassName(ClassName.create("", "Test"));
+    try {
+      Writables.writeToString(enumWriter);
+      fail();
+    } catch (IllegalStateException e) {
+      assertThat(e.getMessage()).isEqualTo("Cannot write an enum with no constants.");
+    }
+  }
+
+  @Test public void constantsAreIndented() {
+    EnumWriter enumWriter = EnumWriter.forClassName(ClassName.create("", "Test"));
+    enumWriter.addConstant("HELLO");
+    enumWriter.addConstant("WORLD");
+
+    String expected = ""
+        + "enum Test {\n"
+        + "  HELLO,\n"
+        + "  WORLD;\n"
+        + "}\n";
+    assertThat(Writables.writeToString(enumWriter)).isEqualTo(expected);
   }
 }

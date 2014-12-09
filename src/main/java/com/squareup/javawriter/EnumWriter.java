@@ -16,7 +16,6 @@
 package com.squareup.javawriter;
 
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -60,23 +59,17 @@ public final class EnumWriter extends TypeWriter {
 
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
+    checkState(!constantWriters.isEmpty(), "Cannot write an enum with no constants.");
+
     context = createSubcontext(context);
     writeAnnotations(appendable, context);
     writeModifiers(appendable).append("enum ").append(name.simpleName());
     Writables.Joiner.on(", ").prefix(" implements ")
         .appendTo(appendable, context, implementedTypes);
-    appendable.append(" {");
+    appendable.append(" {\n");
 
-    checkState(!constantWriters.isEmpty(), "Cannot write an enum with no constants.");
-    appendable.append('\n');
-    ImmutableList<ConstantWriter> constantWriterList =
-        ImmutableList.copyOf(constantWriters.values());
-    for (ConstantWriter constantWriter
-        : constantWriterList.subList(0, constantWriterList.size() - 1)) {
-      constantWriter.write(appendable, context);
-      appendable.append(",\n");
-    }
-    constantWriterList.get(constantWriterList.size() - 1).write(appendable, context);
+    Writables.Joiner.on(",\n")
+        .appendTo(new IndentingAppendable(appendable), context, constantWriters.values());
     appendable.append(";\n");
 
     if (!fieldWriters.isEmpty()) {
