@@ -107,10 +107,8 @@ public final class EnumWriter extends TypeWriter {
 
   @Override
   public Set<ClassName> referencedClasses() {
-    @SuppressWarnings("unchecked")
     Iterable<? extends HasClassReferences> concat =
-        Iterables.concat(nestedTypeWriters, constantWriters.values(), fieldWriters.values(),
-            constructorWriters, methodWriters, implementedTypes, annotations);
+        Iterables.concat(super.referencedClasses(), constantWriters.values(), constructorWriters);
     return FluentIterable.from(concat)
         .transformAndConcat(GET_REFERENCED_CLASSES)
         .toSet();

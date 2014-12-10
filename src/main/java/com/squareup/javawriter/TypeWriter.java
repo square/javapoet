@@ -22,6 +22,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
@@ -39,7 +40,7 @@ import javax.lang.model.type.TypeMirror;
  * Only named types. Doesn't cover anonymous inner classes.
  */
 public abstract class TypeWriter /* ha ha */ extends Modifiable
-    implements Writable, HasTypeName, HasClassReferences {
+    implements Writable, HasTypeName {
   final ClassName name;
   final List<TypeName> implementedTypes;
   final List<MethodWriter> methodWriters;
@@ -147,6 +148,16 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
     } catch (IOException e) {
       throw new AssertionError(e);
     }
+  }
+
+  @Override public Set<ClassName> referencedClasses() {
+    @SuppressWarnings("unchecked")
+    Iterable<? extends HasClassReferences> concat =
+        Iterables.concat(super.referencedClasses(), implementedTypes, methodWriters,
+            nestedTypeWriters, fieldWriters.values(), explicitImports);
+    return FluentIterable.from(concat)
+        .transformAndConcat(GET_REFERENCED_CLASSES)
+        .toSet();
   }
 
   Appendable writeTypeToAppendable(Appendable appendable) throws IOException {

@@ -28,7 +28,7 @@ import javax.lang.model.element.TypeElement;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public final class ConstructorWriter extends Modifiable implements Writable, HasClassReferences {
+public final class ConstructorWriter extends Modifiable implements Writable {
   private final List<TypeVariableName> typeVariables;
   private final String name;
   private final Map<String, VariableWriter> parameterWriters;
@@ -76,8 +76,10 @@ public final class ConstructorWriter extends Modifiable implements Writable, Has
 
   @Override
   public Set<ClassName> referencedClasses() {
-    return FluentIterable.from(
-        Iterables.concat(typeVariables, parameterWriters.values(), ImmutableList.of(body)))
+    Iterable<? extends HasClassReferences> concat =
+        Iterables.concat(super.referencedClasses(), typeVariables, parameterWriters.values(),
+            ImmutableList.of(body));
+    return FluentIterable.from(concat)
             .transformAndConcat(GET_REFERENCED_CLASSES)
             .toSet();
   }

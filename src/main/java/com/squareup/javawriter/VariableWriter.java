@@ -15,12 +15,15 @@
  */
 package com.squareup.javawriter;
 
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class VariableWriter extends Modifiable implements Writable, HasClassReferences {
+public class VariableWriter extends Modifiable implements Writable {
   private final TypeName type;
   private final String name;
 
@@ -46,6 +49,10 @@ public class VariableWriter extends Modifiable implements Writable, HasClassRefe
 
   @Override
   public Set<ClassName> referencedClasses() {
-    return type.referencedClasses();
+    Iterable<? extends HasClassReferences> concat =
+        Iterables.concat(super.referencedClasses(), ImmutableSet.of(type));
+    return FluentIterable.from(concat)
+        .transformAndConcat(GET_REFERENCED_CLASSES)
+        .toSet();
   }
 }
