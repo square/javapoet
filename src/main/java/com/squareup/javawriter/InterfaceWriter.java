@@ -31,6 +31,7 @@ public final class InterfaceWriter extends TypeWriter {
   }
 
   private final List<TypeVariableName> typeVariables;
+
   InterfaceWriter(ClassName name) {
     super(name);
     this.typeVariables = Lists.newArrayList();
@@ -62,10 +63,8 @@ public final class InterfaceWriter extends TypeWriter {
 
   @Override
   public Set<ClassName> referencedClasses() {
-    @SuppressWarnings("unchecked")
     Iterable<? extends HasClassReferences> concat =
-        Iterables.concat(nestedTypeWriters, methodWriters, implementedTypes, typeVariables,
-            annotations);
+        Iterables.concat(super.referencedClasses(), typeVariables);
     return FluentIterable.from(concat)
         .transformAndConcat(GET_REFERENCED_CLASSES)
         .toSet();

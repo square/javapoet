@@ -15,6 +15,7 @@
  */
 package com.squareup.javawriter;
 
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.squareup.javawriter.Writable.Context;
@@ -25,7 +26,7 @@ import java.util.List;
 import java.util.Set;
 import javax.lang.model.element.Modifier;
 
-public abstract class Modifiable {
+public abstract class Modifiable implements HasClassReferences {
   final Set<Modifier> modifiers;
   final List<AnnotationWriter> annotations;
 
@@ -64,5 +65,11 @@ public abstract class Modifiable {
       annotationWriter.write(appendable, context).append('\n');
     }
     return appendable;
+  }
+
+  @Override public Set<ClassName> referencedClasses() {
+    return FluentIterable.from(annotations)
+        .transformAndConcat(GET_REFERENCED_CLASSES)
+        .toSet();
   }
 }

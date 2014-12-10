@@ -29,7 +29,7 @@ import javax.lang.model.element.TypeElement;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-public final class MethodWriter extends Modifiable implements HasClassReferences, Writable {
+public final class MethodWriter extends Modifiable implements Writable {
   private final List<TypeVariableName> typeVariables;
   private final TypeName returnType;
   private final String name;
@@ -109,9 +109,10 @@ public final class MethodWriter extends Modifiable implements HasClassReferences
 
   @Override
   public Set<ClassName> referencedClasses() {
+    @SuppressWarnings("unchecked")
     Iterable<? extends HasClassReferences> concat =
-        Iterables.concat(typeVariables, ImmutableList.of(returnType, body),
-            parameterWriters.values(), throwsTypes);
+        Iterables.concat(super.referencedClasses(), typeVariables,
+            ImmutableList.of(returnType, body), parameterWriters.values(), throwsTypes);
     return FluentIterable.from(concat)
         .transformAndConcat(GET_REFERENCED_CLASSES)
         .toSet();
