@@ -40,7 +40,7 @@ public final class ClassWriter extends TypeWriter {
 
   private Optional<TypeName> supertype;
   private final List<ConstructorWriter> constructorWriters;
-  private final List<TypeName> typeVariables;
+  private final List<TypeVariableName> typeVariables;
 
   ClassWriter(ClassName className) {
     super(className);
@@ -66,8 +66,8 @@ public final class ClassWriter extends TypeWriter {
     return constructorWriter;
   }
 
-  public void addTypeVariable(TypeName typeName) {
-    typeVariables.add(typeName);
+  public void addTypeVariable(TypeVariableName typeVariable) {
+    this.typeVariables.add(typeVariable);
   }
 
   @Override
@@ -75,7 +75,7 @@ public final class ClassWriter extends TypeWriter {
     context = createSubcontext(context);
     writeAnnotations(appendable, context);
     writeModifiers(appendable).append("class ").append(name.simpleName());
-    Writables.Joiner.on(", ").wrap("<", ">").appendTo(appendable, context, typeVariables);
+    Writables.Joiner.on(", ").wrap("<", "> ").appendTo(appendable, context, typeVariables);
     if (supertype.isPresent()) {
       appendable.append(" extends ");
       supertype.get().write(appendable, context);

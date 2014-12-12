@@ -83,17 +83,11 @@ public final class Snippet implements HasClassReferences, Writable {
   public static Snippet format(String format, Object... args) {
     ImmutableSet.Builder<TypeName> types = ImmutableSet.builder();
     for (Object arg : args) {
-      if (arg instanceof Snippet) {
-        types.addAll(((Snippet) arg).types);
-      }
       if (arg instanceof HasClassReferences) {
         types.addAll(((HasClassReferences) arg).referencedClasses());
       }
-      if (arg instanceof TypeName) {
-        types.add((TypeName) arg);
-      }
       if (arg instanceof HasTypeName) {
-        types.add(((HasTypeName) arg).name());
+        types.addAll(((HasTypeName) arg).name().referencedClasses());
       }
     }
     return new Snippet(format, types.build(), ImmutableList.copyOf(args));

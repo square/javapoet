@@ -132,11 +132,10 @@ import static javax.lang.model.element.Modifier.PUBLIC;
         classWriter.addField(ParameterizedTypeName.create(List.class, WildcardName.create()),
             "list");
 
-    AnonymousClassWriter listWriter =
-        AnonymousClassWriter.forClassName(ClassName.fromClass(ArrayList.class));
-    listWriter.addTypeVariable(
-        ParameterizedTypeName.create(Map.class, ClassName.fromClass(String.class),
-            ClassName.fromClass(Integer.class)));
+    AnonymousClassWriter listWriter = AnonymousClassWriter.forParameterizedTypeName(
+        ParameterizedTypeName.create(ArrayList.class,
+            ParameterizedTypeName.create(Map.class, ClassName.fromClass(String.class),
+                ClassName.fromClass(Integer.class))));
 
     MethodWriter listSizeMethod = listWriter.addMethod(int.class, "size");
     listSizeMethod.annotate(Override.class);
