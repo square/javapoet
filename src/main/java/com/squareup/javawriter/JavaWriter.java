@@ -47,16 +47,12 @@ public final class JavaWriter {
   }
 
   public JavaWriter addTypeWriter(TypeWriter typeWriter) {
-    checkArgument(!(typeWriter instanceof AnonymousClassWriter),
-        "AnonymousClassWriters cannot be added to a JavaWriter");
     typeWriters.add(typeWriter);
     return this;
   }
 
   public JavaWriter addTypeWriters(Iterable<? extends TypeWriter> typeWriters) {
-    for (TypeWriter typeWriter : typeWriters) {
-      addTypeWriter(typeWriter);
-    }
+    Iterables.addAll(this.typeWriters, typeWriters);
     return this;
   }
 

@@ -30,7 +30,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.fail;
 
 @RunWith(JUnit4.class)
 public final class JavaWriterTest {
@@ -143,17 +142,6 @@ public final class JavaWriterTest {
     assertThat(fooFile.exists()).isTrue();
     assertThat(barFile.exists()).isTrue();
     assertThat(bazFile.exists()).isTrue();
-  }
-
-  @Test public void failsAddingAnonymousClass() {
-    try {
-      ClassName fooName = ClassName.create("foo", "Test");
-      AnonymousClassWriter anonymousClassWriter = AnonymousClassWriter.forClassName(fooName);
-      javaWriter.addTypeWriter(anonymousClassWriter);
-      fail();
-    } catch (IllegalArgumentException e) {
-      assertThat(e.getMessage()).isEqualTo("AnonymousClassWriters cannot be added to a JavaWriter");
-    }
   }
 
   // TODO Filer-based tests
