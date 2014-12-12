@@ -20,7 +20,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.util.Set;
@@ -33,7 +32,7 @@ import javax.lang.model.type.TypeVariable;
 
 import static com.squareup.javawriter.TypeNames.FOR_TYPE_MIRROR;
 
-public final class TypeVariableName implements TypeName {
+public final class TypeVariableName extends TypeName {
   private final String name;
   private final Optional<TypeName> upperBound;
 
@@ -84,11 +83,16 @@ public final class TypeVariableName implements TypeName {
 
   @Override
   public Set<ClassName> referencedClasses() {
-    return upperBound.transform(GET_REFERENCED_CLASSES).or(ImmutableSet.<ClassName>of());
+    Iterable<? extends HasClassReferences> concat =
+        Iterables.concat(super.referencedClasses(), upperBound.asSet());
+    return FluentIterable.from(concat)
+        .transformAndConcat(GET_REFERENCED_CLASSES)
+        .toSet();
   }
 
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
+    super.write(appendable, context);
     appendable.append(name);
     if (upperBound.isPresent()) {
       appendable.append(" extends ");
@@ -99,7 +103,9 @@ public final class TypeVariableName implements TypeName {
 
   @Override
   public boolean equals(Object obj) {
-    if (obj instanceof TypeVariableName) {
+    if (obj == this) {
+      return true;
+    } else if (super.equals(obj) && obj instanceof TypeVariableName) {
       TypeVariableName that = (TypeVariableName) obj;
       return this.name.equals(that.name)
           && this.upperBound.equals(that.upperBound);
@@ -110,7 +116,7 @@ public final class TypeVariableName implements TypeName {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(name, upperBound);
+    return Objects.hashCode(super.hashCode(), name, upperBound);
   }
 
   @Override

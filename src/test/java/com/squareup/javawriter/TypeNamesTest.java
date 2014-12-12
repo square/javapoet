@@ -97,21 +97,21 @@ public class TypeNamesTest {
   @Test
   public void forTypeMirror_primitive() {
     assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.BOOLEAN)))
-        .isEqualTo(PrimitiveName.BOOLEAN);
+        .isEqualTo(PrimitiveName.createBoolean());
     assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.BYTE)))
-        .isEqualTo(PrimitiveName.BYTE);
+        .isEqualTo(PrimitiveName.createByte());
     assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.SHORT)))
-        .isEqualTo(PrimitiveName.SHORT);
+        .isEqualTo(PrimitiveName.createShort());
     assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.INT)))
-        .isEqualTo(PrimitiveName.INT);
+        .isEqualTo(PrimitiveName.createInt());
     assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.LONG)))
-        .isEqualTo(PrimitiveName.LONG);
+        .isEqualTo(PrimitiveName.createLong());
     assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.CHAR)))
-        .isEqualTo(PrimitiveName.CHAR);
+        .isEqualTo(PrimitiveName.createChar());
     assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.FLOAT)))
-        .isEqualTo(PrimitiveName.FLOAT);
+        .isEqualTo(PrimitiveName.createFloat());
     assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getPrimitiveType(TypeKind.DOUBLE)))
-        .isEqualTo(PrimitiveName.DOUBLE);
+        .isEqualTo(PrimitiveName.createDouble());
   }
 
   @Test
@@ -124,23 +124,23 @@ public class TypeNamesTest {
     assert_().that(TypeNames.forClass(Object[].class))
         .isEqualTo(new ArrayTypeName(ClassName.fromClass(Object.class)));
     assert_().that(TypeNames.forClass(int[].class))
-        .isEqualTo(new ArrayTypeName(PrimitiveName.INT));
+        .isEqualTo(new ArrayTypeName(PrimitiveName.createInt()));
   }
 
   @Test
   public void forTypeMirror_void() {
     assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getNoType(TypeKind.VOID)))
-        .isEqualTo(VoidName.VOID);
+        .isEqualTo(VoidName.INSTANCE);
   }
 
   @Test public void forClass_void() {
-    assert_().that(TypeNames.forClass(void.class)).isEqualTo(VoidName.VOID);
-    assert_().that(TypeNames.forClass(Void.class)).isNotEqualTo(VoidName.VOID);
+    assert_().that(TypeNames.forClass(void.class)).isEqualTo(VoidName.INSTANCE);
+    assert_().that(TypeNames.forClass(Void.class)).isNotEqualTo(VoidName.INSTANCE);
   }
 
   @Test
   public void forTypeMirror_null() {
     assert_().that(TypeNames.forTypeMirror(compilation.getTypes().getNullType()))
-        .isEqualTo(NullName.NULL);
+        .isEqualTo(NullName.INSTANCE);
   }
 }

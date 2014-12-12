@@ -15,48 +15,88 @@
  */
 package com.squareup.javawriter;
 
-import com.google.common.base.Ascii;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.base.Objects;
 import java.io.IOException;
-import java.util.Set;
 import javax.lang.model.type.PrimitiveType;
 
-public enum PrimitiveName implements TypeName {
-  BOOLEAN, BYTE, SHORT, INT, LONG, CHAR, FLOAT, DOUBLE;
+public final class PrimitiveName extends TypeName {
+  public static PrimitiveName createBoolean() {
+    return new PrimitiveName("boolean");
+  }
 
-  @Override
-  public Set<ClassName> referencedClasses() {
-    return ImmutableSet.of();
+  public static PrimitiveName createByte() {
+    return new PrimitiveName("byte");
+  }
+
+  public static PrimitiveName createShort() {
+    return new PrimitiveName("short");
+  }
+
+  public static PrimitiveName createInt() {
+    return new PrimitiveName("int");
+  }
+
+  public static PrimitiveName createLong() {
+    return new PrimitiveName("long");
+  }
+
+  public static PrimitiveName createChar() {
+    return new PrimitiveName("char");
+  }
+
+  public static PrimitiveName createFloat() {
+    return new PrimitiveName("float");
+  }
+
+  public static PrimitiveName createDouble() {
+    return new PrimitiveName("double");
+  }
+
+  private final String name;
+
+  private PrimitiveName(String name) {
+    this.name = name;
   }
 
   @Override
   public String toString() {
-    return Ascii.toLowerCase(name());
+    return Writables.writeToString(this);
   }
 
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
-    return appendable.append(toString());
+    super.write(appendable, context);
+    return appendable.append(name);
+  }
+
+  @Override public int hashCode() {
+    return Objects.hashCode(super.hashCode(), name);
+  }
+
+  @Override public boolean equals(Object obj) {
+    return super.equals(obj)
+        && obj instanceof PrimitiveName
+        && ((PrimitiveName) obj).name.equals(name);
   }
 
   static PrimitiveName forTypeMirror(PrimitiveType mirror) {
     switch (mirror.getKind()) {
       case BOOLEAN:
-        return BOOLEAN;
+        return createBoolean();
       case BYTE:
-        return BYTE;
+        return createByte();
       case SHORT:
-        return SHORT;
+        return createShort();
       case INT:
-        return INT;
+        return createInt();
       case LONG:
-        return LONG;
+        return createLong();
       case CHAR:
-        return CHAR;
+        return createChar();
       case FLOAT:
-        return FLOAT;
+        return createFloat();
       case DOUBLE:
-        return DOUBLE;
+        return createDouble();
       default:
         throw new AssertionError();
     }
@@ -64,28 +104,28 @@ public enum PrimitiveName implements TypeName {
 
   static PrimitiveName forClass(Class<?> primitiveClass) {
     if (boolean.class.equals(primitiveClass)) {
-      return BOOLEAN;
+      return createBoolean();
     }
     if (byte.class.equals(primitiveClass)) {
-      return BYTE;
+      return createByte();
     }
     if (short.class.equals(primitiveClass)) {
-      return SHORT;
+      return createShort();
     }
     if (int.class.equals(primitiveClass)) {
-      return INT;
+      return createInt();
     }
     if (long.class.equals(primitiveClass)) {
-      return LONG;
+      return createLong();
     }
     if (char.class.equals(primitiveClass)) {
-      return CHAR;
+      return createChar();
     }
     if (float.class.equals(primitiveClass)) {
-      return FLOAT;
+      return createFloat();
     }
     if (double.class.equals(primitiveClass)) {
-      return DOUBLE;
+      return createDouble();
     }
     throw new IllegalArgumentException(primitiveClass + " is not a primitive type");
   }

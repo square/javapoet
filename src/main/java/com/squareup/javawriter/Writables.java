@@ -78,6 +78,10 @@ final class Writables {
       return wrap(prefix, "");
     }
 
+    final Joiner suffix(String suffix) {
+      return wrap("", suffix);
+    }
+
     final Joiner wrap(final String prefix, final String suffix) {
       return new Joiner(this) {
         @Override

@@ -15,5 +15,45 @@
  */
 package com.squareup.javawriter;
 
-public interface TypeName extends HasClassReferences, Writable {
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.util.List;
+import java.util.Set;
+
+public abstract class TypeName implements HasClassReferences, Writable {
+  final List<AnnotationWriter> annotations;
+
+  protected TypeName() {
+    annotations = Lists.newArrayList();
+  }
+
+  public AnnotationWriter annotate(Class<? extends Annotation> annotation) {
+    return annotate(ClassName.fromClass(annotation));
+  }
+
+  public AnnotationWriter annotate(ClassName className) {
+    AnnotationWriter annotationWriter = new AnnotationWriter(className);
+    annotations.add(annotationWriter);
+    return annotationWriter;
+  }
+
+  @Override public Appendable write(Appendable appendable, Context context) throws IOException {
+    return Writables.Joiner.on(" ").suffix(" ").appendTo(appendable, context, annotations);
+  }
+
+  @Override public int hashCode() {
+    return annotations.hashCode();
+  }
+
+  @Override public boolean equals(Object obj) {
+    return obj instanceof TypeName && ((TypeName) obj).annotations.equals(annotations);
+  }
+
+  @Override public Set<ClassName> referencedClasses() {
+    return FluentIterable.from(annotations)
+        .transformAndConcat(GET_REFERENCED_CLASSES)
+        .toSet();
+  }
 }

@@ -18,13 +18,14 @@ package com.squareup.javawriter;
 import com.google.common.base.Objects;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Verify.verify;
 
-public final class ParameterizedTypeName implements TypeName {
+public final class ParameterizedTypeName extends TypeName {
   private final ClassName type;
   private final ImmutableList<? extends TypeName> parameters;
 
@@ -35,23 +36,27 @@ public final class ParameterizedTypeName implements TypeName {
 
   @Override
   public Set<ClassName> referencedClasses() {
-    return FluentIterable.from(parameters)
+    Iterable<? extends HasClassReferences> concat
+        = Iterables.concat(super.referencedClasses(), parameters, ImmutableList.of(type));
+    return FluentIterable.from(concat)
         .transformAndConcat(GET_REFERENCED_CLASSES)
-        .append(type)
         .toSet();
   }
 
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
-    appendable.append(context.sourceReferenceForClassName(type));
     verify(!parameters.isEmpty(), type.toString());
+    super.write(appendable, context);
+    appendable.append(context.sourceReferenceForClassName(type));
     Writables.Joiner.on(", ").wrap("<", ">").appendTo(appendable, context, parameters);
     return appendable;
   }
 
   @Override
   public boolean equals(Object obj) {
-    if (obj instanceof ParameterizedTypeName) {
+    if (obj == this) {
+      return true;
+    } else if (super.equals(obj) && obj instanceof ParameterizedTypeName) {
       ParameterizedTypeName that = (ParameterizedTypeName) obj;
       return this.type.equals(that.type)
           && this.parameters.equals(that.parameters);
@@ -62,7 +67,7 @@ public final class ParameterizedTypeName implements TypeName {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(type, parameters);
+    return Objects.hashCode(super.hashCode(), type, parameters);
   }
 
   @Override
