@@ -35,12 +35,11 @@ public final class AnonymousClassWriter implements Writable, HasClassReferences 
   private final TypeName supertypeOrImplementedInterface;
   private Optional<Snippet> constructorArguments;
   private final ClassBodyWriter body;
-  // TODO support nested types (currently, nested types must be fully-qualifiedly named)
 
   AnonymousClassWriter(TypeName supertypeOrImplementedInterface) {
     this.supertypeOrImplementedInterface = supertypeOrImplementedInterface;
     this.constructorArguments = Optional.absent();
-    this.body = new ClassBodyWriter();
+    this.body = ClassBodyWriter.forAnonymousType();
   }
 
   public void setConstructorArguments(Snippet parameters) {
@@ -95,8 +94,7 @@ public final class AnonymousClassWriter implements Writable, HasClassReferences 
       constructorArguments.get().write(appendable, context);
     }
     appendable.append(") {");
-    body.writeFields(appendable, context);
-    body.writeMethods(appendable, context);
+    body.write(appendable, context);
     appendable.append('}');
     return appendable;
   }

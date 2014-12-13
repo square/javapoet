@@ -19,18 +19,13 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.lang.model.element.Modifier;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
-import static javax.lang.model.element.Modifier.PRIVATE;
-import static javax.lang.model.element.Modifier.PROTECTED;
-import static javax.lang.model.element.Modifier.PUBLIC;
 
 public final class EnumWriter extends TypeWriter {
   public static EnumWriter forClassName(ClassName name) {
@@ -39,7 +34,6 @@ public final class EnumWriter extends TypeWriter {
   }
 
   private final Map<String, ConstantWriter> constantWriters = Maps.newLinkedHashMap();
-  private final List<ConstructorWriter> constructorWriters = Lists.newArrayList();
 
   EnumWriter(ClassName name) {
     super(name);
@@ -52,9 +46,7 @@ public final class EnumWriter extends TypeWriter {
   }
 
   public ConstructorWriter addConstructor() {
-    ConstructorWriter constructorWriter = new ConstructorWriter(name.simpleName());
-    constructorWriters.add(constructorWriter);
-    return constructorWriter;
+    return body.addConstructor();
   }
 
   @Override
@@ -72,35 +64,15 @@ public final class EnumWriter extends TypeWriter {
         .appendTo(new IndentingAppendable(appendable), context, constantWriters.values());
     appendable.append(";\n");
 
-    body.writeFields(appendable, context);
-    for (ConstructorWriter constructorWriter : constructorWriters) {
-      appendable.append('\n');
-      if (!isDefaultConstructor(constructorWriter)) {
-        constructorWriter.write(new IndentingAppendable(appendable), context);
-      }
-    }
-    body.writeMethods(appendable, context);
-    for (TypeWriter nestedTypeWriter : nestedTypeWriters) {
-      appendable.append('\n');
-      nestedTypeWriter.write(new IndentingAppendable(appendable), context);
-    }
+    body.write(appendable, context);
     appendable.append("}\n");
     return appendable;
-  }
-
-  private static final Set<Modifier> VISIBILIY_MODIFIERS =
-      Sets.immutableEnumSet(PUBLIC, PROTECTED, PRIVATE);
-
-  private boolean isDefaultConstructor(ConstructorWriter constructorWriter) {
-    return Sets.intersection(VISIBILIY_MODIFIERS, modifiers)
-        .equals(Sets.intersection(VISIBILIY_MODIFIERS, constructorWriter.modifiers))
-        && constructorWriter.body().isEmpty();
   }
 
   @Override
   public Set<ClassName> referencedClasses() {
     Iterable<? extends HasClassReferences> concat =
-        Iterables.concat(super.referencedClasses(), constantWriters.values(), constructorWriters);
+        Iterables.concat(super.referencedClasses(), constantWriters.values());
     return FluentIterable.from(concat)
         .transformAndConcat(GET_REFERENCED_CLASSES)
         .toSet();

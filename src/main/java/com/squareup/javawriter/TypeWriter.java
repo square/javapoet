@@ -42,14 +42,12 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
   final ClassName name;
   final List<TypeName> implementedTypes;
   final ClassBodyWriter body;
-  final List<TypeWriter> nestedTypeWriters;
   final List<ClassName> explicitImports;
 
   TypeWriter(ClassName name) {
     this.name = name;
     this.implementedTypes = Lists.newArrayList();
-    this.body = new ClassBodyWriter();
-    this.nestedTypeWriters = Lists.newArrayList();
+    this.body = ClassBodyWriter.forNamedType(name);
     this.explicitImports = Lists.newArrayList();
   }
 
@@ -83,21 +81,15 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
   }
 
   public ClassWriter addNestedClass(String name) {
-    ClassWriter innerClassWriter = new ClassWriter(this.name.nestedClassNamed(name));
-    nestedTypeWriters.add(innerClassWriter);
-    return innerClassWriter;
+    return body.addNestedClass(name);
   }
 
   public InterfaceWriter addNestedInterface(String name) {
-    InterfaceWriter innerInterfaceWriter = new InterfaceWriter(this.name.nestedClassNamed(name));
-    nestedTypeWriters.add(innerInterfaceWriter);
-    return innerInterfaceWriter;
+    return body.addNestedInterface(name);
   }
 
   public EnumWriter addNestedEnum(String name) {
-    EnumWriter innerEnumWriter = new EnumWriter(this.name.nestedClassNamed(name));
-    nestedTypeWriters.add(innerEnumWriter);
-    return innerEnumWriter;
+    return body.addNestedEnum(name);
   }
 
   public void addImplementedType(TypeName typeReference) {
@@ -132,7 +124,7 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
     @SuppressWarnings("unchecked")
     Iterable<? extends HasClassReferences> concat =
         Iterables.concat(super.referencedClasses(), implementedTypes, ImmutableSet.of(body),
-            nestedTypeWriters, explicitImports);
+            explicitImports);
     return FluentIterable.from(concat)
         .transformAndConcat(GET_REFERENCED_CLASSES)
         .toSet();
@@ -152,7 +144,7 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
     while (!declaredTypes.isEmpty()) {
       TypeWriter currentType = declaredTypes.pop();
       declaredSimpleNamesBuilder.add(currentType.name().simpleName());
-      declaredTypes.addAll(currentType.nestedTypeWriters);
+      declaredTypes.addAll(currentType.body.nestedTypeWriters);
     }
 
     ImmutableSet<String> declaredSimpleNames = declaredSimpleNamesBuilder.build();
@@ -189,7 +181,7 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
   }
 
   protected Context createSubcontext(Context context) {
-    return context.createSubcontext(FluentIterable.from(nestedTypeWriters)
+    return context.createSubcontext(FluentIterable.from(body.nestedTypeWriters)
         .transform(new Function<TypeWriter, ClassName>() {
           @Override public ClassName apply(TypeWriter input) {
             return input.name();

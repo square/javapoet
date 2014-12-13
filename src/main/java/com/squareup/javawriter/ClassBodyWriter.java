@@ -15,11 +15,11 @@
  */
 package com.squareup.javawriter;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.squareup.javawriter.Writable.Context;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -27,13 +27,37 @@ import java.util.Set;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
-public class ClassBodyWriter implements HasClassReferences {
-  private final Map<String, FieldWriter> fieldWriters;
-  private final List<MethodWriter> methodWriters;
+import static com.google.common.base.Preconditions.checkState;
 
-  ClassBodyWriter() {
+public final class ClassBodyWriter implements Writable, HasClassReferences {
+
+  static ClassBodyWriter forAnonymousType() {
+    return new ClassBodyWriter(Optional.<ClassName>absent());
+  }
+
+  static ClassBodyWriter forNamedType(ClassName name) {
+    return new ClassBodyWriter(Optional.of(name));
+  }
+
+  private final Optional<ClassName> name;
+  private final Map<String, FieldWriter> fieldWriters;
+  private final List<ConstructorWriter> constructorWriters;
+  private final List<MethodWriter> methodWriters;
+  final List<TypeWriter> nestedTypeWriters;
+
+  private ClassBodyWriter(Optional<ClassName> name) {
+    this.name = name;
     this.fieldWriters = Maps.newLinkedHashMap();
+    this.constructorWriters = Lists.newArrayList();
     this.methodWriters = Lists.newArrayList();
+    this.nestedTypeWriters = Lists.newArrayList();
+  }
+
+  public ConstructorWriter addConstructor() {
+    checkState(name.isPresent(), "Cannot add a constructor to an anonymous type");
+    ConstructorWriter constructorWriter = new ConstructorWriter(name.get().simpleName());
+    constructorWriters.add(constructorWriter);
+    return constructorWriter;
   }
 
   public MethodWriter addMethod(TypeWriter returnType, String name) {
@@ -82,30 +106,64 @@ public class ClassBodyWriter implements HasClassReferences {
     return fieldWriter;
   }
 
+  public ClassWriter addNestedClass(String name) {
+    // TODO support nested types in anonymous types
+    // (currently, nested types must be fully-qualifiedly named)
+    checkState(this.name.isPresent(), "Nested types not yet supported in anonymous types");
+    ClassWriter innerClassWriter = new ClassWriter(this.name.get().nestedClassNamed(name));
+    nestedTypeWriters.add(innerClassWriter);
+    return innerClassWriter;
+  }
+
+  public InterfaceWriter addNestedInterface(String name) {
+    // TODO support nested types in anonymous types
+    // (currently, nested types must be fully-qualifiedly named)
+    checkState(this.name.isPresent(), "Nested types not yet supported in anonymous types");
+    InterfaceWriter innerInterfaceWriter =
+        new InterfaceWriter(this.name.get().nestedClassNamed(name));
+    nestedTypeWriters.add(innerInterfaceWriter);
+    return innerInterfaceWriter;
+  }
+
+  public EnumWriter addNestedEnum(String name) {
+    // TODO support nested types in anonymous types
+    // (currently, nested types must be fully-qualifiedly named)
+    checkState(this.name.isPresent(), "Nested types not yet supported in anonymous types");
+    EnumWriter innerEnumWriter = new EnumWriter(this.name.get().nestedClassNamed(name));
+    nestedTypeWriters.add(innerEnumWriter);
+    return innerEnumWriter;
+  }
+
   @Override
   public Set<ClassName> referencedClasses() {
     @SuppressWarnings("unchecked")
     Iterable<? extends HasClassReferences> concat =
-        Iterables.concat(fieldWriters.values(), methodWriters);
+        Iterables.concat(fieldWriters.values(), constructorWriters, methodWriters,
+            nestedTypeWriters);
     return FluentIterable.from(concat)
         .transformAndConcat(GET_REFERENCED_CLASSES)
         .toSet();
   }
 
-  public Appendable writeFields(Appendable appendable, Context context) throws IOException {
+  @Override
+  public Appendable write(Appendable appendable, Context context) throws IOException {
     if (!fieldWriters.isEmpty()) {
       appendable.append('\n');
     }
     for (VariableWriter fieldWriter : fieldWriters.values()) {
       fieldWriter.write(new IndentingAppendable(appendable), context).append('\n');
     }
-    return appendable;
-  }
-
-  public Appendable writeMethods(Appendable appendable, Context context) throws IOException {
+    for (ConstructorWriter constructorWriter : constructorWriters) {
+      appendable.append('\n');
+      constructorWriter.write(new IndentingAppendable(appendable), context);
+    }
     for (MethodWriter methodWriter : methodWriters) {
       appendable.append('\n');
       methodWriter.write(new IndentingAppendable(appendable), context);
+    }
+    for (TypeWriter nestedTypeWriter : nestedTypeWriters) {
+      appendable.append('\n');
+      nestedTypeWriter.write(new IndentingAppendable(appendable), context);
     }
     return appendable;
   }

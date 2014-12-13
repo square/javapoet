@@ -18,6 +18,7 @@ package com.squareup.javawriter;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import javax.lang.model.element.Modifier;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
@@ -35,7 +36,7 @@ public final class EnumWriterTest {
   }
 
   @Test public void constantsAreRequired() {
-    EnumWriter enumWriter = EnumWriter.forClassName(ClassName.create("", "Test"));
+    EnumWriter enumWriter = EnumWriter.forClassName(ClassName.create("test", "Test"));
     try {
       Writables.writeToString(enumWriter);
       fail();
@@ -45,15 +46,45 @@ public final class EnumWriterTest {
   }
 
   @Test public void constantsAreIndented() {
-    EnumWriter enumWriter = EnumWriter.forClassName(ClassName.create("", "Test"));
+    EnumWriter enumWriter = EnumWriter.forClassName(ClassName.create("test", "Test"));
     enumWriter.addConstant("HELLO");
     enumWriter.addConstant("WORLD");
 
     String expected = ""
+        + "package test;\n"
+        + "\n"
         + "enum Test {\n"
         + "  HELLO,\n"
         + "  WORLD;\n"
         + "}\n";
-    assertThat(Writables.writeToString(enumWriter)).isEqualTo(expected);
+    assertThat(enumWriter.toString()).isEqualTo(expected);
+  }
+
+  @Test public void constantsWithConstructorArguments() {
+    EnumWriter enumWriter = EnumWriter.forClassName(ClassName.create("test", "Test"));
+    enumWriter.addConstant("HELLO").addArgument(Snippet.format("\"Hello\""));
+    enumWriter.addConstant("WORLD").addArgument(Snippet.format("\"World!\""));
+
+    FieldWriter valueWriter = enumWriter.addField(String.class, "value");
+    valueWriter.addModifiers(Modifier.PUBLIC, Modifier.FINAL);
+
+    ConstructorWriter constructorWriterWriter = enumWriter.addConstructor();
+    constructorWriterWriter.addModifiers(Modifier.PRIVATE);
+    constructorWriterWriter.addParameter(String.class, "value");
+    constructorWriterWriter.body().addSnippet("this.value = value;");
+
+    assertThat(enumWriter.toString()).isEqualTo(""
+        + "package test;\n"
+        + "\n"
+        + "enum Test {\n"
+        + "  HELLO(\"Hello\"),\n"
+        + "  WORLD(\"World!\");\n"
+        + "\n"
+        + "  public final String value;\n"
+        + "\n"
+        + "  private Test(String value) {\n"
+        + "    this.value = value;\n"
+        + "  }\n"
+        + "}\n");
   }
 }
