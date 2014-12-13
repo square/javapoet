@@ -16,6 +16,7 @@
 package com.squareup.javawriter;
 
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -23,6 +24,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -81,10 +84,12 @@ public final class EnumWriter extends TypeWriter {
   public static final class ConstantWriter implements Writable, HasClassReferences {
     private final String name;
     private final List<Snippet> constructorSnippets;
+    private final ClassBodyWriter body;
 
     private ConstantWriter(String name) {
       this.name = name;
       this.constructorSnippets = Lists.newArrayList();
+      this.body = ClassBodyWriter.forAnonymousType();
     }
 
     public ConstantWriter addArgument(Snippet snippet) {
@@ -92,16 +97,49 @@ public final class EnumWriter extends TypeWriter {
       return this;
     }
 
+    public MethodWriter addMethod(TypeWriter returnType, String name) {
+      return body.addMethod(returnType, name);
+    }
+
+    public MethodWriter addMethod(TypeMirror returnType, String name) {
+      return body.addMethod(returnType, name);
+    }
+
+    public MethodWriter addMethod(TypeName returnType, String name) {
+      return body.addMethod(returnType, name);
+    }
+
+    public MethodWriter addMethod(Class<?> returnType, String name) {
+      return body.addMethod(returnType, name);
+    }
+
+    public FieldWriter addField(Class<?> type, String name) {
+      return body.addField(type, name);
+    }
+
+    public FieldWriter addField(TypeElement type, String name) {
+      return body.addField(type, name);
+    }
+
+    public FieldWriter addField(TypeName type, String name) {
+      return body.addField(type, name);
+    }
+
     @Override
     public Appendable write(Appendable appendable, Context context) throws IOException {
       appendable.append(name);
       Writables.Joiner.on(", ").wrap("(", ")").appendTo(appendable, context, constructorSnippets);
+      if (!body.isEmpty()) {
+        appendable.append(" {");
+        body.write(appendable, context);
+        appendable.append('}');
+      }
       return appendable;
     }
 
     @Override
     public Set<ClassName> referencedClasses() {
-      return FluentIterable.from(constructorSnippets)
+      return FluentIterable.from(Iterables.concat(constructorSnippets, ImmutableList.of(body)))
           .transformAndConcat(GET_REFERENCED_CLASSES)
           .toSet();
     }

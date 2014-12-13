@@ -53,6 +53,11 @@ public final class ClassBodyWriter implements Writable, HasClassReferences {
     this.nestedTypeWriters = Lists.newArrayList();
   }
 
+  public boolean isEmpty() {
+    return fieldWriters.isEmpty() && constructorWriters.isEmpty() && methodWriters.isEmpty()
+        && nestedTypeWriters.isEmpty();
+  }
+
   public ConstructorWriter addConstructor() {
     checkState(name.isPresent(), "Cannot add a constructor to an anonymous type");
     ConstructorWriter constructorWriter = new ConstructorWriter(name.get().simpleName());

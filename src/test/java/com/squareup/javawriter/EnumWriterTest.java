@@ -87,4 +87,38 @@ public final class EnumWriterTest {
         + "  }\n"
         + "}\n");
   }
+
+  @Test public void constantsWithClassBody() {
+    EnumWriter enumWriter = EnumWriter.forClassName(ClassName.create("test", "Test"));
+
+    EnumWriter.ConstantWriter helloWriter = enumWriter.addConstant("HELLO");
+    MethodWriter helloToStringWriter = helloWriter.addMethod(String.class, "toString");
+    helloToStringWriter.annotate(Override.class);
+    helloToStringWriter.addModifiers(Modifier.PUBLIC);
+    helloToStringWriter.body().addSnippet("return \"Hello\";");
+
+    EnumWriter.ConstantWriter worldWriter = enumWriter.addConstant("WORLD");
+    MethodWriter worldToStringWriter = worldWriter.addMethod(String.class, "toString");
+    worldToStringWriter.annotate(Override.class);
+    worldToStringWriter.addModifiers(Modifier.PUBLIC);
+    worldToStringWriter.body().addSnippet("return \"World!\";");
+
+    assertThat(enumWriter.toString()).isEqualTo(""
+        + "package test;\n"
+        + "\n"
+        + "enum Test {\n"
+        + "  HELLO {\n"
+        + "    @Override\n"
+        + "    public String toString() {\n"
+        + "      return \"Hello\";\n"
+        + "    }\n"
+        + "  },\n"
+        + "  WORLD {\n"
+        + "    @Override\n"
+        + "    public String toString() {\n"
+        + "      return \"World!\";\n"
+        + "    }\n"
+        + "  };\n"
+        + "}\n");
+  }
 }
