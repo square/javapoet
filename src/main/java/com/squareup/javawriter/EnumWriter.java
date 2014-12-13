@@ -72,22 +72,14 @@ public final class EnumWriter extends TypeWriter {
         .appendTo(new IndentingAppendable(appendable), context, constantWriters.values());
     appendable.append(";\n");
 
-    if (!fieldWriters.isEmpty()) {
-      appendable.append('\n');
-    }
-    for (VariableWriter fieldWriter : fieldWriters.values()) {
-      fieldWriter.write(new IndentingAppendable(appendable), context).append("\n");
-    }
+    body.writeFields(appendable, context);
     for (ConstructorWriter constructorWriter : constructorWriters) {
       appendable.append('\n');
       if (!isDefaultConstructor(constructorWriter)) {
         constructorWriter.write(new IndentingAppendable(appendable), context);
       }
     }
-    for (MethodWriter methodWriter : methodWriters) {
-      appendable.append('\n');
-      methodWriter.write(new IndentingAppendable(appendable), context);
-    }
+    body.writeMethods(appendable, context);
     for (TypeWriter nestedTypeWriter : nestedTypeWriters) {
       appendable.append('\n');
       nestedTypeWriter.write(new IndentingAppendable(appendable), context);

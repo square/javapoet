@@ -24,14 +24,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.Deque;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
@@ -43,17 +41,15 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
     implements Writable, HasTypeName {
   final ClassName name;
   final List<TypeName> implementedTypes;
-  final List<MethodWriter> methodWriters;
+  final ClassBodyWriter body;
   final List<TypeWriter> nestedTypeWriters;
-  final Map<String, FieldWriter> fieldWriters;
   final List<ClassName> explicitImports;
 
   TypeWriter(ClassName name) {
     this.name = name;
     this.implementedTypes = Lists.newArrayList();
-    this.methodWriters = Lists.newArrayList();
+    this.body = new ClassBodyWriter();
     this.nestedTypeWriters = Lists.newArrayList();
-    this.fieldWriters = Maps.newLinkedHashMap();
     this.explicitImports = Lists.newArrayList();
   }
 
@@ -71,29 +67,19 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
   }
 
   public MethodWriter addMethod(TypeWriter returnType, String name) {
-    MethodWriter methodWriter = new MethodWriter(returnType.name, name);
-    methodWriters.add(methodWriter);
-    return methodWriter;
+    return body.addMethod(returnType, name);
   }
 
   public MethodWriter addMethod(TypeMirror returnType, String name) {
-    MethodWriter methodWriter =
-        new MethodWriter(TypeNames.forTypeMirror(returnType), name);
-    methodWriters.add(methodWriter);
-    return methodWriter;
+    return body.addMethod(returnType, name);
   }
 
   public MethodWriter addMethod(TypeName returnType, String name) {
-    MethodWriter methodWriter = new MethodWriter(returnType, name);
-    methodWriters.add(methodWriter);
-    return methodWriter;
+    return body.addMethod(returnType, name);
   }
 
   public MethodWriter addMethod(Class<?> returnType, String name) {
-    MethodWriter methodWriter =
-        new MethodWriter(TypeNames.forClass(returnType), name);
-    methodWriters.add(methodWriter);
-    return methodWriter;
+    return body.addMethod(returnType, name);
   }
 
   public ClassWriter addNestedClass(String name) {
@@ -123,23 +109,15 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
   }
 
   public FieldWriter addField(Class<?> type, String name) {
-    return addField(TypeNames.forClass(type), name);
+    return body.addField(type, name);
   }
 
   public FieldWriter addField(TypeElement type, String name) {
-    return addField(ClassName.fromTypeElement(type), name);
+    return body.addField(type, name);
   }
 
   public FieldWriter addField(TypeName type, String name) {
-    String candidateName = name;
-    int differentiator = 1;
-    while (fieldWriters.containsKey(candidateName)) {
-      candidateName = name + differentiator;
-      differentiator++;
-    }
-    FieldWriter fieldWriter = new FieldWriter(type, candidateName);
-    fieldWriters.put(candidateName, fieldWriter);
-    return fieldWriter;
+    return body.addField(type, name);
   }
 
   @Override public final String toString() {
@@ -153,8 +131,8 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
   @Override public Set<ClassName> referencedClasses() {
     @SuppressWarnings("unchecked")
     Iterable<? extends HasClassReferences> concat =
-        Iterables.concat(super.referencedClasses(), implementedTypes, methodWriters,
-            nestedTypeWriters, fieldWriters.values(), explicitImports);
+        Iterables.concat(super.referencedClasses(), implementedTypes, ImmutableSet.of(body),
+            nestedTypeWriters, explicitImports);
     return FluentIterable.from(concat)
         .transformAndConcat(GET_REFERENCED_CLASSES)
         .toSet();
