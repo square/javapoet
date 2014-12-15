@@ -29,7 +29,7 @@ import javax.lang.model.type.TypeMirror;
 
 import static com.google.common.base.Preconditions.checkState;
 
-public final class ClassBodyWriter implements Writable, HasClassReferences {
+final class ClassBodyWriter implements Writable, HasClassReferences {
 
   static ClassBodyWriter forAnonymousType() {
     return new ClassBodyWriter(Optional.<ClassName>absent());
