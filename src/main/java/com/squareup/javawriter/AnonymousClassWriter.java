@@ -18,12 +18,7 @@ package com.squareup.javawriter;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
@@ -39,15 +34,12 @@ public final class AnonymousClassWriter implements Writable, HasClassReferences 
 
   private final TypeName supertypeOrImplementedInterface;
   private Optional<Snippet> constructorArguments;
-  private final List<MethodWriter> methodWriters;
-  private final Map<String, FieldWriter> fieldWriters;
-  // TODO support nested types (currently, nested types must be fully-qualifiedly named)
+  private final ClassBodyWriter body;
 
   AnonymousClassWriter(TypeName supertypeOrImplementedInterface) {
     this.supertypeOrImplementedInterface = supertypeOrImplementedInterface;
     this.constructorArguments = Optional.absent();
-    this.methodWriters = Lists.newArrayList();
-    this.fieldWriters = Maps.newLinkedHashMap();
+    this.body = ClassBodyWriter.forAnonymousType();
   }
 
   public void setConstructorArguments(Snippet parameters) {
@@ -59,58 +51,36 @@ public final class AnonymousClassWriter implements Writable, HasClassReferences 
   }
 
   public MethodWriter addMethod(TypeWriter returnType, String name) {
-    MethodWriter methodWriter = new MethodWriter(returnType.name, name);
-    methodWriters.add(methodWriter);
-    return methodWriter;
+    return body.addMethod(returnType, name);
   }
 
   public MethodWriter addMethod(TypeMirror returnType, String name) {
-    MethodWriter methodWriter =
-        new MethodWriter(TypeNames.forTypeMirror(returnType), name);
-    methodWriters.add(methodWriter);
-    return methodWriter;
+    return body.addMethod(returnType, name);
   }
 
   public MethodWriter addMethod(TypeName returnType, String name) {
-    MethodWriter methodWriter = new MethodWriter(returnType, name);
-    methodWriters.add(methodWriter);
-    return methodWriter;
+    return body.addMethod(returnType, name);
   }
 
   public MethodWriter addMethod(Class<?> returnType, String name) {
-    MethodWriter methodWriter =
-        new MethodWriter(TypeNames.forClass(returnType), name);
-    methodWriters.add(methodWriter);
-    return methodWriter;
+    return body.addMethod(returnType, name);
   }
 
   public FieldWriter addField(Class<?> type, String name) {
-    return addField(TypeNames.forClass(type), name);
+    return body.addField(type, name);
   }
 
   public FieldWriter addField(TypeElement type, String name) {
-    return addField(ClassName.fromTypeElement(type), name);
+    return body.addField(type, name);
   }
 
   public FieldWriter addField(TypeName type, String name) {
-    String candidateName = name;
-    int differentiator = 1;
-    while (fieldWriters.containsKey(candidateName)) {
-      candidateName = name + differentiator;
-      differentiator++;
-    }
-    FieldWriter fieldWriter = new FieldWriter(type, candidateName);
-    fieldWriters.put(candidateName, fieldWriter);
-    return fieldWriter;
+    return body.addField(type, name);
   }
 
   @Override
   public Set<ClassName> referencedClasses() {
-    @SuppressWarnings("unchecked")
-    Iterable<? extends HasClassReferences> concat =
-        Iterables.concat(ImmutableList.of(supertypeOrImplementedInterface), methodWriters,
-            fieldWriters.values());
-    return FluentIterable.from(concat)
+    return FluentIterable.from(ImmutableList.of(supertypeOrImplementedInterface, body))
         .transformAndConcat(GET_REFERENCED_CLASSES)
         .toSet();
   }
@@ -124,16 +94,7 @@ public final class AnonymousClassWriter implements Writable, HasClassReferences 
       constructorArguments.get().write(appendable, context);
     }
     appendable.append(") {");
-    if (!fieldWriters.isEmpty()) {
-      appendable.append('\n');
-    }
-    for (VariableWriter fieldWriter : fieldWriters.values()) {
-      fieldWriter.write(new IndentingAppendable(appendable), context).append('\n');
-    }
-    for (MethodWriter methodWriter : methodWriters) {
-      appendable.append('\n');
-      methodWriter.write(new IndentingAppendable(appendable), context);
-    }
+    body.write(appendable, context);
     appendable.append('}');
     return appendable;
   }

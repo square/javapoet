@@ -16,21 +16,19 @@
 package com.squareup.javawriter;
 
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
-import static javax.lang.model.element.Modifier.PRIVATE;
-import static javax.lang.model.element.Modifier.PROTECTED;
-import static javax.lang.model.element.Modifier.PUBLIC;
 
 public final class EnumWriter extends TypeWriter {
   public static EnumWriter forClassName(ClassName name) {
@@ -39,7 +37,6 @@ public final class EnumWriter extends TypeWriter {
   }
 
   private final Map<String, ConstantWriter> constantWriters = Maps.newLinkedHashMap();
-  private final List<ConstructorWriter> constructorWriters = Lists.newArrayList();
 
   EnumWriter(ClassName name) {
     super(name);
@@ -52,9 +49,7 @@ public final class EnumWriter extends TypeWriter {
   }
 
   public ConstructorWriter addConstructor() {
-    ConstructorWriter constructorWriter = new ConstructorWriter(name.simpleName());
-    constructorWriters.add(constructorWriter);
-    return constructorWriter;
+    return body.addConstructor();
   }
 
   @Override
@@ -72,43 +67,15 @@ public final class EnumWriter extends TypeWriter {
         .appendTo(new IndentingAppendable(appendable), context, constantWriters.values());
     appendable.append(";\n");
 
-    if (!fieldWriters.isEmpty()) {
-      appendable.append('\n');
-    }
-    for (VariableWriter fieldWriter : fieldWriters.values()) {
-      fieldWriter.write(new IndentingAppendable(appendable), context).append("\n");
-    }
-    for (ConstructorWriter constructorWriter : constructorWriters) {
-      appendable.append('\n');
-      if (!isDefaultConstructor(constructorWriter)) {
-        constructorWriter.write(new IndentingAppendable(appendable), context);
-      }
-    }
-    for (MethodWriter methodWriter : methodWriters) {
-      appendable.append('\n');
-      methodWriter.write(new IndentingAppendable(appendable), context);
-    }
-    for (TypeWriter nestedTypeWriter : nestedTypeWriters) {
-      appendable.append('\n');
-      nestedTypeWriter.write(new IndentingAppendable(appendable), context);
-    }
+    body.write(appendable, context);
     appendable.append("}\n");
     return appendable;
-  }
-
-  private static final Set<Modifier> VISIBILIY_MODIFIERS =
-      Sets.immutableEnumSet(PUBLIC, PROTECTED, PRIVATE);
-
-  private boolean isDefaultConstructor(ConstructorWriter constructorWriter) {
-    return Sets.intersection(VISIBILIY_MODIFIERS, modifiers)
-        .equals(Sets.intersection(VISIBILIY_MODIFIERS, constructorWriter.modifiers))
-        && constructorWriter.body().isEmpty();
   }
 
   @Override
   public Set<ClassName> referencedClasses() {
     Iterable<? extends HasClassReferences> concat =
-        Iterables.concat(super.referencedClasses(), constantWriters.values(), constructorWriters);
+        Iterables.concat(super.referencedClasses(), constantWriters.values());
     return FluentIterable.from(concat)
         .transformAndConcat(GET_REFERENCED_CLASSES)
         .toSet();
@@ -117,10 +84,12 @@ public final class EnumWriter extends TypeWriter {
   public static final class ConstantWriter implements Writable, HasClassReferences {
     private final String name;
     private final List<Snippet> constructorSnippets;
+    private final ClassBodyWriter body;
 
     private ConstantWriter(String name) {
       this.name = name;
       this.constructorSnippets = Lists.newArrayList();
+      this.body = ClassBodyWriter.forAnonymousType();
     }
 
     public ConstantWriter addArgument(Snippet snippet) {
@@ -128,16 +97,49 @@ public final class EnumWriter extends TypeWriter {
       return this;
     }
 
+    public MethodWriter addMethod(TypeWriter returnType, String name) {
+      return body.addMethod(returnType, name);
+    }
+
+    public MethodWriter addMethod(TypeMirror returnType, String name) {
+      return body.addMethod(returnType, name);
+    }
+
+    public MethodWriter addMethod(TypeName returnType, String name) {
+      return body.addMethod(returnType, name);
+    }
+
+    public MethodWriter addMethod(Class<?> returnType, String name) {
+      return body.addMethod(returnType, name);
+    }
+
+    public FieldWriter addField(Class<?> type, String name) {
+      return body.addField(type, name);
+    }
+
+    public FieldWriter addField(TypeElement type, String name) {
+      return body.addField(type, name);
+    }
+
+    public FieldWriter addField(TypeName type, String name) {
+      return body.addField(type, name);
+    }
+
     @Override
     public Appendable write(Appendable appendable, Context context) throws IOException {
       appendable.append(name);
       Writables.Joiner.on(", ").wrap("(", ")").appendTo(appendable, context, constructorSnippets);
+      if (!body.isEmpty()) {
+        appendable.append(" {");
+        body.write(appendable, context);
+        appendable.append('}');
+      }
       return appendable;
     }
 
     @Override
     public Set<ClassName> referencedClasses() {
-      return FluentIterable.from(constructorSnippets)
+      return FluentIterable.from(Iterables.concat(constructorSnippets, ImmutableList.of(body)))
           .transformAndConcat(GET_REFERENCED_CLASSES)
           .toSet();
     }

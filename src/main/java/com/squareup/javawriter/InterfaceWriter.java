@@ -49,14 +49,7 @@ public final class InterfaceWriter extends TypeWriter {
     Writables.Joiner.on(", ").wrap("<", "> ").appendTo(appendable, context, typeVariables);
     Writables.Joiner.on(", ").prefix(" extends ").appendTo(appendable, context, implementedTypes);
     appendable.append(" {");
-    for (MethodWriter methodWriter : methodWriters) {
-      appendable.append('\n');
-      methodWriter.write(new IndentingAppendable(appendable), context);
-    }
-    for (TypeWriter nestedTypeWriter : nestedTypeWriters) {
-      appendable.append('\n');
-      nestedTypeWriter.write(new IndentingAppendable(appendable), context);
-    }
+    body.write(appendable, context);
     appendable.append("}\n");
     return appendable;
   }
