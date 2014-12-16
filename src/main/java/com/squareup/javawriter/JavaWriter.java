@@ -15,7 +15,6 @@
  */
 package com.squareup.javawriter;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closer;
@@ -104,15 +103,9 @@ public final class JavaWriter {
   }
 
   public void writeTo(Filer filer) throws IOException {
-    writeTo(filer, ImmutableSet.<Element>of());
-  }
-
-  public void writeTo(Filer filer, Iterable<? extends Element> originatingElements)
-      throws IOException {
-    // TODO tack originatingElements on TypeWriter? Losing a top-level-only writer for this sucks.
     for (TypeWriter typeWriter : typeWriters) {
       JavaFileObject sourceFile = filer.createSourceFile(typeWriter.name().canonicalName(),
-          Iterables.toArray(originatingElements, Element.class));
+          Iterables.toArray(typeWriter.originatingElements(), Element.class));
       Writer closeable = sourceFile.openWriter();
       Closer closer = Closer.create();
       try {
