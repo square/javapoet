@@ -15,15 +15,17 @@
  */
 package com.squareup.javawriter;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.SetMultimap;
 import com.sun.tools.javac.nio.JavacPathFileManager;
 import com.sun.tools.javac.nio.PathFileManager;
 import com.sun.tools.javac.util.Context;
 import java.io.IOException;
 import java.nio.file.FileSystem;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Set;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
 import javax.tools.FileObject;
@@ -31,60 +33,46 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static javax.tools.StandardLocation.CLASS_OUTPUT;
-import static javax.tools.StandardLocation.SOURCE_OUTPUT;
 
 final class TestFiler implements Filer {
   private final String separator;
   private final Path fileSystemRoot;
   private final PathFileManager fileManager;
+  private final SetMultimap<Path, Element> originatingElementsMap;
 
-  public TestFiler(FileSystem fileSystem) {
+  public TestFiler(FileSystem fileSystem, Path fsRoot) {
     separator = fileSystem.getSeparator();
-    fileSystemRoot = Iterables.get(fileSystem.getRootDirectories(), 0);
+    fileSystemRoot = fsRoot;
     fileManager = new JavacPathFileManager(new Context(), false, UTF_8);
     fileManager.setDefaultFileSystem(fileSystem);
+    originatingElementsMap = LinkedHashMultimap.create();
   }
 
-  public Path getLocationPath(JavaFileManager.Location location) {
-    Iterable<? extends Path> locationPaths = fileManager.getLocation(location);
-    if (locationPaths == null || Iterables.isEmpty(locationPaths)) {
-      Path locationPath = fileSystemRoot.resolve(location.getName());
-      locationPaths = ImmutableList.of(locationPath);
-      try {
-        Files.createDirectories(locationPath);
-        fileManager.setLocation(location, locationPaths);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    }
-    return Iterables.getOnlyElement(locationPaths);
-  }
-
-  private JavaFileObject getJavaFileObject(String fqcn, JavaFileManager.Location location) {
-    String javaPath = fqcn.replace(".", separator) + ".java"; // Not robust, assumes well-formed.
-    Path finalPath = getLocationPath(location).resolve(javaPath);
-    return Iterables.getOnlyElement(fileManager.getJavaFileObjects(finalPath));
+  public Set<Element> getOriginatingElements(Path path) {
+    return originatingElementsMap.get(path);
   }
 
   @Override
   public JavaFileObject createSourceFile(CharSequence name, Element... originatingElements)
       throws IOException {
-    return getJavaFileObject(name.toString(), SOURCE_OUTPUT);
+    String relative = name.toString().replace(".", separator) + ".java"; // Not robust, assumes well-formed.
+    Path path = fileSystemRoot.resolve(relative);
+    originatingElementsMap.putAll(path, Arrays.asList(originatingElements));
+    return Iterables.getOnlyElement(fileManager.getJavaFileObjects(path));
   }
 
   @Override public JavaFileObject createClassFile(CharSequence name, Element... originatingElements)
       throws IOException {
-    return getJavaFileObject(name.toString(), CLASS_OUTPUT);
+    throw new UnsupportedOperationException("Not implemented.");
   }
 
   @Override public FileObject createResource(JavaFileManager.Location location, CharSequence pkg,
       CharSequence relativeName, Element... originatingElements) throws IOException {
-    return getJavaFileObject(pkg + "." + relativeName, location);
+    throw new UnsupportedOperationException("Not implemented.");
   }
 
   @Override public FileObject getResource(JavaFileManager.Location location, CharSequence pkg,
       CharSequence relativeName) throws IOException {
-    return getJavaFileObject(pkg + "." + relativeName, location);
+    throw new UnsupportedOperationException("Not implemented.");
   }
 }

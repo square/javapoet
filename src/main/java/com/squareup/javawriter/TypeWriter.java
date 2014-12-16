@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.util.Deque;
 import java.util.List;
 import java.util.Set;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
@@ -42,13 +43,33 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
   final ClassName name;
   final List<TypeName> implementedTypes;
   final ClassBodyWriter body;
-  final List<ClassName> explicitImports;
+  private final List<ClassName> explicitImports;
+  private final List<Element> originatingElements;
 
   TypeWriter(ClassName name) {
     this.name = name;
     this.implementedTypes = Lists.newArrayList();
     this.body = ClassBodyWriter.forNamedType(name);
     this.explicitImports = Lists.newArrayList();
+    this.originatingElements = Lists.newArrayList();
+  }
+
+  /**
+   * Add one or more originating elements for which this type is being generated.
+   *
+   * @see JavaWriter#writeTo
+   */
+  public void addOriginatingElement(Element first, Element... rest) {
+    addOriginatingElement(Lists.asList(first, rest));
+  }
+
+  /**
+   * Add originating elements for which this type is being generated.
+   *
+   * @see JavaWriter#writeTo
+   */
+  public void addOriginatingElement(Iterable<? extends Element> elements) {
+    Iterables.addAll(originatingElements, elements);
   }
 
   @Override
@@ -128,6 +149,15 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
     return FluentIterable.from(concat)
         .transformAndConcat(GET_REFERENCED_CLASSES)
         .toSet();
+  }
+
+  Set<Element> originatingElements() {
+    ImmutableSet.Builder<Element> elements = ImmutableSet.builder();
+    elements.addAll(originatingElements);
+    for (TypeWriter nestedTypeWriter : body.nestedTypeWriters) {
+      elements.addAll(nestedTypeWriter.originatingElements());
+    }
+    return elements.build();
   }
 
   Appendable writeTypeToAppendable(Appendable appendable) throws IOException {

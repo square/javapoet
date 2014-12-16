@@ -23,14 +23,15 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import javax.lang.model.element.Element;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
 import static com.google.common.truth.Truth.assertThat;
-import static javax.tools.StandardLocation.SOURCE_OUTPUT;
 
 @RunWith(JUnit4.class)
 public final class JavaWriterTest {
@@ -44,8 +45,7 @@ public final class JavaWriterTest {
   private final Path fsRoot = Iterables.getOnlyElement(fs.getRootDirectories());
 
   // Used for testing annotation processor Filer behavior.
-  private final TestFiler filer = new TestFiler(fs);
-  private final Path filerRoot = filer.getLocationPath(SOURCE_OUTPUT);
+  private final TestFiler filer = new TestFiler(fs, fsRoot);
 
   @Test public void pathNotDirectory() throws IOException {
     Path path = fs.getPath("/foo/bar");
@@ -90,7 +90,7 @@ public final class JavaWriterTest {
     ClassWriter test = ClassWriter.forClassName(name);
     javaWriter.addTypeWriter(test).writeTo(filer);
 
-    Path testPath = filerRoot.resolve("Test.java");
+    Path testPath = fsRoot.resolve("Test.java");
     assertThat(Files.exists(testPath)).isTrue();
   }
 
@@ -128,9 +128,9 @@ public final class JavaWriterTest {
     ClassWriter test2 = ClassWriter.forClassName(name2);
     javaWriter.addTypeWriter(test1).addTypeWriter(test2).writeTo(filer);
 
-    Path testPath1 = filerRoot.resolve(fs.getPath("example", "Test1.java"));
+    Path testPath1 = fsRoot.resolve(fs.getPath("example", "Test1.java"));
     assertThat(Files.exists(testPath1)).isTrue();
-    Path testPath2 = filerRoot.resolve(fs.getPath("example", "Test2.java"));
+    Path testPath2 = fsRoot.resolve(fs.getPath("example", "Test2.java"));
     assertThat(Files.exists(testPath2)).isTrue();
   }
 
@@ -180,11 +180,31 @@ public final class JavaWriterTest {
     ClassWriter baz = ClassWriter.forClassName(bazName);
     javaWriter.addTypeWriters(ImmutableList.of(foo, bar, baz)).writeTo(filer);
 
-    Path fooPath = filerRoot.resolve(fs.getPath("foo", "Test.java"));
-    Path barPath = filerRoot.resolve(fs.getPath("foo", "bar", "Test.java"));
-    Path bazPath = filerRoot.resolve(fs.getPath("foo", "bar", "baz", "Test.java"));
+    Path fooPath = fsRoot.resolve(fs.getPath("foo", "Test.java"));
+    Path barPath = fsRoot.resolve(fs.getPath("foo", "bar", "Test.java"));
+    Path bazPath = fsRoot.resolve(fs.getPath("foo", "bar", "baz", "Test.java"));
     assertThat(Files.exists(fooPath)).isTrue();
     assertThat(Files.exists(barPath)).isTrue();
     assertThat(Files.exists(bazPath)).isTrue();
+  }
+
+  @Test public void filerPassesOriginatingElements() throws IOException {
+    ClassName name1 = ClassName.create("example", "Test1");
+    ClassWriter test1 = ClassWriter.forClassName(name1);
+    Element element1_1 = Mockito.mock(Element.class);
+    test1.addOriginatingElement(element1_1);
+
+    ClassName name2 = ClassName.create("example", "Test2");
+    ClassWriter test2 = ClassWriter.forClassName(name2);
+    Element element2_1 = Mockito.mock(Element.class);
+    Element element2_2 = Mockito.mock(Element.class);
+    test2.addOriginatingElement(element2_1, element2_2);
+
+    javaWriter.addTypeWriter(test1).addTypeWriter(test2).writeTo(filer);
+
+    Path testPath1 = fsRoot.resolve(fs.getPath("example", "Test1.java"));
+    assertThat(filer.getOriginatingElements(testPath1)).containsExactly(element1_1);
+    Path testPath2 = fsRoot.resolve(fs.getPath("example", "Test2.java"));
+    assertThat(filer.getOriginatingElements(testPath2)).containsExactly(element2_1, element2_2);
   }
 }

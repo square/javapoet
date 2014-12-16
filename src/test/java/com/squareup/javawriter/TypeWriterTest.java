@@ -15,10 +15,13 @@
  */
 package com.squareup.javawriter;
 
+import com.google.common.collect.ImmutableList;
 import java.util.concurrent.Executor;
+import javax.lang.model.element.Element;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -71,5 +74,25 @@ public class TypeWriterTest {
         + "\n"
         + "class Top {}\n";
     assertThat(topClass.toString()).isEqualTo(expected);
+  }
+
+  @Test public void nestedTypesPropagateOriginatingElements() {
+    ClassWriter outer = ClassWriter.forClassName(ClassName.create("test", "Outer"));
+    Element outerElement = Mockito.mock(Element.class);
+    outer.addOriginatingElement(outerElement);
+
+    ClassWriter middle = outer.addNestedClass("Middle");
+    Element middleElement1 = Mockito.mock(Element.class);
+    Element middleElement2 = Mockito.mock(Element.class);
+    middle.addOriginatingElement(middleElement1, middleElement2);
+
+    ClassWriter inner = middle.addNestedClass("Inner");
+    Element innerElement1 = Mockito.mock(Element.class);
+    Element innerElement2 = Mockito.mock(Element.class);
+    Element innerElement3 = Mockito.mock(Element.class);
+    inner.addOriginatingElement(ImmutableList.of(innerElement1, innerElement2, innerElement3));
+
+    assertThat(outer.originatingElements()).containsExactly(outerElement, middleElement1,
+        middleElement2, innerElement1, innerElement2, innerElement3);
   }
 }
