@@ -31,7 +31,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class ConstructorWriter extends Modifiable implements Writable {
   private final List<TypeVariableName> typeVariables;
   private final String name;
-  private final Map<String, VariableWriter> parameterWriters;
+  private final Map<String, ParameterWriter> parameterWriters;
   private final BlockWriter body;
 
   ConstructorWriter(String name) {
@@ -45,20 +45,20 @@ public final class ConstructorWriter extends Modifiable implements Writable {
     this.typeVariables.add(typeVariable);
   }
 
-  public VariableWriter addParameter(Class<?> type, String name) {
+  public ParameterWriter addParameter(Class<?> type, String name) {
     return addParameter(TypeNames.forClass(type), name);
   }
 
-  public VariableWriter addParameter(TypeElement type, String name) {
+  public ParameterWriter addParameter(TypeElement type, String name) {
     return addParameter(ClassName.fromTypeElement(type), name);
   }
 
-  public VariableWriter addParameter(TypeWriter type, String name) {
+  public ParameterWriter addParameter(TypeWriter type, String name) {
     return addParameter(type.name, name);
   }
 
-  public VariableWriter addParameter(TypeName type, String name) {
-    VariableWriter parameterWriter = new VariableWriter(type, name);
+  public ParameterWriter addParameter(TypeName type, String name) {
+    ParameterWriter parameterWriter = new ParameterWriter(type, name);
     parameterWriters.put(name, parameterWriter);
     return parameterWriter;
   }
@@ -67,9 +67,9 @@ public final class ConstructorWriter extends Modifiable implements Writable {
     return body;
   }
 
-  private VariableWriter addParameter(ClassName type, String name) {
+  private ParameterWriter addParameter(ClassName type, String name) {
     checkArgument(!parameterWriters.containsKey(name));
-    VariableWriter parameterWriter = new VariableWriter(type, name);
+    ParameterWriter parameterWriter = new ParameterWriter(type, name);
     parameterWriters.put(name, parameterWriter);
     return parameterWriter;
   }

@@ -39,7 +39,10 @@ public final class FieldWriter extends VariableWriter {
 
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
-    super.write(appendable, context);
+    writeAnnotations(appendable, context, '\n');
+    writeModifiers(appendable);
+    type().write(appendable, context);
+    appendable.append(' ').append(name());
     if (initializer.isPresent()) {
       appendable.append(" = ");
       initializer.get().write(appendable, context);

@@ -33,7 +33,7 @@ public final class MethodWriter extends Modifiable implements Writable {
   private final List<TypeVariableName> typeVariables;
   private final TypeName returnType;
   private final String name;
-  private final Map<String, VariableWriter> parameterWriters;
+  private final Map<String, ParameterWriter> parameterWriters;
   private final List<ClassName> throwsTypes;
   private BlockWriter body;
 
@@ -54,21 +54,21 @@ public final class MethodWriter extends Modifiable implements Writable {
     this.typeVariables.add(typeVariable);
   }
 
-  public VariableWriter addParameter(Class<?> type, String name) {
+  public ParameterWriter addParameter(Class<?> type, String name) {
     return addParameter(TypeNames.forClass(type), name);
   }
 
-  public VariableWriter addParameter(TypeElement type, String name) {
+  public ParameterWriter addParameter(TypeElement type, String name) {
     return addParameter(ClassName.fromTypeElement(type), name);
   }
 
-  public VariableWriter addParameter(TypeWriter type, String name) {
+  public ParameterWriter addParameter(TypeWriter type, String name) {
     return addParameter(type.name, name);
   }
 
-  public VariableWriter addParameter(TypeName type, String name) {
+  public ParameterWriter addParameter(TypeName type, String name) {
     checkArgument(!parameterWriters.containsKey(name));
-    VariableWriter parameterWriter = new VariableWriter(type, name);
+    ParameterWriter parameterWriter = new ParameterWriter(type, name);
     parameterWriters.put(name, parameterWriter);
     return parameterWriter;
   }
@@ -87,7 +87,7 @@ public final class MethodWriter extends Modifiable implements Writable {
 
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
-    writeAnnotations(appendable, context);
+    writeAnnotations(appendable, context, '\n');
     writeModifiers(appendable);
     Writables.Joiner.on(", ").wrap("<", "> ").appendTo(appendable, context, typeVariables);
     returnType.write(appendable, context);

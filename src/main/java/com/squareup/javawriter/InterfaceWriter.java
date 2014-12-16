@@ -44,7 +44,7 @@ public final class InterfaceWriter extends TypeWriter {
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
     context = createSubcontext(context);
-    writeAnnotations(appendable, context);
+    writeAnnotations(appendable, context, '\n');
     writeModifiers(appendable).append("interface ").append(name.simpleName());
     Writables.Joiner.on(", ").wrap("<", "> ").appendTo(appendable, context, typeVariables);
     Writables.Joiner.on(", ").prefix(" extends ").appendTo(appendable, context, implementedTypes);

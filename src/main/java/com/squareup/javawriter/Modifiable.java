@@ -64,9 +64,10 @@ public abstract class Modifiable implements HasClassReferences {
     return appendable;
   }
 
-  Appendable writeAnnotations(Appendable appendable, Context context) throws IOException {
+  Appendable writeAnnotations(Appendable appendable, Context context, char separator)
+      throws IOException {
     for (AnnotationWriter annotationWriter : annotations) {
-      annotationWriter.write(appendable, context).append('\n');
+      annotationWriter.write(appendable, context).append(separator);
     }
     return appendable;
   }

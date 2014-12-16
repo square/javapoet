@@ -155,7 +155,7 @@ final class ClassBodyWriter implements Writable, HasClassReferences {
     if (!fieldWriters.isEmpty()) {
       appendable.append('\n');
     }
-    for (VariableWriter fieldWriter : fieldWriters.values()) {
+    for (FieldWriter fieldWriter : fieldWriters.values()) {
       fieldWriter.write(new IndentingAppendable(appendable), context).append('\n');
     }
     for (ConstructorWriter constructorWriter : constructorWriters) {

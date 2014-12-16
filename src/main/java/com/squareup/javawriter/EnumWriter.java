@@ -57,7 +57,7 @@ public final class EnumWriter extends TypeWriter {
     checkState(!constantWriters.isEmpty(), "Cannot write an enum with no constants.");
 
     context = createSubcontext(context);
-    writeAnnotations(appendable, context);
+    writeAnnotations(appendable, context, '\n');
     writeModifiers(appendable).append("enum ").append(name.simpleName());
     Writables.Joiner.on(", ").prefix(" implements ")
         .appendTo(appendable, context, implementedTypes);
