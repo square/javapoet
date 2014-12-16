@@ -30,6 +30,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import static com.google.common.truth.Truth.assertThat;
+import static javax.tools.StandardLocation.SOURCE_OUTPUT;
 
 @RunWith(JUnit4.class)
 public final class JavaWriterTest {
@@ -41,6 +42,10 @@ public final class JavaWriterTest {
   // Used for testing java.nio.file Path behavior.
   private final FileSystem fs = Jimfs.newFileSystem();
   private final Path fsRoot = Iterables.getOnlyElement(fs.getRootDirectories());
+
+  // Used for testing annotation processor Filer behavior.
+  private final TestFiler filer = new TestFiler(fs);
+  private final Path filerRoot = filer.getLocationPath(SOURCE_OUTPUT);
 
   @Test public void pathNotDirectory() throws IOException {
     Path path = fs.getPath("/foo/bar");
@@ -80,6 +85,15 @@ public final class JavaWriterTest {
     assertThat(testFile.exists()).isTrue();
   }
 
+  @Test public void filerDefaultPackage() throws IOException {
+    ClassName name = ClassName.create("", "Test");
+    ClassWriter test = ClassWriter.forClassName(name);
+    javaWriter.addTypeWriter(test).writeTo(filer);
+
+    Path testPath = filerRoot.resolve("Test.java");
+    assertThat(Files.exists(testPath)).isTrue();
+  }
+
   @Test public void pathSamePackage() throws IOException {
     ClassName name1 = ClassName.create("example", "Test1");
     ClassName name2 = ClassName.create("example", "Test2");
@@ -87,9 +101,9 @@ public final class JavaWriterTest {
     ClassWriter test2 = ClassWriter.forClassName(name2);
     javaWriter.addTypeWriter(test1).addTypeWriter(test2).writeTo(fsRoot);
 
-    Path testPath1 = fsRoot.resolve("example/Test1.java");
+    Path testPath1 = fsRoot.resolve(fs.getPath("example", "Test1.java"));
     assertThat(Files.exists(testPath1)).isTrue();
-    Path testPath2 = fsRoot.resolve("example/Test2.java");
+    Path testPath2 = fsRoot.resolve(fs.getPath("example", "Test2.java"));
     assertThat(Files.exists(testPath2)).isTrue();
   }
 
@@ -105,6 +119,19 @@ public final class JavaWriterTest {
     assertThat(testFile1.exists()).isTrue();
     File testFile2 = new File(examplePackage, "Test2.java");
     assertThat(testFile2.exists()).isTrue();
+  }
+
+  @Test public void filerSamePackage() throws IOException {
+    ClassName name1 = ClassName.create("example", "Test1");
+    ClassName name2 = ClassName.create("example", "Test2");
+    ClassWriter test1 = ClassWriter.forClassName(name1);
+    ClassWriter test2 = ClassWriter.forClassName(name2);
+    javaWriter.addTypeWriter(test1).addTypeWriter(test2).writeTo(filer);
+
+    Path testPath1 = filerRoot.resolve(fs.getPath("example", "Test1.java"));
+    assertThat(Files.exists(testPath1)).isTrue();
+    Path testPath2 = filerRoot.resolve(fs.getPath("example", "Test2.java"));
+    assertThat(Files.exists(testPath2)).isTrue();
   }
 
   @Test public void pathNestedClasses() throws IOException {
@@ -144,5 +171,20 @@ public final class JavaWriterTest {
     assertThat(bazFile.exists()).isTrue();
   }
 
-  // TODO Filer-based tests
+  @Test public void filerNestedClasses() throws IOException {
+    ClassName fooName = ClassName.create("foo", "Test");
+    ClassName barName = ClassName.create("foo.bar", "Test");
+    ClassName bazName = ClassName.create("foo.bar.baz", "Test");
+    ClassWriter foo = ClassWriter.forClassName(fooName);
+    ClassWriter bar = ClassWriter.forClassName(barName);
+    ClassWriter baz = ClassWriter.forClassName(bazName);
+    javaWriter.addTypeWriters(ImmutableList.of(foo, bar, baz)).writeTo(filer);
+
+    Path fooPath = filerRoot.resolve(fs.getPath("foo", "Test.java"));
+    Path barPath = filerRoot.resolve(fs.getPath("foo", "bar", "Test.java"));
+    Path bazPath = filerRoot.resolve(fs.getPath("foo", "bar", "baz", "Test.java"));
+    assertThat(Files.exists(fooPath)).isTrue();
+    assertThat(Files.exists(barPath)).isTrue();
+    assertThat(Files.exists(bazPath)).isTrue();
+  }
 }
