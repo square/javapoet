@@ -35,8 +35,12 @@ public abstract class Modifiable implements HasClassReferences {
     this.annotations = Lists.newArrayList();
   }
 
-  public void addModifiers(Modifier first, Modifier... rest) {
-    addModifiers(Lists.asList(first, rest));
+  public void addModifier(Modifier modifier) {
+    modifiers.add(modifier);
+  }
+
+  public void addModifiers(Modifier first, Modifier second, Modifier... rest) {
+    addModifiers(Lists.asList(first, second, rest));
   }
 
   public void addModifiers(Iterable<Modifier> modifiers) {

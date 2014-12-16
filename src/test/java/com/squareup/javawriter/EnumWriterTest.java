@@ -69,7 +69,7 @@ public final class EnumWriterTest {
     valueWriter.addModifiers(Modifier.PUBLIC, Modifier.FINAL);
 
     ConstructorWriter constructorWriterWriter = enumWriter.addConstructor();
-    constructorWriterWriter.addModifiers(Modifier.PRIVATE);
+    constructorWriterWriter.addModifier(Modifier.PRIVATE);
     constructorWriterWriter.addParameter(String.class, "value");
     constructorWriterWriter.body().addSnippet("this.value = value;");
 
@@ -94,13 +94,13 @@ public final class EnumWriterTest {
     EnumWriter.ConstantWriter helloWriter = enumWriter.addConstant("HELLO");
     MethodWriter helloToStringWriter = helloWriter.addMethod(String.class, "toString");
     helloToStringWriter.annotate(Override.class);
-    helloToStringWriter.addModifiers(Modifier.PUBLIC);
+    helloToStringWriter.addModifier(Modifier.PUBLIC);
     helloToStringWriter.body().addSnippet("return \"Hello\";");
 
     EnumWriter.ConstantWriter worldWriter = enumWriter.addConstant("WORLD");
     MethodWriter worldToStringWriter = worldWriter.addMethod(String.class, "toString");
     worldToStringWriter.annotate(Override.class);
-    worldToStringWriter.addModifiers(Modifier.PUBLIC);
+    worldToStringWriter.addModifier(Modifier.PUBLIC);
     worldToStringWriter.body().addSnippet("return \"World!\";");
 
     assertThat(enumWriter.toString()).isEqualTo(""
