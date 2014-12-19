@@ -50,6 +50,10 @@ public final class JavaWriter {
     return this;
   }
 
+  public JavaWriter addTypeWriters(TypeWriter first, TypeWriter second, TypeWriter... rest) {
+    return addTypeWriters(Lists.asList(first, second, rest));
+  }
+
   public JavaWriter addTypeWriters(Iterable<? extends TypeWriter> typeWriters) {
     Iterables.addAll(this.typeWriters, typeWriters);
     return this;

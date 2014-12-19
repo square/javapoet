@@ -55,12 +55,12 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
   }
 
   /**
-   * Add one or more originating elements for which this type is being generated.
+   * Add an originating element for which this type is being generated.
    *
    * @see JavaWriter#writeTo
    */
-  public void addOriginatingElement(Element first, Element... rest) {
-    addOriginatingElement(Lists.asList(first, rest));
+  public void addOriginatingElement(Element element) {
+    originatingElements.add(element);
   }
 
   /**
@@ -68,7 +68,16 @@ public abstract class TypeWriter /* ha ha */ extends Modifiable
    *
    * @see JavaWriter#writeTo
    */
-  public void addOriginatingElement(Iterable<? extends Element> elements) {
+  public void addOriginatingElements(Element first, Element second, Element... rest) {
+    addOriginatingElements(Lists.asList(first, second, rest));
+  }
+
+  /**
+   * Add originating elements for which this type is being generated.
+   *
+   * @see JavaWriter#writeTo
+   */
+  public void addOriginatingElements(Iterable<? extends Element> elements) {
     Iterables.addAll(originatingElements, elements);
   }
 

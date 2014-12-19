@@ -84,13 +84,13 @@ public class TypeWriterTest {
     ClassWriter middle = outer.addNestedClass("Middle");
     Element middleElement1 = Mockito.mock(Element.class);
     Element middleElement2 = Mockito.mock(Element.class);
-    middle.addOriginatingElement(middleElement1, middleElement2);
+    middle.addOriginatingElements(middleElement1, middleElement2);
 
     ClassWriter inner = middle.addNestedClass("Inner");
     Element innerElement1 = Mockito.mock(Element.class);
     Element innerElement2 = Mockito.mock(Element.class);
     Element innerElement3 = Mockito.mock(Element.class);
-    inner.addOriginatingElement(ImmutableList.of(innerElement1, innerElement2, innerElement3));
+    inner.addOriginatingElements(ImmutableList.of(innerElement1, innerElement2, innerElement3));
 
     assertThat(outer.originatingElements()).containsExactly(outerElement, middleElement1,
         middleElement2, innerElement1, innerElement2, innerElement3);

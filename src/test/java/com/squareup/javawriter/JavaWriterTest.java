@@ -15,7 +15,6 @@
  */
 package com.squareup.javawriter;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.jimfs.Jimfs;
 import java.io.File;
@@ -99,7 +98,7 @@ public final class JavaWriterTest {
     ClassName name2 = ClassName.create("example", "Test2");
     ClassWriter test1 = ClassWriter.forClassName(name1);
     ClassWriter test2 = ClassWriter.forClassName(name2);
-    javaWriter.addTypeWriter(test1).addTypeWriter(test2).writeTo(fsRoot);
+    javaWriter.addTypeWriters(test1, test2).writeTo(fsRoot);
 
     Path testPath1 = fsRoot.resolve(fs.getPath("example", "Test1.java"));
     assertThat(Files.exists(testPath1)).isTrue();
@@ -112,7 +111,7 @@ public final class JavaWriterTest {
     ClassName name2 = ClassName.create("example", "Test2");
     ClassWriter test1 = ClassWriter.forClassName(name1);
     ClassWriter test2 = ClassWriter.forClassName(name2);
-    javaWriter.addTypeWriter(test1).addTypeWriter(test2).writeTo(tmp.getRoot());
+    javaWriter.addTypeWriters(test1, test2).writeTo(tmp.getRoot());
 
     File examplePackage = new File(tmp.getRoot(), "example");
     File testFile1 = new File(examplePackage, "Test1.java");
@@ -126,7 +125,7 @@ public final class JavaWriterTest {
     ClassName name2 = ClassName.create("example", "Test2");
     ClassWriter test1 = ClassWriter.forClassName(name1);
     ClassWriter test2 = ClassWriter.forClassName(name2);
-    javaWriter.addTypeWriter(test1).addTypeWriter(test2).writeTo(filer);
+    javaWriter.addTypeWriters(test1, test2).writeTo(filer);
 
     Path testPath1 = fsRoot.resolve(fs.getPath("example", "Test1.java"));
     assertThat(Files.exists(testPath1)).isTrue();
@@ -141,7 +140,7 @@ public final class JavaWriterTest {
     ClassWriter foo = ClassWriter.forClassName(fooName);
     ClassWriter bar = ClassWriter.forClassName(barName);
     ClassWriter baz = ClassWriter.forClassName(bazName);
-    javaWriter.addTypeWriters(ImmutableList.of(foo, bar, baz)).writeTo(fsRoot);
+    javaWriter.addTypeWriters(foo, bar, baz).writeTo(fsRoot);
 
     Path fooPath = fsRoot.resolve(fs.getPath("foo", "Test.java"));
     Path barPath = fsRoot.resolve(fs.getPath("foo", "bar", "Test.java"));
@@ -158,7 +157,7 @@ public final class JavaWriterTest {
     ClassWriter foo = ClassWriter.forClassName(fooName);
     ClassWriter bar = ClassWriter.forClassName(barName);
     ClassWriter baz = ClassWriter.forClassName(bazName);
-    javaWriter.addTypeWriters(ImmutableList.of(foo, bar, baz)).writeTo(tmp.getRoot());
+    javaWriter.addTypeWriters(foo, bar, baz).writeTo(tmp.getRoot());
 
     File fooDir = new File(tmp.getRoot(), "foo");
     File fooFile = new File(fooDir, "Test.java");
@@ -178,7 +177,7 @@ public final class JavaWriterTest {
     ClassWriter foo = ClassWriter.forClassName(fooName);
     ClassWriter bar = ClassWriter.forClassName(barName);
     ClassWriter baz = ClassWriter.forClassName(bazName);
-    javaWriter.addTypeWriters(ImmutableList.of(foo, bar, baz)).writeTo(filer);
+    javaWriter.addTypeWriters(foo, bar, baz).writeTo(filer);
 
     Path fooPath = fsRoot.resolve(fs.getPath("foo", "Test.java"));
     Path barPath = fsRoot.resolve(fs.getPath("foo", "bar", "Test.java"));
@@ -198,9 +197,9 @@ public final class JavaWriterTest {
     ClassWriter test2 = ClassWriter.forClassName(name2);
     Element element2_1 = Mockito.mock(Element.class);
     Element element2_2 = Mockito.mock(Element.class);
-    test2.addOriginatingElement(element2_1, element2_2);
+    test2.addOriginatingElements(element2_1, element2_2);
 
-    javaWriter.addTypeWriter(test1).addTypeWriter(test2).writeTo(filer);
+    javaWriter.addTypeWriters(test1, test2).writeTo(filer);
 
     Path testPath1 = fsRoot.resolve(fs.getPath("example", "Test1.java"));
     assertThat(filer.getOriginatingElements(testPath1)).containsExactly(element1_1);

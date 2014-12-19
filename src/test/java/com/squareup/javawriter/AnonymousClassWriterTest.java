@@ -38,7 +38,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
     AnonymousClassWriter threadWriter = AnonymousClassWriter.forClassName(threadName);
     MethodWriter threadStartMethod = threadWriter.addMethod(void.class, "start");
     threadStartMethod.annotate(Override.class);
-    threadStartMethod.addModifiers(PUBLIC);
+    threadStartMethod.addModifier(PUBLIC);
     threadStartMethod.body().addSnippet("System.out.println(\"Hello World!\");");
 
     threadField.setInitializer("%s", threadWriter);
@@ -66,7 +66,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
     threadWriter.setConstructorArguments("runnable");
     MethodWriter threadStartMethod = threadWriter.addMethod(void.class, "start");
     threadStartMethod.annotate(Override.class);
-    threadStartMethod.addModifiers(PUBLIC);
+    threadStartMethod.addModifier(PUBLIC);
     threadStartMethod.body().addSnippet("System.out.println(\"Hello World!\");");
 
     constructorWriter.body().addSnippet("thread = %s;", threadWriter);
@@ -99,7 +99,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
     threadListField.setInitializer("%s.asList(\"Hello World\")", ClassName.fromClass(Arrays.class));
     MethodWriter threadStartMethod = threadWriter.addMethod(void.class, "start");
     threadStartMethod.annotate(Override.class);
-    threadStartMethod.addModifiers(PUBLIC);
+    threadStartMethod.addModifier(PUBLIC);
     threadStartMethod.body().addSnippet("System.out.println(list.get(0));");
 
     constructorWriter.body().addSnippet("thread = %s;", threadWriter);
@@ -139,7 +139,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 
     MethodWriter listSizeMethod = listWriter.addMethod(int.class, "size");
     listSizeMethod.annotate(Override.class);
-    listSizeMethod.addModifiers(PUBLIC);
+    listSizeMethod.addModifier(PUBLIC);
     listSizeMethod.body().addSnippet("return 1;");
 
     listField.setInitializer("%s", listWriter);
