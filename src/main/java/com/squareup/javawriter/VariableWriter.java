@@ -16,14 +16,13 @@
 package com.squareup.javawriter;
 
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import java.io.IOException;
 import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class VariableWriter extends Modifiable implements Writable {
+public abstract class VariableWriter extends Modifiable implements Writable {
   private final TypeName type;
   private final String name;
 
@@ -41,16 +40,9 @@ public class VariableWriter extends Modifiable implements Writable {
   }
 
   @Override
-  public Appendable write(Appendable appendable, Context context) throws IOException {
-    writeModifiers(appendable);
-    type.write(appendable, context);
-    return appendable.append(' ').append(name);
-  }
-
-  @Override
   public Set<ClassName> referencedClasses() {
     Iterable<? extends HasClassReferences> concat =
-        Iterables.concat(super.referencedClasses(), ImmutableSet.of(type));
+        Iterables.concat(super.referencedClasses(), ImmutableList.of(type));
     return FluentIterable.from(concat)
         .transformAndConcat(GET_REFERENCED_CLASSES)
         .toSet();

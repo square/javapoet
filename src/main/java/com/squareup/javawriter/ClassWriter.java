@@ -64,7 +64,7 @@ public final class ClassWriter extends TypeWriter {
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
     context = createSubcontext(context);
-    writeAnnotations(appendable, context);
+    writeAnnotations(appendable, context, '\n');
     writeModifiers(appendable).append("class ").append(name.simpleName());
     Writables.Joiner.on(", ").wrap("<", "> ").appendTo(appendable, context, typeVariables);
     if (supertype.isPresent()) {
