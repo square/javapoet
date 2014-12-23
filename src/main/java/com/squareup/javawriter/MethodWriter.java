@@ -111,7 +111,7 @@ public final class MethodWriter extends Modifiable implements Writable {
   public Set<ClassName> referencedClasses() {
     @SuppressWarnings("unchecked")
     Iterable<? extends HasClassReferences> concat =
-        Iterables.concat(super.referencedClasses(), typeVariables,
+        Iterables.concat(super.referencedClasses(), typeVariables, annotations,
             ImmutableList.of(returnType, body), parameterWriters.values(), throwsTypes);
     return FluentIterable.from(concat)
         .transformAndConcat(GET_REFERENCED_CLASSES)
