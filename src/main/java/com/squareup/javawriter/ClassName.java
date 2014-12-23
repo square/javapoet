@@ -163,7 +163,7 @@ public final class ClassName implements TypeName, Comparable<ClassName> {
     Class<?> current = clazz.getEnclosingClass();
     while (current != null) {
       enclosingNames.add(current.getSimpleName());
-      current = clazz.getEnclosingClass();
+      current = current.getEnclosingClass();
     }
     Collections.reverse(enclosingNames);
     return create(clazz.getPackage().getName(), enclosingNames, clazz.getSimpleName());
