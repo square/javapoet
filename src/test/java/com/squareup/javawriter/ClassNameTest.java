@@ -81,6 +81,13 @@ public class ClassNameTest {
     assert_().that(ClassName.fromTypeElement(element).canonicalName())
         .isEqualTo("java.lang.Object");
   }
+  
+  @Test public void classNameFromClass() {
+    assert_().that(ClassName.fromClass(Object.class).canonicalName())
+        .isEqualTo("java.lang.Object");
+    assert_().that(ClassName.fromClass(OuterClass.InnerClass.class).canonicalName())
+        .isEqualTo("com.squareup.javawriter.ClassNameTest.OuterClass.InnerClass");
+  }
 
   @Test public void peerNamed_topLevelClass() {
     Elements elements = compilationRule.getElements();
