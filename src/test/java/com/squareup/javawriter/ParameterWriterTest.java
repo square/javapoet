@@ -22,7 +22,7 @@ import org.junit.runners.JUnit4;
 import static com.google.common.truth.Truth.assertThat;
 
 /**
- * ParameterWriter only differs from FieldWriter in the format of its annotations.
+ * ParameterWriter differs from FieldWriter in the format of its annotations and varargs support.
  */
 @RunWith(JUnit4.class)
 public final class ParameterWriterTest {
@@ -44,5 +44,14 @@ public final class ParameterWriterTest {
 
     assertThat(Writables.writeToString(parameterWriter))
         .isEqualTo("@example.NotNull @example.Redacted java.lang.Runnable runnable");
+  }
+
+  @Test public void varargs() {
+    ClassName runnable = ClassName.fromClass(Runnable.class);
+    ParameterWriter parameterWriter = new ParameterWriter(runnable, "runnable");
+    parameterWriter.setVarargs(true);
+
+    assertThat(Writables.writeToString(parameterWriter))
+        .isEqualTo("java.lang.Runnable... runnable");
   }
 }
