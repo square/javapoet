@@ -9,13 +9,13 @@
     <version>7</version>
   </parent>
 
-  <groupId>com.squareup</groupId>
+  <groupId>com.google</groupId>
   <artifactId>javapoet</artifactId>
   <version>1.0.0-SNAPSHOT</version>
 
   <name>JavaPoet</name>
   <description>Use beautiful Java code to generate beautiful Java code.</description>
-  <url>http://github.com/square/javapoet/</url>
+  <url>http://github.com/google/javapoet/</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

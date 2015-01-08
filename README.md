@@ -7,6 +7,16 @@ Source file generation can useful when doing things such as annotation processin
 with metadata files (e.g., database schemas, protocol formats). By generating code, you eliminate
 the need to write boilerplate while also keeping a single source of truth for the metadata.
 
+Square's Javawriter
+-------------------
+
+This is a fork of [Square's Javapoet][square] intended as a staging ground for
+changes originating from inside google.  While it may vary from Square's, the intention
+is that all changes end up "upstreamed" to Square's repository, and that this fork
+will only vary temporarily while change is in process.  Generally, unless you are
+depending on features not yet merged you should depend on square's version.  We
+have no plans to do releases, though this fork will publish snapshots on successful
+merges.
 
 ### Example
 
@@ -737,17 +747,17 @@ Use `$T` when referencing types in Javadoc to get automatic imports.
 Download
 --------
 
-Download [the latest .jar][dl] or depend via Maven:
+Download [the latest snapshot .jar][dl] or depend via Maven:
 ```xml
 <dependency>
-  <groupId>com.squareup</groupId>
+  <groupId>com.google</groupId>
   <artifactId>javapoet</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
 or Gradle:
 ```groovy
-compile 'com.squareup:javapoet:1.0.0'
+compile 'com.google:javapoet:1.0.0-SNAPSHOT'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
@@ -772,7 +782,6 @@ License
     limitations under the License.
 
 
-
 JavaWriter
 ==========
 
@@ -784,7 +793,8 @@ top-to-bottom in a single pass, a file can be assembled as a tree of declaration
 JavaWriter continues to be available in [GitHub][javawriter] and [Maven Central][javawriter_maven].
 
 
- [dl]: https://search.maven.org/remote_content?g=com.squareup&a=javapoet&v=LATEST
+ [dl]: https://oss.sonatype.org/content/repositories/snapshots/com/google/javapoet/javapoet/1.0-SNAPSHOT/
+ [square]: http://github.com/square/javawriter
  [snap]: https://oss.sonatype.org/content/repositories/snapshots/
  [javawriter]: https://github.com/square/javapoet/tree/javawriter_2
  [javawriter_maven]: http://search.maven.org/#artifactdetails%7Ccom.squareup%7Cjavawriter%7C2.5.1%7Cjar
