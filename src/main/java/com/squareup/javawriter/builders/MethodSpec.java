@@ -17,12 +17,12 @@ package com.squareup.javawriter.builders;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.squareup.javawriter.ClassName;
 import com.squareup.javawriter.TypeName;
+import com.squareup.javawriter.TypeNames;
 import com.squareup.javawriter.VoidName;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import javax.lang.model.element.Modifier;
 
@@ -30,29 +30,31 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /** A generated method declaration. */
 public final class MethodSpec {
-  public final Name name;
-  public final ImmutableList<ClassName> annotations;
-  public final ImmutableList<ParameterSpec> parameters;
+  public final ImmutableList<AnnotationSpec> annotations;
   public final ImmutableSet<Modifier> modifiers;
   public final TypeName returnType;
+  public final Name name;
+  public final ImmutableList<ParameterSpec> parameters;
   public final ImmutableList<Snippet> snippets;
 
   private MethodSpec(Builder builder) {
-    this.name = checkNotNull(builder.name);
     this.annotations = ImmutableList.copyOf(builder.annotations);
-    this.parameters = ImmutableList.copyOf(builder.parameters);
     this.modifiers = ImmutableSet.copyOf(builder.modifiers);
     this.returnType = builder.returnType;
+    this.name = checkNotNull(builder.name);
+    this.parameters = ImmutableList.copyOf(builder.parameters);
     this.snippets = ImmutableList.copyOf(builder.snippets);
   }
 
   void emit(CodeWriter codeWriter) {
-    codeWriter.emit("$T $L(", returnType, name); // TODO(jwilson): modifiers.
+    codeWriter.emitAnnotations(annotations, false);
+    codeWriter.emitModifiers(modifiers);
+    codeWriter.emit("$T $L(", returnType, name);
 
     boolean firstParameter = true;
     for (ParameterSpec parameterSpec : parameters) {
       if (!firstParameter) codeWriter.emit(", ");
-      codeWriter.emit("$T $L", parameterSpec.type, parameterSpec.name);
+      parameterSpec.emit(codeWriter);
       firstParameter = false;
     }
     codeWriter.emit(") {\n");
@@ -67,12 +69,36 @@ public final class MethodSpec {
   }
 
   public static final class Builder {
-    private Name name;
-    private List<ClassName> annotations = new ArrayList<>();
-    private List<ParameterSpec> parameters = new ArrayList<>();
-    private List<Modifier> modifiers = new ArrayList<>();
+    private final List<AnnotationSpec> annotations = new ArrayList<>();
+    private final List<Modifier> modifiers = new ArrayList<>();
     private TypeName returnType = VoidName.VOID;
-    private List<Snippet> snippets = new ArrayList<>();
+    private Name name;
+    private final List<ParameterSpec> parameters = new ArrayList<>();
+    private final List<Snippet> snippets = new ArrayList<>();
+
+    public Builder addAnnotation(AnnotationSpec annotationSpec) {
+      this.annotations.add(annotationSpec);
+      return this;
+    }
+
+    public Builder addAnnotation(Class<? extends Annotation> annotation) {
+      this.annotations.add(AnnotationSpec.of(annotation));
+      return this;
+    }
+
+    public Builder addModifiers(Modifier... modifiers) {
+      Collections.addAll(this.modifiers, modifiers);
+      return this;
+    }
+
+    public Builder returns(Class<?> returnType) {
+      return returns(TypeNames.forClass(returnType));
+    }
+
+    public Builder returns(TypeName returnType) {
+      this.returnType = returnType;
+      return this;
+    }
 
     public Builder name(String name) {
       this.name = new Name(name);
@@ -84,29 +110,17 @@ public final class MethodSpec {
       return this;
     }
 
-    public Builder addAnnotation(Class<? extends Annotation> annotation) {
-      this.annotations.add(ClassName.fromClass(annotation));
-      return this;
-    }
-
     public Builder addParameter(ParameterSpec parameterSpec) {
       this.parameters.add(parameterSpec);
       return this;
     }
 
     public Builder addParameter(Class<?> type, String name) {
-      this.parameters.add(new ParameterSpec.Builder().type(type).name(name).build());
-      return this;
+      return addParameter(new ParameterSpec.Builder().type(type).name(name).build());
     }
 
-    public Builder addModifiers(Modifier... modifiers) {
-      this.modifiers.addAll(Arrays.asList(modifiers));
-      return this;
-    }
-
-    public Builder returns(Class<?> returnType) {
-      this.returnType = ClassName.fromClass(returnType);
-      return this;
+    public Builder addParameter(TypeName type, String name) {
+      return addParameter(new ParameterSpec.Builder().type(type).name(name).build());
     }
 
     public Builder addCode(String format, Object... args) {

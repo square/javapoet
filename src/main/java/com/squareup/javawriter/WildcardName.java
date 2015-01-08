@@ -34,6 +34,14 @@ public final class WildcardName implements TypeName {
     this.superBound = superBound;
   }
 
+  public TypeName extendsBound() {
+    return extendsBound.orNull();
+  }
+
+  public TypeName superBound() {
+    return superBound.orNull();
+  }
+
   static WildcardName forTypeMirror(WildcardType mirror) {
     return new WildcardName(
         Optional.fromNullable(mirror.getExtendsBound()).transform(FOR_TYPE_MIRROR),

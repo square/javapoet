@@ -30,7 +30,6 @@ public final class Name {
   }
 
   @Override public String toString() {
-    // TODO(jwilson): implement deferred naming so that `new Name("public")` yields "public_" etc.
     return seed;
   }
 }
