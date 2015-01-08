@@ -18,8 +18,14 @@ package com.squareup.javawriter;
 import java.io.IOException;
 
 public final class ParameterWriter extends VariableWriter {
+  private boolean varargs;
+
   ParameterWriter(TypeName type, String name) {
     super(type, name);
+  }
+
+  public void setVarargs(boolean varargs) {
+    this.varargs = varargs;
   }
 
   @Override
@@ -27,6 +33,9 @@ public final class ParameterWriter extends VariableWriter {
     writeAnnotations(appendable, context, ' ');
     writeModifiers(appendable);
     type().write(appendable, context);
+    if (varargs) {
+      appendable.append("...");
+    }
     return appendable.append(' ').append(name());
   }
 }
