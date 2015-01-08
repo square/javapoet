@@ -15,24 +15,58 @@
  */
 package com.squareup.javawriter.builders;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.squareup.javawriter.TypeName;
 import com.squareup.javawriter.TypeNames;
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import javax.lang.model.element.Modifier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /** A generated parameter declaration. */
 public final class ParameterSpec {
+  public final ImmutableList<AnnotationSpec> annotations;
+  public final ImmutableSet<Modifier> modifiers;
   public final TypeName type;
   public final Name name;
 
   private ParameterSpec(Builder builder) {
+    this.annotations = ImmutableList.copyOf(builder.annotations);
+    this.modifiers = ImmutableSet.copyOf(builder.modifiers);
     this.type = checkNotNull(builder.type);
     this.name = checkNotNull(builder.name);
   }
 
+  void emit(CodeWriter codeWriter) {
+    codeWriter.emitAnnotations(annotations, true);
+    codeWriter.emitModifiers(modifiers);
+    codeWriter.emit("$T $L", type, name);
+  }
+
   public static final class Builder {
+    private final List<AnnotationSpec> annotations = new ArrayList<>();
+    private final List<Modifier> modifiers = new ArrayList<>();
     private TypeName type;
     private Name name;
+
+    public Builder addAnnotation(AnnotationSpec annotationSpec) {
+      this.annotations.add(annotationSpec);
+      return this;
+    }
+
+    public Builder addAnnotation(Class<? extends Annotation> annotation) {
+      this.annotations.add(AnnotationSpec.of(annotation));
+      return this;
+    }
+
+    public Builder addModifiers(Modifier... modifiers) {
+      Collections.addAll(this.modifiers, modifiers);
+      return this;
+    }
 
     public Builder type(TypeName type) {
       this.type = type;

@@ -15,26 +15,65 @@
  */
 package com.squareup.javawriter.builders;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.squareup.javawriter.TypeName;
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import javax.lang.model.element.Modifier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /** A generated field declaration. */
 public final class FieldSpec {
+  public final ImmutableList<AnnotationSpec> annotations;
+  public final ImmutableSet<Modifier> modifiers;
   public final TypeName type;
   public final Name name;
   public final Snippet initializer;
 
   private FieldSpec(Builder builder) {
+    this.annotations = ImmutableList.copyOf(builder.annotations);
+    this.modifiers = ImmutableSet.copyOf(builder.modifiers);
     this.type = checkNotNull(builder.type);
     this.name = checkNotNull(builder.name);
-    this.initializer = checkNotNull(builder.initializer);
+    this.initializer = builder.initializer;
+  }
+
+  void emit(CodeWriter codeWriter) {
+    codeWriter.emitAnnotations(annotations, false);
+    codeWriter.emitModifiers(modifiers);
+    codeWriter.emit("$T $L", type, name);
+    if (initializer != null) {
+      codeWriter.emit(" = ");
+      codeWriter.emit(initializer);
+    }
+    codeWriter.emit(";\n");
   }
 
   public static final class Builder {
+    private final List<AnnotationSpec> annotations = new ArrayList<>();
+    private final List<Modifier> modifiers = new ArrayList<>();
     private TypeName type;
     private Name name;
     private Snippet initializer;
+
+    public Builder addAnnotation(AnnotationSpec annotationSpec) {
+      this.annotations.add(annotationSpec);
+      return this;
+    }
+
+    public Builder addAnnotation(Class<? extends Annotation> annotation) {
+      this.annotations.add(AnnotationSpec.of(annotation));
+      return this;
+    }
+
+    public Builder addModifiers(Modifier... modifiers) {
+      Collections.addAll(this.modifiers, modifiers);
+      return this;
+    }
 
     public Builder type(TypeName type) {
       this.type = type;
@@ -44,6 +83,10 @@ public final class FieldSpec {
     public Builder name(Name name) {
       this.name = name;
       return this;
+    }
+
+    public Builder name(String name) {
+      return name(new Name(name));
     }
 
     public Builder initializer(String format, Object... args) {

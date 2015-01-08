@@ -26,6 +26,7 @@ import static com.google.common.base.Preconditions.checkState;
  *
  * <ul>
  *   <li>{@code $L} emits the <em>literal</em> value with no escaping.
+ *   <li>{@code $N} emits a <em>name</em>, using name collision avoidance where necessary.
  *   <li>{@code $S} escapes the value as a <em>string</em>, wraps it with double quotes, and emits
  *       that.
  *   <li>{@code $T} emits a <em>type</em> reference. Types will be imported if possible.
@@ -48,6 +49,7 @@ final class Snippet {
         checkState(p + 1 < format.length(), "dangling $ in format string %s", format);
         switch (format.charAt(p + 1)) {
           case 'L':
+          case 'N':
           case 'S':
           case 'T':
             expectedArgsLength++;

@@ -33,6 +33,14 @@ public final class ParameterizedTypeName implements TypeName {
     this.parameters = ImmutableList.copyOf(parameters);
   }
 
+  public ClassName type() {
+    return type;
+  }
+
+  public ImmutableList<? extends TypeName> parameters() {
+    return parameters;
+  }
+
   @Override
   public Set<ClassName> referencedClasses() {
     return FluentIterable.from(parameters)

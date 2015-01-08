@@ -15,17 +15,24 @@
  */
 package com.squareup.javawriter.builders;
 
+import com.google.common.base.Ascii;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.squareup.javawriter.ClassName;
+import com.squareup.javawriter.ParameterizedTypeName;
 import com.squareup.javawriter.StringLiteral;
 import com.squareup.javawriter.TypeName;
 import com.squareup.javawriter.TypeNames;
+import com.squareup.javawriter.WildcardName;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import javax.lang.model.element.Modifier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -34,7 +41,7 @@ import static com.google.common.base.Preconditions.checkState;
  * Converts a {@link JavaFile} to a string suitable to both human- and javac-consumption. This
  * honors imports, indentation, and deferred variable names.
  */
-class CodeWriter {
+final class CodeWriter {
   private final String indent = "  ";
   private final StringBuilder out;
   private final ImmutableMap<ClassName, String> importedTypes;
@@ -68,6 +75,21 @@ class CodeWriter {
     return this;
   }
 
+  public void emitAnnotations(ImmutableList<AnnotationSpec> annotations, boolean inline) {
+    for (AnnotationSpec annotationSpec : annotations) {
+      annotationSpec.emit(this, inline);
+    }
+  }
+
+  public void emitModifiers(ImmutableSet<Modifier> modifiers) {
+    if (!modifiers.isEmpty()) {
+      for (Modifier modifier : EnumSet.copyOf(modifiers)) {
+        emitAndIndent(Ascii.toLowerCase(modifier.name()));
+        emitAndIndent(" ");
+      }
+    }
+  }
+
   public CodeWriter emit(String format, Object... args) {
     return emit(new Snippet(format, args));
   }
@@ -77,7 +99,11 @@ class CodeWriter {
     for (String part : snippet.formatParts) {
       switch (part) {
         case "$L":
-          emitAndIndent(String.valueOf(snippet.args.get(a++)));
+          emitLiteral(snippet.args.get(a++));
+          break;
+
+        case "$N":
+          emitName(snippet.args.get(a++));
           break;
 
         case "$S":
@@ -101,15 +127,49 @@ class CodeWriter {
     return this;
   }
 
+  private void emitLiteral(Object o) {
+    if (o instanceof TypeSpec) {
+      TypeSpec typeSpec = (TypeSpec) o;
+      typeSpec.emit(this);
+    } else {
+      emitAndIndent(String.valueOf(o));
+    }
+  }
+
   private void emitType(Object arg) {
     TypeName typeName = toTypeName(arg);
     emittedTypes.add(typeName);
 
-    String shortName = !visibleTypes.contains(typeName)
-        ? importedTypes.get(typeName)
-        : null;
-
-    emitAndIndent(shortName != null ? shortName : typeName.toString());
+    // TODO(jwilson): replace instanceof nonsense with polymorphism!
+    if (typeName instanceof ParameterizedTypeName) {
+      ParameterizedTypeName parameterizedTypeName = (ParameterizedTypeName) typeName;
+      emitType(parameterizedTypeName.type());
+      emitAndIndent("<");
+      boolean firstParameter = true;
+      for (TypeName parameter : parameterizedTypeName.parameters()) {
+        if (!firstParameter) emitAndIndent(", ");
+        emitType(parameter);
+        firstParameter = false;
+      }
+      emitAndIndent(">");
+    } else if (typeName instanceof WildcardName) {
+      WildcardName wildcardName = (WildcardName) typeName;
+      TypeName extendsBound = wildcardName.extendsBound();
+      TypeName superBound = wildcardName.superBound();
+      if (ClassName.fromClass(Object.class).equals(extendsBound)) {
+        emit("?");
+      } else if (extendsBound != null) {
+        emit("? extends $T", extendsBound);
+      } else if (superBound != null) {
+        emit("? super $T", superBound);
+      }
+      // TODO(jwilson): special case ? for List<?>.
+    } else {
+      String shortName = !visibleTypes.contains(typeName)
+          ? importedTypes.get(typeName)
+          : null;
+      emitAndIndent(shortName != null ? shortName : typeName.toString());
+    }
   }
 
   /** Emits {@code s} with indentation as required. */
@@ -137,6 +197,20 @@ class CodeWriter {
     if (arg instanceof TypeName) return (TypeName) arg;
     if (arg instanceof Class<?>) return TypeNames.forClass((Class<?>) arg);
     throw new IllegalArgumentException("Expected type but was " + arg);
+  }
+
+  private void emitName(Object o) {
+    emitAndIndent(toName(o));
+  }
+
+  private String toName(Object o) {
+    // TODO(jwilson): implement deferred naming so that `new Name("public")` yields "public_" etc.
+    if (o instanceof String) return (String) o;
+    if (o instanceof Name) return ((Name) o).seed;
+    if (o instanceof ParameterSpec) return ((ParameterSpec) o).name.seed;
+    if (o instanceof FieldSpec) return ((FieldSpec) o).name.seed;
+    if (o instanceof MethodSpec) return ((MethodSpec) o).name.seed;
+    throw new IllegalArgumentException("Expected name but was " + o);
   }
 
   /**
