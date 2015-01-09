@@ -12,7 +12,7 @@ Square's Javawriter
 
 This is a fork of [Square's Javapoet][square] intended as a staging ground for
 changes originating from inside google.  While it may vary from Square's, the intention
-is that all changes end up "upstreamed" to Square's repository, and that this fork
+is that all changes end up merged into to Square's repository, and that this fork
 will only vary temporarily while change is in process.  Generally, unless you are
 depending on features not yet merged you should depend on square's version.  We
 have no plans to do releases, though this fork will publish snapshots on successful
