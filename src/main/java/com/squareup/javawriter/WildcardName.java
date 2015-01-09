@@ -15,6 +15,7 @@
  */
 package com.squareup.javawriter;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
@@ -24,7 +25,7 @@ import javax.lang.model.type.WildcardType;
 
 import static com.squareup.javawriter.TypeNames.FOR_TYPE_MIRROR;
 
-public final class WildcardName implements TypeName {
+public final class WildcardName extends TypeName {
   private final Optional<TypeName> extendsBound;
   private final Optional<TypeName> superBound;
 
@@ -52,15 +53,34 @@ public final class WildcardName implements TypeName {
     return new WildcardName(Optional.<TypeName>absent(), Optional.of(lowerBound));
   }
 
+  @Override public int hashCode() {
+    return Objects.hashCode(super.hashCode(), extendsBound, superBound);
+  }
+
+  @Override public boolean equals(Object obj) {
+    if (obj == this) {
+      return true;
+    } else if (super.equals(obj) && obj instanceof WildcardName) {
+      WildcardName other = (WildcardName) obj;
+      return other.extendsBound.equals(extendsBound)
+          && other.superBound.equals(superBound);
+    } else {
+      return false;
+    }
+  }
+
   @Override
   public Set<ClassName> referencedClasses() {
-    return FluentIterable.from(Iterables.concat(extendsBound.asSet(), superBound.asSet()))
+    Iterable<TypeName> concat =
+        Iterables.concat(super.referencedClasses(), extendsBound.asSet(), superBound.asSet());
+    return FluentIterable.from(concat)
         .transformAndConcat(GET_REFERENCED_CLASSES)
         .toSet();
   }
 
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
+    super.write(appendable, context);
     appendable.append('?');
     if (extendsBound.isPresent()) {
       appendable.append(" extends ");
@@ -71,5 +91,9 @@ public final class WildcardName implements TypeName {
       superBound.get().write(appendable, context);
     }
     return appendable;
+  }
+
+  @Override public String toString() {
+    return Writables.writeToString(this);
   }
 }

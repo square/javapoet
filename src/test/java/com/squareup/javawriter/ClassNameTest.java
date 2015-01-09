@@ -26,6 +26,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assert_;
 import static org.junit.Assert.fail;
 
@@ -132,5 +134,12 @@ public class ClassNameTest {
       fail();
     } catch (IllegalArgumentException ignored) {
     }
+  }
+
+  @Test public void annotated() {
+    ClassName string = ClassName.fromClass(String.class);
+    ClassName nonNull = ClassName.create("test", "NonNull");
+    string.annotate(nonNull);
+    assertThat(Writables.writeToString(string)).isEqualTo("@test.NonNull java.lang.String");
   }
 }

@@ -17,10 +17,22 @@ package com.squareup.javawriter;
 
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.util.Set;
 
-public enum VoidName implements TypeName {
-  VOID;
+public final class VoidName extends TypeName {
+  public static final VoidName INSTANCE = new VoidName();
+
+  private VoidName() {
+  }
+
+  @Override public AnnotationWriter annotate(Class<? extends Annotation> annotation) {
+    throw new UnsupportedOperationException("Cannot annotate 'void'.");
+  }
+
+  @Override public AnnotationWriter annotate(ClassName className) {
+    throw new UnsupportedOperationException("Cannot annotate 'void'.");
+  }
 
   @Override
   public Set<ClassName> referencedClasses() {
@@ -30,6 +42,14 @@ public enum VoidName implements TypeName {
   @Override
   public String toString() {
     return "void";
+  }
+
+  @Override public int hashCode() {
+    return 1;
+  }
+
+  @Override public boolean equals(Object obj) {
+    return obj == this;
   }
 
   @Override

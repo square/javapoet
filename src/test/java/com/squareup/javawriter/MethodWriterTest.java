@@ -26,13 +26,13 @@ import static com.google.common.truth.Truth.assertThat;
 @RunWith(JUnit4.class)
 public final class MethodWriterTest {
   @Test public void empty() {
-    MethodWriter test = new MethodWriter(VoidName.VOID, "test");
+    MethodWriter test = new MethodWriter(VoidName.INSTANCE, "test");
     String actual = Writables.writeToString(test);
     assertThat(actual).isEqualTo("void test() {\n}\n");
   }
 
   @Test public void multilineBody() {
-    MethodWriter test = new MethodWriter(VoidName.VOID, "test");
+    MethodWriter test = new MethodWriter(VoidName.INSTANCE, "test");
     test.body().addSnippet("String firstName;\nString lastName;");
     String actual = Writables.writeToString(test);
     assertThat(actual).isEqualTo(Joiner.on('\n').join(
@@ -44,7 +44,7 @@ public final class MethodWriterTest {
   }
 
   @Test public void singleThrowsTypeName() {
-    MethodWriter method = new MethodWriter(VoidName.VOID, "test");
+    MethodWriter method = new MethodWriter(VoidName.INSTANCE, "test");
     method.addThrowsType(ClassName.fromClass(IOException.class));
 
     assertThat(Writables.writeToString(method)) //
@@ -52,7 +52,7 @@ public final class MethodWriterTest {
   }
 
   @Test public void singleThrowsClass() {
-    MethodWriter method = new MethodWriter(VoidName.VOID, "test");
+    MethodWriter method = new MethodWriter(VoidName.INSTANCE, "test");
     method.addThrowsType(ClassName.fromClass(IOException.class));
 
     assertThat(Writables.writeToString(method)) //
@@ -60,7 +60,7 @@ public final class MethodWriterTest {
   }
 
   @Test public void throwsWithBody() {
-    MethodWriter method = new MethodWriter(PrimitiveName.INT, "test");
+    MethodWriter method = new MethodWriter(PrimitiveName.createInt(), "test");
     method.addThrowsType(ClassName.fromClass(IOException.class));
     method.body().addSnippet("return 0;");
 
@@ -72,7 +72,7 @@ public final class MethodWriterTest {
   }
 
   @Test public void multipleThrows() {
-    MethodWriter method = new MethodWriter(VoidName.VOID, "test");
+    MethodWriter method = new MethodWriter(VoidName.INSTANCE, "test");
     method.addThrowsType(IOException.class);
     method.addThrowsType(ClassName.create("example", "ExampleException"));
 

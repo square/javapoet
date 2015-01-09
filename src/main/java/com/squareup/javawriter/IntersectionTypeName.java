@@ -18,16 +18,24 @@ package com.squareup.javawriter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
 
-final class IntersectionTypeName implements TypeName {
+final class IntersectionTypeName extends TypeName {
   private final List<TypeName> typeNames;
 
   IntersectionTypeName(List<TypeName> typeNames) {
     this.typeNames = typeNames;
+  }
+
+  @Override public AnnotationWriter annotate(Class<? extends Annotation> annotation) {
+    throw new UnsupportedOperationException("Cannot annotate intersection type.");
+  }
+
+  @Override public AnnotationWriter annotate(ClassName className) {
+    throw new UnsupportedOperationException("Cannot annotate intersection type.");
   }
 
   @Override public Set<ClassName> referencedClasses() {

@@ -17,10 +17,22 @@ package com.squareup.javawriter;
 
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.util.Set;
 
-enum NullName implements TypeName {
-  NULL;
+final class NullName extends TypeName {
+  static final NullName INSTANCE = new NullName();
+
+  private NullName() {
+  }
+
+  @Override public AnnotationWriter annotate(Class<? extends Annotation> annotation) {
+    throw new UnsupportedOperationException("Cannot annotate 'null'.");
+  }
+
+  @Override public AnnotationWriter annotate(ClassName className) {
+    throw new UnsupportedOperationException("Cannot annotate 'null'.");
+  }
 
   @Override
   public Set<ClassName> referencedClasses() {
@@ -30,6 +42,14 @@ enum NullName implements TypeName {
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
     return appendable.append("null");
+  }
+
+  @Override public int hashCode() {
+    return 1;
+  }
+
+  @Override public boolean equals(Object obj) {
+    return obj == this;
   }
 
   @Override

@@ -41,7 +41,7 @@ public final class TypeNames {
 
   public static TypeName forClass(Class<?> clazz) {
     if (void.class.equals(clazz)) {
-      return VoidName.VOID;
+      return VoidName.INSTANCE;
     } else if (clazz.isPrimitive()) {
       return PrimitiveName.forClass(clazz);
     } else if (clazz.isArray()) {
@@ -108,14 +108,14 @@ public final class TypeNames {
 
       @Override
       public NullName visitNull(NullType t, Void p) {
-        return NullName.NULL;
+        return NullName.INSTANCE;
       }
 
       @Override
       public TypeName visitNoType(NoType t, Void p) {
         switch (t.getKind()) {
           case VOID:
-            return VoidName.VOID;
+            return VoidName.INSTANCE;
           case PACKAGE:
             throw new IllegalArgumentException();
           default:

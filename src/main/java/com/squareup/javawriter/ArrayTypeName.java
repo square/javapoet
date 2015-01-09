@@ -15,10 +15,14 @@
  */
 package com.squareup.javawriter;
 
+import com.google.common.base.Objects;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.util.Set;
 
-final class ArrayTypeName implements TypeName {
+final class ArrayTypeName extends TypeName {
   private final TypeName componentType;
 
   ArrayTypeName(TypeName componentType) {
@@ -27,23 +31,29 @@ final class ArrayTypeName implements TypeName {
 
   @Override
   public Set<ClassName> referencedClasses() {
-    return componentType.referencedClasses();
+    Iterable<? extends HasClassReferences> concat
+        = Iterables.concat(super.referencedClasses(), ImmutableList.of(componentType));
+    return FluentIterable.from(concat)
+        .transformAndConcat(GET_REFERENCED_CLASSES)
+        .toSet();
   }
 
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
+    super.write(appendable, context);
     return componentType.write(appendable, context).append("[]");
   }
 
   @Override
   public boolean equals(Object obj) {
     return (obj instanceof ArrayTypeName)
-        & this.componentType.equals(((ArrayTypeName) obj).componentType);
+        && super.equals(obj)
+        && this.componentType.equals(((ArrayTypeName) obj).componentType);
   }
 
   @Override
   public int hashCode() {
-    return componentType.hashCode();
+    return Objects.hashCode(super.hashCode(), componentType);
   }
 
   @Override

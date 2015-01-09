@@ -20,6 +20,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -47,7 +48,7 @@ import static javax.lang.model.element.NestingKind.TOP_LEVEL;
  *
  * @since 2.0
  */
-public final class ClassName implements TypeName, Comparable<ClassName> {
+public final class ClassName extends TypeName implements Comparable<ClassName> {
   private String fullyQualifiedName = null;
   private final String packageName;
   /* From top to bottom.  E.g.: this field will contain ["A", "B"] for pgk.A.B.C */
@@ -227,11 +228,12 @@ public final class ClassName implements TypeName, Comparable<ClassName> {
 
   @Override
   public String toString() {
-    return canonicalName();
+    return Writables.writeToString(this);
   }
 
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
+    super.write(appendable, context);
     appendable.append(context.sourceReferenceForClassName(this));
     return appendable;
   }
@@ -240,7 +242,7 @@ public final class ClassName implements TypeName, Comparable<ClassName> {
   public boolean equals(Object obj) {
     if (obj == this) {
       return true;
-    } else if (obj instanceof ClassName) {
+    } else if (super.equals(obj) && obj instanceof ClassName) {
       ClassName that = (ClassName) obj;
       return this.packageName.equals(that.packageName)
           && this.enclosingSimpleNames.equals(that.enclosingSimpleNames)
@@ -252,7 +254,7 @@ public final class ClassName implements TypeName, Comparable<ClassName> {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(packageName, enclosingSimpleNames, simpleName);
+    return Objects.hashCode(super.hashCode(), packageName, enclosingSimpleNames, simpleName);
   }
 
   @Override
@@ -262,6 +264,6 @@ public final class ClassName implements TypeName, Comparable<ClassName> {
 
   @Override
   public Set<ClassName> referencedClasses() {
-    return ImmutableSet.of(this);
+    return FluentIterable.from(super.referencedClasses()).append(this).toSet();
   }
 }
