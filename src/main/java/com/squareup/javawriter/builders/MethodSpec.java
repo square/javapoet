@@ -17,6 +17,7 @@ package com.squareup.javawriter.builders;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.squareup.javawriter.ClassName;
 import com.squareup.javawriter.TypeName;
 import com.squareup.javawriter.TypeNames;
 import com.squareup.javawriter.VoidName;
@@ -26,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.lang.model.element.Modifier;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /** A generated method declaration. */
@@ -38,6 +40,11 @@ public final class MethodSpec {
   public final ImmutableList<Snippet> snippets;
 
   private MethodSpec(Builder builder) {
+    checkArgument(builder.returnType != null ^ builder.name == Name.CONSTRUCTOR,
+        "unexpected return type %s for %s", builder.returnType, builder.name);
+    checkArgument(builder.snippets.isEmpty() || !builder.modifiers.contains(Modifier.ABSTRACT),
+        "abstract method %s cannot have code", builder.name);
+
     this.annotations = ImmutableList.copyOf(builder.annotations);
     this.modifiers = ImmutableSet.copyOf(builder.modifiers);
     this.returnType = builder.returnType;
@@ -46,10 +53,15 @@ public final class MethodSpec {
     this.snippets = ImmutableList.copyOf(builder.snippets);
   }
 
-  void emit(CodeWriter codeWriter) {
+  void emit(CodeWriter codeWriter, ClassName enclosing, ImmutableSet<Modifier> implicitModifiers) {
     codeWriter.emitAnnotations(annotations, false);
-    codeWriter.emitModifiers(modifiers);
-    codeWriter.emit("$T $L(", returnType, name);
+    codeWriter.emitModifiers(modifiers, implicitModifiers);
+
+    if (name == Name.CONSTRUCTOR) {
+      codeWriter.emit("$L(", enclosing.simpleName());
+    } else {
+      codeWriter.emit("$T $L(", returnType, name);
+    }
 
     boolean firstParameter = true;
     for (ParameterSpec parameterSpec : parameters) {
@@ -57,6 +69,12 @@ public final class MethodSpec {
       parameterSpec.emit(codeWriter);
       firstParameter = false;
     }
+
+    if (hasModifier(Modifier.ABSTRACT)) {
+      codeWriter.emit(");\n");
+      return;
+    }
+
     codeWriter.emit(") {\n");
 
     codeWriter.indent();
@@ -66,6 +84,10 @@ public final class MethodSpec {
     codeWriter.unindent();
 
     codeWriter.emit("}\n");
+  }
+
+  public boolean hasModifier(Modifier modifier) {
+    return modifiers.contains(modifier);
   }
 
   public static final class Builder {
@@ -97,6 +119,12 @@ public final class MethodSpec {
 
     public Builder returns(TypeName returnType) {
       this.returnType = returnType;
+      return this;
+    }
+
+    public Builder constructor() {
+      returnType = null;
+      name = Name.CONSTRUCTOR;
       return this;
     }
 

@@ -20,7 +20,6 @@ import com.squareup.javawriter.ClassName;
 import com.squareup.javawriter.ParameterizedTypeName;
 import com.squareup.javawriter.WildcardName;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 import javax.lang.model.element.Modifier;
 import org.junit.Test;
@@ -134,7 +133,7 @@ public class TypeSpecTest {
     TypeSpec taco = new TypeSpec.Builder()
         .name(ClassName.create("com.squareup.tacos", "Taco"))
         .addField(new FieldSpec.Builder()
-            .addModifiers(Modifier.STATIC, Modifier.FINAL)
+            .addModifiers(Modifier.STATIC, Modifier.FINAL, Modifier.FINAL)
             .type(thingThangOfFooBar)
             .name("NAME")
             .initializer("$L", aThingThang)
@@ -164,6 +163,189 @@ public class TypeSpecTest {
         + "      };\n"
         + "    }\n"
         + "  };\n"
+        + "}\n");
+  }
+
+  @Test public void annotatedParameters() throws Exception {
+    TypeSpec service = new TypeSpec.Builder()
+        .name(ClassName.create("com.squareup.tacos", "Foo"))
+        .addMethod(new MethodSpec.Builder()
+            .addModifiers(Modifier.PUBLIC)
+            .constructor()
+            .addParameter(new ParameterSpec.Builder()
+                .type(long.class)
+                .name("id")
+                .build())
+            .addParameter(new ParameterSpec.Builder()
+                .addAnnotation(ClassName.create("com.squareup.tacos", "Ping"))
+                .type(String.class)
+                .name("one")
+                .build())
+            .addParameter(new ParameterSpec.Builder()
+                .addAnnotation(ClassName.create("com.squareup.tacos", "Ping"))
+                .type(String.class)
+                .name("two")
+                .build())
+            .addParameter(new ParameterSpec.Builder()
+                .addAnnotation(new AnnotationSpec.Builder()
+                    .type(ClassName.create("com.squareup.tacos", "Pong"))
+                    .addMember("value", "$S", "pong")
+                    .build())
+                .type(String.class)
+                .name("three")
+                .build())
+            .addParameter(new ParameterSpec.Builder()
+                .addAnnotation(ClassName.create("com.squareup.tacos", "Ping"))
+                .type(String.class)
+                .name("four")
+                .build())
+            .addCode("/* code snippets */\n")
+            .build())
+        .build();
+
+    assertThat(toString(service)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.tacos.Ping;\n"
+        + "import com.squareup.tacos.Pong;\n"
+        + "import java.lang.String;\n"
+        + "\n"
+        + "class Foo {\n"
+        + "  public Foo(long id, @Ping String one, @Ping String two, @Pong(\"pong\") String three, "
+        + "@Ping String four) {\n"
+        + "    /* code snippets */\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void retrofitStyleInterface() throws Exception {
+    ClassName observable = ClassName.create("com.squareup.tacos", "Observable");
+    ClassName fooBar = ClassName.create("com.squareup.tacos", "FooBar");
+    ClassName thing = ClassName.create("com.squareup.tacos", "Thing");
+    ClassName things = ClassName.create("com.squareup.tacos", "Things");
+    ClassName map = ClassName.create("java.util", "Map");
+    ClassName string = ClassName.create("java.lang", "String");
+    ClassName headers = ClassName.create("com.squareup.tacos", "Headers");
+    ClassName post = ClassName.create("com.squareup.tacos", "POST");
+    ClassName body = ClassName.create("com.squareup.tacos", "Body");
+    ClassName queryMap = ClassName.create("com.squareup.tacos", "QueryMap");
+    ClassName header = ClassName.create("com.squareup.tacos", "Header");
+    TypeSpec service = new TypeSpec.Builder()
+        .name(ClassName.create("com.squareup.tacos", "Service"))
+        .type(TypeSpec.Type.INTERFACE)
+        .addMethod(new MethodSpec.Builder()
+            .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+            .addAnnotation(new AnnotationSpec.Builder()
+                .type(headers)
+                .addMember("value", "{\n$S,\n$S\n}",
+                    "Accept: application/json", "User-Agent: foobar")
+                .build())
+            .addAnnotation(new AnnotationSpec.Builder()
+                .type(post)
+                .addMember("value", "$S", "/foo/bar")
+                .build())
+            .returns(ParameterizedTypeName.create(observable, fooBar))
+            .name("fooBar")
+            .addParameter(new ParameterSpec.Builder()
+                .addAnnotation(body)
+                .type(ParameterizedTypeName.create(things, thing))
+                .name("things")
+                .build())
+            .addParameter(new ParameterSpec.Builder()
+                .addAnnotation(new AnnotationSpec.Builder()
+                    .type(queryMap)
+                    .addMember("encodeValues", "false")
+                    .build())
+                .type(ParameterizedTypeName.create(map, string, string))
+                .name("query")
+                .build())
+            .addParameter(new ParameterSpec.Builder()
+                .addAnnotation(new AnnotationSpec.Builder()
+                    .type(header)
+                    .addMember("value", "$S", "Authorization")
+                    .build())
+                .type(string)
+                .name("authorization")
+                .build())
+            .build())
+        .build();
+
+    assertThat(toString(service)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.tacos.Body;\n"
+        + "import com.squareup.tacos.FooBar;\n"
+        + "import com.squareup.tacos.Header;\n"
+        + "import com.squareup.tacos.Headers;\n"
+        + "import com.squareup.tacos.Observable;\n"
+        + "import com.squareup.tacos.POST;\n"
+        + "import com.squareup.tacos.QueryMap;\n"
+        + "import com.squareup.tacos.Thing;\n"
+        + "import com.squareup.tacos.Things;\n"
+        + "import java.lang.String;\n"
+        + "import java.util.Map;\n"
+        + "\n"
+        + "interface Service {\n"
+        + "  @Headers({\n"
+        + "      \"Accept: application/json\",\n"
+        + "      \"User-Agent: foobar\"\n"
+        + "      })\n"
+        + "  @POST(\"/foo/bar\")\n"
+        + "  Observable<FooBar> fooBar(@Body Things<Thing> things, @QueryMap(encodeValues = false) "
+        + "Map<String, String> query, @Header(\"Authorization\") String authorization);\n"
+        + "}\n");
+  }
+
+  @Test public void annotatedField() throws Exception {
+    TypeSpec taco = new TypeSpec.Builder()
+        .name(ClassName.create("com.squareup.tacos", "Taco"))
+        .addField(new FieldSpec.Builder()
+            .addAnnotation(new AnnotationSpec.Builder()
+                .type(ClassName.create("com.squareup.tacos", "JsonAdapter"))
+                .addMember("value", "$T.class", ClassName.create("com.squareup.tacos", "Foo"))
+                .build())
+            .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+            .type(String.class)
+            .name("thing")
+            .build())
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.tacos.Foo;\n"
+        + "import com.squareup.tacos.JsonAdapter;\n"
+        + "import java.lang.String;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  @JsonAdapter(Foo.class)\n"
+        + "  private final String thing;\n"
+        + "}\n");
+  }
+
+  @Test public void annotatedClass() throws Exception {
+    ClassName someType = ClassName.create("com.squareup.tacos", "SomeType");
+    TypeSpec taco = new TypeSpec.Builder()
+        .addAnnotation(new AnnotationSpec.Builder()
+            .type(ClassName.create("com.squareup.tacos", "Something"))
+            .addMember("hi", "$T.$N", someType, "FIELD")
+            .addMember("hey", "$L", 12)
+            .addMember("hello", "$S", "goodbye")
+            .build())
+        .name(ClassName.create("com.squareup.tacos", "Foo"))
+        .addModifiers(Modifier.PUBLIC)
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.tacos.SomeType;\n"
+        + "import com.squareup.tacos.Something;\n"
+        + "\n"
+        + "@Something(\n"
+        + "    hello = \"goodbye\",\n"
+        + "    hey = 12,\n"
+        + "    hi = SomeType.FIELD\n"
+        + ")\n"
+        + "public class Foo {\n"
         + "}\n");
   }
 

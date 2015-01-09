@@ -16,6 +16,7 @@
 package com.squareup.javawriter.builders;
 
 import com.google.common.collect.ImmutableList;
+import java.util.Arrays;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -67,7 +68,7 @@ final class Snippet {
     }
 
     checkArgument(args.length == expectedArgsLength,
-        "expected %s args but was %s", expectedArgsLength, args);
+        "expected %s args for %s but was %s", expectedArgsLength, format, Arrays.toString(args));
 
     this.formatParts = formatPartsBuilder.build();
     this.args = ImmutableList.copyOf(args);

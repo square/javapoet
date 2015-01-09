@@ -17,6 +17,7 @@ package com.squareup.javawriter.builders;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.squareup.javawriter.ClassName;
 import com.squareup.javawriter.TypeName;
 import com.squareup.javawriter.TypeNames;
 import java.lang.annotation.Annotation;
@@ -41,6 +42,10 @@ public final class ParameterSpec {
     this.name = checkNotNull(builder.name);
   }
 
+  public boolean hasModifier(Modifier modifier) {
+    return modifiers.contains(modifier);
+  }
+
   void emit(CodeWriter codeWriter) {
     codeWriter.emitAnnotations(annotations, true);
     codeWriter.emitModifiers(modifiers);
@@ -59,6 +64,11 @@ public final class ParameterSpec {
     }
 
     public Builder addAnnotation(Class<? extends Annotation> annotation) {
+      this.annotations.add(AnnotationSpec.of(annotation));
+      return this;
+    }
+
+    public Builder addAnnotation(ClassName annotation) {
       this.annotations.add(AnnotationSpec.of(annotation));
       return this;
     }
