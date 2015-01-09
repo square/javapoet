@@ -18,6 +18,7 @@ package com.squareup.javawriter.builders;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javawriter.TypeName;
+import com.squareup.javawriter.TypeNames;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,9 +43,13 @@ public final class FieldSpec {
     this.initializer = builder.initializer;
   }
 
-  void emit(CodeWriter codeWriter) {
+  public boolean hasModifier(Modifier modifier) {
+    return modifiers.contains(modifier);
+  }
+
+  void emit(CodeWriter codeWriter, ImmutableSet<Modifier> implicitModifiers) {
     codeWriter.emitAnnotations(annotations, false);
-    codeWriter.emitModifiers(modifiers);
+    codeWriter.emitModifiers(modifiers, implicitModifiers);
     codeWriter.emit("$T $L", type, name);
     if (initializer != null) {
       codeWriter.emit(" = ");
@@ -78,6 +83,10 @@ public final class FieldSpec {
     public Builder type(TypeName type) {
       this.type = type;
       return this;
+    }
+
+    public Builder type(Class<?> type) {
+      return type(TypeNames.forClass(type));
     }
 
     public Builder name(Name name) {

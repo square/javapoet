@@ -34,8 +34,8 @@ import java.util.List;
 import java.util.Map;
 import javax.lang.model.element.Modifier;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Converts a {@link JavaFile} to a string suitable to both human- and javac-consumption. This
@@ -55,13 +55,21 @@ final class CodeWriter {
   }
 
   public CodeWriter indent() {
-    indentLevel++;
+    return indent(1);
+  }
+
+  public CodeWriter indent(int levels) {
+    indentLevel += levels;
     return this;
   }
 
   public CodeWriter unindent() {
-    checkState(indentLevel > 0);
-    indentLevel--;
+    return unindent(1);
+  }
+
+  public CodeWriter unindent(int levels) {
+    checkArgument(indentLevel - levels >= 0);
+    indentLevel -= levels;
     return this;
   }
 
@@ -71,7 +79,7 @@ final class CodeWriter {
   }
 
   public CodeWriter popVisibleType(TypeName typeName) {
-    checkState(visibleTypes.remove(typeName));
+    checkArgument(visibleTypes.remove(typeName));
     return this;
   }
 
@@ -81,13 +89,23 @@ final class CodeWriter {
     }
   }
 
-  public void emitModifiers(ImmutableSet<Modifier> modifiers) {
+  /**
+   * Emits {@code modifiers} in the standard order. Modifiers in {@code implicitModifiers} will not
+   * be emitted.
+   */
+  public void emitModifiers(
+      ImmutableSet<Modifier> modifiers, ImmutableSet<Modifier> implicitModifiers) {
     if (!modifiers.isEmpty()) {
       for (Modifier modifier : EnumSet.copyOf(modifiers)) {
+        if (implicitModifiers.contains(modifier)) continue;
         emitAndIndent(Ascii.toLowerCase(modifier.name()));
         emitAndIndent(" ");
       }
     }
+  }
+
+  public void emitModifiers(ImmutableSet<Modifier> modifiers) {
+    emitModifiers(modifiers, ImmutableSet.<Modifier>of());
   }
 
   public CodeWriter emit(String format, Object... args) {

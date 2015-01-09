@@ -23,6 +23,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * {@code public_} or {@code public1}.
  */
 public final class Name {
+  static final Name CONSTRUCTOR = new Name("<init>");
+
   public final String seed;
 
   public Name(String seed) {

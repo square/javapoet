@@ -33,7 +33,7 @@ public final class AnnotationSpec {
   public final ImmutableSortedMap<String, Snippet> members;
 
   private AnnotationSpec(Builder builder) {
-    this.type = checkNotNull(builder.type);
+    this.type = checkNotNull(builder.type, "type");
     this.members = ImmutableSortedMap.copyOf(builder.members);
   }
 
@@ -45,8 +45,10 @@ public final class AnnotationSpec {
       codeWriter.emit("@$T$L", type, suffix);
     } else if (members.keySet().equals(ImmutableSet.of("value"))) {
       // @Named("foo")
-      codeWriter.emit("@$T(");
+      codeWriter.emit("@$T(", type);
+      codeWriter.indent(2);
       codeWriter.emit(getOnlyElement(members.values()));
+      codeWriter.unindent(2);
       codeWriter.emit(")$L", suffix);
     } else {
       // Inline:
@@ -58,8 +60,7 @@ public final class AnnotationSpec {
       //       nullable = false
       //   )
       codeWriter.emit("@$T($L", type, separator);
-      codeWriter.indent();
-      codeWriter.indent();
+      codeWriter.indent(2);
       for (Iterator<Map.Entry<String, Snippet>> i = members.entrySet().iterator(); i.hasNext();) {
         Map.Entry<String, Snippet> entry = i.next();
         codeWriter.emit("$L = ", entry.getKey());
@@ -67,14 +68,17 @@ public final class AnnotationSpec {
         if (i.hasNext()) codeWriter.emit(",");
         codeWriter.emit("$L", separator);
       }
-      codeWriter.unindent();
-      codeWriter.unindent();
+      codeWriter.unindent(2);
       codeWriter.emit(")$L", suffix);
     }
   }
 
   public static AnnotationSpec of(Class<? extends Annotation> annotation) {
-    return new Builder().type(ClassName.fromClass(annotation)).build();
+    return of(ClassName.fromClass(annotation));
+  }
+
+  public static AnnotationSpec of(ClassName annotation) {
+    return new Builder().type(annotation).build();
   }
 
   @Override public boolean equals(Object o) {

@@ -15,6 +15,7 @@
  */
 package com.squareup.javawriter.builders;
 
+import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javawriter.ClassName;
@@ -42,6 +43,25 @@ public final class TypeSpec {
   private TypeSpec(Builder builder) {
     checkArgument(builder.name != null ^ builder.anonymousTypeArguments != null,
         "types must have either a name or anonymous type arguments");
+    boolean isInterface = builder.type == Type.INTERFACE;
+    boolean typeIsAbstract = builder.modifiers.contains(Modifier.ABSTRACT) || isInterface;
+    for (MethodSpec methodSpec : builder.methodSpecs) {
+      checkArgument(typeIsAbstract || !methodSpec.hasModifier(Modifier.ABSTRACT),
+          "non-abstract type %s cannot declare abstract method %s", builder.name, methodSpec.name);
+      checkArgument(!isInterface || methodSpec.hasModifier(Modifier.ABSTRACT),
+          "interface %s cannot declare non-abstract method %s", builder.name, methodSpec.name);
+      checkArgument(!isInterface || methodSpec.hasModifier(Modifier.PUBLIC),
+          "interface %s cannot declare non-public method %s", builder.name, methodSpec.name);
+    }
+    for (FieldSpec fieldSpec : builder.fieldSpecs) {
+      if (isInterface) {
+        checkArgument(fieldSpec.hasModifier(Modifier.PUBLIC)
+            && fieldSpec.hasModifier(Modifier.STATIC)
+            && fieldSpec.hasModifier(Modifier.FINAL),
+            "interface %s field %s must be public static final", builder.name, fieldSpec.name);
+      }
+    }
+
     this.annotations = ImmutableList.copyOf(builder.annotations);
     this.modifiers = ImmutableSet.copyOf(builder.modifiers);
     this.type = checkNotNull(builder.type);
@@ -52,6 +72,10 @@ public final class TypeSpec {
     this.methodSpecs = ImmutableList.copyOf(builder.methodSpecs);
   }
 
+  public boolean hasModifier(Modifier modifier) {
+    return modifiers.contains(modifier);
+  }
+
   void emit(CodeWriter codeWriter) {
     if (anonymousTypeArguments != null) {
       codeWriter.emit("new $T(", supertype);
@@ -60,29 +84,42 @@ public final class TypeSpec {
     } else {
       codeWriter.emitAnnotations(annotations, false);
       codeWriter.emitModifiers(modifiers);
-      codeWriter.emit("class $L {\n", name.simpleName());
+      codeWriter.emit("$L $L {\n", Ascii.toLowerCase(type.name()), name.simpleName());
     }
 
     codeWriter.indent();
-
     boolean firstMember = true;
     for (FieldSpec fieldSpec : fieldSpecs) {
       if (!firstMember) codeWriter.emit("\n");
-      fieldSpec.emit(codeWriter);
+      fieldSpec.emit(codeWriter, type.implicitFieldModifiers);
       firstMember = false;
     }
     for (MethodSpec methodSpec : methodSpecs) {
       if (!firstMember) codeWriter.emit("\n");
-      methodSpec.emit(codeWriter);
+      methodSpec.emit(codeWriter, name, type.implicitMethodModifiers);
       firstMember = false;
     }
-
     codeWriter.unindent();
+
     codeWriter.emit(anonymousTypeArguments != null ? "}" : "}\n");
   }
 
   public static enum Type {
-    CLASS, INTERFACE, ENUM
+    CLASS(ImmutableSet.<Modifier>of(), ImmutableSet.<Modifier>of()),
+    INTERFACE(ImmutableSet.of(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL),
+        ImmutableSet.of(Modifier.PUBLIC, Modifier.ABSTRACT)),
+    ENUM(ImmutableSet.<Modifier>of(), ImmutableSet.<Modifier>of());
+
+    private ImmutableSet<Modifier> implicitFieldModifiers
+        = ImmutableSet.of(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL);
+    private ImmutableSet<Modifier> implicitMethodModifiers
+        = ImmutableSet.of(Modifier.PUBLIC, Modifier.ABSTRACT);
+
+    private Type(ImmutableSet<Modifier> implicitFieldModifiers,
+        ImmutableSet<Modifier> implicitMethodModifiers) {
+      this.implicitFieldModifiers = implicitFieldModifiers;
+      this.implicitMethodModifiers = implicitMethodModifiers;
+    }
   }
 
   public static final class Builder {
