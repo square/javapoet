@@ -148,7 +148,7 @@ final class CodeWriter {
   private void emitLiteral(Object o) {
     if (o instanceof TypeSpec) {
       TypeSpec typeSpec = (TypeSpec) o;
-      typeSpec.emit(this);
+      typeSpec.emit(this, null);
     } else {
       emitAndIndent(String.valueOf(o));
     }

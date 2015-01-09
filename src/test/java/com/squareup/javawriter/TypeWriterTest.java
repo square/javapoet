@@ -35,33 +35,6 @@ public class TypeWriterTest {
     assertThat(topClass.toString()).doesNotContain("import some.other.pkg.Bottom;");
   }
 
-  @Test public void zeroImportsSingleNewline() {
-    ClassName name = ClassName.create("test", "Top");
-    ClassWriter classWriter = ClassWriter.forClassName(name);
-
-    String expected = ""
-        + "package test;\n"
-        + "\n"
-        + "class Top {}\n";
-    assertThat(classWriter.toString()).isEqualTo(expected);
-  }
-
-  @Test public void newlineBetweenImports() {
-    ClassName name = ClassName.create("test", "Top");
-    ClassWriter topClass = ClassWriter.forClassName(name);
-    topClass.addField(Executor.class, "executor");
-
-    String expected = ""
-        + "package test;\n"
-        + "\n"
-        + "import java.util.concurrent.Executor;\n"
-        + "\n"
-        + "class Top {\n"
-        + "  Executor executor;\n"
-        + "}\n";
-    assertThat(topClass.toString()).isEqualTo(expected);
-  }
-
   @Test public void explicitImports() {
     ClassName name = ClassName.create("test", "Top");
     ClassWriter topClass = ClassWriter.forClassName(name);

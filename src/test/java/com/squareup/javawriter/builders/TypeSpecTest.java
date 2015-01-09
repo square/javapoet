@@ -19,14 +19,16 @@ import com.google.common.collect.ImmutableList;
 import com.squareup.javawriter.ClassName;
 import com.squareup.javawriter.ParameterizedTypeName;
 import com.squareup.javawriter.WildcardName;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.List;
 import javax.lang.model.element.Modifier;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
 
-public class TypeSpecTest {
+public final class TypeSpecTest {
   @Test public void basic() throws Exception {
     TypeSpec taco = new TypeSpec.Builder()
         .name(ClassName.create("com.squareup.tacos", "Taco"))
@@ -346,6 +348,152 @@ public class TypeSpecTest {
         + "    hi = SomeType.FIELD\n"
         + ")\n"
         + "public class Foo {\n"
+        + "}\n");
+  }
+
+  @Test public void enumWithSubclassing() throws Exception {
+      TypeSpec roshambo = new TypeSpec.Builder()
+        .type(TypeSpec.Type.ENUM)
+        .name(ClassName.create("com.squareup.tacos", "Roshambo"))
+        .addModifiers(Modifier.PUBLIC)
+        .addEnumConstant("ROCK")
+        .addEnumConstant("PAPER", new TypeSpec.Builder()
+            .anonymousTypeArguments("$S", "flat")
+            .addMethod(new MethodSpec.Builder()
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(String.class)
+                .name("toString")
+                .addCode("return $S;\n", "paper airplane!")
+                .build())
+            .build())
+        .addEnumConstant("SCISSORS", new TypeSpec.Builder()
+            .anonymousTypeArguments("$S", "peace sign")
+            .build())
+        .addField(new FieldSpec.Builder()
+            .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+            .type(String.class)
+            .name("handPosition")
+            .build())
+        .addMethod(new MethodSpec.Builder()
+            .constructor()
+            .addParameter(String.class, "handPosition")
+            .addCode("this.handPosition = handPosition;\n")
+            .build())
+        .addMethod(new MethodSpec.Builder()
+            .constructor()
+            .addCode("this($S);\n", "fist")
+            .build())
+        .build();
+    assertThat(toString(roshambo)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.Override;\n"
+        + "import java.lang.String;\n"
+        + "\n"
+        + "public enum Roshambo {\n"
+        + "  ROCK,\n"
+        + "\n"
+        + "  PAPER(\"flat\") {\n"
+        + "    @Override\n"
+        + "    public String toString() {\n"
+        + "      return \"paper airplane!\";\n"
+        + "    }\n"
+        + "  },\n"
+        + "\n"
+        + "  SCISSORS(\"peace sign\");\n"
+        + "\n"
+        + "  private final String handPosition;\n"
+        + "\n"
+        + "  Roshambo(String handPosition) {\n"
+        + "    this.handPosition = handPosition;\n"
+        + "  }\n"
+        + "\n"
+        + "  Roshambo() {\n"
+        + "    this(\"fist\");\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void enumConstantsRequired() throws Exception {
+    try {
+      new TypeSpec.Builder()
+        .type(TypeSpec.Type.ENUM)
+        .name(ClassName.create("com.squareup.tacos", "Roshambo"))
+        .build();
+      fail();
+    } catch (IllegalArgumentException expected) {
+    }
+  }
+
+  @Test public void onlyEnumsMayHaveEnumConstants() throws Exception {
+    try {
+      new TypeSpec.Builder()
+        .type(TypeSpec.Type.CLASS)
+        .name(ClassName.create("com.squareup.tacos", "Roshambo"))
+        .addEnumConstant("ROCK")
+        .build();
+      fail();
+    } catch (IllegalArgumentException expected) {
+    }
+  }
+
+  @Test public void enumWithMembersButNoConstructorCall() throws Exception {
+    TypeSpec roshambo = new TypeSpec.Builder()
+        .type(TypeSpec.Type.ENUM)
+        .name(ClassName.create("com.squareup.tacos", "Roshambo"))
+        .addEnumConstant("SPOCK", new TypeSpec.Builder()
+            .anonymousTypeArguments()
+            .addMethod(new MethodSpec.Builder()
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .returns(String.class)
+                .name("toString")
+                .addCode("return $S;\n", "west side")
+                .build())
+            .build())
+        .build();
+    assertThat(toString(roshambo)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.Override;\n"
+        + "import java.lang.String;\n"
+        + "\n"
+        + "enum Roshambo {\n"
+        + "  SPOCK {\n"
+        + "    @Override\n"
+        + "    public String toString() {\n"
+        + "      return \"west side\";\n"
+        + "    }\n"
+        + "  };\n"
+        + "}\n");
+  }
+
+  @Test public void methodThrows() throws Exception {
+    TypeSpec taco = new TypeSpec.Builder()
+        .name(ClassName.create("com.squareup.tacos", "Taco"))
+        .addMethod(new MethodSpec.Builder()
+            .name("throwOne")
+            .addException(IOException.class)
+            .build())
+        .addMethod(new MethodSpec.Builder()
+            .name("throwTwo")
+            .addException(IOException.class)
+            .addException(ClassName.create("com.squareup.tacos", "SourCreamException"))
+            .build())
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.tacos.SourCreamException;\n"
+        + "import java.io.IOException;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  void throwOne() throws IOException {\n"
+        + "  }\n"
+        + "\n"
+        + "  void throwTwo() throws IOException, SourCreamException {\n"
+        + "  }\n"
         + "}\n");
   }
 
