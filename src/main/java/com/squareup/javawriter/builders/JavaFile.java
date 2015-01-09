@@ -45,12 +45,14 @@ public final class JavaFile {
 
   private void emit(ImmutableMap<ClassName, String> imports, CodeWriter codeWriter) {
     codeWriter.emit("package $L;\n", typeSpec.name.packageName());
-    codeWriter.emit("\n");
-    for (ClassName className : imports.keySet()) {
-      codeWriter.emit("import $L;\n", className);
+    if (!imports.isEmpty()) {
+      codeWriter.emit("\n");
+      for (ClassName className : imports.keySet()) {
+        codeWriter.emit("import $L;\n", className);
+      }
     }
     codeWriter.emit("\n");
-    typeSpec.emit(codeWriter);
+    typeSpec.emit(codeWriter, null);
   }
 
   public static final class Builder {

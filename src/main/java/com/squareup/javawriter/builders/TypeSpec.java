@@ -17,13 +17,17 @@ package com.squareup.javawriter.builders;
 
 import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javawriter.ClassName;
 import com.squareup.javawriter.TypeName;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import javax.lang.model.element.Modifier;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -37,6 +41,7 @@ public final class TypeSpec {
   public final ClassName name;
   public final TypeName supertype;
   public final Snippet anonymousTypeArguments;
+  public final ImmutableMap<String, TypeSpec> enumConstants;
   public final ImmutableList<FieldSpec> fieldSpecs;
   public final ImmutableList<MethodSpec> methodSpecs;
 
@@ -45,6 +50,8 @@ public final class TypeSpec {
         "types must have either a name or anonymous type arguments");
     boolean isInterface = builder.type == Type.INTERFACE;
     boolean typeIsAbstract = builder.modifiers.contains(Modifier.ABSTRACT) || isInterface;
+    checkArgument(builder.type == Type.ENUM ^ builder.enumConstants.isEmpty(),
+        "unexpected enum constants %s for type %s", builder.enumConstants, builder.type);
     for (MethodSpec methodSpec : builder.methodSpecs) {
       checkArgument(typeIsAbstract || !methodSpec.hasModifier(Modifier.ABSTRACT),
           "non-abstract type %s cannot declare abstract method %s", builder.name, methodSpec.name);
@@ -68,6 +75,7 @@ public final class TypeSpec {
     this.name = builder.name;
     this.supertype = builder.supertype;
     this.anonymousTypeArguments = builder.anonymousTypeArguments;
+    this.enumConstants = ImmutableMap.copyOf(builder.enumConstants);
     this.fieldSpecs = ImmutableList.copyOf(builder.fieldSpecs);
     this.methodSpecs = ImmutableList.copyOf(builder.methodSpecs);
   }
@@ -76,8 +84,19 @@ public final class TypeSpec {
     return modifiers.contains(modifier);
   }
 
-  void emit(CodeWriter codeWriter) {
-    if (anonymousTypeArguments != null) {
+  void emit(CodeWriter codeWriter, String enumName) {
+    if (enumName != null) {
+      codeWriter.emit("$L", enumName);
+      if (!anonymousTypeArguments.formatParts.isEmpty()) {
+        codeWriter.emit("(");
+        codeWriter.emit(anonymousTypeArguments);
+        codeWriter.emit(")");
+      }
+      if (fieldSpecs.isEmpty() && methodSpecs.isEmpty()) {
+        return; // Avoid unnecessary braces "{}".
+      }
+      codeWriter.emit(" {\n");
+    } else if (anonymousTypeArguments != null) {
       codeWriter.emit("new $T(", supertype);
       codeWriter.emit(anonymousTypeArguments);
       codeWriter.emit(") {\n");
@@ -89,6 +108,14 @@ public final class TypeSpec {
 
     codeWriter.indent();
     boolean firstMember = true;
+    for (Iterator<Map.Entry<String, TypeSpec>> i = enumConstants.entrySet().iterator();
+        i.hasNext();) {
+      Map.Entry<String, TypeSpec> enumConstant = i.next();
+      if (!firstMember) codeWriter.emit("\n");
+      enumConstant.getValue().emit(codeWriter, enumConstant.getKey());
+      firstMember = false;
+      codeWriter.emit("$L", i.hasNext() ? ",\n" : ";\n");
+    }
     for (FieldSpec fieldSpec : fieldSpecs) {
       if (!firstMember) codeWriter.emit("\n");
       fieldSpec.emit(codeWriter, type.implicitFieldModifiers);
@@ -101,7 +128,11 @@ public final class TypeSpec {
     }
     codeWriter.unindent();
 
-    codeWriter.emit(anonymousTypeArguments != null ? "}" : "}\n");
+    if (enumName != null || anonymousTypeArguments != null) {
+      codeWriter.emit("}");
+    } else {
+      codeWriter.emit("}\n");
+    }
   }
 
   public static enum Type {
@@ -129,6 +160,7 @@ public final class TypeSpec {
     private ClassName name;
     private TypeName supertype = ClassName.fromClass(Object.class);
     private Snippet anonymousTypeArguments;
+    private Map<String, TypeSpec> enumConstants = new LinkedHashMap<>();
     private List<FieldSpec> fieldSpecs = new ArrayList<>();
     private List<MethodSpec> methodSpecs = new ArrayList<>();
 
@@ -162,18 +194,35 @@ public final class TypeSpec {
       return this;
     }
 
+    public Builder anonymousTypeArguments() {
+      return anonymousTypeArguments("");
+    }
+
     public Builder anonymousTypeArguments(String format, Object... args) {
       this.anonymousTypeArguments = new Snippet(format, args);
       return this;
     }
 
-    public Builder addMethod(MethodSpec methodSpec) {
-      methodSpecs.add(methodSpec);
+    public Builder addEnumConstant(String name) {
+      return addEnumConstant(name, new Builder()
+          .anonymousTypeArguments()
+          .build());
+    }
+
+    public Builder addEnumConstant(String name, TypeSpec typeSpec) {
+      checkArgument(typeSpec.anonymousTypeArguments != null,
+          "enum constants must have anonymous type arguments");
+      enumConstants.put(name, typeSpec);
       return this;
     }
 
     public Builder addField(FieldSpec fieldSpec) {
       fieldSpecs.add(fieldSpec);
+      return this;
+    }
+
+    public Builder addMethod(MethodSpec methodSpec) {
+      methodSpecs.add(methodSpec);
       return this;
     }
 

@@ -37,6 +37,7 @@ public final class MethodSpec {
   public final TypeName returnType;
   public final Name name;
   public final ImmutableList<ParameterSpec> parameters;
+  public final ImmutableList<ClassName> exceptions;
   public final ImmutableList<Snippet> snippets;
 
   private MethodSpec(Builder builder) {
@@ -50,6 +51,7 @@ public final class MethodSpec {
     this.returnType = builder.returnType;
     this.name = checkNotNull(builder.name);
     this.parameters = ImmutableList.copyOf(builder.parameters);
+    this.exceptions = ImmutableList.copyOf(builder.exceptions);
     this.snippets = ImmutableList.copyOf(builder.snippets);
   }
 
@@ -75,7 +77,17 @@ public final class MethodSpec {
       return;
     }
 
-    codeWriter.emit(") {\n");
+    codeWriter.emit(")");
+    if (!exceptions.isEmpty()) {
+      codeWriter.emit(" throws");
+      boolean firstException = true;
+      for (ClassName exception : exceptions) {
+        if (!firstException) codeWriter.emit(",");
+        codeWriter.emit(" $T", exception);
+        firstException = false;
+      }
+    }
+    codeWriter.emit(" {\n");
 
     codeWriter.indent();
     for (Snippet snippet : snippets) {
@@ -96,6 +108,7 @@ public final class MethodSpec {
     private TypeName returnType = VoidName.VOID;
     private Name name;
     private final List<ParameterSpec> parameters = new ArrayList<>();
+    private final List<ClassName> exceptions = new ArrayList<>();
     private final List<Snippet> snippets = new ArrayList<>();
 
     public Builder addAnnotation(AnnotationSpec annotationSpec) {
@@ -149,6 +162,15 @@ public final class MethodSpec {
 
     public Builder addParameter(TypeName type, String name) {
       return addParameter(new ParameterSpec.Builder().type(type).name(name).build());
+    }
+
+    public Builder addException(Class<? extends Throwable> exception) {
+      return addException(ClassName.fromClass(exception));
+    }
+
+    public Builder addException(ClassName exception) {
+      this.exceptions.add(exception);
+      return this;
     }
 
     public Builder addCode(String format, Object... args) {
