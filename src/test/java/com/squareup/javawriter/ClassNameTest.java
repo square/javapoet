@@ -15,22 +15,19 @@
  */
 package com.squareup.javawriter;
 
-import com.squareup.javawriter.ClassNameTest.OuterClass.InnerClass;
-
 import com.google.common.collect.ImmutableList;
 import com.google.testing.compile.CompilationRule;
+import com.squareup.javawriter.ClassNameTest.OuterClass.InnerClass;
 import java.util.Map;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+
 import static com.google.common.truth.Truth.assert_;
 import static org.junit.Assert.fail;
 
-@RunWith(JUnit4.class)
-public class ClassNameTest {
+public final class ClassNameTest {
   @Rule public CompilationRule compilationRule = new CompilationRule();
 
   @Test public void bestGuessForString_simpleClass() {

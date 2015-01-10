@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -50,6 +51,7 @@ public final class TypeSpec {
   public final ImmutableList<FieldSpec> fieldSpecs;
   public final ImmutableList<MethodSpec> methodSpecs;
   public final ImmutableList<TypeSpec> typeSpecs;
+  public final ImmutableList<Element> originatingElements;
 
   private TypeSpec(Builder builder) {
     checkArgument(builder.name != null ^ builder.anonymousTypeArguments != null,
@@ -91,6 +93,13 @@ public final class TypeSpec {
     this.fieldSpecs = ImmutableList.copyOf(builder.fieldSpecs);
     this.methodSpecs = ImmutableList.copyOf(builder.methodSpecs);
     this.typeSpecs = ImmutableList.copyOf(builder.typeSpecs);
+
+    ImmutableList.Builder<Element> originatingElementsBuilder = ImmutableList.builder();
+    originatingElementsBuilder.addAll(builder.originatingElements);
+    for (TypeSpec typeSpec : builder.typeSpecs) {
+      originatingElementsBuilder.addAll(typeSpec.originatingElements);
+    }
+    this.originatingElements = originatingElementsBuilder.build();
   }
 
   public boolean hasModifier(Modifier modifier) {
@@ -219,14 +228,15 @@ public final class TypeSpec {
     private final List<Modifier> modifiers = new ArrayList<>();
     private Type type = Type.CLASS;
     private String name;
-    private List<TypeVariableName> typeVariables = new ArrayList<>();
+    private final List<TypeVariableName> typeVariables = new ArrayList<>();
     private TypeName superclass = ClassName.OBJECT;
-    private List<TypeName> superinterfaces = new ArrayList<>();
+    private final List<TypeName> superinterfaces = new ArrayList<>();
     private Snippet anonymousTypeArguments;
-    private Map<String, TypeSpec> enumConstants = new LinkedHashMap<>();
-    private List<FieldSpec> fieldSpecs = new ArrayList<>();
-    private List<MethodSpec> methodSpecs = new ArrayList<>();
-    private List<TypeSpec> typeSpecs = new ArrayList<>();
+    private final Map<String, TypeSpec> enumConstants = new LinkedHashMap<>();
+    private final List<FieldSpec> fieldSpecs = new ArrayList<>();
+    private final List<MethodSpec> methodSpecs = new ArrayList<>();
+    private final List<TypeSpec> typeSpecs = new ArrayList<>();
+    private final List<Element> originatingElements = new ArrayList<>();
 
     public Builder addAnnotation(AnnotationSpec annotationSpec) {
       this.annotations.add(annotationSpec);
@@ -310,6 +320,11 @@ public final class TypeSpec {
 
     public Builder addType(TypeSpec typeSpec) {
       typeSpecs.add(typeSpec);
+      return this;
+    }
+
+    public Builder addOriginatingElement(Element originatingElement) {
+      originatingElements.add(originatingElement);
       return this;
     }
 

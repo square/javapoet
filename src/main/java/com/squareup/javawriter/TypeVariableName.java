@@ -20,8 +20,6 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import java.io.IOException;
-import java.util.Set;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -84,23 +82,7 @@ public final class TypeVariableName implements TypeName {
     return name;
   }
 
-  @Override
-  public Set<ClassName> referencedClasses() {
-    return upperBound.referencedClasses();
-  }
-
-  @Override
-  public Appendable write(Appendable appendable, Context context) throws IOException {
-    appendable.append(name);
-    if (!upperBound.equals(ClassName.OBJECT)) {
-      appendable.append(" extends ");
-      upperBound.write(appendable, context);
-    }
-    return appendable;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
+  @Override public boolean equals(Object obj) {
     if (obj instanceof TypeVariableName) {
       TypeVariableName that = (TypeVariableName) obj;
       return this.name.equals(that.name)
@@ -110,13 +92,7 @@ public final class TypeVariableName implements TypeName {
     }
   }
 
-  @Override
-  public int hashCode() {
+  @Override public int hashCode() {
     return Objects.hashCode(name, upperBound);
-  }
-
-  @Override
-  public String toString() {
-    return Writables.writeToString(this);
   }
 }

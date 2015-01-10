@@ -15,30 +15,19 @@
  */
 package com.squareup.javawriter;
 
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
-import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
-final class IntersectionTypeName implements TypeName {
-  private final List<TypeName> typeNames;
+public final class IntersectionTypeName implements TypeName {
+  private final ImmutableList<TypeName> typeNames;
 
   IntersectionTypeName(List<TypeName> typeNames) {
-    this.typeNames = typeNames;
+    this.typeNames = ImmutableList.copyOf(typeNames);
   }
 
-  @Override public Set<ClassName> referencedClasses() {
-    return FluentIterable.from(typeNames)
-        .transformAndConcat(GET_REFERENCED_CLASSES)
-        .toSet();
-  }
-
-  @Override public Appendable write(Appendable appendable, Context context) throws IOException {
-    Writables.Joiner.on(" & ").appendTo(appendable, context, typeNames);
-    return appendable;
+  public List<TypeName> typeNames() {
+    return typeNames;
   }
 
   @Override public int hashCode() {

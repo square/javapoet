@@ -16,13 +16,9 @@
 package com.squareup.javawriter;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import java.io.IOException;
-import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Verify.verify;
 
 public final class ParameterizedTypeName implements TypeName {
   private final ClassName type;
@@ -41,24 +37,7 @@ public final class ParameterizedTypeName implements TypeName {
     return parameters;
   }
 
-  @Override
-  public Set<ClassName> referencedClasses() {
-    return FluentIterable.from(parameters)
-        .transformAndConcat(GET_REFERENCED_CLASSES)
-        .append(type)
-        .toSet();
-  }
-
-  @Override
-  public Appendable write(Appendable appendable, Context context) throws IOException {
-    appendable.append(context.sourceReferenceForClassName(type));
-    verify(!parameters.isEmpty(), type.toString());
-    Writables.Joiner.on(", ").wrap("<", ">").appendTo(appendable, context, parameters);
-    return appendable;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
+  @Override public boolean equals(Object obj) {
     if (obj instanceof ParameterizedTypeName) {
       ParameterizedTypeName that = (ParameterizedTypeName) obj;
       return this.type.equals(that.type)
@@ -68,14 +47,8 @@ public final class ParameterizedTypeName implements TypeName {
     }
   }
 
-  @Override
-  public int hashCode() {
+  @Override public int hashCode() {
     return Objects.hashCode(type, parameters);
-  }
-
-  @Override
-  public String toString() {
-    return Writables.writeToString(this);
   }
 
   public static ParameterizedTypeName create(ClassName className,
