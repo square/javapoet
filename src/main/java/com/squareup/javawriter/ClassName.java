@@ -48,6 +48,8 @@ import static javax.lang.model.element.NestingKind.TOP_LEVEL;
  * @since 2.0
  */
 public final class ClassName implements TypeName, Comparable<ClassName> {
+  public static final ClassName OBJECT = ClassName.fromClass(Object.class);
+
   private String fullyQualifiedName = null;
   private final String packageName;
   /* From top to bottom.  E.g.: this field will contain ["A", "B"] for pgk.A.B.C */

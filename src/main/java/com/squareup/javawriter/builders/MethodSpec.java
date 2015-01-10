@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableSet;
 import com.squareup.javawriter.ClassName;
 import com.squareup.javawriter.TypeName;
 import com.squareup.javawriter.TypeNames;
+import com.squareup.javawriter.TypeVariableName;
 import com.squareup.javawriter.VoidName;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class MethodSpec {
   public final ImmutableList<AnnotationSpec> annotations;
   public final ImmutableSet<Modifier> modifiers;
+  public final ImmutableList<TypeVariableName> typeVariables;
   public final TypeName returnType;
   public final Name name;
   public final ImmutableList<ParameterSpec> parameters;
@@ -48,6 +50,7 @@ public final class MethodSpec {
 
     this.annotations = ImmutableList.copyOf(builder.annotations);
     this.modifiers = ImmutableSet.copyOf(builder.modifiers);
+    this.typeVariables = ImmutableList.copyOf(builder.typeVariables);
     this.returnType = builder.returnType;
     this.name = checkNotNull(builder.name);
     this.parameters = ImmutableList.copyOf(builder.parameters);
@@ -58,6 +61,11 @@ public final class MethodSpec {
   void emit(CodeWriter codeWriter, ClassName enclosing, ImmutableSet<Modifier> implicitModifiers) {
     codeWriter.emitAnnotations(annotations, false);
     codeWriter.emitModifiers(modifiers, implicitModifiers);
+
+    if (!typeVariables.isEmpty()) {
+      codeWriter.emitTypeVariables(typeVariables);
+      codeWriter.emit(" ");
+    }
 
     if (name == Name.CONSTRUCTOR) {
       codeWriter.emit("$L(", enclosing.simpleName());
@@ -105,6 +113,7 @@ public final class MethodSpec {
   public static final class Builder {
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
+    private List<TypeVariableName> typeVariables = new ArrayList<>();
     private TypeName returnType = VoidName.VOID;
     private Name name;
     private final List<ParameterSpec> parameters = new ArrayList<>();
@@ -123,6 +132,11 @@ public final class MethodSpec {
 
     public Builder addModifiers(Modifier... modifiers) {
       Collections.addAll(this.modifiers, modifiers);
+      return this;
+    }
+
+    public Builder addTypeVariable(TypeVariableName typeVariable) {
+      typeVariables.add(typeVariable);
       return this;
     }
 

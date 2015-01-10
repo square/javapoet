@@ -16,11 +16,9 @@
 package com.squareup.javawriter;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.util.Set;
@@ -35,19 +33,23 @@ import static com.squareup.javawriter.TypeNames.FOR_TYPE_MIRROR;
 
 public final class TypeVariableName implements TypeName {
   private final String name;
-  private final Optional<TypeName> upperBound;
+  private final TypeName upperBound;
 
-  TypeVariableName(String name, Optional<TypeName> upperBound) {
+  TypeVariableName(String name, TypeName upperBound) {
     this.name = name;
     this.upperBound = upperBound;
   }
 
+  public TypeName upperBound() {
+    return upperBound;
+  }
+
   public static TypeVariableName create(String name) {
-    return new TypeVariableName(name, Optional.<TypeName>absent());
+    return new TypeVariableName(name, ClassName.OBJECT);
   }
 
   public static TypeVariableName create(String name, TypeName upperBound) {
-    return new TypeVariableName(name, Optional.of(upperBound));
+    return new TypeVariableName(name, upperBound);
   }
 
   static TypeVariableName forTypeMirror(TypeVariable mirror) {
@@ -71,11 +73,11 @@ public final class TypeVariableName implements TypeName {
         .filter(Predicates.not(Predicates.<TypeName>equalTo(ClassName.fromClass(Object.class))))
         .toList();
     if (typeNames.size() == 1) {
-      return new TypeVariableName(name, Optional.of(Iterables.getOnlyElement(typeNames)));
+      return new TypeVariableName(name, Iterables.getOnlyElement(typeNames));
     } else if (!typeNames.isEmpty()) {
-      return new TypeVariableName(name, Optional.<TypeName>of(new IntersectionTypeName(typeNames)));
+      return new TypeVariableName(name, new IntersectionTypeName(typeNames));
     }
-    return new TypeVariableName(name, Optional.<TypeName>absent());
+    return new TypeVariableName(name, ClassName.OBJECT);
   }
 
   public String name() {
@@ -84,15 +86,15 @@ public final class TypeVariableName implements TypeName {
 
   @Override
   public Set<ClassName> referencedClasses() {
-    return upperBound.transform(GET_REFERENCED_CLASSES).or(ImmutableSet.<ClassName>of());
+    return upperBound.referencedClasses();
   }
 
   @Override
   public Appendable write(Appendable appendable, Context context) throws IOException {
     appendable.append(name);
-    if (upperBound.isPresent()) {
+    if (!upperBound.equals(ClassName.OBJECT)) {
       appendable.append(" extends ");
-      upperBound.get().write(appendable, context);
+      upperBound.write(appendable, context);
     }
     return appendable;
   }

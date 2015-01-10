@@ -25,6 +25,7 @@ import com.squareup.javawriter.ParameterizedTypeName;
 import com.squareup.javawriter.StringLiteral;
 import com.squareup.javawriter.TypeName;
 import com.squareup.javawriter.TypeNames;
+import com.squareup.javawriter.TypeVariableName;
 import com.squareup.javawriter.WildcardName;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -108,6 +109,27 @@ final class CodeWriter {
     emitModifiers(modifiers, ImmutableSet.<Modifier>of());
   }
 
+  /**
+   * Emit type variables with their bounds. This should only be used when declaring type variables;
+   * everywhere else bounds are omitted.
+   */
+  public void emitTypeVariables(ImmutableList<TypeVariableName> typeVariables) {
+    if (typeVariables.isEmpty()) return;
+
+    emit("<");
+    boolean first = true;
+    for (TypeVariableName typeVariable : typeVariables) {
+      if (!first) emit(", ");
+      emit("$L", typeVariable.name());
+      TypeName upperBound = typeVariable.upperBound();
+      if (!upperBound.equals(ClassName.OBJECT)) {
+        emit(" extends $T", upperBound);
+      }
+      first = false;
+    }
+    emit(">");
+  }
+
   public CodeWriter emit(String format, Object... args) {
     return emit(new Snippet(format, args));
   }
@@ -181,7 +203,8 @@ final class CodeWriter {
       } else if (superBound != null) {
         emit("? super $T", superBound);
       }
-      // TODO(jwilson): special case ? for List<?>.
+    } else if (typeName instanceof TypeVariableName) {
+      emit("$L", ((TypeVariableName) typeName).name());
     } else {
       String shortName = !visibleTypes.contains(typeName)
           ? importedTypes.get(typeName)
