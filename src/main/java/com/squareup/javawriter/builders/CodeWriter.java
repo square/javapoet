@@ -16,16 +16,19 @@
 package com.squareup.javawriter.builders;
 
 import com.google.common.base.Ascii;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.squareup.javawriter.ClassName;
 import com.squareup.javawriter.ParameterizedTypeName;
+import com.squareup.javawriter.PrimitiveName;
 import com.squareup.javawriter.StringLiteral;
 import com.squareup.javawriter.TypeName;
 import com.squareup.javawriter.TypeNames;
 import com.squareup.javawriter.TypeVariableName;
+import com.squareup.javawriter.VoidName;
 import com.squareup.javawriter.WildcardName;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -33,10 +36,12 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.lang.model.element.Modifier;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Converts a {@link JavaFile} to a string suitable to both human- and javac-consumption. This
@@ -45,10 +50,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 final class CodeWriter {
   private final String indent = "  ";
   private final StringBuilder out;
-  private final ImmutableMap<ClassName, String> importedTypes;
-  private final LinkedHashSet<TypeName> emittedTypes = new LinkedHashSet<>();
-  private final List<TypeName> visibleTypes = new ArrayList<>();
   private int indentLevel;
+
+  private String packageName;
+  private final List<TypeSpec> typeSpecStack = new ArrayList<>();
+  private final ImmutableMap<ClassName, String> importedTypes;
+  private final Set<ClassName> importableTypes = new LinkedHashSet<>();
 
   public CodeWriter(StringBuilder out, ImmutableMap<ClassName, String> importedTypes) {
     this.out = checkNotNull(out);
@@ -74,13 +81,25 @@ final class CodeWriter {
     return this;
   }
 
-  public CodeWriter pushVisibleType(TypeName typeName) {
-    visibleTypes.add(typeName);
+  public CodeWriter pushPackage(String packageName) {
+    checkState(this.packageName == null);
+    this.packageName = checkNotNull(packageName);
     return this;
   }
 
-  public CodeWriter popVisibleType(TypeName typeName) {
-    checkArgument(visibleTypes.remove(typeName));
+  public CodeWriter popPackage() {
+    checkState(this.packageName != null);
+    this.packageName = null;
+    return this;
+  }
+
+  public CodeWriter pushType(TypeSpec type) {
+    this.typeSpecStack.add(type);
+    return this;
+  }
+
+  public CodeWriter popType() {
+    this.typeSpecStack.remove(typeSpecStack.size() - 1);
     return this;
   }
 
@@ -178,7 +197,6 @@ final class CodeWriter {
 
   private void emitType(Object arg) {
     TypeName typeName = toTypeName(arg);
-    emittedTypes.add(typeName);
 
     // TODO(jwilson): replace instanceof nonsense with polymorphism!
     if (typeName instanceof ParameterizedTypeName) {
@@ -205,12 +223,66 @@ final class CodeWriter {
       }
     } else if (typeName instanceof TypeVariableName) {
       emit("$L", ((TypeVariableName) typeName).name());
+    } else if (typeName instanceof ClassName) {
+      emitAndIndent(lookupName((ClassName) typeName));
+    } else if (typeName instanceof PrimitiveName) {
+      emitAndIndent(typeName.toString());
+    } else if (typeName instanceof VoidName) {
+      emitAndIndent(typeName.toString());
     } else {
-      String shortName = !visibleTypes.contains(typeName)
-          ? importedTypes.get(typeName)
-          : null;
-      emitAndIndent(shortName != null ? shortName : typeName.toString());
+      throw new UnsupportedOperationException("unexpected type: " + arg);
     }
+  }
+
+  /**
+   * Returns the best name to identify {@code className} with in the current context. This uses the
+   * available imports and the current scope to find the shortest name available. It does not honor
+   * names visible due to inheritance.
+   */
+  private String lookupName(ClassName className) {
+    // Different package than current? Just look for an import.
+    if (!className.packageName().equals(packageName)) {
+      String importedName = importedTypes.get(className);
+      if (importedName != null) {
+        importableTypes.add(className);
+        return importedName;
+      }
+
+      // If the target class wasn't imported, perhaps its enclosing class was. Try that.
+      ClassName enclosingClassName = className.enclosingClassName().orNull();
+      if (enclosingClassName != null) {
+        return lookupName(enclosingClassName) + "." + className.simpleName();
+      }
+
+      // Fall back to the fully-qualified name. Mark the type as importable for a future pass.
+      importableTypes.add(className);
+      return className.toString();
+    }
+
+    // Look for the longest common prefix, which we can omit.
+    ImmutableList<String> classNames = className.simpleNames();
+    int prefixLength = commonPrefixLength(classNames);
+    if (prefixLength == classNames.size()) {
+      return className.simpleName(); // Special case: a class referring to itself!
+    }
+
+    return Joiner.on('.').join(classNames.subList(prefixLength, classNames.size()));
+  }
+
+  /**
+   * Returns the common prefix of {@code classNames} and the current nesting scope. For example,
+   * suppose the current scope is {@code AbstractMap.SimpleEntry}. This will return 0 for {@code
+   * List}, 1 for {@code AbstractMap}, 1 for {@code AbstractMap.SimpleImmutableEntry}, and 2 for
+   * {@code AbstractMap.SimpleEntry} itself.
+   */
+  private int commonPrefixLength(ImmutableList<String> classNames) {
+    int size = Math.min(classNames.size(), typeSpecStack.size());
+    for (int i = 0; i < size; i++) {
+      String a = classNames.get(i);
+      String b = typeSpecStack.get(i).name;
+      if (!a.equals(b)) return i;
+    }
+    return size;
   }
 
   /** Emits {@code s} with indentation as required. */
@@ -261,7 +333,7 @@ final class CodeWriter {
   ImmutableMap<ClassName, String> suggestedImports() {
     // Find the simple names that can be imported, and the classes that they target.
     Map<String, ClassName> simpleNameToType = new LinkedHashMap<>();
-    for (TypeName typeName : emittedTypes) {
+    for (TypeName typeName : importableTypes) {
       if (!(typeName instanceof ClassName)) continue;
       ClassName className = (ClassName) typeName;
       if (simpleNameToType.containsKey(className.simpleName())) continue;

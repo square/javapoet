@@ -15,30 +15,17 @@
  */
 package com.squareup.javawriter.builders;
 
-import com.google.common.collect.ImmutableList;
-import com.squareup.javawriter.ClassName;
 import java.util.Date;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.fail;
 
 public final class JavaFileTest {
-  @Test public void cannotEmitNestedClass() throws Exception {
-    TypeSpec tacoSupremo = new TypeSpec.Builder()
-        .name(ClassName.create("com.squareup.tacos", ImmutableList.of("Taco"), "Supremo"))
-        .build();
-    try {
-      new JavaFile.Builder().classSpec(tacoSupremo);
-      fail();
-    } catch (IllegalArgumentException expected) {
-    }
-  }
-
   @Test public void noImports() throws Exception {
     String source = new JavaFile.Builder()
-        .classSpec(new TypeSpec.Builder()
-            .name(ClassName.create("com.squareup.tacos", "Taco"))
+        .packageName("com.squareup.tacos")
+        .typeSpec(new TypeSpec.Builder()
+            .name("Taco")
             .build())
         .build()
         .toString();
@@ -51,8 +38,9 @@ public final class JavaFileTest {
 
   @Test public void singleImport() throws Exception {
     String source = new JavaFile.Builder()
-        .classSpec(new TypeSpec.Builder()
-            .name(ClassName.create("com.squareup.tacos", "Taco"))
+        .packageName("com.squareup.tacos")
+        .typeSpec(new TypeSpec.Builder()
+            .name("Taco")
             .addField(new FieldSpec.Builder()
                 .type(Date.class)
                 .name("madeFreshDate")
@@ -72,8 +60,9 @@ public final class JavaFileTest {
 
   @Test public void conflictingImports() throws Exception {
     String source = new JavaFile.Builder()
-        .classSpec(new TypeSpec.Builder()
-            .name(ClassName.create("com.squareup.tacos", "Taco"))
+        .packageName("com.squareup.tacos")
+        .typeSpec(new TypeSpec.Builder()
+            .name("Taco")
             .addField(new FieldSpec.Builder()
                 .type(Date.class)
                 .name("madeFreshDate")
@@ -95,12 +84,5 @@ public final class JavaFileTest {
         + "\n"
         + "  java.sql.Date madeFreshDatabaseDate;\n"
         + "}\n");
-  }
-
-  private String toString(TypeSpec typeSpec) {
-    return new JavaFile.Builder()
-        .classSpec(typeSpec)
-        .build()
-        .toString();
   }
 }

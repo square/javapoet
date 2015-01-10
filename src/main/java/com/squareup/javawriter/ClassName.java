@@ -71,6 +71,14 @@ public final class ClassName implements TypeName, Comparable<ClassName> {
     return enclosingSimpleNames;
   }
 
+  // TODO(jwilson): make this package-private once builders and type names are in the same package.
+  public ImmutableList<String> simpleNames() {
+    return new ImmutableList.Builder<String>()
+        .addAll(enclosingSimpleNames)
+        .add(simpleName)
+        .build();
+  }
+
   public Optional<ClassName> enclosingClassName() {
     return enclosingSimpleNames.isEmpty()
         ? Optional.<ClassName>absent()

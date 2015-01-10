@@ -31,9 +31,11 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 public final class TypeSpecTest {
+  private final String tacosPackage = "com.squareup.tacos";
+
   @Test public void basic() throws Exception {
     TypeSpec taco = new TypeSpec.Builder()
-        .name(ClassName.create("com.squareup.tacos", "Taco"))
+        .name("Taco")
         .addMethod(new MethodSpec.Builder()
             .name("toString")
             .addAnnotation(Override.class)
@@ -58,7 +60,7 @@ public final class TypeSpecTest {
 
   @Test public void interestingTypes() throws Exception {
     TypeSpec taco = new TypeSpec.Builder()
-        .name(ClassName.create("com.squareup.tacos", "Taco"))
+        .name("Taco")
         .addField(new FieldSpec.Builder()
             .type(ParameterizedTypeName.create(ClassName.fromClass(List.class),
                 WildcardName.createWithUpperBound(ClassName.fromClass(Object.class))))
@@ -92,14 +94,14 @@ public final class TypeSpecTest {
   }
 
   @Test public void anonymousInnerClass() throws Exception {
-    ClassName foo = ClassName.create("com.squareup.tacos", "Foo");
-    ClassName bar = ClassName.create("com.squareup.tacos", "Bar");
+    ClassName foo = ClassName.create(tacosPackage, "Foo");
+    ClassName bar = ClassName.create(tacosPackage, "Bar");
     ClassName thingThang = ClassName.create(
-        "com.squareup.tacos", ImmutableList.of("Thing"), "Thang");
+        tacosPackage, ImmutableList.of("Thing"), "Thang");
     ParameterizedTypeName thingThangOfFooBar
         = ParameterizedTypeName.create(thingThang, foo, bar);
-    ClassName thung = ClassName.create("com.squareup.tacos", "Thung");
-    ClassName simpleThung = ClassName.create("com.squareup.tacos", "SimpleThung");
+    ClassName thung = ClassName.create(tacosPackage, "Thung");
+    ClassName simpleThung = ClassName.create(tacosPackage, "SimpleThung");
     ParameterizedTypeName thungOfSuperBar
         = ParameterizedTypeName.create(thung, WildcardName.createWithLowerBound(bar));
     ParameterizedTypeName thungOfSuperFoo
@@ -135,7 +137,7 @@ public final class TypeSpecTest {
             .build())
         .build();
     TypeSpec taco = new TypeSpec.Builder()
-        .name(ClassName.create("com.squareup.tacos", "Taco"))
+        .name("Taco")
         .addField(new FieldSpec.Builder()
             .addModifiers(Modifier.STATIC, Modifier.FINAL, Modifier.FINAL)
             .type(thingThangOfFooBar)
@@ -144,19 +146,13 @@ public final class TypeSpecTest {
             .build())
         .build();
 
-    // TODO: import Thing, and change references from "Thang" to "Thing.Thang"
     assertThat(toString(taco)).isEqualTo(""
         + "package com.squareup.tacos;\n"
         + "\n"
-        + "import com.squareup.tacos.Bar;\n"
-        + "import com.squareup.tacos.Foo;\n"
-        + "import com.squareup.tacos.SimpleThung;\n"
-        + "import com.squareup.tacos.Thing.Thang;\n"
-        + "import com.squareup.tacos.Thung;\n"
         + "import java.lang.Override;\n"
         + "\n"
         + "class Taco {\n"
-        + "  static final Thang<Foo, Bar> NAME = new Thang<Foo, Bar>() {\n"
+        + "  static final Thing.Thang<Foo, Bar> NAME = new Thing.Thang<Foo, Bar>() {\n"
         + "    @Override\n"
         + "    public Thung<? super Bar> call(final Thung<? super Foo> thung) {\n"
         + "      return new SimpleThung<Bar>(thung) {\n"
@@ -172,7 +168,7 @@ public final class TypeSpecTest {
 
   @Test public void annotatedParameters() throws Exception {
     TypeSpec service = new TypeSpec.Builder()
-        .name(ClassName.create("com.squareup.tacos", "Foo"))
+        .name("Foo")
         .addMethod(new MethodSpec.Builder()
             .addModifiers(Modifier.PUBLIC)
             .constructor()
@@ -181,25 +177,25 @@ public final class TypeSpecTest {
                 .name("id")
                 .build())
             .addParameter(new ParameterSpec.Builder()
-                .addAnnotation(ClassName.create("com.squareup.tacos", "Ping"))
+                .addAnnotation(ClassName.create(tacosPackage, "Ping"))
                 .type(String.class)
                 .name("one")
                 .build())
             .addParameter(new ParameterSpec.Builder()
-                .addAnnotation(ClassName.create("com.squareup.tacos", "Ping"))
+                .addAnnotation(ClassName.create(tacosPackage, "Ping"))
                 .type(String.class)
                 .name("two")
                 .build())
             .addParameter(new ParameterSpec.Builder()
                 .addAnnotation(new AnnotationSpec.Builder()
-                    .type(ClassName.create("com.squareup.tacos", "Pong"))
+                    .type(ClassName.create(tacosPackage, "Pong"))
                     .addMember("value", "$S", "pong")
                     .build())
                 .type(String.class)
                 .name("three")
                 .build())
             .addParameter(new ParameterSpec.Builder()
-                .addAnnotation(ClassName.create("com.squareup.tacos", "Ping"))
+                .addAnnotation(ClassName.create(tacosPackage, "Ping"))
                 .type(String.class)
                 .name("four")
                 .build())
@@ -210,8 +206,6 @@ public final class TypeSpecTest {
     assertThat(toString(service)).isEqualTo(""
         + "package com.squareup.tacos;\n"
         + "\n"
-        + "import com.squareup.tacos.Ping;\n"
-        + "import com.squareup.tacos.Pong;\n"
         + "import java.lang.String;\n"
         + "\n"
         + "class Foo {\n"
@@ -223,19 +217,19 @@ public final class TypeSpecTest {
   }
 
   @Test public void retrofitStyleInterface() throws Exception {
-    ClassName observable = ClassName.create("com.squareup.tacos", "Observable");
-    ClassName fooBar = ClassName.create("com.squareup.tacos", "FooBar");
-    ClassName thing = ClassName.create("com.squareup.tacos", "Thing");
-    ClassName things = ClassName.create("com.squareup.tacos", "Things");
+    ClassName observable = ClassName.create(tacosPackage, "Observable");
+    ClassName fooBar = ClassName.create(tacosPackage, "FooBar");
+    ClassName thing = ClassName.create(tacosPackage, "Thing");
+    ClassName things = ClassName.create(tacosPackage, "Things");
     ClassName map = ClassName.create("java.util", "Map");
     ClassName string = ClassName.create("java.lang", "String");
-    ClassName headers = ClassName.create("com.squareup.tacos", "Headers");
-    ClassName post = ClassName.create("com.squareup.tacos", "POST");
-    ClassName body = ClassName.create("com.squareup.tacos", "Body");
-    ClassName queryMap = ClassName.create("com.squareup.tacos", "QueryMap");
-    ClassName header = ClassName.create("com.squareup.tacos", "Header");
+    ClassName headers = ClassName.create(tacosPackage, "Headers");
+    ClassName post = ClassName.create(tacosPackage, "POST");
+    ClassName body = ClassName.create(tacosPackage, "Body");
+    ClassName queryMap = ClassName.create(tacosPackage, "QueryMap");
+    ClassName header = ClassName.create(tacosPackage, "Header");
     TypeSpec service = new TypeSpec.Builder()
-        .name(ClassName.create("com.squareup.tacos", "Service"))
+        .name("Service")
         .type(TypeSpec.Type.INTERFACE)
         .addMethod(new MethodSpec.Builder()
             .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
@@ -277,15 +271,6 @@ public final class TypeSpecTest {
     assertThat(toString(service)).isEqualTo(""
         + "package com.squareup.tacos;\n"
         + "\n"
-        + "import com.squareup.tacos.Body;\n"
-        + "import com.squareup.tacos.FooBar;\n"
-        + "import com.squareup.tacos.Header;\n"
-        + "import com.squareup.tacos.Headers;\n"
-        + "import com.squareup.tacos.Observable;\n"
-        + "import com.squareup.tacos.POST;\n"
-        + "import com.squareup.tacos.QueryMap;\n"
-        + "import com.squareup.tacos.Thing;\n"
-        + "import com.squareup.tacos.Things;\n"
         + "import java.lang.String;\n"
         + "import java.util.Map;\n"
         + "\n"
@@ -302,11 +287,11 @@ public final class TypeSpecTest {
 
   @Test public void annotatedField() throws Exception {
     TypeSpec taco = new TypeSpec.Builder()
-        .name(ClassName.create("com.squareup.tacos", "Taco"))
+        .name("Taco")
         .addField(new FieldSpec.Builder()
             .addAnnotation(new AnnotationSpec.Builder()
-                .type(ClassName.create("com.squareup.tacos", "JsonAdapter"))
-                .addMember("value", "$T.class", ClassName.create("com.squareup.tacos", "Foo"))
+                .type(ClassName.create(tacosPackage, "JsonAdapter"))
+                .addMember("value", "$T.class", ClassName.create(tacosPackage, "Foo"))
                 .build())
             .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
             .type(String.class)
@@ -316,8 +301,6 @@ public final class TypeSpecTest {
     assertThat(toString(taco)).isEqualTo(""
         + "package com.squareup.tacos;\n"
         + "\n"
-        + "import com.squareup.tacos.Foo;\n"
-        + "import com.squareup.tacos.JsonAdapter;\n"
         + "import java.lang.String;\n"
         + "\n"
         + "class Taco {\n"
@@ -327,22 +310,19 @@ public final class TypeSpecTest {
   }
 
   @Test public void annotatedClass() throws Exception {
-    ClassName someType = ClassName.create("com.squareup.tacos", "SomeType");
+    ClassName someType = ClassName.create(tacosPackage, "SomeType");
     TypeSpec taco = new TypeSpec.Builder()
         .addAnnotation(new AnnotationSpec.Builder()
-            .type(ClassName.create("com.squareup.tacos", "Something"))
+            .type(ClassName.create(tacosPackage, "Something"))
             .addMember("hi", "$T.$N", someType, "FIELD")
             .addMember("hey", "$L", 12)
             .addMember("hello", "$S", "goodbye")
             .build())
-        .name(ClassName.create("com.squareup.tacos", "Foo"))
+        .name("Foo")
         .addModifiers(Modifier.PUBLIC)
         .build();
     assertThat(toString(taco)).isEqualTo(""
         + "package com.squareup.tacos;\n"
-        + "\n"
-        + "import com.squareup.tacos.SomeType;\n"
-        + "import com.squareup.tacos.Something;\n"
         + "\n"
         + "@Something(\n"
         + "    hello = \"goodbye\",\n"
@@ -356,7 +336,7 @@ public final class TypeSpecTest {
   @Test public void enumWithSubclassing() throws Exception {
       TypeSpec roshambo = new TypeSpec.Builder()
         .type(TypeSpec.Type.ENUM)
-        .name(ClassName.create("com.squareup.tacos", "Roshambo"))
+        .name("Roshambo")
         .addModifiers(Modifier.PUBLIC)
         .addEnumConstant("ROCK")
         .addEnumConstant("PAPER", new TypeSpec.Builder()
@@ -421,7 +401,7 @@ public final class TypeSpecTest {
     try {
       new TypeSpec.Builder()
         .type(TypeSpec.Type.ENUM)
-        .name(ClassName.create("com.squareup.tacos", "Roshambo"))
+        .name("Roshambo")
         .build();
       fail();
     } catch (IllegalArgumentException expected) {
@@ -432,7 +412,7 @@ public final class TypeSpecTest {
     try {
       new TypeSpec.Builder()
         .type(TypeSpec.Type.CLASS)
-        .name(ClassName.create("com.squareup.tacos", "Roshambo"))
+        .name("Roshambo")
         .addEnumConstant("ROCK")
         .build();
       fail();
@@ -443,7 +423,7 @@ public final class TypeSpecTest {
   @Test public void enumWithMembersButNoConstructorCall() throws Exception {
     TypeSpec roshambo = new TypeSpec.Builder()
         .type(TypeSpec.Type.ENUM)
-        .name(ClassName.create("com.squareup.tacos", "Roshambo"))
+        .name("Roshambo")
         .addEnumConstant("SPOCK", new TypeSpec.Builder()
             .anonymousTypeArguments()
             .addMethod(new MethodSpec.Builder()
@@ -467,13 +447,13 @@ public final class TypeSpecTest {
         + "    public String toString() {\n"
         + "      return \"west side\";\n"
         + "    }\n"
-        + "  };\n"
+        + "  }\n"
         + "}\n");
   }
 
   @Test public void methodThrows() throws Exception {
     TypeSpec taco = new TypeSpec.Builder()
-        .name(ClassName.create("com.squareup.tacos", "Taco"))
+        .name("Taco")
         .addMethod(new MethodSpec.Builder()
             .name("throwOne")
             .addException(IOException.class)
@@ -481,13 +461,12 @@ public final class TypeSpecTest {
         .addMethod(new MethodSpec.Builder()
             .name("throwTwo")
             .addException(IOException.class)
-            .addException(ClassName.create("com.squareup.tacos", "SourCreamException"))
+            .addException(ClassName.create(tacosPackage, "SourCreamException"))
             .build())
         .build();
     assertThat(toString(taco)).isEqualTo(""
         + "package com.squareup.tacos;\n"
         + "\n"
-        + "import com.squareup.tacos.SourCreamException;\n"
         + "import java.io.IOException;\n"
         + "\n"
         + "class Taco {\n"
@@ -502,9 +481,9 @@ public final class TypeSpecTest {
   @Test public void typeVariables() throws Exception {
     TypeVariableName t = TypeVariableName.create("T");
     TypeVariableName p = TypeVariableName.create("P", ClassName.fromClass(Number.class));
-    ClassName location = ClassName.create("com.squareup.tacos", "Location");
+    ClassName location = ClassName.create(tacosPackage, "Location");
     TypeSpec typeSpec = new TypeSpec.Builder()
-        .name(location)
+        .name("Location")
         .addTypeVariable(t)
         .addTypeVariable(p)
         .addSuperinterface(ParameterizedTypeName.create(ClassName.fromClass(Comparable.class), p))
@@ -543,7 +522,6 @@ public final class TypeSpecTest {
     assertThat(toString(typeSpec)).isEqualTo(""
         + "package com.squareup.tacos;\n"
         + "\n"
-        + "import com.squareup.tacos.Location;\n"
         + "import java.lang.Comparable;\n"
         + "import java.lang.Number;\n"
         + "import java.lang.Override;\n"
@@ -568,10 +546,10 @@ public final class TypeSpecTest {
   }
 
   @Test public void classImplementsExtends() throws Exception {
-    ClassName taco = ClassName.create("com.squareup.tacos", "Taco");
-    ClassName food = ClassName.create("com.squareup.taco", "Food");
+    ClassName taco = ClassName.create(tacosPackage, "Taco");
+    ClassName food = ClassName.create("com.squareup.tacos", "Food");
     TypeSpec typeSpec = new TypeSpec.Builder()
-        .name(taco)
+        .name("Taco")
         .addModifiers(Modifier.ABSTRACT)
         .superclass(ParameterizedTypeName.create(AbstractSet.class, food))
         .addSuperinterface(Serializable.class)
@@ -580,8 +558,6 @@ public final class TypeSpecTest {
     assertThat(toString(typeSpec)).isEqualTo(""
         + "package com.squareup.tacos;\n"
         + "\n"
-        + "import com.squareup.taco.Food;\n"
-        + "import com.squareup.tacos.Taco;\n"
         + "import java.io.Serializable;\n"
         + "import java.lang.Comparable;\n"
         + "import java.util.AbstractSet;\n"
@@ -592,17 +568,16 @@ public final class TypeSpecTest {
   }
 
   @Test public void enumImplements() throws Exception {
-    ClassName food = ClassName.create("com.squareup.taco", "Food");
     TypeSpec typeSpec = new TypeSpec.Builder()
         .type(TypeSpec.Type.ENUM)
-        .name(food)
+        .name("Food")
         .addSuperinterface(Serializable.class)
         .addSuperinterface(Cloneable.class)
         .addEnumConstant("LEAN_GROUND_BEEF")
         .addEnumConstant("SHREDDED_CHEESE")
         .build();
     assertThat(toString(typeSpec)).isEqualTo(""
-        + "package com.squareup.taco;\n"
+        + "package com.squareup.tacos;\n"
         + "\n"
         + "import java.io.Serializable;\n"
         + "import java.lang.Cloneable;\n"
@@ -610,22 +585,21 @@ public final class TypeSpecTest {
         + "enum Food implements Serializable, Cloneable {\n"
         + "  LEAN_GROUND_BEEF,\n"
         + "\n"
-        + "  SHREDDED_CHEESE;\n"
+        + "  SHREDDED_CHEESE\n"
         + "}\n");
   }
 
   @Test public void interfaceExtends() throws Exception {
-    ClassName taco = ClassName.create("com.squareup.tacos", "Taco");
+    ClassName taco = ClassName.create(tacosPackage, "Taco");
     TypeSpec typeSpec = new TypeSpec.Builder()
         .type(TypeSpec.Type.INTERFACE)
-        .name(taco)
+        .name("Taco")
         .addSuperinterface(Serializable.class)
         .addSuperinterface(ParameterizedTypeName.create(Comparable.class, taco))
         .build();
     assertThat(toString(typeSpec)).isEqualTo(""
         + "package com.squareup.tacos;\n"
         + "\n"
-        + "import com.squareup.tacos.Taco;\n"
         + "import java.io.Serializable;\n"
         + "import java.lang.Comparable;\n"
         + "\n"
@@ -633,9 +607,91 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  @Test public void nestedClasses() throws Exception {
+    ClassName taco = ClassName.create(tacosPackage, ImmutableList.of("Combo"), "Taco");
+    ClassName topping = ClassName.create(
+        tacosPackage, ImmutableList.of("Combo", "Taco"), "Topping");
+    ClassName chips = ClassName.create(tacosPackage, ImmutableList.of("Combo"), "Chips");
+    ClassName sauce = ClassName.create(tacosPackage, ImmutableList.of("Combo"), "Sauce");
+    TypeSpec typeSpec = new TypeSpec.Builder()
+        .name("Combo")
+        .addField(FieldSpec.of(taco, "taco"))
+        .addField(FieldSpec.of(chips, "chips"))
+        .addType(new TypeSpec.Builder()
+            .addModifiers(Modifier.STATIC)
+            .name(taco.simpleName())
+            .addField(FieldSpec.of(ParameterizedTypeName.create(List.class, topping), "toppings"))
+            .addField(FieldSpec.of(sauce, "sauce"))
+            .addType(new TypeSpec.Builder()
+                .type(TypeSpec.Type.ENUM)
+                .name(topping.simpleName())
+                .addEnumConstant("SHREDDED_CHEESE")
+                .addEnumConstant("LEAN_GROUND_BEEF")
+                .build())
+            .build())
+        .addType(new TypeSpec.Builder()
+            .addModifiers(Modifier.STATIC)
+            .name(chips.simpleName())
+            .addField(FieldSpec.of(topping, "topping"))
+            .addField(FieldSpec.of(sauce, "dippingSauce"))
+            .build())
+        .addType(new TypeSpec.Builder()
+            .type(TypeSpec.Type.ENUM)
+            .name(sauce.simpleName())
+            .addEnumConstant("SOUR_CREAM")
+            .addEnumConstant("SALSA")
+            .addEnumConstant("QUESO")
+            .addEnumConstant("MILD")
+            .addEnumConstant("FIRE")
+            .build())
+        .build();
+
+    assertThat(toString(typeSpec)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.util.List;\n"
+        + "\n"
+        + "class Combo {\n"
+        + "  Taco taco;\n"
+        + "\n"
+        + "  Chips chips;\n"
+        + "\n"
+        + "  static class Taco {\n"
+        + "    List<Topping> toppings;\n"
+        + "\n"
+        + "    Sauce sauce;\n"
+        + "\n"
+        + "    enum Topping {\n"
+        + "      SHREDDED_CHEESE,\n"
+        + "\n"
+        + "      LEAN_GROUND_BEEF\n"
+        + "    }\n"
+        + "  }\n"
+        + "\n"
+        + "  static class Chips {\n"
+        + "    Taco.Topping topping;\n"
+        + "\n"
+        + "    Sauce dippingSauce;\n"
+        + "  }\n"
+        + "\n"
+        + "  enum Sauce {\n"
+        + "    SOUR_CREAM,\n"
+        + "\n"
+        + "    SALSA,\n"
+        + "\n"
+        + "    QUESO,\n"
+        + "\n"
+        + "    MILD,\n"
+        + "\n"
+        + "    FIRE\n"
+        + "  }\n"
+        + "}\n");
+  }
+
   private String toString(TypeSpec typeSpec) {
     return new JavaFile.Builder()
-        .classSpec(typeSpec)
+        .packageName(tacosPackage)
+        .typeSpec(typeSpec)
         .build()
         .toString();
   }
