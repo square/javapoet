@@ -21,6 +21,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.squareup.javawriter.ClassName;
 import com.squareup.javawriter.TypeName;
+import com.squareup.javawriter.TypeNames;
+import com.squareup.javawriter.TypeVariableName;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,6 +34,7 @@ import javax.lang.model.element.Modifier;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.collect.Iterables.getOnlyElement;
 
 /** A generated class, interface, or enum declaration. */
 public final class TypeSpec {
@@ -39,7 +42,9 @@ public final class TypeSpec {
   public final ImmutableSet<Modifier> modifiers;
   public final Type type;
   public final ClassName name;
-  public final TypeName supertype;
+  public final ImmutableList<TypeVariableName> typeVariables;
+  public final TypeName superclass;
+  public final ImmutableList<TypeName> superinterfaces;
   public final Snippet anonymousTypeArguments;
   public final ImmutableMap<String, TypeSpec> enumConstants;
   public final ImmutableList<FieldSpec> fieldSpecs;
@@ -68,12 +73,18 @@ public final class TypeSpec {
             "interface %s field %s must be public static final", builder.name, fieldSpec.name);
       }
     }
+    boolean superclassIsObject = builder.superclass.equals(ClassName.OBJECT);
+    int interestingSupertypeCount = (superclassIsObject ? 0 : 1) + builder.superinterfaces.size();
+    checkArgument(builder.anonymousTypeArguments == null || interestingSupertypeCount <= 1,
+        "anonymous type has too many supertypes");
 
     this.annotations = ImmutableList.copyOf(builder.annotations);
     this.modifiers = ImmutableSet.copyOf(builder.modifiers);
     this.type = checkNotNull(builder.type);
     this.name = builder.name;
-    this.supertype = builder.supertype;
+    this.typeVariables = ImmutableList.copyOf(builder.typeVariables);
+    this.superclass = builder.superclass;
+    this.superinterfaces = ImmutableList.copyOf(builder.superinterfaces);
     this.anonymousTypeArguments = builder.anonymousTypeArguments;
     this.enumConstants = ImmutableMap.copyOf(builder.enumConstants);
     this.fieldSpecs = ImmutableList.copyOf(builder.fieldSpecs);
@@ -97,13 +108,48 @@ public final class TypeSpec {
       }
       codeWriter.emit(" {\n");
     } else if (anonymousTypeArguments != null) {
-      codeWriter.emit("new $T(", supertype);
+      codeWriter.emit("new $T(", getOnlyElement(superinterfaces, superclass));
       codeWriter.emit(anonymousTypeArguments);
       codeWriter.emit(") {\n");
     } else {
       codeWriter.emitAnnotations(annotations, false);
       codeWriter.emitModifiers(modifiers);
-      codeWriter.emit("$L $L {\n", Ascii.toLowerCase(type.name()), name.simpleName());
+      codeWriter.emit("$L $L", Ascii.toLowerCase(type.name()), name.simpleName());
+      codeWriter.emitTypeVariables(typeVariables);
+
+      List<TypeName> extendsTypes;
+      List<TypeName> implementsTypes;
+      if (type == Type.INTERFACE) {
+        extendsTypes = superinterfaces;
+        implementsTypes = ImmutableList.of();
+      } else {
+        extendsTypes = superclass.equals(ClassName.OBJECT)
+            ? ImmutableList.<TypeName>of()
+            : ImmutableList.of(superclass);
+        implementsTypes = superinterfaces;
+      }
+
+      if (!extendsTypes.isEmpty()) {
+        codeWriter.emit(" extends");
+        boolean firstType = true;
+        for (TypeName type : extendsTypes) {
+          if (!firstType) codeWriter.emit(",");
+          codeWriter.emit(" $T", type);
+          firstType = false;
+        }
+      }
+
+      if (!implementsTypes.isEmpty()) {
+        codeWriter.emit(" implements");
+        boolean firstType = true;
+        for (TypeName type : implementsTypes) {
+          if (!firstType) codeWriter.emit(",");
+          codeWriter.emit(" $T", type);
+          firstType = false;
+        }
+      }
+
+      codeWriter.emit(" {\n");
     }
 
     codeWriter.indent();
@@ -158,7 +204,9 @@ public final class TypeSpec {
     private final List<Modifier> modifiers = new ArrayList<>();
     private Type type = Type.CLASS;
     private ClassName name;
-    private TypeName supertype = ClassName.fromClass(Object.class);
+    private List<TypeVariableName> typeVariables = new ArrayList<>();
+    private TypeName superclass = ClassName.OBJECT;
+    private List<TypeName> superinterfaces = new ArrayList<>();
     private Snippet anonymousTypeArguments;
     private Map<String, TypeSpec> enumConstants = new LinkedHashMap<>();
     private List<FieldSpec> fieldSpecs = new ArrayList<>();
@@ -189,8 +237,26 @@ public final class TypeSpec {
       return this;
     }
 
-    public Builder supertype(TypeName supertype) {
-      this.supertype = supertype;
+    public Builder addTypeVariable(TypeVariableName typeVariable) {
+      typeVariables.add(typeVariable);
+      return this;
+    }
+
+    public Builder superclass(Class<?> superclass) {
+      return superclass(TypeNames.forClass(superclass));
+    }
+
+    public Builder superclass(TypeName superclass) {
+      this.superclass = superclass;
+      return this;
+    }
+
+    public Builder addSuperinterface(Class<?> superinterface) {
+      return addSuperinterface(TypeNames.forClass(superinterface));
+    }
+
+    public Builder addSuperinterface(TypeName superinterface) {
+      this.superinterfaces.add(superinterface);
       return this;
     }
 

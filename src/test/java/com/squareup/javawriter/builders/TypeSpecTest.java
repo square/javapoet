@@ -18,9 +18,11 @@ package com.squareup.javawriter.builders;
 import com.google.common.collect.ImmutableList;
 import com.squareup.javawriter.ClassName;
 import com.squareup.javawriter.ParameterizedTypeName;
+import com.squareup.javawriter.TypeVariableName;
 import com.squareup.javawriter.WildcardName;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.AbstractSet;
 import java.util.List;
 import javax.lang.model.element.Modifier;
 import org.junit.Test;
@@ -110,7 +112,7 @@ public final class TypeSpecTest {
         .name("thung")
         .build();
     TypeSpec aSimpleThung = new TypeSpec.Builder()
-        .supertype(simpleThungOfBar)
+        .superclass(simpleThungOfBar)
         .anonymousTypeArguments("$N", thungParameter)
         .addMethod(new MethodSpec.Builder()
             .addAnnotation(Override.class)
@@ -121,7 +123,7 @@ public final class TypeSpecTest {
             .build())
         .build();
     TypeSpec aThingThang = new TypeSpec.Builder()
-        .supertype(thingThangOfFooBar)
+        .superclass(thingThangOfFooBar)
         .anonymousTypeArguments("")
         .addMethod(new MethodSpec.Builder()
             .addAnnotation(Override.class)
@@ -494,6 +496,140 @@ public final class TypeSpecTest {
         + "\n"
         + "  void throwTwo() throws IOException, SourCreamException {\n"
         + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void typeVariables() throws Exception {
+    TypeVariableName t = TypeVariableName.create("T");
+    TypeVariableName p = TypeVariableName.create("P", ClassName.fromClass(Number.class));
+    ClassName location = ClassName.create("com.squareup.tacos", "Location");
+    TypeSpec typeSpec = new TypeSpec.Builder()
+        .name(location)
+        .addTypeVariable(t)
+        .addTypeVariable(p)
+        .addSuperinterface(ParameterizedTypeName.create(ClassName.fromClass(Comparable.class), p))
+        .addField(new FieldSpec.Builder()
+            .type(t)
+            .name("label")
+            .build())
+        .addField(new FieldSpec.Builder()
+            .type(p)
+            .name("x")
+            .build())
+        .addField(new FieldSpec.Builder()
+            .type(p)
+            .name("y")
+            .build())
+        .addMethod(new MethodSpec.Builder()
+            .addAnnotation(Override.class)
+            .addModifiers(Modifier.PUBLIC)
+            .returns(int.class)
+            .name("compareTo")
+            .addParameter(p, "p")
+            .addCode("return 0;\n")
+            .build())
+        .addMethod(new MethodSpec.Builder()
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+            .addTypeVariable(t)
+            .addTypeVariable(p)
+            .returns(ParameterizedTypeName.create(location, t, p))
+            .name("of")
+            .addParameter(t, "label")
+            .addParameter(p, "x")
+            .addParameter(p, "y")
+            .addCode("throw new $T($S);\n", UnsupportedOperationException.class, "TODO")
+            .build())
+        .build();
+    assertThat(toString(typeSpec)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.tacos.Location;\n"
+        + "import java.lang.Comparable;\n"
+        + "import java.lang.Number;\n"
+        + "import java.lang.Override;\n"
+        + "import java.lang.UnsupportedOperationException;\n"
+        + "\n"
+        + "class Location<T, P extends Number> implements Comparable<P> {\n"
+        + "  T label;\n"
+        + "\n"
+        + "  P x;\n"
+        + "\n"
+        + "  P y;\n"
+        + "\n"
+        + "  @Override\n"
+        + "  public int compareTo(P p) {\n"
+        + "    return 0;\n"
+        + "  }\n"
+        + "\n"
+        + "  public static <T, P extends Number> Location<T, P> of(T label, P x, P y) {\n"
+        + "    throw new UnsupportedOperationException(\"TODO\");\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void classImplementsExtends() throws Exception {
+    ClassName taco = ClassName.create("com.squareup.tacos", "Taco");
+    ClassName food = ClassName.create("com.squareup.taco", "Food");
+    TypeSpec typeSpec = new TypeSpec.Builder()
+        .name(taco)
+        .addModifiers(Modifier.ABSTRACT)
+        .superclass(ParameterizedTypeName.create(AbstractSet.class, food))
+        .addSuperinterface(Serializable.class)
+        .addSuperinterface(ParameterizedTypeName.create(Comparable.class, taco))
+        .build();
+    assertThat(toString(typeSpec)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.taco.Food;\n"
+        + "import com.squareup.tacos.Taco;\n"
+        + "import java.io.Serializable;\n"
+        + "import java.lang.Comparable;\n"
+        + "import java.util.AbstractSet;\n"
+        + "\n"
+        + "abstract class Taco extends AbstractSet<Food> "
+        + "implements Serializable, Comparable<Taco> {\n"
+        + "}\n");
+  }
+
+  @Test public void enumImplements() throws Exception {
+    ClassName food = ClassName.create("com.squareup.taco", "Food");
+    TypeSpec typeSpec = new TypeSpec.Builder()
+        .type(TypeSpec.Type.ENUM)
+        .name(food)
+        .addSuperinterface(Serializable.class)
+        .addSuperinterface(Cloneable.class)
+        .addEnumConstant("LEAN_GROUND_BEEF")
+        .addEnumConstant("SHREDDED_CHEESE")
+        .build();
+    assertThat(toString(typeSpec)).isEqualTo(""
+        + "package com.squareup.taco;\n"
+        + "\n"
+        + "import java.io.Serializable;\n"
+        + "import java.lang.Cloneable;\n"
+        + "\n"
+        + "enum Food implements Serializable, Cloneable {\n"
+        + "  LEAN_GROUND_BEEF,\n"
+        + "\n"
+        + "  SHREDDED_CHEESE;\n"
+        + "}\n");
+  }
+
+  @Test public void interfaceExtends() throws Exception {
+    ClassName taco = ClassName.create("com.squareup.tacos", "Taco");
+    TypeSpec typeSpec = new TypeSpec.Builder()
+        .type(TypeSpec.Type.INTERFACE)
+        .name(taco)
+        .addSuperinterface(Serializable.class)
+        .addSuperinterface(ParameterizedTypeName.create(Comparable.class, taco))
+        .build();
+    assertThat(toString(typeSpec)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.tacos.Taco;\n"
+        + "import java.io.Serializable;\n"
+        + "import java.lang.Comparable;\n"
+        + "\n"
+        + "interface Taco extends Serializable, Comparable<Taco> {\n"
         + "}\n");
   }
 
