@@ -58,7 +58,7 @@ public final class MethodSpec {
     this.snippets = ImmutableList.copyOf(builder.snippets);
   }
 
-  void emit(CodeWriter codeWriter, ClassName enclosing, ImmutableSet<Modifier> implicitModifiers) {
+  void emit(CodeWriter codeWriter, String enclosingName, ImmutableSet<Modifier> implicitModifiers) {
     codeWriter.emitAnnotations(annotations, false);
     codeWriter.emitModifiers(modifiers, implicitModifiers);
 
@@ -68,7 +68,7 @@ public final class MethodSpec {
     }
 
     if (name == Name.CONSTRUCTOR) {
-      codeWriter.emit("$L(", enclosing.simpleName());
+      codeWriter.emit("$L(", enclosingName);
     } else {
       codeWriter.emit("$T $L(", returnType, name);
     }

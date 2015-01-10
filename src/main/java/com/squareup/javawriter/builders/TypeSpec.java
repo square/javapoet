@@ -41,7 +41,7 @@ public final class TypeSpec {
   public final ImmutableList<AnnotationSpec> annotations;
   public final ImmutableSet<Modifier> modifiers;
   public final Type type;
-  public final ClassName name;
+  public final String name;
   public final ImmutableList<TypeVariableName> typeVariables;
   public final TypeName superclass;
   public final ImmutableList<TypeName> superinterfaces;
@@ -49,6 +49,7 @@ public final class TypeSpec {
   public final ImmutableMap<String, TypeSpec> enumConstants;
   public final ImmutableList<FieldSpec> fieldSpecs;
   public final ImmutableList<MethodSpec> methodSpecs;
+  public final ImmutableList<TypeSpec> typeSpecs;
 
   private TypeSpec(Builder builder) {
     checkArgument(builder.name != null ^ builder.anonymousTypeArguments != null,
@@ -89,6 +90,7 @@ public final class TypeSpec {
     this.enumConstants = ImmutableMap.copyOf(builder.enumConstants);
     this.fieldSpecs = ImmutableList.copyOf(builder.fieldSpecs);
     this.methodSpecs = ImmutableList.copyOf(builder.methodSpecs);
+    this.typeSpecs = ImmutableList.copyOf(builder.typeSpecs);
   }
 
   public boolean hasModifier(Modifier modifier) {
@@ -103,7 +105,7 @@ public final class TypeSpec {
         codeWriter.emit(anonymousTypeArguments);
         codeWriter.emit(")");
       }
-      if (fieldSpecs.isEmpty() && methodSpecs.isEmpty()) {
+      if (fieldSpecs.isEmpty() && methodSpecs.isEmpty() && typeSpecs.isEmpty()) {
         return; // Avoid unnecessary braces "{}".
       }
       codeWriter.emit(" {\n");
@@ -114,7 +116,7 @@ public final class TypeSpec {
     } else {
       codeWriter.emitAnnotations(annotations, false);
       codeWriter.emitModifiers(modifiers);
-      codeWriter.emit("$L $L", Ascii.toLowerCase(type.name()), name.simpleName());
+      codeWriter.emit("$L $L", Ascii.toLowerCase(type.name()), name);
       codeWriter.emitTypeVariables(typeVariables);
 
       List<TypeName> extendsTypes;
@@ -152,6 +154,7 @@ public final class TypeSpec {
       codeWriter.emit(" {\n");
     }
 
+    codeWriter.pushType(this);
     codeWriter.indent();
     boolean firstMember = true;
     for (Iterator<Map.Entry<String, TypeSpec>> i = enumConstants.entrySet().iterator();
@@ -160,7 +163,13 @@ public final class TypeSpec {
       if (!firstMember) codeWriter.emit("\n");
       enumConstant.getValue().emit(codeWriter, enumConstant.getKey());
       firstMember = false;
-      codeWriter.emit("$L", i.hasNext() ? ",\n" : ";\n");
+      if (i.hasNext()) {
+        codeWriter.emit("$L", ",\n");
+      } else if (!fieldSpecs.isEmpty() || !methodSpecs.isEmpty() || !typeSpecs.isEmpty()) {
+        codeWriter.emit("$L", ";\n");
+      } else {
+        codeWriter.emit("$L", "\n");
+      }
     }
     for (FieldSpec fieldSpec : fieldSpecs) {
       if (!firstMember) codeWriter.emit("\n");
@@ -172,7 +181,13 @@ public final class TypeSpec {
       methodSpec.emit(codeWriter, name, type.implicitMethodModifiers);
       firstMember = false;
     }
+    for (TypeSpec typeSpec : typeSpecs) {
+      if (!firstMember) codeWriter.emit("\n");
+      typeSpec.emit(codeWriter, null);
+      firstMember = false;
+    }
     codeWriter.unindent();
+    codeWriter.popType();
 
     if (enumName != null || anonymousTypeArguments != null) {
       codeWriter.emit("}");
@@ -203,7 +218,7 @@ public final class TypeSpec {
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
     private Type type = Type.CLASS;
-    private ClassName name;
+    private String name;
     private List<TypeVariableName> typeVariables = new ArrayList<>();
     private TypeName superclass = ClassName.OBJECT;
     private List<TypeName> superinterfaces = new ArrayList<>();
@@ -211,6 +226,7 @@ public final class TypeSpec {
     private Map<String, TypeSpec> enumConstants = new LinkedHashMap<>();
     private List<FieldSpec> fieldSpecs = new ArrayList<>();
     private List<MethodSpec> methodSpecs = new ArrayList<>();
+    private List<TypeSpec> typeSpecs = new ArrayList<>();
 
     public Builder addAnnotation(AnnotationSpec annotationSpec) {
       this.annotations.add(annotationSpec);
@@ -232,7 +248,7 @@ public final class TypeSpec {
       return this;
     }
 
-    public Builder name(ClassName name) {
+    public Builder name(String name) {
       this.name = name;
       return this;
     }
@@ -289,6 +305,11 @@ public final class TypeSpec {
 
     public Builder addMethod(MethodSpec methodSpec) {
       methodSpecs.add(methodSpec);
+      return this;
+    }
+
+    public Builder addType(TypeSpec typeSpec) {
+      typeSpecs.add(typeSpec);
       return this;
     }
 

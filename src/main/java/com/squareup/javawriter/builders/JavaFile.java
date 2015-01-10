@@ -18,14 +18,15 @@ package com.squareup.javawriter.builders;
 import com.google.common.collect.ImmutableMap;
 import com.squareup.javawriter.ClassName;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /** A Java file containing a single top level class. */
 public final class JavaFile {
+  public final String packageName;
   public final TypeSpec typeSpec;
 
   private JavaFile(Builder builder) {
+    this.packageName = builder.packageName;
     this.typeSpec = checkNotNull(builder.typeSpec);
   }
 
@@ -44,23 +45,35 @@ public final class JavaFile {
   }
 
   private void emit(ImmutableMap<ClassName, String> imports, CodeWriter codeWriter) {
-    codeWriter.emit("package $L;\n", typeSpec.name.packageName());
-    if (!imports.isEmpty()) {
+    codeWriter.pushPackage(packageName);
+
+    if (!packageName.isEmpty()) {
+      codeWriter.emit("package $L;\n", packageName);
       codeWriter.emit("\n");
+    }
+
+    if (!imports.isEmpty()) {
       for (ClassName className : imports.keySet()) {
         codeWriter.emit("import $L;\n", className);
       }
+      codeWriter.emit("\n");
     }
-    codeWriter.emit("\n");
+
     typeSpec.emit(codeWriter, null);
+
+    codeWriter.popPackage();
   }
 
   public static final class Builder {
+    private String packageName = "";
     private TypeSpec typeSpec;
 
-    public Builder classSpec(TypeSpec typeSpec) {
-      checkArgument(!typeSpec.name.enclosingClassName().isPresent(),
-          "Cannot create a JavaFile for %s", typeSpec.name);
+    public Builder packageName(String packageName) {
+      this.packageName = checkNotNull(packageName);
+      return this;
+    }
+
+    public Builder typeSpec(TypeSpec typeSpec) {
       this.typeSpec = typeSpec;
       return this;
     }

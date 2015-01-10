@@ -58,6 +58,18 @@ public final class FieldSpec {
     codeWriter.emit(";\n");
   }
 
+  public static FieldSpec of(Class<?> type, String name, Modifier... modifiers) {
+    return of(TypeNames.forClass(type), name, modifiers);
+  }
+
+  public static FieldSpec of(TypeName type, String name, Modifier... modifiers) {
+    return new Builder()
+        .type(type)
+        .name(name)
+        .addModifiers(modifiers)
+        .build();
+  }
+
   public static final class Builder {
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
