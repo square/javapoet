@@ -16,8 +16,6 @@
 package com.squareup.javawriter;
 
 import com.google.common.collect.Iterables;
-import com.squareup.javawriter.builders.JavaFile;
-import com.squareup.javawriter.builders.TypeSpec;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;

@@ -13,16 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.javawriter.builders;
+package com.squareup.javawriter;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.squareup.javawriter.ClassName;
-import com.squareup.javawriter.TypeName;
-import com.squareup.javawriter.TypeNames;
-import com.squareup.javawriter.TypeVariableName;
-import com.squareup.javawriter.VoidName;
-import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,11 +31,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class MethodSpec {
   public final ImmutableList<AnnotationSpec> annotations;
   public final ImmutableSet<Modifier> modifiers;
-  public final ImmutableList<TypeVariableName> typeVariables;
-  public final TypeName returnType;
+  public final ImmutableList<TypeVariable<?>> typeVariables;
+  public final Type returnType;
   public final Name name;
   public final ImmutableList<ParameterSpec> parameters;
-  public final ImmutableList<ClassName> exceptions;
+  public final ImmutableList<Type> exceptions;
   public final ImmutableList<Snippet> snippets;
 
   private MethodSpec(Builder builder) {
@@ -89,7 +85,7 @@ public final class MethodSpec {
     if (!exceptions.isEmpty()) {
       codeWriter.emit(" throws");
       boolean firstException = true;
-      for (ClassName exception : exceptions) {
+      for (Type exception : exceptions) {
         if (!firstException) codeWriter.emit(",");
         codeWriter.emit(" $T", exception);
         firstException = false;
@@ -113,11 +109,11 @@ public final class MethodSpec {
   public static final class Builder {
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
-    private List<TypeVariableName> typeVariables = new ArrayList<>();
-    private TypeName returnType = VoidName.VOID;
+    private List<TypeVariable<?>> typeVariables = new ArrayList<>();
+    private Type returnType = void.class;
     private Name name;
     private final List<ParameterSpec> parameters = new ArrayList<>();
-    private final List<ClassName> exceptions = new ArrayList<>();
+    private final List<Type> exceptions = new ArrayList<>();
     private final List<Snippet> snippets = new ArrayList<>();
 
     public Builder addAnnotation(AnnotationSpec annotationSpec) {
@@ -125,7 +121,7 @@ public final class MethodSpec {
       return this;
     }
 
-    public Builder addAnnotation(Class<? extends Annotation> annotation) {
+    public Builder addAnnotation(Type annotation) {
       this.annotations.add(AnnotationSpec.of(annotation));
       return this;
     }
@@ -135,16 +131,12 @@ public final class MethodSpec {
       return this;
     }
 
-    public Builder addTypeVariable(TypeVariableName typeVariable) {
+    public Builder addTypeVariable(TypeVariable typeVariable) {
       typeVariables.add(typeVariable);
       return this;
     }
 
-    public Builder returns(Class<?> returnType) {
-      return returns(TypeNames.forClass(returnType));
-    }
-
-    public Builder returns(TypeName returnType) {
+    public Builder returns(Type returnType) {
       this.returnType = returnType;
       return this;
     }
@@ -170,19 +162,11 @@ public final class MethodSpec {
       return this;
     }
 
-    public Builder addParameter(Class<?> type, String name) {
+    public Builder addParameter(Type type, String name) {
       return addParameter(new ParameterSpec.Builder().type(type).name(name).build());
     }
 
-    public Builder addParameter(TypeName type, String name) {
-      return addParameter(new ParameterSpec.Builder().type(type).name(name).build());
-    }
-
-    public Builder addException(Class<? extends Throwable> exception) {
-      return addException(ClassName.fromClass(exception));
-    }
-
-    public Builder addException(ClassName exception) {
+    public Builder addException(Type exception) {
       this.exceptions.add(exception);
       return this;
     }

@@ -17,7 +17,6 @@ package com.squareup.javawriter;
 
 import com.google.common.collect.ImmutableList;
 import com.google.testing.compile.CompilationRule;
-import com.squareup.javawriter.ClassNameTest.OuterClass.InnerClass;
 import java.util.Map;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
@@ -84,33 +83,6 @@ public final class ClassNameTest {
         .isEqualTo("java.lang.Object");
     assert_().that(ClassName.fromClass(OuterClass.InnerClass.class).canonicalName())
         .isEqualTo("com.squareup.javawriter.ClassNameTest.OuterClass.InnerClass");
-  }
-
-  @Test public void peerNamed_topLevelClass() {
-    Elements elements = compilationRule.getElements();
-    TypeElement element = elements.getTypeElement(ClassNameTest.class.getCanonicalName());
-    ClassName className = ClassName.fromTypeElement(element);
-    ClassName peerName = className.peerNamed("Foo");
-    assert_().that(peerName.canonicalName())
-        .isEqualTo("com.squareup.javawriter.Foo");
-  }
-
-  @Test public void peerNamed_nestedClass() {
-    Elements elements = compilationRule.getElements();
-    TypeElement element = elements.getTypeElement(OuterClass.class.getCanonicalName());
-    ClassName className = ClassName.fromTypeElement(element);
-    ClassName peerName = className.peerNamed("Foo");
-    assert_().that(peerName.canonicalName())
-        .isEqualTo("com.squareup.javawriter.ClassNameTest.Foo");
-  }
-
-  @Test public void peerNamed_deeplyNestedClass() {
-    Elements elements = compilationRule.getElements();
-    TypeElement element = elements.getTypeElement(InnerClass.class.getCanonicalName());
-    ClassName className = ClassName.fromTypeElement(element);
-    ClassName peerName = className.peerNamed("Foo");
-    assert_().that(peerName.canonicalName())
-        .isEqualTo("com.squareup.javawriter.ClassNameTest.OuterClass.Foo");
   }
 
   @Test public void fromClassRejectionTypes() {

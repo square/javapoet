@@ -17,7 +17,6 @@ package com.squareup.javawriter;
 
 import com.google.common.collect.Iterables;
 import com.google.common.jimfs.Jimfs;
-import com.squareup.javawriter.builders.TypeSpec;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystem;
