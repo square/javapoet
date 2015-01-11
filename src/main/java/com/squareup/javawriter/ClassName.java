@@ -24,11 +24,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -93,7 +91,7 @@ public final class ClassName implements TypeName, Comparable<ClassName> {
 
   public String canonicalName() {
     if (fullyQualifiedName == null) {
-      StringBuilder builder = new StringBuilder(packageName());
+      StringBuilder builder = new StringBuilder(packageName);
       if (builder.length() > 0) {
         builder.append('.');
       }
@@ -235,19 +233,11 @@ public final class ClassName implements TypeName, Comparable<ClassName> {
     return new ClassName(packageName, ImmutableList.<String>of(), simpleName);
   }
 
-  @Override
-  public String toString() {
+  @Override public String toString() {
     return canonicalName();
   }
 
-  @Override
-  public Appendable write(Appendable appendable, Context context) throws IOException {
-    appendable.append(context.sourceReferenceForClassName(this));
-    return appendable;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
+  @Override public boolean equals(Object obj) {
     if (obj == this) {
       return true;
     } else if (obj instanceof ClassName) {
@@ -260,18 +250,11 @@ public final class ClassName implements TypeName, Comparable<ClassName> {
     }
   }
 
-  @Override
-  public int hashCode() {
+  @Override public int hashCode() {
     return Objects.hashCode(packageName, enclosingSimpleNames, simpleName);
   }
 
-  @Override
-  public int compareTo(ClassName o) {
+  @Override public int compareTo(ClassName o) {
     return canonicalName().compareTo(o.canonicalName());
-  }
-
-  @Override
-  public Set<ClassName> referencedClasses() {
-    return ImmutableSet.of(this);
   }
 }

@@ -17,21 +17,26 @@ package com.squareup.javawriter.builders;
 
 import com.google.common.collect.ImmutableList;
 import com.squareup.javawriter.ClassName;
+import com.squareup.javawriter.IntersectionTypeName;
 import com.squareup.javawriter.ParameterizedTypeName;
 import com.squareup.javawriter.TypeVariableName;
 import com.squareup.javawriter.WildcardName;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.AbstractSet;
+import java.util.Comparator;
 import java.util.List;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 public final class TypeSpecTest {
   private final String tacosPackage = "com.squareup.tacos";
+  private static final String donutsPackage = "com.squareup.donuts";
 
   @Test public void basic() throws Exception {
     TypeSpec taco = new TypeSpec.Builder()
@@ -685,6 +690,123 @@ public final class TypeSpecTest {
         + "\n"
         + "    FIRE\n"
         + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void referencedAndDeclaredSimpleNamesConflict() throws Exception {
+    FieldSpec internalTop = FieldSpec.of(ClassName.create(tacosPackage, "Top"), "internalTop");
+    FieldSpec internalBottom = FieldSpec.of(ClassName.create(
+        tacosPackage, ImmutableList.of("Top", "Middle"), "Bottom"), "internalBottom");
+    FieldSpec externalTop = FieldSpec.of(
+        ClassName.create(donutsPackage, "Top"), "externalTop");
+    FieldSpec externalBottom = FieldSpec.of(
+        ClassName.create(donutsPackage, "Bottom"), "externalBottom");
+    TypeSpec top = new TypeSpec.Builder()
+        .name("Top")
+        .addField(internalTop)
+        .addField(internalBottom)
+        .addField(externalTop)
+        .addField(externalBottom)
+        .addType(new TypeSpec.Builder()
+            .name("Middle")
+            .addField(internalTop)
+            .addField(internalBottom)
+            .addField(externalTop)
+            .addField(externalBottom)
+            .addType(new TypeSpec.Builder()
+                .name("Bottom")
+                .addField(internalTop)
+                .addField(internalBottom)
+                .addField(externalTop)
+                .addField(externalBottom)
+                .build())
+            .build())
+        .build();
+    assertThat(toString(top)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.donuts.Bottom;\n"
+        + "\n"
+        + "class Top {\n"
+        + "  Top internalTop;\n"
+        + "\n"
+        + "  Middle.Bottom internalBottom;\n"
+        + "\n"
+        + "  com.squareup.donuts.Top externalTop;\n"
+        + "\n"
+        + "  Bottom externalBottom;\n"
+        + "\n"
+        + "  class Middle {\n"
+        + "    Top internalTop;\n"
+        + "\n"
+        + "    Bottom internalBottom;\n"
+        + "\n"
+        + "    com.squareup.donuts.Top externalTop;\n"
+        + "\n"
+        + "    com.squareup.donuts.Bottom externalBottom;\n"
+        + "\n"
+        + "    class Bottom {\n"
+        + "      Top internalTop;\n"
+        + "\n"
+        + "      Bottom internalBottom;\n"
+        + "\n"
+        + "      com.squareup.donuts.Top externalTop;\n"
+        + "\n"
+        + "      com.squareup.donuts.Bottom externalBottom;\n"
+        + "    }\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void originatingElementsIncludesThoseOfNestedTypes() {
+    Element outerElement = Mockito.mock(Element.class);
+    Element innerElement = Mockito.mock(Element.class);
+    TypeSpec outer = new TypeSpec.Builder()
+        .name("Outer")
+        .addOriginatingElement(outerElement)
+        .addType(new TypeSpec.Builder()
+            .name("Inner")
+            .addOriginatingElement(innerElement)
+            .build())
+        .build();
+    assertThat(outer.originatingElements).containsExactly(outerElement, innerElement);
+  }
+
+  @Test public void intersectionType() {
+    TypeVariableName typeVariable = TypeVariableName.create("T", IntersectionTypeName.create(
+        ClassName.fromClass(Comparator.class), ClassName.fromClass(Serializable.class)));
+    TypeSpec taco = new TypeSpec.Builder()
+        .name("Taco")
+        .addMethod(new MethodSpec.Builder()
+            .addTypeVariable(typeVariable)
+            .returns(typeVariable)
+            .name("getComparator")
+            .addCode("return null;\n")
+            .build())
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.io.Serializable;\n"
+        + "import java.util.Comparator;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  <T extends Comparator & Serializable> T getComparator() {\n"
+        + "    return null;\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void arrayType() {
+    TypeSpec taco = new TypeSpec.Builder()
+        .name("Taco")
+        .addField(FieldSpec.of(int[].class, "ints"))
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  int[] ints;\n"
         + "}\n");
   }
 

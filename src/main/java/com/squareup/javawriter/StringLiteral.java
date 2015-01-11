@@ -82,13 +82,11 @@ public final class StringLiteral {
     return literal;
   }
 
-  @Override
-  public String toString() {
+  @Override public String toString() {
     return literal;
   }
 
-  @Override
-  public boolean equals(Object obj) {
+  @Override public boolean equals(Object obj) {
     if (obj == this) {
       return true;
     } else if (obj instanceof StringLiteral) {

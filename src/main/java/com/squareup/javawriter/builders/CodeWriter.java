@@ -21,7 +21,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import com.squareup.javawriter.ArrayTypeName;
 import com.squareup.javawriter.ClassName;
+import com.squareup.javawriter.IntersectionTypeName;
 import com.squareup.javawriter.ParameterizedTypeName;
 import com.squareup.javawriter.PrimitiveName;
 import com.squareup.javawriter.StringLiteral;
@@ -36,6 +38,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import javax.lang.model.element.Modifier;
 
@@ -229,6 +232,15 @@ final class CodeWriter {
       emitAndIndent(typeName.toString());
     } else if (typeName instanceof VoidName) {
       emitAndIndent(typeName.toString());
+    } else if (typeName instanceof ArrayTypeName) {
+      emit("$T[]", ((ArrayTypeName) typeName).componentType());
+    } else if (typeName instanceof IntersectionTypeName) {
+      boolean first = true;
+      for (TypeName bound : ((IntersectionTypeName) typeName).typeNames()) {
+        if (!first) emit(" & ");
+        emit("$T", bound);
+        first = false;
+      }
     } else {
       throw new UnsupportedOperationException("unexpected type: " + arg);
     }
@@ -242,6 +254,10 @@ final class CodeWriter {
   private String lookupName(ClassName className) {
     // Different package than current? Just look for an import.
     if (!className.packageName().equals(packageName)) {
+      if (conflictsWithLocalName(className)) {
+        return className.toString(); // A local name conflicts? Use the fully-qualified name.
+      }
+
       String importedName = importedTypes.get(className);
       if (importedName != null) {
         importableTypes.add(className);
@@ -267,6 +283,20 @@ final class CodeWriter {
     }
 
     return Joiner.on('.').join(classNames.subList(prefixLength, classNames.size()));
+  }
+
+  /**
+   * Returns true if {@code className} conflicts with a visible class name in the current scope and
+   * cannot be referred to by its short name.
+   */
+  private boolean conflictsWithLocalName(ClassName className) {
+    for (TypeSpec typeSpec : typeSpecStack) {
+      if (Objects.equals(typeSpec.name, className.simpleName())) return true;
+      for (TypeSpec visibleChild : typeSpec.typeSpecs) {
+        if (Objects.equals(visibleChild.name, className.simpleName())) return true;
+      }
+    }
+    return false;
   }
 
   /**

@@ -16,27 +16,13 @@
 package com.squareup.javawriter;
 
 import com.google.common.base.Ascii;
-import com.google.common.collect.ImmutableSet;
-import java.io.IOException;
-import java.util.Set;
 import javax.lang.model.type.PrimitiveType;
 
 public enum PrimitiveName implements TypeName {
   BOOLEAN, BYTE, SHORT, INT, LONG, CHAR, FLOAT, DOUBLE;
 
-  @Override
-  public Set<ClassName> referencedClasses() {
-    return ImmutableSet.of();
-  }
-
-  @Override
-  public String toString() {
+  @Override public String toString() {
     return Ascii.toLowerCase(name());
-  }
-
-  @Override
-  public Appendable write(Appendable appendable, Context context) throws IOException {
-    return appendable.append(toString());
   }
 
   static PrimitiveName forTypeMirror(PrimitiveType mirror) {

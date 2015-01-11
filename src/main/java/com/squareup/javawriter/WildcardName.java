@@ -16,10 +16,6 @@
 package com.squareup.javawriter;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.Iterables;
-import java.io.IOException;
-import java.util.Set;
 import javax.lang.model.type.WildcardType;
 
 import static com.squareup.javawriter.TypeNames.FOR_TYPE_MIRROR;
@@ -58,26 +54,5 @@ public final class WildcardName implements TypeName {
 
   public static WildcardName createWithLowerBound(TypeName lowerBound) {
     return new WildcardName(Optional.<TypeName>absent(), Optional.of(lowerBound));
-  }
-
-  @Override
-  public Set<ClassName> referencedClasses() {
-    return FluentIterable.from(Iterables.concat(extendsBound.asSet(), superBound.asSet()))
-        .transformAndConcat(GET_REFERENCED_CLASSES)
-        .toSet();
-  }
-
-  @Override
-  public Appendable write(Appendable appendable, Context context) throws IOException {
-    appendable.append('?');
-    if (extendsBound.isPresent()) {
-      appendable.append(" extends ");
-      extendsBound.get().write(appendable, context);
-    }
-    if (superBound.isPresent()) {
-      appendable.append(" super ");
-      superBound.get().write(appendable, context);
-    }
-    return appendable;
   }
 }
