@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.javawriter.builders;
+package com.squareup.javawriter;
 
 import com.google.common.collect.ImmutableMap;
-import com.squareup.javawriter.ClassName;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -32,19 +31,18 @@ public final class JavaFile {
 
   public String toString() {
     // First pass: emit the entire class, just to collect the types we'll need to import.
-    ImmutableMap<ClassName, String> noImports = ImmutableMap.of();
-    CodeWriter importsCollector = new CodeWriter(new StringBuilder(), noImports);
-    emit(noImports, importsCollector);
+    CodeWriter importsCollector = new CodeWriter(new StringBuilder());
+    emit(importsCollector);
     ImmutableMap<ClassName, String> suggestedImports = importsCollector.suggestedImports();
 
     // Second pass: Write the code, taking advantage of the imports.
     StringBuilder result = new StringBuilder();
     CodeWriter codeWriter = new CodeWriter(result, suggestedImports);
-    emit(suggestedImports, codeWriter);
+    emit(codeWriter);
     return result.toString();
   }
 
-  private void emit(ImmutableMap<ClassName, String> imports, CodeWriter codeWriter) {
+  private void emit(CodeWriter codeWriter) {
     codeWriter.pushPackage(packageName);
 
     if (!packageName.isEmpty()) {
@@ -52,8 +50,8 @@ public final class JavaFile {
       codeWriter.emit("\n");
     }
 
-    if (!imports.isEmpty()) {
-      for (ClassName className : imports.keySet()) {
+    if (!codeWriter.importedTypes().isEmpty()) {
+      for (ClassName className : codeWriter.importedTypes().keySet()) {
         codeWriter.emit("import $L;\n", className);
       }
       codeWriter.emit("\n");

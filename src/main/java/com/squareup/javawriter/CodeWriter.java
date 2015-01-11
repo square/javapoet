@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.javawriter.builders;
+package com.squareup.javawriter;
 
 import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
@@ -21,17 +21,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-import com.squareup.javawriter.ArrayTypeName;
-import com.squareup.javawriter.ClassName;
-import com.squareup.javawriter.IntersectionTypeName;
-import com.squareup.javawriter.ParameterizedTypeName;
-import com.squareup.javawriter.PrimitiveName;
-import com.squareup.javawriter.StringLiteral;
-import com.squareup.javawriter.TypeName;
-import com.squareup.javawriter.TypeNames;
-import com.squareup.javawriter.TypeVariableName;
-import com.squareup.javawriter.VoidName;
-import com.squareup.javawriter.WildcardName;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
@@ -60,9 +54,17 @@ final class CodeWriter {
   private final ImmutableMap<ClassName, String> importedTypes;
   private final Set<ClassName> importableTypes = new LinkedHashSet<>();
 
+  public CodeWriter(StringBuilder out) {
+    this(out, ImmutableMap.<ClassName, String>of());
+  }
+
   public CodeWriter(StringBuilder out, ImmutableMap<ClassName, String> importedTypes) {
     this.out = checkNotNull(out);
     this.importedTypes = checkNotNull(importedTypes);
+  }
+
+  public ImmutableMap<ClassName, String> importedTypes() {
+    return importedTypes;
   }
 
   public CodeWriter indent() {
@@ -135,19 +137,21 @@ final class CodeWriter {
    * Emit type variables with their bounds. This should only be used when declaring type variables;
    * everywhere else bounds are omitted.
    */
-  public void emitTypeVariables(ImmutableList<TypeVariableName> typeVariables) {
+  public void emitTypeVariables(ImmutableList<TypeVariable<?>> typeVariables) {
     if (typeVariables.isEmpty()) return;
 
     emit("<");
-    boolean first = true;
-    for (TypeVariableName typeVariable : typeVariables) {
-      if (!first) emit(", ");
-      emit("$L", typeVariable.name());
-      TypeName upperBound = typeVariable.upperBound();
-      if (!upperBound.equals(ClassName.OBJECT)) {
-        emit(" extends $T", upperBound);
+    boolean firstTypeVariable = true;
+    for (TypeVariable<?> typeVariable : typeVariables) {
+      if (!firstTypeVariable) emit(", ");
+      emit("$L", typeVariable.getName());
+      boolean firstBound = true;
+      for (Type bound : typeVariable.getBounds()) {
+        if (isObject(bound)) continue;
+        emit(firstBound ? " extends $T" : " & $T", bound);
+        firstBound = false;
       }
-      first = false;
+      firstTypeVariable = false;
     }
     emit(">");
   }
@@ -198,52 +202,71 @@ final class CodeWriter {
     }
   }
 
-  private void emitType(Object arg) {
-    TypeName typeName = toTypeName(arg);
+  private CodeWriter emitType(Object arg) {
+    Type type = toType(arg);
 
-    // TODO(jwilson): replace instanceof nonsense with polymorphism!
-    if (typeName instanceof ParameterizedTypeName) {
-      ParameterizedTypeName parameterizedTypeName = (ParameterizedTypeName) typeName;
-      emitType(parameterizedTypeName.type());
+    if (type instanceof Class<?>) {
+      Class<?> classType = (Class<?>) type;
+      if (classType.isPrimitive()) {
+        if (boolean.class == classType) return emit("boolean");
+        if (byte.class == classType) return emit("byte");
+        if (short.class == classType) return emit("short");
+        if (int.class == classType) return emit("int");
+        if (long.class == classType) return emit("long");
+        if (char.class == classType) return emit("char");
+        if (float.class == classType) return emit("float");
+        if (double.class == classType) return emit("double");
+        if (void.class == classType) return emit("void");
+      } else if (classType.isArray()) {
+        return emit("$T[]", classType.getComponentType());
+      } else {
+        return emitType(ClassName.fromClass(classType));
+      }
+    }
+
+    if (type instanceof ParameterizedType) {
+      ParameterizedType parameterizedType = (ParameterizedType) type;
+      emitType(parameterizedType.getRawType());
       emitAndIndent("<");
       boolean firstParameter = true;
-      for (TypeName parameter : parameterizedTypeName.parameters()) {
+      for (Type parameter : parameterizedType.getActualTypeArguments()) {
         if (!firstParameter) emitAndIndent(", ");
         emitType(parameter);
         firstParameter = false;
       }
       emitAndIndent(">");
-    } else if (typeName instanceof WildcardName) {
-      WildcardName wildcardName = (WildcardName) typeName;
-      TypeName extendsBound = wildcardName.extendsBound();
-      TypeName superBound = wildcardName.superBound();
-      if (ClassName.fromClass(Object.class).equals(extendsBound)) {
+    } else if (type instanceof WildcardType) {
+      WildcardType wildcardName = (WildcardType) type;
+      Type[] extendsBounds = wildcardName.getUpperBounds();
+      Type[] superBounds = wildcardName.getLowerBounds();
+      if (superBounds.length == 1) {
+        emit("? super $T", superBounds[0]);
+      } else if (extendsBounds.length == 1 && !isObject(extendsBounds[0])) {
+        emit("? extends $T", extendsBounds[0]);
+      } else {
         emit("?");
-      } else if (extendsBound != null) {
-        emit("? extends $T", extendsBound);
-      } else if (superBound != null) {
-        emit("? super $T", superBound);
       }
-    } else if (typeName instanceof TypeVariableName) {
-      emit("$L", ((TypeVariableName) typeName).name());
-    } else if (typeName instanceof ClassName) {
-      emitAndIndent(lookupName((ClassName) typeName));
-    } else if (typeName instanceof PrimitiveName) {
-      emitAndIndent(typeName.toString());
-    } else if (typeName instanceof VoidName) {
-      emitAndIndent(typeName.toString());
-    } else if (typeName instanceof ArrayTypeName) {
-      emit("$T[]", ((ArrayTypeName) typeName).componentType());
-    } else if (typeName instanceof IntersectionTypeName) {
-      boolean first = true;
-      for (TypeName bound : ((IntersectionTypeName) typeName).typeNames()) {
-        if (!first) emit(" & ");
+    } else if (type instanceof TypeVariable<?>) {
+      emit("$L", ((TypeVariable) type).getName());
+    } else if (type instanceof ClassName) {
+      emitAndIndent(lookupName((ClassName) type));
+    } else if (type instanceof GenericArrayType) {
+      emit("$T[]", ((GenericArrayType) type).getGenericComponentType());
+    } else if (type instanceof IntersectionType) {
+      boolean firstBound = true;
+      for (Type bound : ((IntersectionType) type).getBounds()) {
+        if (!firstBound) emit(" & ");
         emit("$T", bound);
-        first = false;
+        firstBound = false;
       }
     } else {
       throw new UnsupportedOperationException("unexpected type: " + arg);
     }
+    return this;
+  }
+
+  private boolean isObject(Type bound) {
+    return bound == Object.class || bound.equals(ClassName.OBJECT);
   }
 
   /**
@@ -336,9 +359,8 @@ final class CodeWriter {
     }
   }
 
-  private TypeName toTypeName(Object arg) {
-    if (arg instanceof TypeName) return (TypeName) arg;
-    if (arg instanceof Class<?>) return TypeNames.forClass((Class<?>) arg);
+  private Type toType(Object arg) {
+    if (arg instanceof Type) return (Type) arg;
     throw new IllegalArgumentException("Expected type but was " + arg);
   }
 
@@ -363,9 +385,9 @@ final class CodeWriter {
   ImmutableMap<ClassName, String> suggestedImports() {
     // Find the simple names that can be imported, and the classes that they target.
     Map<String, ClassName> simpleNameToType = new LinkedHashMap<>();
-    for (TypeName typeName : importableTypes) {
-      if (!(typeName instanceof ClassName)) continue;
-      ClassName className = (ClassName) typeName;
+    for (Type type : importableTypes) {
+      if (!(type instanceof ClassName)) continue;
+      ClassName className = (ClassName) type;
       if (simpleNameToType.containsKey(className.simpleName())) continue;
       simpleNameToType.put(className.simpleName(), className);
     }

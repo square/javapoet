@@ -15,10 +15,8 @@
  */
 package com.squareup.javawriter;
 
-public enum VoidName implements TypeName {
-  VOID;
+import java.lang.reflect.Type;
 
-  @Override public String toString() {
-    return "void";
-  }
+interface IntersectionType extends Type {
+  Type[] getBounds();
 }

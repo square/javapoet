@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.javawriter.builders;
+package com.squareup.javawriter;
 
 import com.google.common.collect.ImmutableList;
-import com.squareup.javawriter.ClassName;
-import com.squareup.javawriter.IntersectionTypeName;
-import com.squareup.javawriter.ParameterizedTypeName;
-import com.squareup.javawriter.TypeVariableName;
-import com.squareup.javawriter.WildcardName;
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.TypeVariable;
 import java.util.AbstractSet;
 import java.util.Comparator;
 import java.util.List;
@@ -67,18 +64,17 @@ public final class TypeSpecTest {
     TypeSpec taco = new TypeSpec.Builder()
         .name("Taco")
         .addField(new FieldSpec.Builder()
-            .type(ParameterizedTypeName.create(ClassName.fromClass(List.class),
-                WildcardName.createWithUpperBound(ClassName.fromClass(Object.class))))
+            .type(Types.parameterizedType(List.class, Types.subtypeOf(Object.class)))
             .name("extendsObject")
             .build())
         .addField(new FieldSpec.Builder()
-            .type(ParameterizedTypeName.create(ClassName.fromClass(List.class),
-                WildcardName.createWithUpperBound(ClassName.fromClass(Serializable.class))))
+            .type(Types.parameterizedType(ClassName.fromClass(List.class),
+                Types.subtypeOf(Serializable.class)))
             .name("extendsSerializable")
             .build())
         .addField(new FieldSpec.Builder()
-            .type(ParameterizedTypeName.create(ClassName.fromClass(List.class),
-                WildcardName.createWithLowerBound(ClassName.fromClass(String.class))))
+            .type(Types.parameterizedType(ClassName.fromClass(List.class),
+                Types.supertypeOf(String.class)))
             .name("superString")
             .build())
         .build();
@@ -103,15 +99,15 @@ public final class TypeSpecTest {
     ClassName bar = ClassName.create(tacosPackage, "Bar");
     ClassName thingThang = ClassName.create(
         tacosPackage, ImmutableList.of("Thing"), "Thang");
-    ParameterizedTypeName thingThangOfFooBar
-        = ParameterizedTypeName.create(thingThang, foo, bar);
+    ParameterizedType thingThangOfFooBar
+        = Types.parameterizedType(thingThang, foo, bar);
     ClassName thung = ClassName.create(tacosPackage, "Thung");
     ClassName simpleThung = ClassName.create(tacosPackage, "SimpleThung");
-    ParameterizedTypeName thungOfSuperBar
-        = ParameterizedTypeName.create(thung, WildcardName.createWithLowerBound(bar));
-    ParameterizedTypeName thungOfSuperFoo
-        = ParameterizedTypeName.create(thung, WildcardName.createWithLowerBound(foo));
-    ParameterizedTypeName simpleThungOfBar = ParameterizedTypeName.create(simpleThung, bar);
+    ParameterizedType thungOfSuperBar
+        = Types.parameterizedType(thung, Types.supertypeOf(bar));
+    ParameterizedType thungOfSuperFoo
+        = Types.parameterizedType(thung, Types.supertypeOf(foo));
+    ParameterizedType simpleThungOfBar = Types.parameterizedType(simpleThung, bar);
 
     ParameterSpec thungParameter = new ParameterSpec.Builder()
         .addModifiers(Modifier.FINAL)
@@ -235,7 +231,7 @@ public final class TypeSpecTest {
     ClassName header = ClassName.create(tacosPackage, "Header");
     TypeSpec service = new TypeSpec.Builder()
         .name("Service")
-        .type(TypeSpec.Type.INTERFACE)
+        .interfaceType()
         .addMethod(new MethodSpec.Builder()
             .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
             .addAnnotation(new AnnotationSpec.Builder()
@@ -247,11 +243,11 @@ public final class TypeSpecTest {
                 .type(post)
                 .addMember("value", "$S", "/foo/bar")
                 .build())
-            .returns(ParameterizedTypeName.create(observable, fooBar))
+            .returns(Types.parameterizedType(observable, fooBar))
             .name("fooBar")
             .addParameter(new ParameterSpec.Builder()
                 .addAnnotation(body)
-                .type(ParameterizedTypeName.create(things, thing))
+                .type(Types.parameterizedType(things, thing))
                 .name("things")
                 .build())
             .addParameter(new ParameterSpec.Builder()
@@ -259,7 +255,7 @@ public final class TypeSpecTest {
                     .type(queryMap)
                     .addMember("encodeValues", "false")
                     .build())
-                .type(ParameterizedTypeName.create(map, string, string))
+                .type(Types.parameterizedType(map, string, string))
                 .name("query")
                 .build())
             .addParameter(new ParameterSpec.Builder()
@@ -340,7 +336,7 @@ public final class TypeSpecTest {
 
   @Test public void enumWithSubclassing() throws Exception {
       TypeSpec roshambo = new TypeSpec.Builder()
-        .type(TypeSpec.Type.ENUM)
+        .enumType()
         .name("Roshambo")
         .addModifiers(Modifier.PUBLIC)
         .addEnumConstant("ROCK")
@@ -405,7 +401,7 @@ public final class TypeSpecTest {
   @Test public void enumConstantsRequired() throws Exception {
     try {
       new TypeSpec.Builder()
-        .type(TypeSpec.Type.ENUM)
+        .enumType()
         .name("Roshambo")
         .build();
       fail();
@@ -416,7 +412,6 @@ public final class TypeSpecTest {
   @Test public void onlyEnumsMayHaveEnumConstants() throws Exception {
     try {
       new TypeSpec.Builder()
-        .type(TypeSpec.Type.CLASS)
         .name("Roshambo")
         .addEnumConstant("ROCK")
         .build();
@@ -427,7 +422,7 @@ public final class TypeSpecTest {
 
   @Test public void enumWithMembersButNoConstructorCall() throws Exception {
     TypeSpec roshambo = new TypeSpec.Builder()
-        .type(TypeSpec.Type.ENUM)
+        .enumType()
         .name("Roshambo")
         .addEnumConstant("SPOCK", new TypeSpec.Builder()
             .anonymousTypeArguments()
@@ -484,14 +479,14 @@ public final class TypeSpecTest {
   }
 
   @Test public void typeVariables() throws Exception {
-    TypeVariableName t = TypeVariableName.create("T");
-    TypeVariableName p = TypeVariableName.create("P", ClassName.fromClass(Number.class));
+    TypeVariable<?> t = Types.typeVariable("T");
+    TypeVariable<?> p = Types.typeVariable("P", Number.class);
     ClassName location = ClassName.create(tacosPackage, "Location");
     TypeSpec typeSpec = new TypeSpec.Builder()
         .name("Location")
         .addTypeVariable(t)
         .addTypeVariable(p)
-        .addSuperinterface(ParameterizedTypeName.create(ClassName.fromClass(Comparable.class), p))
+        .addSuperinterface(Types.parameterizedType(ClassName.fromClass(Comparable.class), p))
         .addField(new FieldSpec.Builder()
             .type(t)
             .name("label")
@@ -516,7 +511,7 @@ public final class TypeSpecTest {
             .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
             .addTypeVariable(t)
             .addTypeVariable(p)
-            .returns(ParameterizedTypeName.create(location, t, p))
+            .returns(Types.parameterizedType(location, t, p))
             .name("of")
             .addParameter(t, "label")
             .addParameter(p, "x")
@@ -556,9 +551,9 @@ public final class TypeSpecTest {
     TypeSpec typeSpec = new TypeSpec.Builder()
         .name("Taco")
         .addModifiers(Modifier.ABSTRACT)
-        .superclass(ParameterizedTypeName.create(AbstractSet.class, food))
+        .superclass(Types.parameterizedType(AbstractSet.class, food))
         .addSuperinterface(Serializable.class)
-        .addSuperinterface(ParameterizedTypeName.create(Comparable.class, taco))
+        .addSuperinterface(Types.parameterizedType(Comparable.class, taco))
         .build();
     assertThat(toString(typeSpec)).isEqualTo(""
         + "package com.squareup.tacos;\n"
@@ -574,7 +569,7 @@ public final class TypeSpecTest {
 
   @Test public void enumImplements() throws Exception {
     TypeSpec typeSpec = new TypeSpec.Builder()
-        .type(TypeSpec.Type.ENUM)
+        .enumType()
         .name("Food")
         .addSuperinterface(Serializable.class)
         .addSuperinterface(Cloneable.class)
@@ -597,10 +592,10 @@ public final class TypeSpecTest {
   @Test public void interfaceExtends() throws Exception {
     ClassName taco = ClassName.create(tacosPackage, "Taco");
     TypeSpec typeSpec = new TypeSpec.Builder()
-        .type(TypeSpec.Type.INTERFACE)
+        .interfaceType()
         .name("Taco")
         .addSuperinterface(Serializable.class)
-        .addSuperinterface(ParameterizedTypeName.create(Comparable.class, taco))
+        .addSuperinterface(Types.parameterizedType(Comparable.class, taco))
         .build();
     assertThat(toString(typeSpec)).isEqualTo(""
         + "package com.squareup.tacos;\n"
@@ -625,10 +620,10 @@ public final class TypeSpecTest {
         .addType(new TypeSpec.Builder()
             .addModifiers(Modifier.STATIC)
             .name(taco.simpleName())
-            .addField(FieldSpec.of(ParameterizedTypeName.create(List.class, topping), "toppings"))
+            .addField(FieldSpec.of(Types.parameterizedType(List.class, topping), "toppings"))
             .addField(FieldSpec.of(sauce, "sauce"))
             .addType(new TypeSpec.Builder()
-                .type(TypeSpec.Type.ENUM)
+                .enumType()
                 .name(topping.simpleName())
                 .addEnumConstant("SHREDDED_CHEESE")
                 .addEnumConstant("LEAN_GROUND_BEEF")
@@ -641,7 +636,7 @@ public final class TypeSpecTest {
             .addField(FieldSpec.of(sauce, "dippingSauce"))
             .build())
         .addType(new TypeSpec.Builder()
-            .type(TypeSpec.Type.ENUM)
+            .enumType()
             .name(sauce.simpleName())
             .addEnumConstant("SOUR_CREAM")
             .addEnumConstant("SALSA")
@@ -773,8 +768,7 @@ public final class TypeSpecTest {
   }
 
   @Test public void intersectionType() {
-    TypeVariableName typeVariable = TypeVariableName.create("T", IntersectionTypeName.create(
-        ClassName.fromClass(Comparator.class), ClassName.fromClass(Serializable.class)));
+    TypeVariable<?> typeVariable = Types.typeVariable("T", Comparator.class, Serializable.class);
     TypeSpec taco = new TypeSpec.Builder()
         .name("Taco")
         .addMethod(new MethodSpec.Builder()

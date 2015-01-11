@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.javawriter.builders;
+package com.squareup.javawriter;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.squareup.javawriter.TypeName;
-import com.squareup.javawriter.TypeNames;
-import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +29,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class FieldSpec {
   public final ImmutableList<AnnotationSpec> annotations;
   public final ImmutableSet<Modifier> modifiers;
-  public final TypeName type;
+  public final Type type;
   public final Name name;
   public final Snippet initializer;
 
@@ -58,11 +56,7 @@ public final class FieldSpec {
     codeWriter.emit(";\n");
   }
 
-  public static FieldSpec of(Class<?> type, String name, Modifier... modifiers) {
-    return of(TypeNames.forClass(type), name, modifiers);
-  }
-
-  public static FieldSpec of(TypeName type, String name, Modifier... modifiers) {
+  public static FieldSpec of(Type type, String name, Modifier... modifiers) {
     return new Builder()
         .type(type)
         .name(name)
@@ -73,7 +67,7 @@ public final class FieldSpec {
   public static final class Builder {
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
-    private TypeName type;
+    private Type type;
     private Name name;
     private Snippet initializer;
 
@@ -82,7 +76,7 @@ public final class FieldSpec {
       return this;
     }
 
-    public Builder addAnnotation(Class<? extends Annotation> annotation) {
+    public Builder addAnnotation(Type annotation) {
       this.annotations.add(AnnotationSpec.of(annotation));
       return this;
     }
@@ -92,13 +86,9 @@ public final class FieldSpec {
       return this;
     }
 
-    public Builder type(TypeName type) {
+    public Builder type(Type type) {
       this.type = type;
       return this;
-    }
-
-    public Builder type(Class<?> type) {
-      return type(TypeNames.forClass(type));
     }
 
     public Builder name(Name name) {

@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.javawriter.builders;
+package com.squareup.javawriter;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Maps;
-import com.squareup.javawriter.ClassName;
-import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.SortedMap;
@@ -29,7 +28,7 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 
 /** A generated annotation on a declaration. */
 public final class AnnotationSpec {
-  public final ClassName type;
+  public final Type type;
   public final ImmutableSortedMap<String, Snippet> members;
 
   private AnnotationSpec(Builder builder) {
@@ -42,14 +41,14 @@ public final class AnnotationSpec {
     String suffix = inline ? " " : "\n";
     if (members.isEmpty()) {
       // @Singleton
-      codeWriter.emit("@$T$L", type, suffix);
+      codeWriter.emit("@$T" + suffix, type);
     } else if (members.keySet().equals(ImmutableSet.of("value"))) {
       // @Named("foo")
       codeWriter.emit("@$T(", type);
       codeWriter.indent(2);
       codeWriter.emit(getOnlyElement(members.values()));
       codeWriter.unindent(2);
-      codeWriter.emit(")$L", suffix);
+      codeWriter.emit(")" + suffix);
     } else {
       // Inline:
       //   @Column(name = "updated_at", nullable = false)
@@ -59,25 +58,21 @@ public final class AnnotationSpec {
       //       name = "updated_at",
       //       nullable = false
       //   )
-      codeWriter.emit("@$T($L", type, separator);
+      codeWriter.emit("@$T(" + separator, type);
       codeWriter.indent(2);
       for (Iterator<Map.Entry<String, Snippet>> i = members.entrySet().iterator(); i.hasNext();) {
         Map.Entry<String, Snippet> entry = i.next();
         codeWriter.emit("$L = ", entry.getKey());
         codeWriter.emit(entry.getValue());
         if (i.hasNext()) codeWriter.emit(",");
-        codeWriter.emit("$L", separator);
+        codeWriter.emit(separator);
       }
       codeWriter.unindent(2);
-      codeWriter.emit(")$L", suffix);
+      codeWriter.emit(")" + suffix);
     }
   }
 
-  public static AnnotationSpec of(Class<? extends Annotation> annotation) {
-    return of(ClassName.fromClass(annotation));
-  }
-
-  public static AnnotationSpec of(ClassName annotation) {
+  public static AnnotationSpec of(Type annotation) {
     return new Builder().type(annotation).build();
   }
 
@@ -92,10 +87,10 @@ public final class AnnotationSpec {
   }
 
   public static final class Builder {
-    private ClassName type;
+    private Type type;
     private final SortedMap<String, Snippet> members = Maps.newTreeMap();
 
-    public Builder type(ClassName type) {
+    public Builder type(Type type) {
       this.type = type;
       return this;
     }

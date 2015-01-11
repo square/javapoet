@@ -24,8 +24,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import java.lang.reflect.Type;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
@@ -45,7 +45,7 @@ import static javax.lang.model.element.NestingKind.TOP_LEVEL;
  *
  * @since 2.0
  */
-public final class ClassName implements TypeName, Comparable<ClassName> {
+public final class ClassName implements Type, Comparable<ClassName> {
   public static final ClassName OBJECT = ClassName.fromClass(Object.class);
 
   private String fullyQualifiedName = null;
@@ -69,8 +69,7 @@ public final class ClassName implements TypeName, Comparable<ClassName> {
     return enclosingSimpleNames;
   }
 
-  // TODO(jwilson): make this package-private once builders and type names are in the same package.
-  public ImmutableList<String> simpleNames() {
+  ImmutableList<String> simpleNames() {
     return new ImmutableList.Builder<String>()
         .addAll(enclosingSimpleNames)
         .add(simpleName)
@@ -101,42 +100,6 @@ public final class ClassName implements TypeName, Comparable<ClassName> {
       fullyQualifiedName = builder.append(simpleName()).toString();
     }
     return fullyQualifiedName;
-  }
-
-  public String classFileName() {
-    StringBuilder builder = new StringBuilder();
-    Joiner.on('$').appendTo(builder, enclosingSimpleNames());
-    if (!enclosingSimpleNames().isEmpty()) {
-      builder.append('$');
-    }
-    return builder.append(simpleName()).toString();
-  }
-
-  public ClassName topLevelClassName() {
-    Iterator<String> enclosingIterator = enclosingSimpleNames().iterator();
-    return enclosingIterator.hasNext()
-        ? new ClassName(packageName(), ImmutableList.<String>of(),
-            enclosingIterator.next())
-        : this;
-  }
-
-  public ClassName nestedClassNamed(String memberClassName) {
-    checkNotNull(memberClassName);
-    checkArgument(SourceVersion.isIdentifier(memberClassName));
-    checkArgument(Ascii.isUpperCase(memberClassName.charAt(0)));
-    return new ClassName(packageName(),
-        new ImmutableList.Builder<String>()
-            .addAll(enclosingSimpleNames())
-            .add(simpleName())
-            .build(),
-        memberClassName);
-  }
-
-  public ClassName peerNamed(String peerClassName) {
-    checkNotNull(peerClassName);
-    checkArgument(SourceVersion.isIdentifier(peerClassName));
-    checkArgument(Ascii.isUpperCase(peerClassName.charAt(0)));
-    return new ClassName(packageName(), enclosingSimpleNames(), peerClassName);
   }
 
   private static final ImmutableSet<NestingKind> ACCEPTABLE_NESTING_KINDS =
