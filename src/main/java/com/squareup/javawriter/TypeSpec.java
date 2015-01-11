@@ -40,6 +40,7 @@ public final class TypeSpec {
   public final DeclarationType declarationType;
   public final String name;
   public final Snippet anonymousTypeArguments;
+  public final ImmutableList<Snippet> javadocSnippets;
   public final ImmutableList<AnnotationSpec> annotations;
   public final ImmutableSet<Modifier> modifiers;
   public final ImmutableList<TypeVariable<?>> typeVariables;
@@ -82,6 +83,7 @@ public final class TypeSpec {
     this.declarationType = checkNotNull(builder.declarationType);
     this.name = builder.name;
     this.anonymousTypeArguments = builder.anonymousTypeArguments;
+    this.javadocSnippets = ImmutableList.copyOf(builder.javadocSnippets);
     this.annotations = ImmutableList.copyOf(builder.annotations);
     this.modifiers = ImmutableSet.copyOf(builder.modifiers);
     this.typeVariables = ImmutableList.copyOf(builder.typeVariables);
@@ -137,6 +139,7 @@ public final class TypeSpec {
       codeWriter.emit(anonymousTypeArguments);
       codeWriter.emit(") {\n");
     } else {
+      codeWriter.emitJavadoc(javadocSnippets);
       codeWriter.emitAnnotations(annotations, false);
       codeWriter.emitModifiers(modifiers);
       codeWriter.emit("$L $L", Ascii.toLowerCase(declarationType.name()), name);
@@ -239,6 +242,7 @@ public final class TypeSpec {
     private final String name;
     private final Snippet anonymousTypeArguments;
 
+    private final List<Snippet> javadocSnippets = new ArrayList<>();
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
     private final List<TypeVariable<?>> typeVariables = new ArrayList<>();
@@ -257,22 +261,30 @@ public final class TypeSpec {
       this.anonymousTypeArguments = anonymousTypeArguments;
     }
 
+    public Builder addJavadoc(String format, Object... args) {
+      checkState(anonymousTypeArguments == null);
+      javadocSnippets.add(new Snippet(format, args));
+      return this;
+    }
+
     public Builder addAnnotation(AnnotationSpec annotationSpec) {
+      checkState(anonymousTypeArguments == null);
       this.annotations.add(annotationSpec);
       return this;
     }
 
     public Builder addAnnotation(Type annotation) {
-      this.annotations.add(AnnotationSpec.of(annotation));
-      return this;
+      return addAnnotation(AnnotationSpec.of(annotation));
     }
 
     public Builder addModifiers(Modifier... modifiers) {
+      checkState(anonymousTypeArguments == null);
       Collections.addAll(this.modifiers, modifiers);
       return this;
     }
 
     public Builder addTypeVariable(TypeVariable<?> typeVariable) {
+      checkState(anonymousTypeArguments == null);
       typeVariables.add(typeVariable);
       return this;
     }
@@ -288,11 +300,11 @@ public final class TypeSpec {
     }
 
     public Builder addEnumConstant(String name) {
-      checkState(declarationType == DeclarationType.ENUM);
       return addEnumConstant(name, anonymousClassBuilder("").build());
     }
 
     public Builder addEnumConstant(String name, TypeSpec typeSpec) {
+      checkState(declarationType == DeclarationType.ENUM);
       checkArgument(typeSpec.anonymousTypeArguments != null,
           "enum constants must have anonymous type arguments");
       enumConstants.put(name, typeSpec);

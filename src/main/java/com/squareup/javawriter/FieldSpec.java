@@ -27,17 +27,19 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /** A generated field declaration. */
 public final class FieldSpec {
+  public final Type type;
   public final Name name;
+  public final ImmutableList<Snippet> javadocSnippets;
   public final ImmutableList<AnnotationSpec> annotations;
   public final ImmutableSet<Modifier> modifiers;
-  public final Type type;
   public final Snippet initializer;
 
   private FieldSpec(Builder builder) {
+    this.type = checkNotNull(builder.type);
     this.name = checkNotNull(builder.name);
+    this.javadocSnippets = ImmutableList.copyOf(builder.javadocSnippets);
     this.annotations = ImmutableList.copyOf(builder.annotations);
     this.modifiers = ImmutableSet.copyOf(builder.modifiers);
-    this.type = checkNotNull(builder.type);
     this.initializer = builder.initializer;
   }
 
@@ -46,6 +48,7 @@ public final class FieldSpec {
   }
 
   void emit(CodeWriter codeWriter, ImmutableSet<Modifier> implicitModifiers) {
+    codeWriter.emitJavadoc(javadocSnippets);
     codeWriter.emitAnnotations(annotations, false);
     codeWriter.emitModifiers(modifiers, implicitModifiers);
     codeWriter.emit("$T $L", type, name);
@@ -56,31 +59,37 @@ public final class FieldSpec {
     codeWriter.emit(";\n");
   }
 
-  public static Builder builder(String name) {
-    return builder(new Name(name));
+  public static Builder builder(Type type, String name) {
+    return builder(type, new Name(name));
   }
 
-  public static Builder builder(Name name) {
-    return new Builder(name);
+  public static Builder builder(Type type, Name name) {
+    return new Builder(type, name);
   }
 
   public static FieldSpec of(Type type, String name, Modifier... modifiers) {
-    return new Builder(new Name(name))
-        .type(type)
+    return builder(type, new Name(name))
         .addModifiers(modifiers)
         .build();
   }
 
   public static final class Builder {
+    private final Type type;
     private final Name name;
 
+    private final List<Snippet> javadocSnippets = new ArrayList<>();
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
-    private Type type;
     private Snippet initializer;
 
-    private Builder(Name name) {
+    private Builder(Type type, Name name) {
+      this.type = type;
       this.name = name;
+    }
+
+    public Builder addJavadoc(String format, Object... args) {
+      javadocSnippets.add(new Snippet(format, args));
+      return this;
     }
 
     public Builder addAnnotation(AnnotationSpec annotationSpec) {
@@ -95,11 +104,6 @@ public final class FieldSpec {
 
     public Builder addModifiers(Modifier... modifiers) {
       Collections.addAll(this.modifiers, modifiers);
-      return this;
-    }
-
-    public Builder type(Type type) {
-      this.type = type;
       return this;
     }
 

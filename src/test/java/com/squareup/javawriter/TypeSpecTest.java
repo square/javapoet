@@ -23,6 +23,8 @@ import java.lang.reflect.TypeVariable;
 import java.util.AbstractSet;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Random;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import org.junit.Test;
@@ -59,18 +61,16 @@ public final class TypeSpecTest {
   }
 
   @Test public void interestingTypes() throws Exception {
+    ParameterizedType listOfAny = Types.parameterizedType(
+        List.class, Types.subtypeOf(Object.class));
+    ParameterizedType listOfExtends = Types.parameterizedType(
+        List.class, Types.subtypeOf(Serializable.class));
+    ParameterizedType listOfSuper = Types.parameterizedType(
+        List.class, Types.supertypeOf(String.class));
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-        .addField(FieldSpec.builder("extendsObject")
-            .type(Types.parameterizedType(List.class, Types.subtypeOf(Object.class)))
-            .build())
-        .addField(FieldSpec.builder("extendsSerializable")
-            .type(Types.parameterizedType(ClassName.fromClass(List.class),
-                Types.subtypeOf(Serializable.class)))
-            .build())
-        .addField(FieldSpec.builder("superString")
-            .type(Types.parameterizedType(ClassName.fromClass(List.class),
-                Types.supertypeOf(String.class)))
-            .build())
+        .addField(FieldSpec.of(listOfAny, "extendsObject"))
+        .addField(FieldSpec.of(listOfExtends, "extendsSerializable"))
+        .addField(FieldSpec.of(listOfSuper, "superString"))
         .build();
     assertThat(toString(taco)).isEqualTo(""
         + "package com.squareup.tacos;\n"
@@ -126,9 +126,8 @@ public final class TypeSpecTest {
             .build())
         .build();
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-        .addField(FieldSpec.builder("NAME")
+        .addField(FieldSpec.builder(thingThangOfFooBar, "NAME")
             .addModifiers(Modifier.STATIC, Modifier.FINAL, Modifier.FINAL)
-            .type(thingThangOfFooBar)
             .initializer("$L", aThingThang)
             .build())
         .build();
@@ -250,12 +249,11 @@ public final class TypeSpecTest {
 
   @Test public void annotatedField() throws Exception {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-        .addField(FieldSpec.builder("thing")
+        .addField(FieldSpec.builder(String.class, "thing")
             .addAnnotation(AnnotationSpec.builder(ClassName.create(tacosPackage, "JsonAdapter"))
                 .addMember("value", "$T.class", ClassName.create(tacosPackage, "Foo"))
                 .build())
             .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
-            .type(String.class)
             .build())
         .build();
     assertThat(toString(taco)).isEqualTo(""
@@ -305,9 +303,8 @@ public final class TypeSpecTest {
             .build())
         .addEnumConstant("SCISSORS", TypeSpec.anonymousClassBuilder("$S", "peace sign")
             .build())
-        .addField(FieldSpec.builder("handPosition")
+        .addField(FieldSpec.builder(String.class, "handPosition")
             .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
-            .type(String.class)
             .build())
         .addMethod(MethodSpec.constructorBuilder()
             .addParameter(String.class, "handPosition")
@@ -425,15 +422,9 @@ public final class TypeSpecTest {
         .addTypeVariable(t)
         .addTypeVariable(p)
         .addSuperinterface(Types.parameterizedType(ClassName.fromClass(Comparable.class), p))
-        .addField(FieldSpec.builder("label")
-            .type(t)
-            .build())
-        .addField(FieldSpec.builder("x")
-            .type(p)
-            .build())
-        .addField(FieldSpec.builder("y")
-            .type(p)
-            .build())
+        .addField(FieldSpec.of(t, "label"))
+        .addField(FieldSpec.of(p, "x"))
+        .addField(FieldSpec.of(p, "y"))
         .addMethod(MethodSpec.methodBuilder("compareTo")
             .addAnnotation(Override.class)
             .addModifiers(Modifier.PUBLIC)
@@ -714,6 +705,47 @@ public final class TypeSpecTest {
         + "\n"
         + "class Taco {\n"
         + "  int[] ints;\n"
+        + "}\n");
+  }
+
+  @Test public void javadoc() {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addJavadoc("A hard or soft tortilla, loosely folded and filled with whatever {@link \n")
+        .addJavadoc("{@link $T random} tex-mex stuff we could find in the pantry.\n", Random.class)
+        .addField(FieldSpec.builder(boolean.class, "soft")
+            .addJavadoc("True for a soft flour tortilla; false for a crunchy corn tortilla.\n")
+            .build())
+        .addMethod(MethodSpec.methodBuilder("refold")
+            .addJavadoc("Folds the back of this taco to reduce sauce leakage.\n"
+                + "\n"
+                + "<p>For {@link $T#KOREAN}, the front may also be folded.\n", Locale.class)
+            .addParameter(Locale.class, "locale")
+            .build())
+        .build();
+    // Mentioning a type in Javadoc will not cause an import to be added (java.util.Random here),
+    // but the short name will be used if it's already imported (java.util.Locale here).
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.util.Locale;\n"
+        + "\n"
+        + "/**\n"
+        + " * A hard or soft tortilla, loosely folded and filled with whatever {@link \n"
+        + " * {@link java.util.Random random} tex-mex stuff we could find in the pantry.\n"
+        + " */\n"
+        + "class Taco {\n"
+        + "  /**\n"
+        + "   * True for a soft flour tortilla; false for a crunchy corn tortilla.\n"
+        + "   */\n"
+        + "  boolean soft;\n"
+        + "\n"
+        + "  /**\n"
+        + "   * Folds the back of this taco to reduce sauce leakage.\n"
+        + "   *\n"
+        + "   * <p>For {@link Locale#KOREAN}, the front may also be folded.\n"
+        + "   */\n"
+        + "  void refold(Locale locale) {\n"
+        + "  }\n"
         + "}\n");
   }
 
