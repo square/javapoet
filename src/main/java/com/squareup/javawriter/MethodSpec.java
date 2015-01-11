@@ -31,6 +31,7 @@ import static com.google.common.base.Preconditions.checkState;
 /** A generated constructor or method declaration. */
 public final class MethodSpec {
   public final Name name;
+  public final ImmutableList<Snippet> javadocSnippets;
   public final ImmutableList<AnnotationSpec> annotations;
   public final ImmutableSet<Modifier> modifiers;
   public final ImmutableList<TypeVariable<?>> typeVariables;
@@ -44,6 +45,7 @@ public final class MethodSpec {
         "abstract method %s cannot have code", builder.name);
 
     this.name = checkNotNull(builder.name);
+    this.javadocSnippets = ImmutableList.copyOf(builder.javadocSnippets);
     this.annotations = ImmutableList.copyOf(builder.annotations);
     this.modifiers = ImmutableSet.copyOf(builder.modifiers);
     this.typeVariables = ImmutableList.copyOf(builder.typeVariables);
@@ -54,6 +56,7 @@ public final class MethodSpec {
   }
 
   void emit(CodeWriter codeWriter, String enclosingName, ImmutableSet<Modifier> implicitModifiers) {
+    codeWriter.emitJavadoc(javadocSnippets);
     codeWriter.emitAnnotations(annotations, false);
     codeWriter.emitModifiers(modifiers, implicitModifiers);
 
@@ -120,6 +123,7 @@ public final class MethodSpec {
   public static final class Builder {
     private final Name name;
 
+    private final List<Snippet> javadocSnippets = new ArrayList<>();
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
     private List<TypeVariable<?>> typeVariables = new ArrayList<>();
@@ -131,6 +135,11 @@ public final class MethodSpec {
     private Builder(Name name) {
       this.name = name;
       this.returnType = name == Name.CONSTRUCTOR ? null : void.class;
+    }
+
+    public Builder addJavadoc(String format, Object... args) {
+      javadocSnippets.add(new Snippet(format, args));
+      return this;
     }
 
     public Builder addAnnotation(AnnotationSpec annotationSpec) {

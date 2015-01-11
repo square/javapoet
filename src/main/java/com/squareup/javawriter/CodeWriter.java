@@ -49,6 +49,7 @@ final class CodeWriter {
   private final StringBuilder out;
   private int indentLevel;
 
+  private boolean javadoc = false;
   private String packageName;
   private final List<TypeSpec> typeSpecStack = new ArrayList<>();
   private final ImmutableMap<ClassName, String> importedTypes;
@@ -106,6 +107,21 @@ final class CodeWriter {
   public CodeWriter popType() {
     this.typeSpecStack.remove(typeSpecStack.size() - 1);
     return this;
+  }
+
+  public void emitJavadoc(ImmutableList<Snippet> javadocSnippets) {
+    if (javadocSnippets.isEmpty()) return;
+
+    emit("/**\n");
+    javadoc = true;
+    try {
+      for (Snippet snippet : javadocSnippets) {
+        emit(snippet);
+      }
+    } finally {
+      javadoc = false;
+    }
+    emit(" */\n");
   }
 
   public void emitAnnotations(ImmutableList<AnnotationSpec> annotations, boolean inline) {
@@ -283,7 +299,7 @@ final class CodeWriter {
 
       String importedName = importedTypes.get(className);
       if (importedName != null) {
-        importableTypes.add(className);
+        if (!javadoc) importableTypes.add(className);
         return importedName;
       }
 
@@ -294,7 +310,7 @@ final class CodeWriter {
       }
 
       // Fall back to the fully-qualified name. Mark the type as importable for a future pass.
-      importableTypes.add(className);
+      if (!javadoc) importableTypes.add(className);
       return className.toString();
     }
 
@@ -338,25 +354,46 @@ final class CodeWriter {
     return size;
   }
 
-  /** Emits {@code s} with indentation as required. */
+  /**
+   * Emits {@code s} with indentation as required. It's important that all code that writes to
+   * {@link #out} does it through here, since we emit indentation lazily in order to avoid
+   * unnecessary trailing whitespace.
+   */
   private void emitAndIndent(String s) {
     boolean first = true;
     for (String line : s.split("\n", -1)) {
-      if (!first) out.append('\n');
+      // Emit a newline character. Make sure blank lines in Javadoc look good.
+      if (!first) {
+        if (javadoc && trailingNewline()) {
+          emitIndentation();
+          out.append(" *");
+        }
+        out.append('\n');
+      }
+
       first = false;
       if (line.isEmpty()) continue; // Don't indent empty lines.
-      emitIndentationIfNecessary();
+
+      // Emit indentation if necessary.
+      if (trailingNewline()) {
+        emitIndentation();
+        if (javadoc) {
+          out.append(" * ");
+        }
+      }
+
       out.append(line);
     }
   }
 
-  private void emitIndentationIfNecessary() {
-    // Only emit indentation immediately after a '\n' character.
-    if (out.length() <= 0 || out.charAt(out.length() - 1) != '\n') return;
-
+  private void emitIndentation() {
     for (int j = 0; j < indentLevel; j++) {
       out.append(indent);
     }
+  }
+
+  private boolean trailingNewline() {
+    return out.length() > 0 && out.charAt(out.length() - 1) == '\n';
   }
 
   private Type toType(Object arg) {
