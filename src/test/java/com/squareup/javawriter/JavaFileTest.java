@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.javawriter.builders;
+package com.squareup.javawriter;
 
+import com.squareup.javawriter.FieldSpec;
+import com.squareup.javawriter.JavaFile;
+import com.squareup.javawriter.TypeSpec;
 import java.util.Date;
 import org.junit.Test;
 

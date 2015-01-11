@@ -13,14 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.javawriter.builders;
+package com.squareup.javawriter;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.squareup.javawriter.ClassName;
-import com.squareup.javawriter.TypeName;
-import com.squareup.javawriter.TypeNames;
-import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +29,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class ParameterSpec {
   public final ImmutableList<AnnotationSpec> annotations;
   public final ImmutableSet<Modifier> modifiers;
-  public final TypeName type;
+  public final Type type;
   public final Name name;
 
   private ParameterSpec(Builder builder) {
@@ -55,7 +52,7 @@ public final class ParameterSpec {
   public static final class Builder {
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
-    private TypeName type;
+    private Type type;
     private Name name;
 
     public Builder addAnnotation(AnnotationSpec annotationSpec) {
@@ -63,12 +60,7 @@ public final class ParameterSpec {
       return this;
     }
 
-    public Builder addAnnotation(Class<? extends Annotation> annotation) {
-      this.annotations.add(AnnotationSpec.of(annotation));
-      return this;
-    }
-
-    public Builder addAnnotation(ClassName annotation) {
+    public Builder addAnnotation(Type annotation) {
       this.annotations.add(AnnotationSpec.of(annotation));
       return this;
     }
@@ -78,13 +70,8 @@ public final class ParameterSpec {
       return this;
     }
 
-    public Builder type(TypeName type) {
+    public Builder type(Type type) {
       this.type = type;
-      return this;
-    }
-
-    public Builder type(Class<?> type) {
-      this.type = TypeNames.forClass(type);
       return this;
     }
 

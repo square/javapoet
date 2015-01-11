@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.javawriter.builders;
+package com.squareup.javawriter;
 
 import com.google.common.collect.ImmutableList;
 import java.util.Arrays;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
@@ -67,8 +66,10 @@ final class Snippet {
       formatPartsBuilder.add(format.substring(p, nextP));
     }
 
-    checkArgument(args.length == expectedArgsLength,
-        "expected %s args for %s but was %s", expectedArgsLength, format, Arrays.toString(args));
+    if (args.length != expectedArgsLength) {
+      throw new IllegalStateException(String.format("expected %s args for %s but was %s",
+          expectedArgsLength, format, Arrays.toString(args)));
+    }
 
     this.formatParts = formatPartsBuilder.build();
     this.args = ImmutableList.copyOf(args);
