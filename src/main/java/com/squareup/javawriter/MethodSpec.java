@@ -26,29 +26,28 @@ import javax.lang.model.element.Modifier;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
-/** A generated method declaration. */
+/** A generated constructor or method declaration. */
 public final class MethodSpec {
+  public final Name name;
   public final ImmutableList<AnnotationSpec> annotations;
   public final ImmutableSet<Modifier> modifiers;
   public final ImmutableList<TypeVariable<?>> typeVariables;
   public final Type returnType;
-  public final Name name;
   public final ImmutableList<ParameterSpec> parameters;
   public final ImmutableList<Type> exceptions;
   public final ImmutableList<Snippet> snippets;
 
   private MethodSpec(Builder builder) {
-    checkArgument(builder.returnType != null ^ builder.name == Name.CONSTRUCTOR,
-        "unexpected return type %s for %s", builder.returnType, builder.name);
     checkArgument(builder.snippets.isEmpty() || !builder.modifiers.contains(Modifier.ABSTRACT),
         "abstract method %s cannot have code", builder.name);
 
+    this.name = checkNotNull(builder.name);
     this.annotations = ImmutableList.copyOf(builder.annotations);
     this.modifiers = ImmutableSet.copyOf(builder.modifiers);
     this.typeVariables = ImmutableList.copyOf(builder.typeVariables);
     this.returnType = builder.returnType;
-    this.name = checkNotNull(builder.name);
     this.parameters = ImmutableList.copyOf(builder.parameters);
     this.exceptions = ImmutableList.copyOf(builder.exceptions);
     this.snippets = ImmutableList.copyOf(builder.snippets);
@@ -106,15 +105,33 @@ public final class MethodSpec {
     return modifiers.contains(modifier);
   }
 
+  public static Builder methodBuilder(String name) {
+    return methodBuilder(new Name(name));
+  }
+
+  public static Builder methodBuilder(Name name) {
+    return new Builder(name);
+  }
+
+  public static Builder constructorBuilder() {
+    return new Builder(Name.CONSTRUCTOR);
+  }
+
   public static final class Builder {
+    private final Name name;
+
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
     private List<TypeVariable<?>> typeVariables = new ArrayList<>();
-    private Type returnType = void.class;
-    private Name name;
+    private Type returnType;
     private final List<ParameterSpec> parameters = new ArrayList<>();
     private final List<Type> exceptions = new ArrayList<>();
     private final List<Snippet> snippets = new ArrayList<>();
+
+    private Builder(Name name) {
+      this.name = name;
+      this.returnType = name == Name.CONSTRUCTOR ? null : void.class;
+    }
 
     public Builder addAnnotation(AnnotationSpec annotationSpec) {
       this.annotations.add(annotationSpec);
@@ -137,23 +154,8 @@ public final class MethodSpec {
     }
 
     public Builder returns(Type returnType) {
+      checkState(name != Name.CONSTRUCTOR);
       this.returnType = returnType;
-      return this;
-    }
-
-    public Builder constructor() {
-      returnType = null;
-      name = Name.CONSTRUCTOR;
-      return this;
-    }
-
-    public Builder name(String name) {
-      this.name = new Name(name);
-      return this;
-    }
-
-    public Builder name(Name name) {
-      this.name = name;
       return this;
     }
 
@@ -163,7 +165,7 @@ public final class MethodSpec {
     }
 
     public Builder addParameter(Type type, String name) {
-      return addParameter(new ParameterSpec.Builder().type(type).name(name).build());
+      return addParameter(ParameterSpec.builder(type, name).build());
     }
 
     public Builder addException(Type exception) {

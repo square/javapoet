@@ -64,9 +64,7 @@ public final class JavaWriterTest {
   }
 
   @Test public void pathDefaultPackage() throws IOException {
-    TypeSpec type = new TypeSpec.Builder()
-        .name("Test")
-        .build();
+    TypeSpec type = TypeSpec.classBuilder("Test").build();
     javaWriter.add("", type).writeTo(fsRoot);
 
     Path testPath = fsRoot.resolve("Test.java");
@@ -74,9 +72,7 @@ public final class JavaWriterTest {
   }
 
   @Test public void fileDefaultPackage() throws IOException {
-    TypeSpec type = new TypeSpec.Builder()
-        .name("Test")
-        .build();
+    TypeSpec type = TypeSpec.classBuilder("Test").build();
     javaWriter.add("", type).writeTo(tmp.getRoot());
 
     File testFile = new File(tmp.getRoot(), "Test.java");
@@ -84,9 +80,7 @@ public final class JavaWriterTest {
   }
 
   @Test public void filerDefaultPackage() throws IOException {
-    TypeSpec type = new TypeSpec.Builder()
-        .name("Test")
-        .build();
+    TypeSpec type = TypeSpec.classBuilder("Test").build();
     javaWriter.add("", type).writeTo(filer);
 
     Path testPath = fsRoot.resolve("Test.java");
@@ -94,12 +88,8 @@ public final class JavaWriterTest {
   }
 
   @Test public void pathSamePackage() throws IOException {
-    TypeSpec test1 = new TypeSpec.Builder()
-        .name("Test1")
-        .build();
-    TypeSpec test2 = new TypeSpec.Builder()
-        .name("Test2")
-        .build();
+    TypeSpec test1 = TypeSpec.classBuilder("Test1").build();
+    TypeSpec test2 = TypeSpec.classBuilder("Test2").build();
     javaWriter.add("example", test1).add("example", test2).writeTo(fsRoot);
 
     Path testPath1 = fsRoot.resolve(fs.getPath("example", "Test1.java"));
@@ -109,12 +99,8 @@ public final class JavaWriterTest {
   }
 
   @Test public void fileSamePackage() throws IOException {
-    TypeSpec test1 = new TypeSpec.Builder()
-        .name("Test1")
-        .build();
-    TypeSpec test2 = new TypeSpec.Builder()
-        .name("Test2")
-        .build();
+    TypeSpec test1 = TypeSpec.classBuilder("Test1").build();
+    TypeSpec test2 = TypeSpec.classBuilder("Test2").build();
     javaWriter.add("example", test1).add("example", test2).writeTo(tmp.getRoot());
 
     File examplePackage = new File(tmp.getRoot(), "example");
@@ -125,12 +111,8 @@ public final class JavaWriterTest {
   }
 
   @Test public void filerSamePackage() throws IOException {
-    TypeSpec test1 = new TypeSpec.Builder()
-        .name("Test1")
-        .build();
-    TypeSpec test2 = new TypeSpec.Builder()
-        .name("Test2")
-        .build();
+    TypeSpec test1 = TypeSpec.classBuilder("Test1").build();
+    TypeSpec test2 = TypeSpec.classBuilder("Test2").build();
     javaWriter.add("example", test1).add("example", test2).writeTo(filer);
 
     Path testPath1 = fsRoot.resolve(fs.getPath("example", "Test1.java"));
@@ -140,9 +122,7 @@ public final class JavaWriterTest {
   }
 
   @Test public void pathNestedClasses() throws IOException {
-    TypeSpec test = new TypeSpec.Builder()
-        .name("Test")
-        .build();
+    TypeSpec test = TypeSpec.classBuilder("Test").build();
     javaWriter.add("foo", test)
         .add("foo.bar", test)
         .add("foo.bar.baz", test)
@@ -157,7 +137,7 @@ public final class JavaWriterTest {
   }
 
   @Test public void fileNestedClasses() throws IOException {
-    TypeSpec test = new TypeSpec.Builder().name("Test").build();
+    TypeSpec test = TypeSpec.classBuilder("Test").build();
     javaWriter.add("foo", test)
         .add("foo.bar", test)
         .add("foo.bar.baz", test)
@@ -175,7 +155,7 @@ public final class JavaWriterTest {
   }
 
   @Test public void filerNestedClasses() throws IOException {
-    TypeSpec test = new TypeSpec.Builder().name("Test").build();
+    TypeSpec test = TypeSpec.classBuilder("Test").build();
     javaWriter.add("foo", test)
         .add("foo.bar", test)
         .add("foo.bar.baz", test)
@@ -191,15 +171,13 @@ public final class JavaWriterTest {
 
   @Test public void filerPassesOriginatingElements() throws IOException {
     Element element1_1 = Mockito.mock(Element.class);
-    TypeSpec test1 = new TypeSpec.Builder()
-        .name("Test1")
+    TypeSpec test1 = TypeSpec.classBuilder("Test1")
         .addOriginatingElement(element1_1)
         .build();
 
     Element element2_1 = Mockito.mock(Element.class);
     Element element2_2 = Mockito.mock(Element.class);
-    TypeSpec test2 = new TypeSpec.Builder()
-        .name("Test2")
+    TypeSpec test2 = TypeSpec.classBuilder("Test2")
         .addOriginatingElement(element2_1)
         .addOriginatingElement(element2_2)
         .build();

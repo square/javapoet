@@ -32,18 +32,19 @@ import javax.lang.model.element.Modifier;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.collect.Iterables.getOnlyElement;
 
 /** A generated class, interface, or enum declaration. */
 public final class TypeSpec {
-  public final ImmutableList<AnnotationSpec> annotations;
-  public final ImmutableSet<Modifier> modifiers;
   public final DeclarationType declarationType;
   public final String name;
+  public final Snippet anonymousTypeArguments;
+  public final ImmutableList<AnnotationSpec> annotations;
+  public final ImmutableSet<Modifier> modifiers;
   public final ImmutableList<TypeVariable<?>> typeVariables;
   public final Type superclass;
   public final ImmutableList<Type> superinterfaces;
-  public final Snippet anonymousTypeArguments;
   public final ImmutableMap<String, TypeSpec> enumConstants;
   public final ImmutableList<FieldSpec> fieldSpecs;
   public final ImmutableList<MethodSpec> methodSpecs;
@@ -78,14 +79,14 @@ public final class TypeSpec {
     checkArgument(builder.anonymousTypeArguments == null || interestingSupertypeCount <= 1,
         "anonymous type has too many supertypes");
 
-    this.annotations = ImmutableList.copyOf(builder.annotations);
-    this.modifiers = ImmutableSet.copyOf(builder.modifiers);
     this.declarationType = checkNotNull(builder.declarationType);
     this.name = builder.name;
+    this.anonymousTypeArguments = builder.anonymousTypeArguments;
+    this.annotations = ImmutableList.copyOf(builder.annotations);
+    this.modifiers = ImmutableSet.copyOf(builder.modifiers);
     this.typeVariables = ImmutableList.copyOf(builder.typeVariables);
     this.superclass = builder.superclass;
     this.superinterfaces = ImmutableList.copyOf(builder.superinterfaces);
-    this.anonymousTypeArguments = builder.anonymousTypeArguments;
     this.enumConstants = ImmutableMap.copyOf(builder.enumConstants);
     this.fieldSpecs = ImmutableList.copyOf(builder.fieldSpecs);
     this.methodSpecs = ImmutableList.copyOf(builder.methodSpecs);
@@ -101,6 +102,22 @@ public final class TypeSpec {
 
   public boolean hasModifier(Modifier modifier) {
     return modifiers.contains(modifier);
+  }
+
+  public static Builder classBuilder(String name) {
+    return new Builder(DeclarationType.CLASS, name, null);
+  }
+
+  public static Builder interfaceBuilder(String name) {
+    return new Builder(DeclarationType.INTERFACE, name, null);
+  }
+
+  public static Builder enumBuilder(String name) {
+    return new Builder(DeclarationType.ENUM, name, null);
+  }
+
+  public static Builder anonymousClassBuilder(String typeArgumentsFormat, Object... args) {
+    return new Builder(DeclarationType.CLASS, null, new Snippet(typeArgumentsFormat, args));
   }
 
   void emit(CodeWriter codeWriter, String enumName) {
@@ -218,19 +235,27 @@ public final class TypeSpec {
   }
 
   public static final class Builder {
+    private final DeclarationType declarationType;
+    private final String name;
+    private final Snippet anonymousTypeArguments;
+
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
-    private DeclarationType declarationType = DeclarationType.CLASS;
-    private String name;
     private final List<TypeVariable<?>> typeVariables = new ArrayList<>();
     private Type superclass = ClassName.OBJECT;
     private final List<Type> superinterfaces = new ArrayList<>();
-    private Snippet anonymousTypeArguments;
     private final Map<String, TypeSpec> enumConstants = new LinkedHashMap<>();
     private final List<FieldSpec> fieldSpecs = new ArrayList<>();
     private final List<MethodSpec> methodSpecs = new ArrayList<>();
     private final List<TypeSpec> typeSpecs = new ArrayList<>();
     private final List<Element> originatingElements = new ArrayList<>();
+
+    private Builder(DeclarationType declarationType, String name,
+        Snippet anonymousTypeArguments) {
+      this.declarationType = declarationType;
+      this.name = name;
+      this.anonymousTypeArguments = anonymousTypeArguments;
+    }
 
     public Builder addAnnotation(AnnotationSpec annotationSpec) {
       this.annotations.add(annotationSpec);
@@ -244,21 +269,6 @@ public final class TypeSpec {
 
     public Builder addModifiers(Modifier... modifiers) {
       Collections.addAll(this.modifiers, modifiers);
-      return this;
-    }
-
-    public Builder interfaceType() {
-      this.declarationType = DeclarationType.INTERFACE;
-      return this;
-    }
-
-    public Builder enumType() {
-      this.declarationType = DeclarationType.ENUM;
-      return this;
-    }
-
-    public Builder name(String name) {
-      this.name = name;
       return this;
     }
 
@@ -277,19 +287,9 @@ public final class TypeSpec {
       return this;
     }
 
-    public Builder anonymousTypeArguments() {
-      return anonymousTypeArguments("");
-    }
-
-    public Builder anonymousTypeArguments(String format, Object... args) {
-      this.anonymousTypeArguments = new Snippet(format, args);
-      return this;
-    }
-
     public Builder addEnumConstant(String name) {
-      return addEnumConstant(name, new Builder()
-          .anonymousTypeArguments()
-          .build());
+      checkState(declarationType == DeclarationType.ENUM);
+      return addEnumConstant(name, anonymousClassBuilder("").build());
     }
 
     public Builder addEnumConstant(String name, TypeSpec typeSpec) {

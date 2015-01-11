@@ -73,7 +73,11 @@ public final class AnnotationSpec {
   }
 
   public static AnnotationSpec of(Type annotation) {
-    return new Builder().type(annotation).build();
+    return builder(annotation).build();
+  }
+
+  public static Builder builder(Type type) {
+    return new Builder(type);
   }
 
   @Override public boolean equals(Object o) {
@@ -87,12 +91,11 @@ public final class AnnotationSpec {
   }
 
   public static final class Builder {
-    private Type type;
+    private final Type type;
     private final SortedMap<String, Snippet> members = Maps.newTreeMap();
 
-    public Builder type(Type type) {
+    private Builder(Type type) {
       this.type = type;
-      return this;
     }
 
     public Builder addMember(String name, String format, Object... args) {
