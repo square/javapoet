@@ -30,6 +30,7 @@ import javax.tools.JavaFileObject;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+/** Writes generated types to a filesystem using the standard directory structure. */
 public final class JavaWriter {
   private final List<JavaFile> javaFiles = new ArrayList<>();
 

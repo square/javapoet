@@ -258,9 +258,8 @@ public final class Types {
 
   private static Type get(DeclaredType t) {
     return t.getTypeArguments().isEmpty()
-        ? ClassName.fromTypeElement((TypeElement) t.asElement())
-        : parameterizedType(
-            ClassName.fromTypeElement((TypeElement) t.asElement()),
+        ? ClassName.get((TypeElement) t.asElement())
+        : parameterizedType(ClassName.get((TypeElement) t.asElement()),
             FluentIterable.from(t.getTypeArguments()).transform(FOR_TYPE_MIRROR));
   }
 

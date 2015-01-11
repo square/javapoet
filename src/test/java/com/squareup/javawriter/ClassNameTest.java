@@ -15,7 +15,6 @@
  */
 package com.squareup.javawriter;
 
-import com.google.common.collect.ImmutableList;
 import com.google.testing.compile.CompilationRule;
 import java.util.Map;
 import javax.lang.model.element.TypeElement;
@@ -23,15 +22,15 @@ import javax.lang.model.util.Elements;
 import org.junit.Rule;
 import org.junit.Test;
 
-import static com.google.common.truth.Truth.assert_;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 public final class ClassNameTest {
   @Rule public CompilationRule compilationRule = new CompilationRule();
 
   @Test public void bestGuessForString_simpleClass() {
-    assert_().that(ClassName.bestGuessFromString(String.class.getName()))
-        .isEqualTo(ClassName.create("java.lang", "String"));
+    assertThat(ClassName.bestGuess(String.class.getName()))
+        .isEqualTo(ClassName.get("java.lang", "String"));
   }
 
   static class OuterClass {
@@ -39,65 +38,66 @@ public final class ClassNameTest {
   }
 
   @Test public void bestGuessForString_nestedClass() {
-    assert_().that(ClassName.bestGuessFromString(Map.Entry.class.getCanonicalName()))
-        .isEqualTo(ClassName.create("java.util", ImmutableList.of("Map"), "Entry"));
-    assert_().that(ClassName.bestGuessFromString(OuterClass.InnerClass.class.getCanonicalName()))
-        .isEqualTo(
-            ClassName.create("com.squareup.javawriter",
-                ImmutableList.of("ClassNameTest", "OuterClass"), "InnerClass"));
+    assertThat(ClassName.bestGuess(Map.Entry.class.getCanonicalName()))
+        .isEqualTo(ClassName.get("java.util", "Map", "Entry"));
+    assertThat(ClassName.bestGuess(OuterClass.InnerClass.class.getCanonicalName()))
+        .isEqualTo(ClassName.get("com.squareup.javawriter",
+            "ClassNameTest", "OuterClass", "InnerClass"));
   }
 
   @Test public void bestGuessForString_defaultPackage() {
-    assert_().that(ClassName.bestGuessFromString("SomeClass"))
-        .isEqualTo(ClassName.create("", "SomeClass"));
-    assert_().that(ClassName.bestGuessFromString("SomeClass.Nested"))
-        .isEqualTo(ClassName.create("", ImmutableList.of("SomeClass"), "Nested"));
-    assert_().that(ClassName.bestGuessFromString("SomeClass.Nested.EvenMore"))
-        .isEqualTo(ClassName.create("", ImmutableList.of("SomeClass", "Nested"), "EvenMore"));
+    assertThat(ClassName.bestGuess("SomeClass"))
+        .isEqualTo(ClassName.get("", "SomeClass"));
+    assertThat(ClassName.bestGuess("SomeClass.Nested"))
+        .isEqualTo(ClassName.get("", "SomeClass", "Nested"));
+    assertThat(ClassName.bestGuess("SomeClass.Nested.EvenMore"))
+        .isEqualTo(ClassName.get("", "SomeClass", "Nested", "EvenMore"));
   }
 
   @Test public void bestGuessForString_confusingInput() {
     try {
-      ClassName.bestGuessFromString("com.test.$");
+      ClassName.bestGuess("com.test.$");
       fail();
-    } catch (IllegalArgumentException expected) {}
+    } catch (IllegalArgumentException expected) {
+    }
     try {
-      ClassName.bestGuessFromString("com.test.LooksLikeAClass.pkg");
+      ClassName.bestGuess("com.test.LooksLikeAClass.pkg");
       fail();
-    } catch (IllegalArgumentException expected) {}
+    } catch (IllegalArgumentException expected) {
+    }
     try {
-      ClassName.bestGuessFromString("!@#$gibberish%^&*");
+      ClassName.bestGuess("!@#$gibberish%^&*");
       fail();
-    } catch (IllegalArgumentException expected) {}
+    } catch (IllegalArgumentException expected) {
+    }
   }
 
   @Test public void classNameFromTypeElement() {
     Elements elements = compilationRule.getElements();
     TypeElement element = elements.getTypeElement(Object.class.getCanonicalName());
-    assert_().that(ClassName.fromTypeElement(element).canonicalName())
-        .isEqualTo("java.lang.Object");
+    assertThat(ClassName.get(element).toString()).isEqualTo("java.lang.Object");
   }
   
   @Test public void classNameFromClass() {
-    assert_().that(ClassName.fromClass(Object.class).canonicalName())
+    assertThat(ClassName.get(Object.class).toString())
         .isEqualTo("java.lang.Object");
-    assert_().that(ClassName.fromClass(OuterClass.InnerClass.class).canonicalName())
+    assertThat(ClassName.get(OuterClass.InnerClass.class).toString())
         .isEqualTo("com.squareup.javawriter.ClassNameTest.OuterClass.InnerClass");
   }
 
   @Test public void fromClassRejectionTypes() {
     try {
-      ClassName.fromClass(int.class);
+      ClassName.get(int.class);
       fail();
     } catch (IllegalArgumentException ignored) {
     }
     try {
-      ClassName.fromClass(void.class);
+      ClassName.get(void.class);
       fail();
     } catch (IllegalArgumentException ignored) {
     }
     try {
-      ClassName.fromClass(Object[].class);
+      ClassName.get(Object[].class);
       fail();
     } catch (IllegalArgumentException ignored) {
     }

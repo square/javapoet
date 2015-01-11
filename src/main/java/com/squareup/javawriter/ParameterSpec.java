@@ -21,13 +21,15 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /** A generated parameter declaration. */
 public final class ParameterSpec {
-  public final Name name;
+  public final String name;
   public final ImmutableList<AnnotationSpec> annotations;
   public final ImmutableSet<Modifier> modifiers;
   public final Type type;
@@ -49,22 +51,24 @@ public final class ParameterSpec {
     codeWriter.emit("$T $L", type, name);
   }
 
-  public static Builder builder(Type type, String name) {
-    return builder(type, new Name(name));
+  public static Builder builder(Type type, String name, Modifier... modifiers) {
+    return new Builder(type, name)
+        .addModifiers(modifiers);
   }
 
-  public static Builder builder(Type type, Name name) {
-    return new Builder(type, name);
+  public static ParameterSpec of(Type type, String name, Modifier... modifiers) {
+    return builder(type, name, modifiers).build();
   }
 
   public static final class Builder {
     private final Type type;
-    private final Name name;
+    private final String name;
 
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
 
-    private Builder(Type type, Name name) {
+    private Builder(Type type, String name) {
+      checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
       this.type = type;
       this.name = name;
     }

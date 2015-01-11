@@ -15,7 +15,6 @@
  */
 package com.squareup.javawriter;
 
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
@@ -89,23 +88,20 @@ public final class TypeSpecTest {
   }
 
   @Test public void anonymousInnerClass() throws Exception {
-    ClassName foo = ClassName.create(tacosPackage, "Foo");
-    ClassName bar = ClassName.create(tacosPackage, "Bar");
-    ClassName thingThang = ClassName.create(
-        tacosPackage, ImmutableList.of("Thing"), "Thang");
+    ClassName foo = ClassName.get(tacosPackage, "Foo");
+    ClassName bar = ClassName.get(tacosPackage, "Bar");
+    ClassName thingThang = ClassName.get(tacosPackage, "Thing", "Thang");
     ParameterizedType thingThangOfFooBar
         = Types.parameterizedType(thingThang, foo, bar);
-    ClassName thung = ClassName.create(tacosPackage, "Thung");
-    ClassName simpleThung = ClassName.create(tacosPackage, "SimpleThung");
+    ClassName thung = ClassName.get(tacosPackage, "Thung");
+    ClassName simpleThung = ClassName.get(tacosPackage, "SimpleThung");
     ParameterizedType thungOfSuperBar
         = Types.parameterizedType(thung, Types.supertypeOf(bar));
     ParameterizedType thungOfSuperFoo
         = Types.parameterizedType(thung, Types.supertypeOf(foo));
     ParameterizedType simpleThungOfBar = Types.parameterizedType(simpleThung, bar);
 
-    ParameterSpec thungParameter = ParameterSpec.builder(thungOfSuperFoo, "thung")
-        .addModifiers(Modifier.FINAL)
-        .build();
+    ParameterSpec thungParameter = ParameterSpec.of(thungOfSuperFoo, "thung", Modifier.FINAL);
     TypeSpec aSimpleThung = TypeSpec.anonymousClassBuilder("$N", thungParameter)
         .superclass(simpleThungOfBar)
         .addMethod(MethodSpec.methodBuilder("doSomething")
@@ -158,19 +154,18 @@ public final class TypeSpecTest {
             .addModifiers(Modifier.PUBLIC)
             .addParameter(long.class, "id")
             .addParameter(ParameterSpec.builder(String.class, "one")
-                .addAnnotation(ClassName.create(tacosPackage, "Ping"))
+                .addAnnotation(ClassName.get(tacosPackage, "Ping"))
                 .build())
             .addParameter(ParameterSpec.builder(String.class, "two")
-                .addAnnotation(ClassName.create(tacosPackage, "Ping"))
+                .addAnnotation(ClassName.get(tacosPackage, "Ping"))
                 .build())
             .addParameter(ParameterSpec.builder(String.class, "three")
-                .addAnnotation(
-                    AnnotationSpec.builder(ClassName.create(tacosPackage, "Pong"))
-                        .addMember("value", "$S", "pong")
-                        .build())
+                .addAnnotation(AnnotationSpec.builder(ClassName.get(tacosPackage, "Pong"))
+                    .addMember("value", "$S", "pong")
+                    .build())
                 .build())
             .addParameter(ParameterSpec.builder(String.class, "four")
-                .addAnnotation(ClassName.create(tacosPackage, "Ping"))
+                .addAnnotation(ClassName.get(tacosPackage, "Ping"))
                 .build())
             .addCode("/* code snippets */\n")
             .build())
@@ -190,17 +185,17 @@ public final class TypeSpecTest {
   }
 
   @Test public void retrofitStyleInterface() throws Exception {
-    ClassName observable = ClassName.create(tacosPackage, "Observable");
-    ClassName fooBar = ClassName.create(tacosPackage, "FooBar");
-    ClassName thing = ClassName.create(tacosPackage, "Thing");
-    ClassName things = ClassName.create(tacosPackage, "Things");
-    ClassName map = ClassName.create("java.util", "Map");
-    ClassName string = ClassName.create("java.lang", "String");
-    ClassName headers = ClassName.create(tacosPackage, "Headers");
-    ClassName post = ClassName.create(tacosPackage, "POST");
-    ClassName body = ClassName.create(tacosPackage, "Body");
-    ClassName queryMap = ClassName.create(tacosPackage, "QueryMap");
-    ClassName header = ClassName.create(tacosPackage, "Header");
+    ClassName observable = ClassName.get(tacosPackage, "Observable");
+    ClassName fooBar = ClassName.get(tacosPackage, "FooBar");
+    ClassName thing = ClassName.get(tacosPackage, "Thing");
+    ClassName things = ClassName.get(tacosPackage, "Things");
+    ClassName map = ClassName.get("java.util", "Map");
+    ClassName string = ClassName.get("java.lang", "String");
+    ClassName headers = ClassName.get(tacosPackage, "Headers");
+    ClassName post = ClassName.get(tacosPackage, "POST");
+    ClassName body = ClassName.get(tacosPackage, "Body");
+    ClassName queryMap = ClassName.get(tacosPackage, "QueryMap");
+    ClassName header = ClassName.get(tacosPackage, "Header");
     TypeSpec service = TypeSpec.interfaceBuilder("Service")
         .addMethod(MethodSpec.methodBuilder("fooBar")
             .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
@@ -212,8 +207,7 @@ public final class TypeSpecTest {
                 .addMember("value", "$S", "/foo/bar")
                 .build())
             .returns(Types.parameterizedType(observable, fooBar))
-            .addParameter(ParameterSpec.builder(Types.parameterizedType(things, thing),
-                "things")
+            .addParameter(ParameterSpec.builder(Types.parameterizedType(things, thing), "things")
                 .addAnnotation(body)
                 .build())
             .addParameter(ParameterSpec.builder(
@@ -249,11 +243,10 @@ public final class TypeSpecTest {
 
   @Test public void annotatedField() throws Exception {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-        .addField(FieldSpec.builder(String.class, "thing")
-            .addAnnotation(AnnotationSpec.builder(ClassName.create(tacosPackage, "JsonAdapter"))
-                .addMember("value", "$T.class", ClassName.create(tacosPackage, "Foo"))
+        .addField(FieldSpec.builder(String.class, "thing", Modifier.PRIVATE, Modifier.FINAL)
+            .addAnnotation(AnnotationSpec.builder(ClassName.get(tacosPackage, "JsonAdapter"))
+                .addMember("value", "$T.class", ClassName.get(tacosPackage, "Foo"))
                 .build())
-            .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
             .build())
         .build();
     assertThat(toString(taco)).isEqualTo(""
@@ -268,9 +261,9 @@ public final class TypeSpecTest {
   }
 
   @Test public void annotatedClass() throws Exception {
-    ClassName someType = ClassName.create(tacosPackage, "SomeType");
+    ClassName someType = ClassName.get(tacosPackage, "SomeType");
     TypeSpec taco = TypeSpec.classBuilder("Foo")
-        .addAnnotation(AnnotationSpec.builder(ClassName.create(tacosPackage, "Something"))
+        .addAnnotation(AnnotationSpec.builder(ClassName.get(tacosPackage, "Something"))
             .addMember("hi", "$T.$N", someType, "FIELD")
             .addMember("hey", "$L", 12)
             .addMember("hello", "$S", "goodbye")
@@ -303,9 +296,7 @@ public final class TypeSpecTest {
             .build())
         .addEnumConstant("SCISSORS", TypeSpec.anonymousClassBuilder("$S", "peace sign")
             .build())
-        .addField(FieldSpec.builder(String.class, "handPosition")
-            .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
-            .build())
+        .addField(FieldSpec.of(String.class, "handPosition", Modifier.PRIVATE, Modifier.FINAL))
         .addMethod(MethodSpec.constructorBuilder()
             .addParameter(String.class, "handPosition")
             .addCode("this.handPosition = handPosition;\n")
@@ -397,7 +388,7 @@ public final class TypeSpecTest {
             .build())
         .addMethod(MethodSpec.methodBuilder("throwTwo")
             .addException(IOException.class)
-            .addException(ClassName.create(tacosPackage, "SourCreamException"))
+            .addException(ClassName.get(tacosPackage, "SourCreamException"))
             .build())
         .build();
     assertThat(toString(taco)).isEqualTo(""
@@ -417,11 +408,11 @@ public final class TypeSpecTest {
   @Test public void typeVariables() throws Exception {
     TypeVariable<?> t = Types.typeVariable("T");
     TypeVariable<?> p = Types.typeVariable("P", Number.class);
-    ClassName location = ClassName.create(tacosPackage, "Location");
+    ClassName location = ClassName.get(tacosPackage, "Location");
     TypeSpec typeSpec = TypeSpec.classBuilder("Location")
         .addTypeVariable(t)
         .addTypeVariable(p)
-        .addSuperinterface(Types.parameterizedType(ClassName.fromClass(Comparable.class), p))
+        .addSuperinterface(Types.parameterizedType(ClassName.get(Comparable.class), p))
         .addField(FieldSpec.of(t, "label"))
         .addField(FieldSpec.of(p, "x"))
         .addField(FieldSpec.of(p, "y"))
@@ -470,8 +461,8 @@ public final class TypeSpecTest {
   }
 
   @Test public void classImplementsExtends() throws Exception {
-    ClassName taco = ClassName.create(tacosPackage, "Taco");
-    ClassName food = ClassName.create("com.squareup.tacos", "Food");
+    ClassName taco = ClassName.get(tacosPackage, "Taco");
+    ClassName food = ClassName.get("com.squareup.tacos", "Food");
     TypeSpec typeSpec = TypeSpec.classBuilder("Taco")
         .addModifiers(Modifier.ABSTRACT)
         .superclass(Types.parameterizedType(AbstractSet.class, food))
@@ -511,7 +502,7 @@ public final class TypeSpecTest {
   }
 
   @Test public void interfaceExtends() throws Exception {
-    ClassName taco = ClassName.create(tacosPackage, "Taco");
+    ClassName taco = ClassName.get(tacosPackage, "Taco");
     TypeSpec typeSpec = TypeSpec.interfaceBuilder("Taco")
         .addSuperinterface(Serializable.class)
         .addSuperinterface(Types.parameterizedType(Comparable.class, taco))
@@ -527,11 +518,10 @@ public final class TypeSpecTest {
   }
 
   @Test public void nestedClasses() throws Exception {
-    ClassName taco = ClassName.create(tacosPackage, ImmutableList.of("Combo"), "Taco");
-    ClassName topping = ClassName.create(
-        tacosPackage, ImmutableList.of("Combo", "Taco"), "Topping");
-    ClassName chips = ClassName.create(tacosPackage, ImmutableList.of("Combo"), "Chips");
-    ClassName sauce = ClassName.create(tacosPackage, ImmutableList.of("Combo"), "Sauce");
+    ClassName taco = ClassName.get(tacosPackage, "Combo", "Taco");
+    ClassName topping = ClassName.get(tacosPackage, "Combo", "Taco", "Topping");
+    ClassName chips = ClassName.get(tacosPackage, "Combo", "Chips");
+    ClassName sauce = ClassName.get(tacosPackage, "Combo", "Sauce");
     TypeSpec typeSpec = TypeSpec.classBuilder("Combo")
         .addField(FieldSpec.of(taco, "taco"))
         .addField(FieldSpec.of(chips, "chips"))
@@ -601,13 +591,13 @@ public final class TypeSpecTest {
   }
 
   @Test public void referencedAndDeclaredSimpleNamesConflict() throws Exception {
-    FieldSpec internalTop = FieldSpec.of(ClassName.create(tacosPackage, "Top"), "internalTop");
-    FieldSpec internalBottom = FieldSpec.of(ClassName.create(
-        tacosPackage, ImmutableList.of("Top", "Middle"), "Bottom"), "internalBottom");
+    FieldSpec internalTop = FieldSpec.of(ClassName.get(tacosPackage, "Top"), "internalTop");
+    FieldSpec internalBottom = FieldSpec.of(ClassName.get(tacosPackage,
+        "Top", "Middle", "Bottom"), "internalBottom");
     FieldSpec externalTop = FieldSpec.of(
-        ClassName.create(donutsPackage, "Top"), "externalTop");
+        ClassName.get(donutsPackage, "Top"), "externalTop");
     FieldSpec externalBottom = FieldSpec.of(
-        ClassName.create(donutsPackage, "Bottom"), "externalBottom");
+        ClassName.get(donutsPackage, "Bottom"), "externalBottom");
     TypeSpec top = TypeSpec.classBuilder("Top")
         .addField(internalTop)
         .addField(internalBottom)

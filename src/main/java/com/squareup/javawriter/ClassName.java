@@ -18,15 +18,16 @@ package com.squareup.javawriter;
 import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -39,90 +40,48 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static javax.lang.model.element.NestingKind.MEMBER;
 import static javax.lang.model.element.NestingKind.TOP_LEVEL;
 
-/**
- * Represents a fully-qualified class name for {@link NestingKind#TOP_LEVEL} and
- * {@link NestingKind#MEMBER} classes.
- *
- * @since 2.0
- */
+/** A fully-qualified class name for top-level and member classes. */
 public final class ClassName implements Type, Comparable<ClassName> {
-  public static final ClassName OBJECT = ClassName.fromClass(Object.class);
+  public static final ClassName OBJECT = ClassName.get(Object.class);
 
-  private String fullyQualifiedName = null;
-  private final String packageName;
-  /* From top to bottom.  E.g.: this field will contain ["A", "B"] for pgk.A.B.C */
-  private final ImmutableList<String> enclosingSimpleNames;
-  private final String simpleName;
+  /** From top to bottom. This will be ["java.util", "Map", "Entry"] for {@link Map.Entry}. */
+  final ImmutableList<String> names;
+  final String canonicalName;
 
-  private ClassName(String packageName, ImmutableList<String> enclosingSimpleNames,
-      String simpleName) {
-    this.packageName = packageName;
-    this.enclosingSimpleNames = enclosingSimpleNames;
-    this.simpleName = simpleName;
+  private ClassName(List<String> names) {
+    for (int i = 1; i < names.size(); i++) {
+      checkArgument(SourceVersion.isName(names.get(i)));
+    }
+    this.names = ImmutableList.copyOf(names);
+    this.canonicalName = Joiner.on(".").join(names.get(0).isEmpty()
+        ? names.subList(1, names.size())
+        : names);
   }
 
+  /** Returns the package name, like {@code "java.util"} for {@code Map.Entry}. */
   public String packageName() {
-    return packageName;
+    return names.get(0);
   }
 
-  public ImmutableList<String> enclosingSimpleNames() {
-    return enclosingSimpleNames;
+  /**
+   * Returns the enclosing class, like {@link Map} for {@code Map.Entry}. Returns null if this class
+   * is not nested in another class.
+   */
+  public ClassName enclosingClassName() {
+    if (names.size() == 2) return null;
+    return new ClassName(names.subList(0, names.size() - 1));
   }
 
   ImmutableList<String> simpleNames() {
-    return new ImmutableList.Builder<String>()
-        .addAll(enclosingSimpleNames)
-        .add(simpleName)
-        .build();
+    return names.subList(1, names.size());
   }
 
-  public Optional<ClassName> enclosingClassName() {
-    return enclosingSimpleNames.isEmpty()
-        ? Optional.<ClassName>absent()
-        : Optional.of(new ClassName(packageName,
-            enclosingSimpleNames.subList(0, enclosingSimpleNames.size() - 1),
-            enclosingSimpleNames.get(enclosingSimpleNames.size() - 1)));
-  }
-
+  /** Returns the simple name of this class, like {@code "Entry"} for {@link Map.Entry}. */
   public String simpleName() {
-    return simpleName;
+    return names.get(names.size() - 1);
   }
 
-  public String canonicalName() {
-    if (fullyQualifiedName == null) {
-      StringBuilder builder = new StringBuilder(packageName);
-      if (builder.length() > 0) {
-        builder.append('.');
-      }
-      for (String enclosingSimpleName : enclosingSimpleNames()) {
-        builder.append(enclosingSimpleName).append('.');
-      }
-      fullyQualifiedName = builder.append(simpleName()).toString();
-    }
-    return fullyQualifiedName;
-  }
-
-  private static final ImmutableSet<NestingKind> ACCEPTABLE_NESTING_KINDS =
-      Sets.immutableEnumSet(TOP_LEVEL, MEMBER);
-
-  public static ClassName fromTypeElement(TypeElement element) {
-    checkNotNull(element);
-    checkArgument(ACCEPTABLE_NESTING_KINDS.contains(element.getNestingKind()));
-    String simpleName = element.getSimpleName().toString();
-    List<String> enclosingNames = Lists.newArrayList();
-    Element current = element.getEnclosingElement();
-    while (current.getKind().isClass() || current.getKind().isInterface()) {
-      checkArgument(ACCEPTABLE_NESTING_KINDS.contains(element.getNestingKind()));
-      enclosingNames.add(current.getSimpleName().toString());
-      current = current.getEnclosingElement();
-    }
-    PackageElement packageElement = getPackage(current);
-    Collections.reverse(enclosingNames);
-    return new ClassName(packageElement.getQualifiedName().toString(),
-        ImmutableList.copyOf(enclosingNames), simpleName);
-  }
-
-  public static ClassName fromClass(Class<?> clazz) {
+  public static ClassName get(Class<?> clazz) {
     checkNotNull(clazz);
     checkArgument(!clazz.isPrimitive(),
         "Primitive types cannot be represented as a ClassName. Use TypeNames.forClass instead.");
@@ -130,14 +89,75 @@ public final class ClassName implements Type, Comparable<ClassName> {
         "'void' type cannot be represented as a ClassName. Use TypeNames.forClass instead.");
     checkArgument(!clazz.isArray(),
         "Array types cannot be represented as a ClassName. Use TypeNames.forClass instead.");
-    List<String> enclosingNames = Lists.newArrayList();
-    Class<?> current = clazz.getEnclosingClass();
-    while (current != null) {
-      enclosingNames.add(current.getSimpleName());
-      current = current.getEnclosingClass();
+    List<String> names = Lists.newArrayList();
+    for (Class<?> c = clazz; c != null; c = c.getEnclosingClass()) {
+      names.add(c.getSimpleName());
     }
-    Collections.reverse(enclosingNames);
-    return create(clazz.getPackage().getName(), enclosingNames, clazz.getSimpleName());
+    names.add(clazz.getPackage().getName());
+    Collections.reverse(names);
+    return new ClassName(names);
+  }
+
+  /**
+   * Returns a new {@link ClassName} instance for the given fully-qualified class name string. This
+   * method assumes that the input is ASCII and follows typical Java style (lowercase package
+   * names, UpperCamelCase class names) and may produce incorrect results or throw
+   * {@link IllegalArgumentException} otherwise. For that reason, {@link #get(Class)} and
+   * {@link #get(Class)} should be preferred as they can correctly create {@link ClassName}
+   * instances without such restrictions.
+   */
+  public static ClassName bestGuess(String classNameString) {
+    String packageName = "";
+    List<String> simpleNames = new ArrayList<>();
+
+    for (String part : Splitter.on('.').split(classNameString)) {
+      checkArgument(SourceVersion.isIdentifier(part));
+      char firstChar = part.charAt(0);
+      if (Ascii.isLowerCase(firstChar)) {
+        checkArgument(simpleNames.isEmpty(), "couldn't make a guess for %s", classNameString);
+        if (!packageName.isEmpty()) packageName += ".";
+        packageName += part;
+      } else if (Ascii.isUpperCase(firstChar)) {
+        simpleNames.add(part);
+      } else {
+        checkArgument(false, "couldn't make a guess for %s", classNameString);
+      }
+    }
+    checkArgument(!simpleNames.isEmpty(), "couldn't make a guess for %s", classNameString);
+    simpleNames.add(0, packageName);
+    return new ClassName(simpleNames);
+  }
+
+  /**
+   * Returns a class name created from the given parts. For example, calling this with package name
+   * {@code "java.util"} and simple names {@code "Map"}, {@code "Entry"} yields {@link Map.Entry}.
+   */
+  public static ClassName get(String packageName, String simpleName, String... simpleNames) {
+    return new ClassName(new ImmutableList.Builder<String>()
+        .add(packageName)
+        .add(simpleName)
+        .add(simpleNames)
+        .build());
+  }
+
+  private static final ImmutableSet<NestingKind> ACCEPTABLE_NESTING_KINDS =
+      Sets.immutableEnumSet(TOP_LEVEL, MEMBER);
+
+  /** Returns the class name for {@code element}. */
+  public static ClassName get(TypeElement element) {
+    checkNotNull(element);
+    List<String> names = Lists.newArrayList();
+    for (Element e = element; isClassOrInterface(e); e = e.getEnclosingElement()) {
+      checkArgument(ACCEPTABLE_NESTING_KINDS.contains(element.getNestingKind()));
+      names.add(e.getSimpleName().toString());
+    }
+    names.add(getPackage(element).getQualifiedName().toString());
+    Collections.reverse(names);
+    return new ClassName(names);
+  }
+
+  private static boolean isClassOrInterface(Element e) {
+    return e.getKind().isClass() || e.getKind().isInterface();
   }
 
   private static PackageElement getPackage(Element type) {
@@ -147,77 +167,20 @@ public final class ClassName implements Type, Comparable<ClassName> {
     return (PackageElement) type;
   }
 
-  /**
-   * Returns a new {@link ClassName} instance for the given fully-qualified class name string. This
-   * method assumes that the input is ASCII and follows typical Java style (lower-case package
-   * names, upper-camel-case class names) and may produce incorrect results or throw
-   * {@link IllegalArgumentException} otherwise. For that reason, {@link #fromClass(Class)} and
-   * {@link #fromClass(Class)} should be preferred as they can correctly create {@link ClassName}
-   * instances without such restrictions.
-   */
-  public static ClassName bestGuessFromString(String classNameString) {
-    checkNotNull(classNameString);
-    List<String> parts = Splitter.on('.').splitToList(classNameString);
-    int firstClassPartIndex = -1;
-    for (int i = 0; i < parts.size(); i++) {
-      String part = parts.get(i);
-      checkArgument(SourceVersion.isIdentifier(part));
-      char firstChar = part.charAt(0);
-      if (Ascii.isLowerCase(firstChar)) {
-        // looks like a package part
-        if (firstClassPartIndex >= 0) {
-          throw new IllegalArgumentException("couldn't make a guess for " + classNameString);
-        }
-      } else if (Ascii.isUpperCase(firstChar)) {
-        // looks like a class part
-        if (firstClassPartIndex < 0) {
-          firstClassPartIndex = i;
-        }
-      } else {
-        throw new IllegalArgumentException("couldn't make a guess for " + classNameString);
-      }
-    }
-    int lastIndex = parts.size() - 1;
-    return new ClassName(
-        Joiner.on('.').join(parts.subList(0, firstClassPartIndex)),
-        firstClassPartIndex == lastIndex
-            ? ImmutableList.<String>of()
-            : ImmutableList.copyOf(parts.subList(firstClassPartIndex, lastIndex)),
-        parts.get(lastIndex));
-  }
-
-  public static ClassName create(
-      String packageName, List<String> enclosingSimpleNames, String simpleName) {
-    return new ClassName(packageName, ImmutableList.copyOf(enclosingSimpleNames),
-        simpleName);
-  }
-
-  public static ClassName create(String packageName, String simpleName) {
-    return new ClassName(packageName, ImmutableList.<String>of(), simpleName);
-  }
-
-  @Override public String toString() {
-    return canonicalName();
-  }
-
-  @Override public boolean equals(Object obj) {
-    if (obj == this) {
-      return true;
-    } else if (obj instanceof ClassName) {
-      ClassName that = (ClassName) obj;
-      return this.packageName.equals(that.packageName)
-          && this.enclosingSimpleNames.equals(that.enclosingSimpleNames)
-          && this.simpleName.equals(that.simpleName);
-    } else {
-      return false;
-    }
+  @Override public boolean equals(Object o) {
+    return o instanceof ClassName
+        && canonicalName.equals(((ClassName) o).canonicalName);
   }
 
   @Override public int hashCode() {
-    return Objects.hashCode(packageName, enclosingSimpleNames, simpleName);
+    return Objects.hashCode(canonicalName);
   }
 
   @Override public int compareTo(ClassName o) {
-    return canonicalName().compareTo(o.canonicalName());
+    return canonicalName.compareTo(o.canonicalName);
+  }
+
+  @Override public String toString() {
+    return canonicalName;
   }
 }

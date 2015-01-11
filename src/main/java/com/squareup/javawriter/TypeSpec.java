@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 
@@ -256,6 +257,7 @@ public final class TypeSpec {
 
     private Builder(DeclarationType declarationType, String name,
         Snippet anonymousTypeArguments) {
+      checkArgument(name == null || SourceVersion.isName(name), "not a valid name: %s", name);
       this.declarationType = declarationType;
       this.name = name;
       this.anonymousTypeArguments = anonymousTypeArguments;
@@ -307,6 +309,7 @@ public final class TypeSpec {
       checkState(declarationType == DeclarationType.ENUM);
       checkArgument(typeSpec.anonymousTypeArguments != null,
           "enum constants must have anonymous type arguments");
+      checkArgument(SourceVersion.isName(name), "not a valid enum constant: %s", name);
       enumConstants.put(name, typeSpec);
       return this;
     }
@@ -314,6 +317,10 @@ public final class TypeSpec {
     public Builder addField(FieldSpec fieldSpec) {
       fieldSpecs.add(fieldSpec);
       return this;
+    }
+
+    public Builder addField(Type type, String name, Modifier... modifiers) {
+      return addField(FieldSpec.of(type, name, modifiers));
     }
 
     public Builder addMethod(MethodSpec methodSpec) {
