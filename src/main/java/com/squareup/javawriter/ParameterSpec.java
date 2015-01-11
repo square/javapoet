@@ -27,16 +27,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /** A generated parameter declaration. */
 public final class ParameterSpec {
+  public final Name name;
   public final ImmutableList<AnnotationSpec> annotations;
   public final ImmutableSet<Modifier> modifiers;
   public final Type type;
-  public final Name name;
 
   private ParameterSpec(Builder builder) {
+    this.name = checkNotNull(builder.name);
     this.annotations = ImmutableList.copyOf(builder.annotations);
     this.modifiers = ImmutableSet.copyOf(builder.modifiers);
     this.type = checkNotNull(builder.type);
-    this.name = checkNotNull(builder.name);
   }
 
   public boolean hasModifier(Modifier modifier) {
@@ -49,11 +49,25 @@ public final class ParameterSpec {
     codeWriter.emit("$T $L", type, name);
   }
 
+  public static Builder builder(Type type, String name) {
+    return builder(type, new Name(name));
+  }
+
+  public static Builder builder(Type type, Name name) {
+    return new Builder(type, name);
+  }
+
   public static final class Builder {
+    private final Type type;
+    private final Name name;
+
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
-    private Type type;
-    private Name name;
+
+    private Builder(Type type, Name name) {
+      this.type = type;
+      this.name = name;
+    }
 
     public Builder addAnnotation(AnnotationSpec annotationSpec) {
       this.annotations.add(annotationSpec);
@@ -67,21 +81,6 @@ public final class ParameterSpec {
 
     public Builder addModifiers(Modifier... modifiers) {
       Collections.addAll(this.modifiers, modifiers);
-      return this;
-    }
-
-    public Builder type(Type type) {
-      this.type = type;
-      return this;
-    }
-
-    public Builder name(String name) {
-      this.name = new Name(name);
-      return this;
-    }
-
-    public Builder name(Name name) {
-      this.name = name;
       return this;
     }
 

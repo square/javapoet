@@ -15,9 +15,6 @@
  */
 package com.squareup.javawriter;
 
-import com.squareup.javawriter.FieldSpec;
-import com.squareup.javawriter.JavaFile;
-import com.squareup.javawriter.TypeSpec;
 import java.util.Date;
 import org.junit.Test;
 
@@ -27,8 +24,7 @@ public final class JavaFileTest {
   @Test public void noImports() throws Exception {
     String source = new JavaFile.Builder()
         .packageName("com.squareup.tacos")
-        .typeSpec(new TypeSpec.Builder()
-            .name("Taco")
+        .typeSpec(TypeSpec.classBuilder("Taco")
             .build())
         .build()
         .toString();
@@ -42,11 +38,9 @@ public final class JavaFileTest {
   @Test public void singleImport() throws Exception {
     String source = new JavaFile.Builder()
         .packageName("com.squareup.tacos")
-        .typeSpec(new TypeSpec.Builder()
-            .name("Taco")
-            .addField(new FieldSpec.Builder()
+        .typeSpec(TypeSpec.classBuilder("Taco")
+            .addField(FieldSpec.builder("madeFreshDate")
                 .type(Date.class)
-                .name("madeFreshDate")
                 .build())
             .build())
         .build()
@@ -64,15 +58,12 @@ public final class JavaFileTest {
   @Test public void conflictingImports() throws Exception {
     String source = new JavaFile.Builder()
         .packageName("com.squareup.tacos")
-        .typeSpec(new TypeSpec.Builder()
-            .name("Taco")
-            .addField(new FieldSpec.Builder()
+        .typeSpec(TypeSpec.classBuilder("Taco")
+            .addField(FieldSpec.builder("madeFreshDate")
                 .type(Date.class)
-                .name("madeFreshDate")
                 .build())
-            .addField(new FieldSpec.Builder()
+            .addField(FieldSpec.builder("madeFreshDatabaseDate")
                 .type(java.sql.Date.class)
-                .name("madeFreshDatabaseDate")
                 .build())
             .build())
         .build()

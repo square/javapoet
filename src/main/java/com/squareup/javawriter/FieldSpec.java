@@ -27,17 +27,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 /** A generated field declaration. */
 public final class FieldSpec {
+  public final Name name;
   public final ImmutableList<AnnotationSpec> annotations;
   public final ImmutableSet<Modifier> modifiers;
   public final Type type;
-  public final Name name;
   public final Snippet initializer;
 
   private FieldSpec(Builder builder) {
+    this.name = checkNotNull(builder.name);
     this.annotations = ImmutableList.copyOf(builder.annotations);
     this.modifiers = ImmutableSet.copyOf(builder.modifiers);
     this.type = checkNotNull(builder.type);
-    this.name = checkNotNull(builder.name);
     this.initializer = builder.initializer;
   }
 
@@ -56,20 +56,32 @@ public final class FieldSpec {
     codeWriter.emit(";\n");
   }
 
+  public static Builder builder(String name) {
+    return builder(new Name(name));
+  }
+
+  public static Builder builder(Name name) {
+    return new Builder(name);
+  }
+
   public static FieldSpec of(Type type, String name, Modifier... modifiers) {
-    return new Builder()
+    return new Builder(new Name(name))
         .type(type)
-        .name(name)
         .addModifiers(modifiers)
         .build();
   }
 
   public static final class Builder {
+    private final Name name;
+
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
     private Type type;
-    private Name name;
     private Snippet initializer;
+
+    private Builder(Name name) {
+      this.name = name;
+    }
 
     public Builder addAnnotation(AnnotationSpec annotationSpec) {
       this.annotations.add(annotationSpec);
@@ -89,15 +101,6 @@ public final class FieldSpec {
     public Builder type(Type type) {
       this.type = type;
       return this;
-    }
-
-    public Builder name(Name name) {
-      this.name = name;
-      return this;
-    }
-
-    public Builder name(String name) {
-      return name(new Name(name));
     }
 
     public Builder initializer(String format, Object... args) {
