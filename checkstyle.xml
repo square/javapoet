@@ -83,7 +83,7 @@
     <module name="AvoidNestedBlocks"/>
     <!--module name="EmptyBlock"/-->
     <module name="LeftCurly"/>
-    <module name="NeedBraces"/>
+    <!--<module name="NeedBraces"/>-->
     <module name="RightCurly"/>
 
 
@@ -97,7 +97,7 @@
     <!--module name="HiddenField"/-->
     <module name="IllegalInstantiation"/>
     <module name="InnerAssignment"/>
-    <module name="MagicNumber"/>
+    <!--<module name="MagicNumber"/>-->
     <module name="MissingSwitchDefault"/>
     <module name="RedundantThrows"/>
     <module name="SimplifyBooleanExpression"/>

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Google, Inc.
+ * Copyright (C) 2015 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,110 +15,63 @@
  */
 package com.squareup.javawriter;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Formatter;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.Arrays;
 
-public final class Snippet implements HasClassReferences, Writable {
-  private final String format;
-  private final ImmutableSet<TypeName> types;
-  private final ImmutableList<Object> args;
+import static com.google.common.base.Preconditions.checkState;
 
-  private Snippet(String format, ImmutableSet<TypeName> types, ImmutableList<Object> args) {
-    this.format = format;
-    this.types = types;
-    this.args = args;
-  }
+/**
+ * A deferred format string. Unlike {@link java.text.Format} which uses percent {@code %} to escape
+ * placeholders, this uses {@code $}, and has its own set of permitted placeholders:
+ *
+ * <ul>
+ *   <li>{@code $L} emits the <em>literal</em> value with no escaping.
+ *   <li>{@code $N} emits a <em>name</em>, using name collision avoidance where necessary.
+ *   <li>{@code $S} escapes the value as a <em>string</em>, wraps it with double quotes, and emits
+ *       that.
+ *   <li>{@code $T} emits a <em>type</em> reference. Types will be imported if possible.
+ *   <li>{@code $$} emits a dollar sign.
+ * </ul>
+ */
+final class Snippet {
+  /** A heterogeneous list containing string literals and value placeholders. */
+  final ImmutableList<String> formatParts;
+  final ImmutableList<Object> args;
 
-  public String format() {
-    return format;
-  }
-
-  public ImmutableList<Object> args() {
-    return args;
-  }
-
-  public ImmutableSet<TypeName> types() {
-    return types;
-  }
-
-  @Override
-  public String toString() {
-    return Writables.writeToString(this);
-  }
-
-  @Override
-  public Set<ClassName> referencedClasses() {
-    return FluentIterable.from(types)
-        .transformAndConcat(GET_REFERENCED_CLASSES)
-        .toSet();
-  }
-
-  @Override
-  public Appendable write(Appendable appendable, Context context) throws IOException {
-    ImmutableList.Builder<Object> formattedArgsBuilder = ImmutableList.builder();
-    for (Object arg : args) {
-      if (arg instanceof Writable) {
-        formattedArgsBuilder.add(((Writable) arg).write(new StringBuilder(), context).toString());
+  public Snippet(String format, Object[] args) {
+    ImmutableList.Builder<String> formatPartsBuilder = ImmutableList.builder();
+    int expectedArgsLength = 0;
+    for (int p = 0, nextP; p < format.length(); p = nextP) {
+      if (format.charAt(p) != '$') {
+        nextP = format.indexOf('$', p + 1);
+        if (nextP == -1) nextP = format.length();
       } else {
-        formattedArgsBuilder.add(arg);
+        checkState(p + 1 < format.length(), "dangling $ in format string %s", format);
+        switch (format.charAt(p + 1)) {
+          case 'L':
+          case 'N':
+          case 'S':
+          case 'T':
+            expectedArgsLength++;
+            // Fall through.
+          case '$':
+            nextP = p + 2;
+            break;
+
+          default:
+            throw new IllegalArgumentException("invalid format string: " + format);
+        }
       }
+
+      formatPartsBuilder.add(format.substring(p, nextP));
     }
 
-    @SuppressWarnings("resource") // intentionally don't close the formatter
-    Formatter formatter = new Formatter(appendable);
-    formatter.format(format, formattedArgsBuilder.build().toArray());
-
-    return appendable;
-  }
-
-  public static Snippet format(String format, Object... args) {
-    ImmutableSet.Builder<TypeName> types = ImmutableSet.builder();
-    for (Object arg : args) {
-      if (arg instanceof HasClassReferences) {
-        types.addAll(((HasClassReferences) arg).referencedClasses());
-      }
-      if (arg instanceof HasTypeName) {
-        types.addAll(((HasTypeName) arg).name().referencedClasses());
-      }
+    if (args.length != expectedArgsLength) {
+      throw new IllegalStateException(String.format("expected %s args for %s but was %s",
+          expectedArgsLength, format, Arrays.toString(args)));
     }
-    return new Snippet(format, types.build(), ImmutableList.copyOf(args));
-  }
 
-  public static Snippet format(String format, Iterable<?> args) {
-    return format(format, Iterables.toArray(args, Object.class));
-  }
-
-  public static Snippet memberSelectSnippet(Iterable<?> selectors) {
-    return format(Joiner.on('.').join(Collections.nCopies(Iterables.size(selectors), "%s")),
-        selectors);
-  }
-
-  public static Snippet makeParametersSnippet(List<Snippet> parameterSnippets) {
-    Iterator<Snippet> iterator = parameterSnippets.iterator();
-    StringBuilder stringBuilder = new StringBuilder();
-    ImmutableSet.Builder<TypeName> typesBuilder = ImmutableSet.builder();
-    ImmutableList.Builder<Object> argsBuilder = ImmutableList.builder();
-    if (iterator.hasNext()) {
-      Snippet firstSnippet = iterator.next();
-      stringBuilder.append(firstSnippet.format());
-      typesBuilder.addAll(firstSnippet.types());
-      argsBuilder.addAll(firstSnippet.args());
-    }
-    while (iterator.hasNext()) {
-      Snippet nextSnippet = iterator.next();
-      stringBuilder.append(", ").append(nextSnippet.format());
-      typesBuilder.addAll(nextSnippet.types());
-      argsBuilder.addAll(nextSnippet.args());
-    }
-    return new Snippet(stringBuilder.toString(), typesBuilder.build(), argsBuilder.build());
+    this.formatParts = formatPartsBuilder.build();
+    this.args = ImmutableList.copyOf(args);
   }
 }

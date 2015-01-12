@@ -15,5 +15,8 @@
  */
 package com.squareup.javawriter;
 
-public interface TypeName extends HasClassReferences, Writable {
+import java.lang.reflect.Type;
+
+interface IntersectionType extends Type {
+  Type[] getBounds();
 }

@@ -1,8 +1,11 @@
 language: java
 
 jdk:
-  - oraclejdk7
   - oraclejdk8
+
+script:
+  - mvn test -B
+  - jdk_switcher use openjdk7 && mvn surefire:test -B
 
 after_success:
   - .buildscript/deploy_snapshot.sh

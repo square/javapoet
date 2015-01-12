@@ -26,15 +26,12 @@ import javax.lang.model.element.Element;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import static com.google.common.truth.Truth.assertThat;
 
-@RunWith(JUnit4.class)
 public final class JavaWriterTest {
-  private final JavaWriter javaWriter = JavaWriter.create();
+  private final JavaWriter javaWriter = new JavaWriter();
 
   // Used for testing java.io File behavior.
   @Rule public final TemporaryFolder tmp = new TemporaryFolder();
@@ -67,38 +64,33 @@ public final class JavaWriterTest {
   }
 
   @Test public void pathDefaultPackage() throws IOException {
-    ClassName name = ClassName.create("", "Test");
-    ClassWriter test = ClassWriter.forClassName(name);
-    javaWriter.addTypeWriter(test).writeTo(fsRoot);
+    TypeSpec type = TypeSpec.classBuilder("Test").build();
+    javaWriter.add("", type).writeTo(fsRoot);
 
     Path testPath = fsRoot.resolve("Test.java");
     assertThat(Files.exists(testPath)).isTrue();
   }
 
   @Test public void fileDefaultPackage() throws IOException {
-    ClassName name = ClassName.create("", "Test");
-    ClassWriter test = ClassWriter.forClassName(name);
-    javaWriter.addTypeWriter(test).writeTo(tmp.getRoot());
+    TypeSpec type = TypeSpec.classBuilder("Test").build();
+    javaWriter.add("", type).writeTo(tmp.getRoot());
 
     File testFile = new File(tmp.getRoot(), "Test.java");
     assertThat(testFile.exists()).isTrue();
   }
 
   @Test public void filerDefaultPackage() throws IOException {
-    ClassName name = ClassName.create("", "Test");
-    ClassWriter test = ClassWriter.forClassName(name);
-    javaWriter.addTypeWriter(test).writeTo(filer);
+    TypeSpec type = TypeSpec.classBuilder("Test").build();
+    javaWriter.add("", type).writeTo(filer);
 
     Path testPath = fsRoot.resolve("Test.java");
     assertThat(Files.exists(testPath)).isTrue();
   }
 
   @Test public void pathSamePackage() throws IOException {
-    ClassName name1 = ClassName.create("example", "Test1");
-    ClassName name2 = ClassName.create("example", "Test2");
-    ClassWriter test1 = ClassWriter.forClassName(name1);
-    ClassWriter test2 = ClassWriter.forClassName(name2);
-    javaWriter.addTypeWriters(test1, test2).writeTo(fsRoot);
+    TypeSpec test1 = TypeSpec.classBuilder("Test1").build();
+    TypeSpec test2 = TypeSpec.classBuilder("Test2").build();
+    javaWriter.add("example", test1).add("example", test2).writeTo(fsRoot);
 
     Path testPath1 = fsRoot.resolve(fs.getPath("example", "Test1.java"));
     assertThat(Files.exists(testPath1)).isTrue();
@@ -107,11 +99,9 @@ public final class JavaWriterTest {
   }
 
   @Test public void fileSamePackage() throws IOException {
-    ClassName name1 = ClassName.create("example", "Test1");
-    ClassName name2 = ClassName.create("example", "Test2");
-    ClassWriter test1 = ClassWriter.forClassName(name1);
-    ClassWriter test2 = ClassWriter.forClassName(name2);
-    javaWriter.addTypeWriters(test1, test2).writeTo(tmp.getRoot());
+    TypeSpec test1 = TypeSpec.classBuilder("Test1").build();
+    TypeSpec test2 = TypeSpec.classBuilder("Test2").build();
+    javaWriter.add("example", test1).add("example", test2).writeTo(tmp.getRoot());
 
     File examplePackage = new File(tmp.getRoot(), "example");
     File testFile1 = new File(examplePackage, "Test1.java");
@@ -121,11 +111,9 @@ public final class JavaWriterTest {
   }
 
   @Test public void filerSamePackage() throws IOException {
-    ClassName name1 = ClassName.create("example", "Test1");
-    ClassName name2 = ClassName.create("example", "Test2");
-    ClassWriter test1 = ClassWriter.forClassName(name1);
-    ClassWriter test2 = ClassWriter.forClassName(name2);
-    javaWriter.addTypeWriters(test1, test2).writeTo(filer);
+    TypeSpec test1 = TypeSpec.classBuilder("Test1").build();
+    TypeSpec test2 = TypeSpec.classBuilder("Test2").build();
+    javaWriter.add("example", test1).add("example", test2).writeTo(filer);
 
     Path testPath1 = fsRoot.resolve(fs.getPath("example", "Test1.java"));
     assertThat(Files.exists(testPath1)).isTrue();
@@ -134,13 +122,11 @@ public final class JavaWriterTest {
   }
 
   @Test public void pathNestedClasses() throws IOException {
-    ClassName fooName = ClassName.create("foo", "Test");
-    ClassName barName = ClassName.create("foo.bar", "Test");
-    ClassName bazName = ClassName.create("foo.bar.baz", "Test");
-    ClassWriter foo = ClassWriter.forClassName(fooName);
-    ClassWriter bar = ClassWriter.forClassName(barName);
-    ClassWriter baz = ClassWriter.forClassName(bazName);
-    javaWriter.addTypeWriters(foo, bar, baz).writeTo(fsRoot);
+    TypeSpec test = TypeSpec.classBuilder("Test").build();
+    javaWriter.add("foo", test)
+        .add("foo.bar", test)
+        .add("foo.bar.baz", test)
+        .writeTo(fsRoot);
 
     Path fooPath = fsRoot.resolve(fs.getPath("foo", "Test.java"));
     Path barPath = fsRoot.resolve(fs.getPath("foo", "bar", "Test.java"));
@@ -151,13 +137,11 @@ public final class JavaWriterTest {
   }
 
   @Test public void fileNestedClasses() throws IOException {
-    ClassName fooName = ClassName.create("foo", "Test");
-    ClassName barName = ClassName.create("foo.bar", "Test");
-    ClassName bazName = ClassName.create("foo.bar.baz", "Test");
-    ClassWriter foo = ClassWriter.forClassName(fooName);
-    ClassWriter bar = ClassWriter.forClassName(barName);
-    ClassWriter baz = ClassWriter.forClassName(bazName);
-    javaWriter.addTypeWriters(foo, bar, baz).writeTo(tmp.getRoot());
+    TypeSpec test = TypeSpec.classBuilder("Test").build();
+    javaWriter.add("foo", test)
+        .add("foo.bar", test)
+        .add("foo.bar.baz", test)
+        .writeTo(tmp.getRoot());
 
     File fooDir = new File(tmp.getRoot(), "foo");
     File fooFile = new File(fooDir, "Test.java");
@@ -171,13 +155,11 @@ public final class JavaWriterTest {
   }
 
   @Test public void filerNestedClasses() throws IOException {
-    ClassName fooName = ClassName.create("foo", "Test");
-    ClassName barName = ClassName.create("foo.bar", "Test");
-    ClassName bazName = ClassName.create("foo.bar.baz", "Test");
-    ClassWriter foo = ClassWriter.forClassName(fooName);
-    ClassWriter bar = ClassWriter.forClassName(barName);
-    ClassWriter baz = ClassWriter.forClassName(bazName);
-    javaWriter.addTypeWriters(foo, bar, baz).writeTo(filer);
+    TypeSpec test = TypeSpec.classBuilder("Test").build();
+    javaWriter.add("foo", test)
+        .add("foo.bar", test)
+        .add("foo.bar.baz", test)
+        .writeTo(filer);
 
     Path fooPath = fsRoot.resolve(fs.getPath("foo", "Test.java"));
     Path barPath = fsRoot.resolve(fs.getPath("foo", "bar", "Test.java"));
@@ -188,18 +170,19 @@ public final class JavaWriterTest {
   }
 
   @Test public void filerPassesOriginatingElements() throws IOException {
-    ClassName name1 = ClassName.create("example", "Test1");
-    ClassWriter test1 = ClassWriter.forClassName(name1);
     Element element1_1 = Mockito.mock(Element.class);
-    test1.addOriginatingElement(element1_1);
+    TypeSpec test1 = TypeSpec.classBuilder("Test1")
+        .addOriginatingElement(element1_1)
+        .build();
 
-    ClassName name2 = ClassName.create("example", "Test2");
-    ClassWriter test2 = ClassWriter.forClassName(name2);
     Element element2_1 = Mockito.mock(Element.class);
     Element element2_2 = Mockito.mock(Element.class);
-    test2.addOriginatingElements(element2_1, element2_2);
+    TypeSpec test2 = TypeSpec.classBuilder("Test2")
+        .addOriginatingElement(element2_1)
+        .addOriginatingElement(element2_2)
+        .build();
 
-    javaWriter.addTypeWriters(test1, test2).writeTo(filer);
+    javaWriter.add("example", test1).add("example", test2).writeTo(filer);
 
     Path testPath1 = fsRoot.resolve(fs.getPath("example", "Test1.java"));
     assertThat(filer.getOriginatingElements(testPath1)).containsExactly(element1_1);
