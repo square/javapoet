@@ -49,18 +49,18 @@ public final class TypesTest {
 
   @Test public void getBasicTypeMirror() {
     assert_().that(Types.get(getType(Object.class)))
-        .isEqualTo(ClassName.fromClass(Object.class));
+        .isEqualTo(ClassName.get(Object.class));
     assert_().that(Types.get(getType(Charset.class)))
-        .isEqualTo(ClassName.fromClass(Charset.class));
+        .isEqualTo(ClassName.get(Charset.class));
     assert_().that(Types.get(getType(TypesTest.class)))
-        .isEqualTo(ClassName.fromClass(TypesTest.class));
+        .isEqualTo(ClassName.get(TypesTest.class));
   }
 
   @Test public void getParameterizedTypeMirror() {
     DeclaredType setType =
         compilation.getTypes().getDeclaredType(getElement(Set.class), getType(Object.class));
     assert_().that(Types.get(setType))
-        .isEqualTo(Types.parameterizedType(ClassName.fromClass(Set.class), ClassName.OBJECT));
+        .isEqualTo(Types.parameterizedType(ClassName.get(Set.class), ClassName.OBJECT));
   }
 
   static class Parameterized<
@@ -100,13 +100,13 @@ public final class TypesTest {
       // Java 8.
       IntersectionType intersectionType = (IntersectionType) bounds[0];
       assert_().that(intersectionType.getBounds()).asList()
-          .containsExactly(ClassName.fromClass(Number.class), ClassName.fromClass(Runnable.class));
+          .containsExactly(ClassName.get(Number.class), ClassName.get(Runnable.class));
       assert_().that(intersectionType.toString())
           .isEqualTo("java.lang.Number & java.lang.Runnable");
     } else {
       // Java ≤ 7.
       assert_().that(bounds).asList()
-          .containsExactly(ClassName.fromClass(Number.class), ClassName.fromClass(Runnable.class));
+          .containsExactly(ClassName.get(Number.class), ClassName.get(Runnable.class));
     }
   }
 

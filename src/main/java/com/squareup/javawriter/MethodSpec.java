@@ -22,6 +22,7 @@ import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -30,7 +31,9 @@ import static com.google.common.base.Preconditions.checkState;
 
 /** A generated constructor or method declaration. */
 public final class MethodSpec {
-  public final Name name;
+  static final String CONSTRUCTOR = "<init>";
+
+  public final String name;
   public final ImmutableList<Snippet> javadocSnippets;
   public final ImmutableList<AnnotationSpec> annotations;
   public final ImmutableSet<Modifier> modifiers;
@@ -65,7 +68,7 @@ public final class MethodSpec {
       codeWriter.emit(" ");
     }
 
-    if (name == Name.CONSTRUCTOR) {
+    if (name.equals(CONSTRUCTOR)) {
       codeWriter.emit("$L(", enclosingName);
     } else {
       codeWriter.emit("$T $L(", returnType, name);
@@ -109,19 +112,15 @@ public final class MethodSpec {
   }
 
   public static Builder methodBuilder(String name) {
-    return methodBuilder(new Name(name));
-  }
-
-  public static Builder methodBuilder(Name name) {
     return new Builder(name);
   }
 
   public static Builder constructorBuilder() {
-    return new Builder(Name.CONSTRUCTOR);
+    return new Builder(CONSTRUCTOR);
   }
 
   public static final class Builder {
-    private final Name name;
+    private final String name;
 
     private final List<Snippet> javadocSnippets = new ArrayList<>();
     private final List<AnnotationSpec> annotations = new ArrayList<>();
@@ -132,9 +131,11 @@ public final class MethodSpec {
     private final List<Type> exceptions = new ArrayList<>();
     private final List<Snippet> snippets = new ArrayList<>();
 
-    private Builder(Name name) {
+    private Builder(String name) {
+      checkArgument(name.equals(CONSTRUCTOR) || SourceVersion.isName(name),
+          "not a valid name: %s", name);
       this.name = name;
-      this.returnType = name == Name.CONSTRUCTOR ? null : void.class;
+      this.returnType = name.equals(CONSTRUCTOR) ? null : void.class;
     }
 
     public Builder addJavadoc(String format, Object... args) {
@@ -163,7 +164,7 @@ public final class MethodSpec {
     }
 
     public Builder returns(Type returnType) {
-      checkState(name != Name.CONSTRUCTOR);
+      checkState(!name.equals(CONSTRUCTOR));
       this.returnType = returnType;
       return this;
     }
@@ -173,8 +174,8 @@ public final class MethodSpec {
       return this;
     }
 
-    public Builder addParameter(Type type, String name) {
-      return addParameter(ParameterSpec.builder(type, name).build());
+    public Builder addParameter(Type type, String name, Modifier... modifiers) {
+      return addParameter(ParameterSpec.of(type, name, modifiers));
     }
 
     public Builder addException(Type exception) {

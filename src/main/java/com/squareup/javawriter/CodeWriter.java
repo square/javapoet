@@ -28,6 +28,7 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.Formatter;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -190,7 +191,7 @@ final class CodeWriter {
 
         case "$S":
           String arg = String.valueOf(snippet.args.get(a++));
-          emitAndIndent(StringLiteral.forValue(arg).literal());
+          emitAndIndent(stringLiteral(arg));
           break;
 
         case "$T":
@@ -236,7 +237,7 @@ final class CodeWriter {
       } else if (classType.isArray()) {
         return emit("$T[]", classType.getComponentType());
       } else {
-        return emitType(ClassName.fromClass(classType));
+        return emitType(ClassName.get(classType));
       }
     }
 
@@ -304,7 +305,7 @@ final class CodeWriter {
       }
 
       // If the target class wasn't imported, perhaps its enclosing class was. Try that.
-      ClassName enclosingClassName = className.enclosingClassName().orNull();
+      ClassName enclosingClassName = className.enclosingClassName();
       if (enclosingClassName != null) {
         return lookupName(enclosingClassName) + "." + className.simpleName();
       }
@@ -406,12 +407,11 @@ final class CodeWriter {
   }
 
   private String toName(Object o) {
-    // TODO(jwilson): implement deferred naming so that `new Name("public")` yields "public_" etc.
     if (o instanceof String) return (String) o;
-    if (o instanceof Name) return ((Name) o).seed;
-    if (o instanceof ParameterSpec) return ((ParameterSpec) o).name.seed;
-    if (o instanceof FieldSpec) return ((FieldSpec) o).name.seed;
-    if (o instanceof MethodSpec) return ((MethodSpec) o).name.seed;
+    if (o instanceof ParameterSpec) return ((ParameterSpec) o).name;
+    if (o instanceof FieldSpec) return ((FieldSpec) o).name;
+    if (o instanceof MethodSpec) return ((MethodSpec) o).name;
+    if (o instanceof TypeSpec) return ((TypeSpec) o).name;
     throw new IllegalArgumentException("Expected name but was " + o);
   }
 
@@ -440,5 +440,45 @@ final class CodeWriter {
     //     current class's package. (Yuck.)
 
     return typeToSimpleName.build();
+  }
+
+  /** Returns the string literal representing {@code data}, including wrapping quotes. */
+  static String stringLiteral(String value) {
+    StringBuilder result = new StringBuilder();
+    result.append('"');
+    for (int i = 0; i < value.length(); i++) {
+      char c = value.charAt(i);
+      switch (c) {
+        case '"':
+          result.append("\\\"");
+          break;
+        case '\\':
+          result.append("\\\\");
+          break;
+        case '\b':
+          result.append("\\b");
+          break;
+        case '\t':
+          result.append("\\t");
+          break;
+        case '\n':
+          result.append("\\n");
+          break;
+        case '\f':
+          result.append("\\f");
+          break;
+        case '\r':
+          result.append("\\r");
+          break;
+        default:
+          if (Character.isISOControl(c)) {
+            new Formatter(result).format("\\u%04x", (int) c);
+          } else {
+            result.append(c);
+          }
+      }
+    }
+    result.append('"');
+    return result.toString();
   }
 }
