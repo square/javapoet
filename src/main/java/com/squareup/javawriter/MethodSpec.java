@@ -21,6 +21,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
@@ -28,6 +29,7 @@ import javax.lang.model.element.Modifier;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.collect.Iterables.getLast;
 
 /** A generated constructor or method declaration. */
 public final class MethodSpec {
@@ -40,12 +42,15 @@ public final class MethodSpec {
   public final ImmutableList<TypeVariable<?>> typeVariables;
   public final Type returnType;
   public final ImmutableList<ParameterSpec> parameters;
+  public final boolean varargs;
   public final ImmutableList<Type> exceptions;
   public final ImmutableList<Snippet> snippets;
 
   private MethodSpec(Builder builder) {
     checkArgument(builder.snippets.isEmpty() || !builder.modifiers.contains(Modifier.ABSTRACT),
         "abstract method %s cannot have code", builder.name);
+    checkArgument(!builder.varargs || lastParameterIsArray(builder.parameters),
+        "last parameter of varargs method %s must be an array", builder.name);
 
     this.name = checkNotNull(builder.name);
     this.javadocSnippets = ImmutableList.copyOf(builder.javadocSnippets);
@@ -54,8 +59,13 @@ public final class MethodSpec {
     this.typeVariables = ImmutableList.copyOf(builder.typeVariables);
     this.returnType = builder.returnType;
     this.parameters = ImmutableList.copyOf(builder.parameters);
+    this.varargs = builder.varargs;
     this.exceptions = ImmutableList.copyOf(builder.exceptions);
     this.snippets = ImmutableList.copyOf(builder.snippets);
+  }
+
+  private boolean lastParameterIsArray(List<ParameterSpec> parameters) {
+    return !parameters.isEmpty() && Types.arrayComponent(getLast(parameters).type) != null;
   }
 
   void emit(CodeWriter codeWriter, String enclosingName, ImmutableSet<Modifier> implicitModifiers) {
@@ -75,9 +85,10 @@ public final class MethodSpec {
     }
 
     boolean firstParameter = true;
-    for (ParameterSpec parameterSpec : parameters) {
+    for (Iterator<ParameterSpec> i = parameters.iterator(); i.hasNext();) {
+      ParameterSpec parameter = i.next();
       if (!firstParameter) codeWriter.emit(", ");
-      parameterSpec.emit(codeWriter);
+      parameter.emit(codeWriter, !i.hasNext() && varargs);
       firstParameter = false;
     }
 
@@ -130,6 +141,7 @@ public final class MethodSpec {
     private final List<ParameterSpec> parameters = new ArrayList<>();
     private final List<Type> exceptions = new ArrayList<>();
     private final List<Snippet> snippets = new ArrayList<>();
+    private boolean varargs;
 
     private Builder(String name) {
       checkArgument(name.equals(CONSTRUCTOR) || SourceVersion.isName(name),
@@ -176,6 +188,11 @@ public final class MethodSpec {
 
     public Builder addParameter(Type type, String name, Modifier... modifiers) {
       return addParameter(ParameterSpec.of(type, name, modifiers));
+    }
+
+    public Builder varargs() {
+      this.varargs = true;
+      return this;
     }
 
     public Builder addException(Type exception) {

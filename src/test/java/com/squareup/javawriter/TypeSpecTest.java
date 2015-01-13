@@ -412,7 +412,7 @@ public final class TypeSpecTest {
     TypeSpec typeSpec = TypeSpec.classBuilder("Location")
         .addTypeVariable(t)
         .addTypeVariable(p)
-        .addSuperinterface(Types.parameterizedType(ClassName.get(Comparable.class), p))
+        .addSuperinterface(Types.parameterizedType(Comparable.class, p))
         .addField(FieldSpec.of(t, "label"))
         .addField(FieldSpec.of(p, "x"))
         .addField(FieldSpec.of(p, "y"))
@@ -768,6 +768,25 @@ public final class TypeSpecTest {
         + "    price = 500\n"
         + ")\n"
         + "class Menu {\n"
+        + "}\n");
+  }
+
+  @Test public void varargs() throws Exception {
+    TypeSpec taqueria = TypeSpec.classBuilder("Taqueria")
+        .addMethod(MethodSpec.methodBuilder("prepare")
+            .addParameter(int.class, "workers")
+            .addParameter(Runnable[].class, "jobs")
+            .varargs()
+            .build())
+        .build();
+    assertThat(toString(taqueria)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.Runnable;\n"
+        + "\n"
+        + "class Taqueria {\n"
+        + "  void prepare(int workers, Runnable... jobs) {\n"
+        + "  }\n"
         + "}\n");
   }
 

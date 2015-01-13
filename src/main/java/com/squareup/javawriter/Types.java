@@ -347,4 +347,15 @@ public final class Types {
     new CodeWriter(result).emit("$T", type);
     return result.toString();
   }
+
+  /** Returns the array component of {@code type}, or null if {@code type} is not an array. */
+  static Type arrayComponent(Type type) {
+    if (type instanceof Class<?>) {
+      return ((Class<?>) type).getComponentType();
+    } else if (type instanceof GenericArrayType) {
+      return ((GenericArrayType) type).getGenericComponentType();
+    } else {
+      return null;
+    }
+  }
 }
