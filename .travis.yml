@@ -8,7 +8,7 @@ script:
   - jdk_switcher use openjdk7 && mvn surefire:test -B
 
 after_success:
-  - .buildscript/deploy_snapshot.sh
+  - jdk_switcher use oraclejdk8 && .buildscript/deploy_snapshot.sh
 
 env:
   global:
