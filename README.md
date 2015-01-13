@@ -1,7 +1,7 @@
-Java Writer
-===========
+JavaPoet
+========
 
-`JavaWriter` is a utility class which aids in generating Java source files.
+`JavaPoet` is a Java API for generating `.java` source files.
 
 Source file generation can useful when doing things such as annotation processing or interacting
 with metadata files (e.g., database schemas, protocol formats). By generating code, you eliminate
@@ -13,30 +13,40 @@ Example
 -------
 
 ```java
-writer.emitPackage("com.example")
-    .beginType("com.example.Person", "class", EnumSet.of(PUBLIC, FINAL))
-    .emitField("String", "firstName", EnumSet.of(PRIVATE))
-    .emitField("String", "lastName", EnumSet.of(PRIVATE))
-    .emitJavadoc("Returns the person's full name.")
-    .beginMethod("String", "getName", EnumSet.of(PUBLIC))
-    .emitStatement("return firstName + \" \" + lastName")
-    .endMethod()
-    .endType();
+TypeSpec raven = TypeSpec.classBuilder("Raven")
+    .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+    .addMethod(MethodSpec.methodBuilder("main")
+        .addModifiers(Modifier.PUBLIC)
+        .addCode("$T verses = new $T<>();\n",
+            Types.parameterizedType(List.class, String.class),
+            Types.parameterizedType(ArrayList.class, String.class))
+        .addCode("verses.add($S);\n",
+            "Once upon a midnight dreary, while I pondered, weak and weary...")
+        .addCode("verses.add($S);\n",
+            "Over many a quaint and curious volume of forgotten lore—")
+        .addCode("return verses;\n")
+        .build())
+    .build();
+JavaFile ravenSourceFile = new JavaFile.Builder()
+    .packageName("com.squareup.poe")
+    .typeSpec(raven)
+    .build();
 ```
 
 Would produce the following source output:
 
 ```java
-package com.example;
+package com.squareup.poe;
 
-public final class Person {
-  private String firstName;
-  private String lastName;
-  /**
-   * Returns the person's full name.
-   */
-  public String getName() {
-    return firstName + " " + lastName;
+import java.util.ArrayList;
+import java.util.List;
+
+public final class Raven {
+  public void main() {
+    List<String> verses = new ArrayList<String><>();
+    verses.add("Once upon a midnight dreary, while I pondered, weak and weary...");
+    verses.add("Over many a quaint and curious volume of forgotten lore—");
+    return verses;
   }
 }
 ```
@@ -50,13 +60,13 @@ Download [the latest .jar][dl] or depend via Maven:
 ```xml
 <dependency>
   <groupId>com.squareup</groupId>
-  <artifactId>javawriter</artifactId>
-  <version>2.5.1</version>
+  <artifactId>javapoet</artifactId>
+  <version>1.0.0</version>
 </dependency>
 ```
 or Gradle:
 ```groovy
-compile 'com.squareup:javawriter:2.5.1'
+compile 'com.squareup:javapoet:1.0.0'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
@@ -66,7 +76,7 @@ Snapshots of the development version are available in [Sonatype's `snapshots` re
 License
 -------
 
-    Copyright 2013 Square, Inc.
+    Copyright 2015 Square, Inc.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -82,5 +92,5 @@ License
 
 
 
- [dl]: https://search.maven.org/remote_content?g=com.squareup&a=javawriter&v=LATEST
+ [dl]: https://search.maven.org/remote_content?g=com.squareup&a=javapoet&v=LATEST
  [snap]: https://oss.sonatype.org/content/repositories/snapshots/

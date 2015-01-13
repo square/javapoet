@@ -2,9 +2,9 @@
 
 set -ex
 
-REPO="git@github.com:square/javawriter.git"
+REPO="git@github.com:square/javapoet.git"
 GROUP_ID="com.squareup"
-ARTIFACT_ID="javawriter"
+ARTIFACT_ID="javapoet"
 
 DIR=temp-clone
 
