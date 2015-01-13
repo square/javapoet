@@ -55,18 +55,23 @@ public final class ClassNameTest {
   }
 
   @Test public void bestGuessForString_confusingInput() {
+    assertBestGuessThrows("");
+    assertBestGuessThrows(".");
+    assertBestGuessThrows(".Map");
+    assertBestGuessThrows("java");
+    assertBestGuessThrows("java.util");
+    assertBestGuessThrows("java.util.");
+    assertBestGuessThrows("java..util.Map.Entry");
+    assertBestGuessThrows("java.util..Map.Entry");
+    assertBestGuessThrows("java.util.Map..Entry");
+    assertBestGuessThrows("com.test.$");
+    assertBestGuessThrows("com.test.LooksLikeAClass.pkg");
+    assertBestGuessThrows("!@#$gibberish%^&*");
+  }
+
+  private void assertBestGuessThrows(String s) {
     try {
-      ClassName.bestGuess("com.test.$");
-      fail();
-    } catch (IllegalArgumentException expected) {
-    }
-    try {
-      ClassName.bestGuess("com.test.LooksLikeAClass.pkg");
-      fail();
-    } catch (IllegalArgumentException expected) {
-    }
-    try {
-      ClassName.bestGuess("!@#$gibberish%^&*");
+      ClassName.bestGuess(s);
       fail();
     } catch (IllegalArgumentException expected) {
     }
