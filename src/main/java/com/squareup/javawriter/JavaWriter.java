@@ -48,7 +48,7 @@ public final class JavaWriter {
 
   public void writeTo(Path directory) throws IOException {
     checkArgument(Files.notExists(directory) || Files.isDirectory(directory),
-        "Path %s exists but is not a directory.", directory);
+        "path %s exists but is not a directory.", directory);
     for (JavaFile javaFile : javaFiles) {
       String packageName = javaFile.packageName;
 

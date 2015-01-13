@@ -29,6 +29,7 @@ import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
 
 public final class JavaWriterTest {
   private final JavaWriter javaWriter = new JavaWriter();
@@ -49,17 +50,20 @@ public final class JavaWriterTest {
     Files.createFile(path);
     try {
       javaWriter.writeTo(path);
+      fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e.getMessage()).isEqualTo("Path /foo/bar exists but is not a directory.");
+      assertThat(e.getMessage()).isEqualTo("path /foo/bar exists but is not a directory.");
     }
   }
 
   @Test public void fileNotDirectory() throws IOException {
     File file = new File(tmp.newFolder("foo"), "bar");
+    file.createNewFile();
     try {
       javaWriter.writeTo(file);
+      fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e.getMessage()).containsMatch("File .*?/foo/bar exists but is not a directory.");
+      assertThat(e.getMessage()).containsMatch("path .*?/foo/bar exists but is not a directory.");
     }
   }
 

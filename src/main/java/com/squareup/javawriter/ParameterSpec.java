@@ -36,10 +36,10 @@ public final class ParameterSpec {
   public final Type type;
 
   private ParameterSpec(Builder builder) {
-    this.name = checkNotNull(builder.name);
+    this.name = checkNotNull(builder.name, "name == null");
     this.annotations = ImmutableList.copyOf(builder.annotations);
     this.modifiers = ImmutableSet.copyOf(builder.modifiers);
-    this.type = checkNotNull(builder.type);
+    this.type = checkNotNull(builder.type, "type == null");
   }
 
   public boolean hasModifier(Modifier modifier) {
