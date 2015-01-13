@@ -228,24 +228,19 @@ final class CodeWriter {
 
     if (type instanceof Class<?>) {
       Class<?> classType = (Class<?>) type;
-      if (classType.isPrimitive()) {
-        if (boolean.class == classType) return emit("boolean");
-        if (byte.class == classType) return emit("byte");
-        if (short.class == classType) return emit("short");
-        if (int.class == classType) return emit("int");
-        if (long.class == classType) return emit("long");
-        if (char.class == classType) return emit("char");
-        if (float.class == classType) return emit("float");
-        if (double.class == classType) return emit("double");
-        if (void.class == classType) return emit("void");
-      } else if (classType.isArray()) {
-        return emit("$T[]", classType.getComponentType());
-      } else {
-        return emitType(ClassName.get(classType));
-      }
-    }
+      if (classType == boolean.class) return emit("boolean");
+      if (classType == byte.class) return emit("byte");
+      if (classType == short.class) return emit("short");
+      if (classType == int.class) return emit("int");
+      if (classType == long.class) return emit("long");
+      if (classType == char.class) return emit("char");
+      if (classType == float.class) return emit("float");
+      if (classType == double.class) return emit("double");
+      if (classType == void.class) return emit("void");
+      if (classType.isArray()) return emit("$T[]", classType.getComponentType());
+      return emitType(ClassName.get(classType));
 
-    if (type instanceof ParameterizedType) {
+    } else if (type instanceof ParameterizedType) {
       ParameterizedType parameterizedType = (ParameterizedType) type;
       emitType(parameterizedType.getRawType());
       emitAndIndent("<");
@@ -256,23 +251,29 @@ final class CodeWriter {
         firstParameter = false;
       }
       emitAndIndent(">");
+      return this;
+
     } else if (type instanceof WildcardType) {
       WildcardType wildcardName = (WildcardType) type;
       Type[] extendsBounds = wildcardName.getUpperBounds();
       Type[] superBounds = wildcardName.getLowerBounds();
       if (superBounds.length == 1) {
-        emit("? super $T", superBounds[0]);
-      } else if (extendsBounds.length == 1 && !isObject(extendsBounds[0])) {
-        emit("? extends $T", extendsBounds[0]);
-      } else {
-        emit("?");
+        return emit("? super $T", superBounds[0]);
       }
+      checkArgument(extendsBounds.length == 1);
+      return isObject(extendsBounds[0])
+          ? emit("?")
+          : emit("? extends $T", extendsBounds[0]);
+
     } else if (type instanceof TypeVariable<?>) {
-      emit("$L", ((TypeVariable) type).getName());
+      return emitAndIndent(((TypeVariable) type).getName());
+
     } else if (type instanceof ClassName) {
-      emitAndIndent(lookupName((ClassName) type));
+      return emitAndIndent(lookupName((ClassName) type));
+
     } else if (type instanceof GenericArrayType) {
-      emit("$T[]", ((GenericArrayType) type).getGenericComponentType());
+      return emit("$T[]", ((GenericArrayType) type).getGenericComponentType());
+
     } else if (type instanceof IntersectionType) {
       boolean firstBound = true;
       for (Type bound : ((IntersectionType) type).getBounds()) {
@@ -280,10 +281,10 @@ final class CodeWriter {
         emit("$T", bound);
         firstBound = false;
       }
-    } else {
-      throw new UnsupportedOperationException("unexpected type: " + arg);
+      return this;
     }
-    return this;
+
+    throw new UnsupportedOperationException("unexpected type: " + arg);
   }
 
   private boolean isObject(Type bound) {
@@ -364,7 +365,7 @@ final class CodeWriter {
    * {@link #out} does it through here, since we emit indentation lazily in order to avoid
    * unnecessary trailing whitespace.
    */
-  private void emitAndIndent(String s) {
+  private CodeWriter emitAndIndent(String s) {
     boolean first = true;
     for (String line : s.split("\n", -1)) {
       // Emit a newline character. Make sure blank lines in Javadoc look good.
@@ -389,6 +390,7 @@ final class CodeWriter {
 
       out.append(line);
     }
+    return this;
   }
 
   private void emitIndentation() {

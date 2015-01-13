@@ -17,10 +17,10 @@ package com.squareup.javawriter;
 
 import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.lang.reflect.Type;
@@ -78,7 +78,7 @@ public final class ClassName implements Type, Comparable<ClassName> {
 
   /** Returns the simple name of this class, like {@code "Entry"} for {@link Map.Entry}. */
   public String simpleName() {
-    return names.get(names.size() - 1);
+    return Iterables.getLast(names);
   }
 
   public static ClassName get(Class<?> clazz) {
@@ -107,25 +107,25 @@ public final class ClassName implements Type, Comparable<ClassName> {
    * instances without such restrictions.
    */
   public static ClassName bestGuess(String classNameString) {
-    String packageName = "";
-    List<String> simpleNames = new ArrayList<>();
+    List<String> names = new ArrayList<>();
 
-    for (String part : Splitter.on('.').split(classNameString)) {
-      checkArgument(SourceVersion.isIdentifier(part));
-      char firstChar = part.charAt(0);
-      if (Ascii.isLowerCase(firstChar)) {
-        checkArgument(simpleNames.isEmpty(), "couldn't make a guess for %s", classNameString);
-        if (!packageName.isEmpty()) packageName += ".";
-        packageName += part;
-      } else if (Ascii.isUpperCase(firstChar)) {
-        simpleNames.add(part);
-      } else {
-        checkArgument(false, "couldn't make a guess for %s", classNameString);
-      }
+    // Add the package name, like "java.util.concurrent", or "" for no package.
+    int p = 0;
+    while (p < classNameString.length() && Ascii.isLowerCase(classNameString.charAt(p))) {
+      p = classNameString.indexOf('.', p) + 1;
+      checkArgument(p != 0, "couldn't make a guess for %s", classNameString);
     }
-    checkArgument(!simpleNames.isEmpty(), "couldn't make a guess for %s", classNameString);
-    simpleNames.add(0, packageName);
-    return new ClassName(simpleNames);
+    names.add(p != 0 ? classNameString.substring(0, p - 1) : "");
+
+    // Add the class names, like "Map" and "Entry".
+    for (String part : Splitter.on('.').split(classNameString.substring(p))) {
+      checkArgument(!part.isEmpty() && Ascii.isUpperCase(part.charAt(0)),
+          "couldn't make a guess for %s", classNameString);
+      names.add(part);
+    }
+
+    checkArgument(names.size() >= 2, "couldn't make a guess for %s", classNameString);
+    return new ClassName(names);
   }
 
   /**
@@ -173,7 +173,7 @@ public final class ClassName implements Type, Comparable<ClassName> {
   }
 
   @Override public int hashCode() {
-    return Objects.hashCode(canonicalName);
+    return canonicalName.hashCode();
   }
 
   @Override public int compareTo(ClassName o) {
