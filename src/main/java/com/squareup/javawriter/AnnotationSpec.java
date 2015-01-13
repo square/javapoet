@@ -15,13 +15,19 @@
  */
 package com.squareup.javawriter;
 
+import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
-import java.util.SortedMap;
+import java.util.TreeMap;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Iterables.getOnlyElement;
@@ -29,26 +35,24 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 /** A generated annotation on a declaration. */
 public final class AnnotationSpec {
   public final Type type;
-  public final ImmutableSortedMap<String, Snippet> members;
+  public final ImmutableMultimap<String, Snippet> members;
 
   private AnnotationSpec(Builder builder) {
     this.type = checkNotNull(builder.type, "type");
-    this.members = ImmutableSortedMap.copyOf(builder.members);
+    this.members = ImmutableListMultimap.copyOf(builder.members);
   }
 
   void emit(CodeWriter codeWriter, boolean inline) {
-    String separator = inline ? "" : "\n";
-    String suffix = inline ? " " : "\n";
+    String whitespace = inline ? "" : "\n";
+    String memberSeparator = inline ? ", " : ",\n";
     if (members.isEmpty()) {
       // @Singleton
-      codeWriter.emit("@$T" + suffix, type);
+      codeWriter.emit("@$T", type);
     } else if (members.keySet().equals(ImmutableSet.of("value"))) {
       // @Named("foo")
       codeWriter.emit("@$T(", type);
-      codeWriter.indent(2);
-      codeWriter.emit(getOnlyElement(members.values()));
-      codeWriter.unindent(2);
-      codeWriter.emit(")" + suffix);
+      emitAnnotationValue(codeWriter, whitespace, memberSeparator, members.values());
+      codeWriter.emit(")");
     } else {
       // Inline:
       //   @Column(name = "updated_at", nullable = false)
@@ -58,18 +62,39 @@ public final class AnnotationSpec {
       //       name = "updated_at",
       //       nullable = false
       //   )
-      codeWriter.emit("@$T(" + separator, type);
+      codeWriter.emit("@$T(" + whitespace, type);
       codeWriter.indent(2);
-      for (Iterator<Map.Entry<String, Snippet>> i = members.entrySet().iterator(); i.hasNext();) {
-        Map.Entry<String, Snippet> entry = i.next();
+      for (Iterator<Map.Entry<String, Collection<Snippet>>> i
+          = members.asMap().entrySet().iterator(); i.hasNext();) {
+        Map.Entry<String, Collection<Snippet>> entry = i.next();
         codeWriter.emit("$L = ", entry.getKey());
-        codeWriter.emit(entry.getValue());
-        if (i.hasNext()) codeWriter.emit(",");
-        codeWriter.emit(separator);
+        emitAnnotationValue(codeWriter, whitespace, memberSeparator, entry.getValue());
+        if (i.hasNext()) codeWriter.emit(memberSeparator);
       }
       codeWriter.unindent(2);
-      codeWriter.emit(")" + suffix);
+      codeWriter.emit(whitespace + ")");
     }
+  }
+
+  private void emitAnnotationValue(
+      CodeWriter codeWriter, String whitespace, String memberSeparator, Collection<Snippet> value) {
+    if (value.size() == 1) {
+      codeWriter.indent(2);
+      codeWriter.emit(getOnlyElement(value));
+      codeWriter.unindent(2);
+      return;
+    }
+
+    codeWriter.emit("{" + whitespace);
+    codeWriter.indent(2);
+    boolean first = true;
+    for (Snippet snippet : value) {
+      if (!first) codeWriter.emit(memberSeparator);
+      codeWriter.emit(snippet);
+      first = false;
+    }
+    codeWriter.unindent(2);
+    codeWriter.emit(whitespace + "}");
   }
 
   public static AnnotationSpec of(Type annotation) {
@@ -92,7 +117,8 @@ public final class AnnotationSpec {
 
   public static final class Builder {
     private final Type type;
-    private final SortedMap<String, Snippet> members = Maps.newTreeMap();
+    private final Multimap<String, Snippet> members = Multimaps.newListMultimap(
+        new TreeMap<String, Collection<Snippet>>(), AnnotationSpec.<Snippet>listSupplier());
 
     private Builder(Type type) {
       this.type = type;
@@ -106,5 +132,13 @@ public final class AnnotationSpec {
     public AnnotationSpec build() {
       return new AnnotationSpec(this);
     }
+  }
+
+  private static <T> Supplier<List<T>> listSupplier() {
+    return new Supplier<List<T>>() {
+      @Override public List<T> get() {
+        return new ArrayList<>();
+      }
+    };
   }
 }

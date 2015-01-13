@@ -200,8 +200,8 @@ public final class TypeSpecTest {
         .addMethod(MethodSpec.methodBuilder("fooBar")
             .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
             .addAnnotation(AnnotationSpec.builder(headers)
-                .addMember("value", "{\n$S,\n$S\n}",
-                    "Accept: application/json", "User-Agent: foobar")
+                .addMember("value", "$S", "Accept: application/json")
+                .addMember("value", "$S", "User-Agent: foobar")
                 .build())
             .addAnnotation(AnnotationSpec.builder(post)
                 .addMember("value", "$S", "/foo/bar")
@@ -234,7 +234,7 @@ public final class TypeSpecTest {
         + "  @Headers({\n"
         + "      \"Accept: application/json\",\n"
         + "      \"User-Agent: foobar\"\n"
-        + "      })\n"
+        + "  })\n"
         + "  @POST(\"/foo/bar\")\n"
         + "  Observable<FooBar> fooBar(@Body Things<Thing> things, @QueryMap(encodeValues = false) "
         + "Map<String, String> query, @Header(\"Authorization\") String authorization);\n"
@@ -736,6 +736,38 @@ public final class TypeSpecTest {
         + "   */\n"
         + "  void refold(Locale locale) {\n"
         + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void annotationsInAnnotations() throws Exception {
+    ClassName beef = ClassName.get(tacosPackage, "Beef");
+    ClassName chicken = ClassName.get(tacosPackage, "Chicken");
+    ClassName option = ClassName.get(tacosPackage, "Option");
+    ClassName mealDeal = ClassName.get(tacosPackage, "MealDeal");
+    TypeSpec menu = TypeSpec.classBuilder("Menu")
+        .addAnnotation(AnnotationSpec.builder(mealDeal)
+            .addMember("price", "$L", 500)
+            .addMember("options", "$L", AnnotationSpec.builder(option)
+                .addMember("name", "$S", "taco")
+                .addMember("meat", "$T.class", beef)
+                .build())
+            .addMember("options", "$L", AnnotationSpec.builder(option)
+                .addMember("name", "$S", "quesadilla")
+                .addMember("meat", "$T.class", chicken)
+                .build())
+            .build())
+        .build();
+    assertThat(toString(menu)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "@MealDeal(\n"
+        + "    options = {\n"
+        + "        @Option(meat = Beef.class, name = \"taco\"),\n"
+        + "        @Option(meat = Chicken.class, name = \"quesadilla\")\n"
+        + "    },\n"
+        + "    price = 500\n"
+        + ")\n"
+        + "class Menu {\n"
         + "}\n");
   }
 
