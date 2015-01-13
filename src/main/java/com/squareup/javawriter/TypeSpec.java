@@ -19,6 +19,7 @@ import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
@@ -123,7 +124,7 @@ public final class TypeSpec {
     return new Builder(DeclarationType.CLASS, null, new Snippet(typeArgumentsFormat, args));
   }
 
-  void emit(CodeWriter codeWriter, String enumName) {
+  void emit(CodeWriter codeWriter, String enumName) throws IOException {
     if (enumName != null) {
       codeWriter.emit("$L", enumName);
       if (!anonymousTypeArguments.formatParts.isEmpty()) {

@@ -17,6 +17,7 @@ package com.squareup.javawriter;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,7 +46,7 @@ public final class ParameterSpec {
     return modifiers.contains(modifier);
   }
 
-  void emit(CodeWriter codeWriter, boolean varargs) {
+  void emit(CodeWriter codeWriter, boolean varargs) throws IOException {
     codeWriter.emitAnnotations(annotations, true);
     codeWriter.emitModifiers(modifiers);
     if (varargs) {

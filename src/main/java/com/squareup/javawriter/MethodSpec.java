@@ -17,6 +17,7 @@ package com.squareup.javawriter;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
@@ -68,7 +69,8 @@ public final class MethodSpec {
     return !parameters.isEmpty() && Types.arrayComponent(getLast(parameters).type) != null;
   }
 
-  void emit(CodeWriter codeWriter, String enclosingName, ImmutableSet<Modifier> implicitModifiers) {
+  void emit(CodeWriter codeWriter, String enclosingName, ImmutableSet<Modifier> implicitModifiers)
+      throws IOException {
     codeWriter.emitJavadoc(javadocSnippets);
     codeWriter.emitAnnotations(annotations, false);
     codeWriter.emitModifiers(modifiers, implicitModifiers);

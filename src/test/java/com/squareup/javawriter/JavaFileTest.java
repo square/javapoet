@@ -96,4 +96,39 @@ public final class JavaFileTest {
         + "  }\n"
         + "}\n");
   }
+
+  @Test public void topOfFileComment() throws Exception {
+    String source = new JavaFile.Builder()
+        .fileComment("Generated $L by JavaWriter. DO NOT EDIT!", "2015-01-13")
+        .packageName("com.squareup.tacos")
+        .typeSpec(TypeSpec.classBuilder("Taco").build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "// Generated 2015-01-13 by JavaWriter. DO NOT EDIT!\n"
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "}\n");
+  }
+
+  @Test public void emptyLinesInTopOfFileComment() throws Exception {
+    String source = new JavaFile.Builder()
+        .fileComment("\nGENERATED FILE:\n\nDO NOT EDIT!\n")
+        .packageName("com.squareup.tacos")
+        .typeSpec(TypeSpec.classBuilder("Taco")
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "//\n"
+        + "// GENERATED FILE:\n"
+        + "//\n"
+        + "// DO NOT EDIT!\n"
+        + "//\n"
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "}\n");
+  }
 }

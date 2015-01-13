@@ -21,6 +21,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.GenericArrayType;
@@ -343,9 +344,13 @@ public final class Types {
   }
 
   private static String typeToString(Type type) {
-    StringBuilder result = new StringBuilder();
-    new CodeWriter(result).emit("$T", type);
-    return result.toString();
+    try {
+      StringBuilder result = new StringBuilder();
+      new CodeWriter(result).emit("$T", type);
+      return result.toString();
+    } catch (IOException e) {
+      throw new AssertionError();
+    }
   }
 
   /** Returns the array component of {@code type}, or null if {@code type} is not an array. */

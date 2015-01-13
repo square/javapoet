@@ -17,6 +17,7 @@ package com.squareup.javawriter;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,7 +50,7 @@ public final class FieldSpec {
     return modifiers.contains(modifier);
   }
 
-  void emit(CodeWriter codeWriter, ImmutableSet<Modifier> implicitModifiers) {
+  void emit(CodeWriter codeWriter, ImmutableSet<Modifier> implicitModifiers) throws IOException {
     codeWriter.emitJavadoc(javadocSnippets);
     codeWriter.emitAnnotations(annotations, false);
     codeWriter.emitModifiers(modifiers, implicitModifiers);

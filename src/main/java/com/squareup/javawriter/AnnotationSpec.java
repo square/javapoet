@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,7 +43,7 @@ public final class AnnotationSpec {
     this.members = ImmutableListMultimap.copyOf(builder.members);
   }
 
-  void emit(CodeWriter codeWriter, boolean inline) {
+  void emit(CodeWriter codeWriter, boolean inline) throws IOException {
     String whitespace = inline ? "" : "\n";
     String memberSeparator = inline ? ", " : ",\n";
     if (members.isEmpty()) {
@@ -76,8 +77,8 @@ public final class AnnotationSpec {
     }
   }
 
-  private void emitAnnotationValue(
-      CodeWriter codeWriter, String whitespace, String memberSeparator, Collection<Snippet> value) {
+  private void emitAnnotationValue(CodeWriter codeWriter, String whitespace, String memberSeparator,
+      Collection<Snippet> value) throws IOException {
     if (value.size() == 1) {
       codeWriter.indent(2);
       codeWriter.emit(getOnlyElement(value));
