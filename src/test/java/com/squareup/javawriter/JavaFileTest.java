@@ -16,6 +16,7 @@
 package com.squareup.javawriter;
 
 import java.util.Date;
+import javax.lang.model.element.Modifier;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -71,6 +72,28 @@ public final class JavaFileTest {
         + "  Date madeFreshDate;\n"
         + "\n"
         + "  java.sql.Date madeFreshDatabaseDate;\n"
+        + "}\n");
+  }
+
+  @Test public void defaultPackage() throws Exception {
+    String source = new JavaFile.Builder()
+        .typeSpec(TypeSpec.classBuilder("HelloWorld")
+            .addMethod(MethodSpec.methodBuilder("main")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addParameter(String[].class, "args")
+                .addCode("$T.out.println($S);\n", System.class, "Hello World!")
+                .build())
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "import java.lang.String;\n"
+        + "import java.lang.System;\n"
+        + "\n"
+        + "class HelloWorld {\n"
+        + "  public static void main(String[] args) {\n"
+        + "    System.out.println(\"Hello World!\");\n"
+        + "  }\n"
         + "}\n");
   }
 }
