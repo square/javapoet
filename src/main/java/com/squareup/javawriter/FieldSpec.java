@@ -38,8 +38,8 @@ public final class FieldSpec {
   public final Snippet initializer;
 
   private FieldSpec(Builder builder) {
-    this.type = checkNotNull(builder.type);
-    this.name = checkNotNull(builder.name);
+    this.type = checkNotNull(builder.type, "type == null");
+    this.name = checkNotNull(builder.name, "name == null");
     this.javadocSnippets = ImmutableList.copyOf(builder.javadocSnippets);
     this.annotations = ImmutableList.copyOf(builder.annotations);
     this.modifiers = ImmutableSet.copyOf(builder.modifiers);

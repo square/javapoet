@@ -82,7 +82,7 @@ public final class TypeSpec {
     checkArgument(builder.anonymousTypeArguments == null || interestingSupertypeCount <= 1,
         "anonymous type has too many supertypes");
 
-    this.declarationType = checkNotNull(builder.declarationType);
+    this.declarationType = checkNotNull(builder.declarationType, "declarationType == null");
     this.name = builder.name;
     this.anonymousTypeArguments = builder.anonymousTypeArguments;
     this.javadocSnippets = ImmutableList.copyOf(builder.javadocSnippets);
@@ -307,7 +307,7 @@ public final class TypeSpec {
     }
 
     public Builder addEnumConstant(String name, TypeSpec typeSpec) {
-      checkState(declarationType == DeclarationType.ENUM);
+      checkState(declarationType == DeclarationType.ENUM, "type is not enum");
       checkArgument(typeSpec.anonymousTypeArguments != null,
           "enum constants must have anonymous type arguments");
       checkArgument(SourceVersion.isName(name), "not a valid enum constant: %s", name);

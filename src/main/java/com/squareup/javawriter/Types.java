@@ -112,7 +112,7 @@ public final class Types {
 
   /** Returns an array type whose elements are all instances of {@code componentType}. */
   public static GenericArrayType arrayOf(final Type componentType) {
-    checkNotNull(componentType);
+    checkNotNull(componentType, "componentType == null");
 
     return new GenericArrayType() {
       @Override public Type getGenericComponentType() {
@@ -339,8 +339,9 @@ public final class Types {
   }
 
   private static void checkNotPrimitive(Type type) {
-    checkNotNull(type);
-    checkArgument(!(type instanceof Class<?>) || !((Class<?>) type).isPrimitive());
+    checkNotNull(type, "type cannot be primitive.");
+    checkArgument(!(type instanceof Class<?>) || !((Class<?>) type).isPrimitive(),
+        "type cannot be primitive.");
   }
 
   private static String typeToString(Type type) {

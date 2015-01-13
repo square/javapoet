@@ -420,7 +420,7 @@ final class CodeWriter {
 
   private Type toType(Object arg) {
     if (arg instanceof Type) return (Type) arg;
-    throw new IllegalArgumentException("Expected type but was " + arg);
+    throw new IllegalArgumentException("expected type but was " + arg);
   }
 
   private void emitName(Object o) throws IOException {
@@ -433,7 +433,7 @@ final class CodeWriter {
     if (o instanceof FieldSpec) return ((FieldSpec) o).name;
     if (o instanceof MethodSpec) return ((MethodSpec) o).name;
     if (o instanceof TypeSpec) return ((TypeSpec) o).name;
-    throw new IllegalArgumentException("Expected name but was " + o);
+    throw new IllegalArgumentException("expected name but was " + o);
   }
 
   /**

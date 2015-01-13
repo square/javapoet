@@ -21,7 +21,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -50,7 +49,7 @@ public final class ClassName implements Type, Comparable<ClassName> {
 
   private ClassName(List<String> names) {
     for (int i = 1; i < names.size(); i++) {
-      checkArgument(SourceVersion.isName(names.get(i)));
+      checkArgument(SourceVersion.isName(names.get(i)), "part '%s' is keyword", names.get(i));
     }
     this.names = ImmutableList.copyOf(names);
     this.canonicalName = Joiner.on(".").join(names.get(0).isEmpty()
@@ -82,11 +81,11 @@ public final class ClassName implements Type, Comparable<ClassName> {
   }
 
   public static ClassName get(Class<?> clazz) {
-    checkNotNull(clazz);
-    checkArgument(!clazz.isPrimitive(), "Primitive types cannot be represented as a ClassName.");
-    checkArgument(!void.class.equals(clazz), "'void' type cannot be represented as a ClassName.");
-    checkArgument(!clazz.isArray(), "Array types cannot be represented as a ClassName.");
-    List<String> names = Lists.newArrayList();
+    checkNotNull(clazz, "clazz == null");
+    checkArgument(!clazz.isPrimitive(), "primitive types cannot be represented as a ClassName");
+    checkArgument(!void.class.equals(clazz), "'void' type cannot be represented as a ClassName");
+    checkArgument(!clazz.isArray(), "array types cannot be represented as a ClassName");
+    List<String> names = new ArrayList<>();
     for (Class<?> c = clazz; c != null; c = c.getEnclosingClass()) {
       names.add(c.getSimpleName());
     }
@@ -142,8 +141,8 @@ public final class ClassName implements Type, Comparable<ClassName> {
 
   /** Returns the class name for {@code element}. */
   public static ClassName get(TypeElement element) {
-    checkNotNull(element);
-    List<String> names = Lists.newArrayList();
+    checkNotNull(element, "element == null");
+    List<String> names = new ArrayList<>();
     for (Element e = element; isClassOrInterface(e); e = e.getEnclosingElement()) {
       checkArgument(ACCEPTABLE_NESTING_KINDS.contains(element.getNestingKind()));
       names.add(e.getSimpleName().toString());

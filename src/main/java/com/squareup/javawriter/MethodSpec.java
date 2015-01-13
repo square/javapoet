@@ -53,7 +53,7 @@ public final class MethodSpec {
     checkArgument(!builder.varargs || lastParameterIsArray(builder.parameters),
         "last parameter of varargs method %s must be an array", builder.name);
 
-    this.name = checkNotNull(builder.name);
+    this.name = checkNotNull(builder.name, "name == null");
     this.javadocSnippets = ImmutableList.copyOf(builder.javadocSnippets);
     this.annotations = ImmutableList.copyOf(builder.annotations);
     this.modifiers = ImmutableSet.copyOf(builder.modifiers);
@@ -178,7 +178,7 @@ public final class MethodSpec {
     }
 
     public Builder returns(Type returnType) {
-      checkState(!name.equals(CONSTRUCTOR));
+      checkState(!name.equals(CONSTRUCTOR), "constructor cannot have return type.");
       this.returnType = returnType;
       return this;
     }

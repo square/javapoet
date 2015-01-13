@@ -41,7 +41,7 @@ public final class JavaFile {
   private JavaFile(Builder builder) {
     this.fileComment = builder.fileComment;
     this.packageName = builder.packageName;
-    this.typeSpec = checkNotNull(builder.typeSpec);
+    this.typeSpec = checkNotNull(builder.typeSpec, "typeSpec == null");
   }
 
   public void emit(Appendable out) throws IOException {
