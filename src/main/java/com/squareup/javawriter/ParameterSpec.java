@@ -45,10 +45,14 @@ public final class ParameterSpec {
     return modifiers.contains(modifier);
   }
 
-  void emit(CodeWriter codeWriter) {
+  void emit(CodeWriter codeWriter, boolean varargs) {
     codeWriter.emitAnnotations(annotations, true);
     codeWriter.emitModifiers(modifiers);
-    codeWriter.emit("$T $L", type, name);
+    if (varargs) {
+      codeWriter.emit("$T... $L", Types.arrayComponent(type), name);
+    } else {
+      codeWriter.emit("$T $L", type, name);
+    }
   }
 
   public static Builder builder(Type type, String name, Modifier... modifiers) {
