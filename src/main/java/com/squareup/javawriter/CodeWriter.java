@@ -128,6 +128,7 @@ final class CodeWriter {
   public void emitAnnotations(ImmutableList<AnnotationSpec> annotations, boolean inline) {
     for (AnnotationSpec annotationSpec : annotations) {
       annotationSpec.emit(this, inline);
+      emit(inline ? " " : "\n");
     }
   }
 
@@ -214,6 +215,9 @@ final class CodeWriter {
     if (o instanceof TypeSpec) {
       TypeSpec typeSpec = (TypeSpec) o;
       typeSpec.emit(this, null);
+    } else if (o instanceof AnnotationSpec) {
+      AnnotationSpec annotationSpec = (AnnotationSpec) o;
+      annotationSpec.emit(this, true);
     } else {
       emitAndIndent(String.valueOf(o));
     }
