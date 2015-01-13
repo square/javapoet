@@ -62,7 +62,7 @@ public final class JavaWriter {
 
       Path outputPath = outputDirectory.resolve(javaFile.typeSpec.name + ".java");
       try (Writer writer = new OutputStreamWriter(Files.newOutputStream(outputPath))) {
-        writer.write(javaFile.toString());
+        javaFile.emit(writer);
       }
     }
   }
@@ -77,7 +77,7 @@ public final class JavaWriter {
           javaFile.packageName + "." + javaFile.typeSpec.name,
           Iterables.toArray(javaFile.typeSpec.originatingElements, Element.class));
       try (Writer writer = filerSourceFile.openWriter()) {
-        writer.write(javaFile.toString());
+        javaFile.emit(writer);
       } catch (Exception e) {
         try {
           filerSourceFile.delete();

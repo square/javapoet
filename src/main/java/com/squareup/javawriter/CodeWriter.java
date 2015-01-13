@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import java.io.IOException;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -47,20 +48,22 @@ import static com.google.common.base.Preconditions.checkState;
  */
 final class CodeWriter {
   private final String indent = "  ";
-  private final StringBuilder out;
+  private final Appendable out;
   private int indentLevel;
 
   private boolean javadoc = false;
+  private boolean comment = false;
   private String packageName;
   private final List<TypeSpec> typeSpecStack = new ArrayList<>();
   private final ImmutableMap<ClassName, String> importedTypes;
   private final Set<ClassName> importableTypes = new LinkedHashSet<>();
+  private boolean trailingNewline;
 
-  public CodeWriter(StringBuilder out) {
+  public CodeWriter(Appendable out) {
     this(out, ImmutableMap.<ClassName, String>of());
   }
 
-  public CodeWriter(StringBuilder out, ImmutableMap<ClassName, String> importedTypes) {
+  public CodeWriter(Appendable out, ImmutableMap<ClassName, String> importedTypes) {
     this.out = checkNotNull(out);
     this.importedTypes = checkNotNull(importedTypes);
   }
@@ -110,7 +113,18 @@ final class CodeWriter {
     return this;
   }
 
-  public void emitJavadoc(ImmutableList<Snippet> javadocSnippets) {
+  public void emitComment(Snippet snippet) throws IOException {
+    trailingNewline = true; // Force the '//' prefix for the comment.
+    comment = true;
+    try {
+      emit(snippet);
+      emit("\n");
+    } finally {
+      comment = false;
+    }
+  }
+
+  public void emitJavadoc(ImmutableList<Snippet> javadocSnippets) throws IOException {
     if (javadocSnippets.isEmpty()) return;
 
     emit("/**\n");
@@ -125,7 +139,8 @@ final class CodeWriter {
     emit(" */\n");
   }
 
-  public void emitAnnotations(ImmutableList<AnnotationSpec> annotations, boolean inline) {
+  public void emitAnnotations(ImmutableList<AnnotationSpec> annotations, boolean inline)
+      throws IOException {
     for (AnnotationSpec annotationSpec : annotations) {
       annotationSpec.emit(this, inline);
       emit(inline ? " " : "\n");
@@ -136,8 +151,8 @@ final class CodeWriter {
    * Emits {@code modifiers} in the standard order. Modifiers in {@code implicitModifiers} will not
    * be emitted.
    */
-  public void emitModifiers(
-      ImmutableSet<Modifier> modifiers, ImmutableSet<Modifier> implicitModifiers) {
+  public void emitModifiers(ImmutableSet<Modifier> modifiers,
+      ImmutableSet<Modifier> implicitModifiers) throws IOException {
     if (!modifiers.isEmpty()) {
       for (Modifier modifier : EnumSet.copyOf(modifiers)) {
         if (implicitModifiers.contains(modifier)) continue;
@@ -147,7 +162,7 @@ final class CodeWriter {
     }
   }
 
-  public void emitModifiers(ImmutableSet<Modifier> modifiers) {
+  public void emitModifiers(ImmutableSet<Modifier> modifiers) throws IOException {
     emitModifiers(modifiers, ImmutableSet.<Modifier>of());
   }
 
@@ -155,7 +170,7 @@ final class CodeWriter {
    * Emit type variables with their bounds. This should only be used when declaring type variables;
    * everywhere else bounds are omitted.
    */
-  public void emitTypeVariables(ImmutableList<TypeVariable<?>> typeVariables) {
+  public void emitTypeVariables(ImmutableList<TypeVariable<?>> typeVariables) throws IOException {
     if (typeVariables.isEmpty()) return;
 
     emit("<");
@@ -174,11 +189,11 @@ final class CodeWriter {
     emit(">");
   }
 
-  public CodeWriter emit(String format, Object... args) {
+  public CodeWriter emit(String format, Object... args) throws IOException {
     return emit(new Snippet(format, args));
   }
 
-  public CodeWriter emit(Snippet snippet) {
+  public CodeWriter emit(Snippet snippet) throws IOException {
     int a = 0;
     for (String part : snippet.formatParts) {
       switch (part) {
@@ -211,7 +226,7 @@ final class CodeWriter {
     return this;
   }
 
-  private void emitLiteral(Object o) {
+  private void emitLiteral(Object o) throws IOException {
     if (o instanceof TypeSpec) {
       TypeSpec typeSpec = (TypeSpec) o;
       typeSpec.emit(this, null);
@@ -223,7 +238,7 @@ final class CodeWriter {
     }
   }
 
-  private CodeWriter emitType(Object arg) {
+  private CodeWriter emitType(Object arg) throws IOException {
     Type type = toType(arg);
 
     if (type instanceof Class<?>) {
@@ -365,42 +380,42 @@ final class CodeWriter {
    * {@link #out} does it through here, since we emit indentation lazily in order to avoid
    * unnecessary trailing whitespace.
    */
-  private CodeWriter emitAndIndent(String s) {
+  private CodeWriter emitAndIndent(String s) throws IOException {
     boolean first = true;
     for (String line : s.split("\n", -1)) {
-      // Emit a newline character. Make sure blank lines in Javadoc look good.
+      // Emit a newline character. Make sure blank lines in Javadoc & comments look good.
       if (!first) {
-        if (javadoc && trailingNewline()) {
+        if ((javadoc || comment) && trailingNewline) {
           emitIndentation();
-          out.append(" *");
+          out.append(javadoc ? " *" : "//");
         }
         out.append('\n');
+        trailingNewline = true;
       }
 
       first = false;
       if (line.isEmpty()) continue; // Don't indent empty lines.
 
-      // Emit indentation if necessary.
-      if (trailingNewline()) {
+      // Emit indentation and comment prefix if necessary.
+      if (trailingNewline) {
         emitIndentation();
         if (javadoc) {
           out.append(" * ");
+        } else if (comment) {
+          out.append("// ");
         }
       }
 
       out.append(line);
+      trailingNewline = false;
     }
     return this;
   }
 
-  private void emitIndentation() {
+  private void emitIndentation() throws IOException {
     for (int j = 0; j < indentLevel; j++) {
       out.append(indent);
     }
-  }
-
-  private boolean trailingNewline() {
-    return out.length() > 0 && out.charAt(out.length() - 1) == '\n';
   }
 
   private Type toType(Object arg) {
@@ -408,7 +423,7 @@ final class CodeWriter {
     throw new IllegalArgumentException("Expected type but was " + arg);
   }
 
-  private void emitName(Object o) {
+  private void emitName(Object o) throws IOException {
     emitAndIndent(toName(o));
   }
 
