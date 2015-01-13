@@ -34,7 +34,7 @@ import javax.lang.model.type.TypeMirror;
 import org.junit.Rule;
 import org.junit.Test;
 
-import static com.google.common.truth.Truth.assert_;
+import static com.google.common.truth.Truth.assertThat;
 
 public final class TypesTest {
   @Rule public final CompilationRule compilation = new CompilationRule();
@@ -48,18 +48,18 @@ public final class TypesTest {
   }
 
   @Test public void getBasicTypeMirror() {
-    assert_().that(Types.get(getType(Object.class)))
+    assertThat(Types.get(getType(Object.class)))
         .isEqualTo(ClassName.get(Object.class));
-    assert_().that(Types.get(getType(Charset.class)))
+    assertThat(Types.get(getType(Charset.class)))
         .isEqualTo(ClassName.get(Charset.class));
-    assert_().that(Types.get(getType(TypesTest.class)))
+    assertThat(Types.get(getType(TypesTest.class)))
         .isEqualTo(ClassName.get(TypesTest.class));
   }
 
   @Test public void getParameterizedTypeMirror() {
     DeclaredType setType =
         compilation.getTypes().getDeclaredType(getElement(Set.class), getType(Object.class));
-    assert_().that(Types.get(setType))
+    assertThat(Types.get(setType))
         .isEqualTo(Types.parameterizedType(ClassName.get(Set.class), ClassName.OBJECT));
   }
 
@@ -75,17 +75,17 @@ public final class TypesTest {
     List<? extends TypeParameterElement> typeVariables =
         getElement(Parameterized.class).getTypeParameters();
 
-    assert_().that(Types.get(typeVariables.get(0).asType()))
+    assertThat(Types.get(typeVariables.get(0).asType()))
         .isEqualTo(Types.typeVariable("Simple"));
-    assert_().that(Types.get(typeVariables.get(1).asType()))
+    assertThat(Types.get(typeVariables.get(1).asType()))
         .isEqualTo(Types.typeVariable("ExtendsClass", Number.class));
-    assert_().that(Types.get(typeVariables.get(2).asType()))
+    assertThat(Types.get(typeVariables.get(2).asType()))
         .isEqualTo(Types.typeVariable("ExtendsInterface", Runnable.class));
-    assert_().that(Types.get(typeVariables.get(3).asType()))
+    assertThat(Types.get(typeVariables.get(3).asType()))
         .isEqualTo(Types.typeVariable("ExtendsTypeVariable", Types.typeVariable("Simple")));
-    assert_().that(Types.get(typeVariables.get(4).asType()))
+    assertThat(Types.get(typeVariables.get(4).asType()))
         .isEqualTo(Types.typeVariable("Intersection", Number.class, Runnable.class));
-    assert_().that(Types.get(typeVariables.get(5).asType()))
+    assertThat(Types.get(typeVariables.get(5).asType()))
         .isEqualTo(Types.typeVariable("IntersectionOfInterfaces",
             Runnable.class, Serializable.class));
   }
@@ -99,78 +99,78 @@ public final class TypesTest {
     if (bounds.length == 1) {
       // Java 8.
       IntersectionType intersectionType = (IntersectionType) bounds[0];
-      assert_().that(intersectionType.getBounds()).asList()
+      assertThat(intersectionType.getBounds()).asList()
           .containsExactly(ClassName.get(Number.class), ClassName.get(Runnable.class));
-      assert_().that(intersectionType.toString())
+      assertThat(intersectionType.toString())
           .isEqualTo("java.lang.Number & java.lang.Runnable");
     } else {
       // Java ≤ 7.
-      assert_().that(bounds).asList()
+      assertThat(bounds).asList()
           .containsExactly(ClassName.get(Number.class), ClassName.get(Runnable.class));
     }
   }
 
   @Test public void getPrimitiveTypeMirror() {
-    assert_().that(Types.get(compilation.getTypes().getPrimitiveType(TypeKind.BOOLEAN)))
+    assertThat(Types.get(compilation.getTypes().getPrimitiveType(TypeKind.BOOLEAN)))
         .isEqualTo(boolean.class);
-    assert_().that(Types.get(compilation.getTypes().getPrimitiveType(TypeKind.BYTE)))
+    assertThat(Types.get(compilation.getTypes().getPrimitiveType(TypeKind.BYTE)))
         .isEqualTo(byte.class);
-    assert_().that(Types.get(compilation.getTypes().getPrimitiveType(TypeKind.SHORT)))
+    assertThat(Types.get(compilation.getTypes().getPrimitiveType(TypeKind.SHORT)))
         .isEqualTo(short.class);
-    assert_().that(Types.get(compilation.getTypes().getPrimitiveType(TypeKind.INT)))
+    assertThat(Types.get(compilation.getTypes().getPrimitiveType(TypeKind.INT)))
         .isEqualTo(int.class);
-    assert_().that(Types.get(compilation.getTypes().getPrimitiveType(TypeKind.LONG)))
+    assertThat(Types.get(compilation.getTypes().getPrimitiveType(TypeKind.LONG)))
         .isEqualTo(long.class);
-    assert_().that(Types.get(compilation.getTypes().getPrimitiveType(TypeKind.CHAR)))
+    assertThat(Types.get(compilation.getTypes().getPrimitiveType(TypeKind.CHAR)))
         .isEqualTo(char.class);
-    assert_().that(Types.get(compilation.getTypes().getPrimitiveType(TypeKind.FLOAT)))
+    assertThat(Types.get(compilation.getTypes().getPrimitiveType(TypeKind.FLOAT)))
         .isEqualTo(float.class);
-    assert_().that(Types.get(compilation.getTypes().getPrimitiveType(TypeKind.DOUBLE)))
+    assertThat(Types.get(compilation.getTypes().getPrimitiveType(TypeKind.DOUBLE)))
         .isEqualTo(double.class);
   }
 
   @Test public void getArrayTypeMirror() {
-    assert_().that(Types.get(compilation.getTypes().getArrayType(getType(Object.class))))
+    assertThat(Types.get(compilation.getTypes().getArrayType(getType(Object.class))))
         .isEqualTo(Types.arrayOf(ClassName.OBJECT));
   }
 
   @Test public void getVoidTypeMirror() {
-    assert_().that(Types.get(compilation.getTypes().getNoType(TypeKind.VOID)))
+    assertThat(Types.get(compilation.getTypes().getNoType(TypeKind.VOID)))
         .isEqualTo(void.class);
   }
 
   @Test public void getNullTypeMirror() {
-    assert_().that(Types.get(compilation.getTypes().getNullType()))
+    assertThat(Types.get(compilation.getTypes().getNullType()))
         .isEqualTo(Types.NULL);
   }
 
   @Test public void parameterizedType() throws Exception {
     ParameterizedType type = Types.parameterizedType(Map.class, String.class, Long.class);
-    assert_().that(type.toString()).isEqualTo("java.util.Map<java.lang.String, java.lang.Long>");
+    assertThat(type.toString()).isEqualTo("java.util.Map<java.lang.String, java.lang.Long>");
   }
 
   @Test public void arrayType() throws Exception {
     GenericArrayType type = Types.arrayOf(String.class);
-    assert_().that(type.toString()).isEqualTo("java.lang.String[]");
+    assertThat(type.toString()).isEqualTo("java.lang.String[]");
   }
 
   @Test public void wildcardExtendsType() throws Exception {
     WildcardType type = Types.subtypeOf(CharSequence.class);
-    assert_().that(type.toString()).isEqualTo("? extends java.lang.CharSequence");
+    assertThat(type.toString()).isEqualTo("? extends java.lang.CharSequence");
   }
 
   @Test public void wildcardExtendsObject() throws Exception {
     WildcardType type = Types.subtypeOf(Object.class);
-    assert_().that(type.toString()).isEqualTo("?");
+    assertThat(type.toString()).isEqualTo("?");
   }
 
   @Test public void wildcardSuperType() throws Exception {
     WildcardType type = Types.supertypeOf(String.class);
-    assert_().that(type.toString()).isEqualTo("? super java.lang.String");
+    assertThat(type.toString()).isEqualTo("? super java.lang.String");
   }
 
   @Test public void typeVariable() throws Exception {
     TypeVariable<?> type = Types.typeVariable("T", CharSequence.class);
-    assert_().that(type.toString()).isEqualTo("T"); // (Bounds are only emitted in declaration.)
+    assertThat(type.toString()).isEqualTo("T"); // (Bounds are only emitted in declaration.)
   }
 }
