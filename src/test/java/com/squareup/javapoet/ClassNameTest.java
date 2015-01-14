@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.javawriter;
+package com.squareup.javapoet;
 
 import com.google.testing.compile.CompilationRule;
 import java.util.Map;
@@ -41,7 +41,7 @@ public final class ClassNameTest {
     assertThat(ClassName.bestGuess(Map.Entry.class.getCanonicalName()))
         .isEqualTo(ClassName.get("java.util", "Map", "Entry"));
     assertThat(ClassName.bestGuess(OuterClass.InnerClass.class.getCanonicalName()))
-        .isEqualTo(ClassName.get("com.squareup.javawriter",
+        .isEqualTo(ClassName.get("com.squareup.javapoet",
             "ClassNameTest", "OuterClass", "InnerClass"));
   }
 
@@ -82,12 +82,12 @@ public final class ClassNameTest {
     TypeElement element = elements.getTypeElement(Object.class.getCanonicalName());
     assertThat(ClassName.get(element).toString()).isEqualTo("java.lang.Object");
   }
-  
+
   @Test public void classNameFromClass() {
     assertThat(ClassName.get(Object.class).toString())
         .isEqualTo("java.lang.Object");
     assertThat(ClassName.get(OuterClass.InnerClass.class).toString())
-        .isEqualTo("com.squareup.javawriter.ClassNameTest.OuterClass.InnerClass");
+        .isEqualTo("com.squareup.javapoet.ClassNameTest.OuterClass.InnerClass");
   }
 
   @Test public void fromClassRejectionTypes() {

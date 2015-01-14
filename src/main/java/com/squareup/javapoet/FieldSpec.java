@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.javawriter;
+package com.squareup.javapoet;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -28,32 +28,38 @@ import javax.lang.model.element.Modifier;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-/** A generated parameter declaration. */
-public final class ParameterSpec {
+/** A generated field declaration. */
+public final class FieldSpec {
+  public final Type type;
   public final String name;
+  public final ImmutableList<Snippet> javadocSnippets;
   public final ImmutableList<AnnotationSpec> annotations;
   public final ImmutableSet<Modifier> modifiers;
-  public final Type type;
+  public final Snippet initializer;
 
-  private ParameterSpec(Builder builder) {
+  private FieldSpec(Builder builder) {
+    this.type = checkNotNull(builder.type, "type == null");
     this.name = checkNotNull(builder.name, "name == null");
+    this.javadocSnippets = ImmutableList.copyOf(builder.javadocSnippets);
     this.annotations = ImmutableList.copyOf(builder.annotations);
     this.modifiers = ImmutableSet.copyOf(builder.modifiers);
-    this.type = checkNotNull(builder.type, "type == null");
+    this.initializer = builder.initializer;
   }
 
   public boolean hasModifier(Modifier modifier) {
     return modifiers.contains(modifier);
   }
 
-  void emit(CodeWriter codeWriter, boolean varargs) throws IOException {
-    codeWriter.emitAnnotations(annotations, true);
-    codeWriter.emitModifiers(modifiers);
-    if (varargs) {
-      codeWriter.emit("$T... $L", Types.arrayComponent(type), name);
-    } else {
-      codeWriter.emit("$T $L", type, name);
+  void emit(CodeWriter codeWriter, ImmutableSet<Modifier> implicitModifiers) throws IOException {
+    codeWriter.emitJavadoc(javadocSnippets);
+    codeWriter.emitAnnotations(annotations, false);
+    codeWriter.emitModifiers(modifiers, implicitModifiers);
+    codeWriter.emit("$T $L", type, name);
+    if (initializer != null) {
+      codeWriter.emit(" = ");
+      codeWriter.emit(initializer);
     }
+    codeWriter.emit(";\n");
   }
 
   public static Builder builder(Type type, String name, Modifier... modifiers) {
@@ -61,7 +67,7 @@ public final class ParameterSpec {
         .addModifiers(modifiers);
   }
 
-  public static ParameterSpec of(Type type, String name, Modifier... modifiers) {
+  public static FieldSpec of(Type type, String name, Modifier... modifiers) {
     return builder(type, name, modifiers).build();
   }
 
@@ -69,13 +75,20 @@ public final class ParameterSpec {
     private final Type type;
     private final String name;
 
+    private final List<Snippet> javadocSnippets = new ArrayList<>();
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
+    private Snippet initializer;
 
     private Builder(Type type, String name) {
       checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
       this.type = type;
       this.name = name;
+    }
+
+    public Builder addJavadoc(String format, Object... args) {
+      javadocSnippets.add(new Snippet(format, args));
+      return this;
     }
 
     public Builder addAnnotation(AnnotationSpec annotationSpec) {
@@ -93,8 +106,13 @@ public final class ParameterSpec {
       return this;
     }
 
-    public ParameterSpec build() {
-      return new ParameterSpec(this);
+    public Builder initializer(String format, Object... args) {
+      this.initializer = new Snippet(format, args);
+      return this;
+    }
+
+    public FieldSpec build() {
+      return new FieldSpec(this);
     }
   }
 }
