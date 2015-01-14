@@ -41,8 +41,8 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 public final class TypeSpec {
   public final DeclarationType declarationType;
   public final String name;
-  public final Snippet anonymousTypeArguments;
-  public final ImmutableList<Snippet> javadocSnippets;
+  public final CodeBlock anonymousTypeArguments;
+  public final CodeBlock javadoc;
   public final ImmutableList<AnnotationSpec> annotations;
   public final ImmutableSet<Modifier> modifiers;
   public final ImmutableList<TypeVariable<?>> typeVariables;
@@ -85,7 +85,7 @@ public final class TypeSpec {
     this.declarationType = checkNotNull(builder.declarationType, "declarationType == null");
     this.name = builder.name;
     this.anonymousTypeArguments = builder.anonymousTypeArguments;
-    this.javadocSnippets = ImmutableList.copyOf(builder.javadocSnippets);
+    this.javadoc = builder.javadoc.build();
     this.annotations = ImmutableList.copyOf(builder.annotations);
     this.modifiers = ImmutableSet.copyOf(builder.modifiers);
     this.typeVariables = ImmutableList.copyOf(builder.typeVariables);
@@ -121,7 +121,7 @@ public final class TypeSpec {
   }
 
   public static Builder anonymousClassBuilder(String typeArgumentsFormat, Object... args) {
-    return new Builder(DeclarationType.CLASS, null, new Snippet(typeArgumentsFormat, args));
+    return new Builder(DeclarationType.CLASS, null, CodeBlock.of(typeArgumentsFormat, args));
   }
 
   void emit(CodeWriter codeWriter, String enumName) throws IOException {
@@ -141,7 +141,7 @@ public final class TypeSpec {
       codeWriter.emit(anonymousTypeArguments);
       codeWriter.emit(") {\n");
     } else {
-      codeWriter.emitJavadoc(javadocSnippets);
+      codeWriter.emitJavadoc(javadoc);
       codeWriter.emitAnnotations(annotations, false);
       codeWriter.emitModifiers(modifiers);
       codeWriter.emit("$L $L", Ascii.toLowerCase(declarationType.name()), name);
@@ -242,9 +242,9 @@ public final class TypeSpec {
   public static final class Builder {
     private final DeclarationType declarationType;
     private final String name;
-    private final Snippet anonymousTypeArguments;
+    private final CodeBlock anonymousTypeArguments;
 
-    private final List<Snippet> javadocSnippets = new ArrayList<>();
+    private final CodeBlock.Builder javadoc = new CodeBlock.Builder();
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
     private final List<TypeVariable<?>> typeVariables = new ArrayList<>();
@@ -257,7 +257,7 @@ public final class TypeSpec {
     private final List<Element> originatingElements = new ArrayList<>();
 
     private Builder(DeclarationType declarationType, String name,
-        Snippet anonymousTypeArguments) {
+        CodeBlock anonymousTypeArguments) {
       checkArgument(name == null || SourceVersion.isName(name), "not a valid name: %s", name);
       this.declarationType = declarationType;
       this.name = name;
@@ -266,7 +266,7 @@ public final class TypeSpec {
 
     public Builder addJavadoc(String format, Object... args) {
       checkState(anonymousTypeArguments == null);
-      javadocSnippets.add(new Snippet(format, args));
+      javadoc.add(format, args);
       return this;
     }
 

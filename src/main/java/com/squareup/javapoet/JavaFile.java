@@ -34,12 +34,12 @@ public final class JavaFile {
     }
   };
 
-  public final Snippet fileComment;
+  public final CodeBlock fileComment;
   public final String packageName;
   public final TypeSpec typeSpec;
 
   private JavaFile(Builder builder) {
-    this.fileComment = builder.fileComment;
+    this.fileComment = builder.fileComment.build();
     this.packageName = builder.packageName;
     this.typeSpec = checkNotNull(builder.typeSpec, "typeSpec == null");
   }
@@ -58,7 +58,7 @@ public final class JavaFile {
   private void emit(CodeWriter codeWriter) throws IOException {
     codeWriter.pushPackage(packageName);
 
-    if (fileComment != null) {
+    if (!fileComment.isEmpty()) {
       codeWriter.emitComment(fileComment);
     }
 
@@ -90,12 +90,12 @@ public final class JavaFile {
   }
 
   public static final class Builder {
-    private Snippet fileComment;
+    private CodeBlock.Builder fileComment = new CodeBlock.Builder();
     private String packageName = "";
     private TypeSpec typeSpec;
 
     public Builder fileComment(String format, Object... args) {
-      this.fileComment = new Snippet(format, args);
+      this.fileComment.add(format, args);
       return this;
     }
 

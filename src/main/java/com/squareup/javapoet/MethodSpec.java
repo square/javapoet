@@ -37,7 +37,7 @@ public final class MethodSpec {
   static final String CONSTRUCTOR = "<init>";
 
   public final String name;
-  public final ImmutableList<Snippet> javadocSnippets;
+  public final CodeBlock javadoc;
   public final ImmutableList<AnnotationSpec> annotations;
   public final ImmutableSet<Modifier> modifiers;
   public final ImmutableList<TypeVariable<?>> typeVariables;
@@ -45,16 +45,17 @@ public final class MethodSpec {
   public final ImmutableList<ParameterSpec> parameters;
   public final boolean varargs;
   public final ImmutableList<Type> exceptions;
-  public final ImmutableList<Snippet> snippets;
+  public final CodeBlock code;
 
   private MethodSpec(Builder builder) {
-    checkArgument(builder.snippets.isEmpty() || !builder.modifiers.contains(Modifier.ABSTRACT),
+    CodeBlock code = builder.code.build();
+    checkArgument(code.isEmpty() || !builder.modifiers.contains(Modifier.ABSTRACT),
         "abstract method %s cannot have code", builder.name);
     checkArgument(!builder.varargs || lastParameterIsArray(builder.parameters),
         "last parameter of varargs method %s must be an array", builder.name);
 
     this.name = checkNotNull(builder.name, "name == null");
-    this.javadocSnippets = ImmutableList.copyOf(builder.javadocSnippets);
+    this.javadoc = builder.javadoc.build();
     this.annotations = ImmutableList.copyOf(builder.annotations);
     this.modifiers = ImmutableSet.copyOf(builder.modifiers);
     this.typeVariables = ImmutableList.copyOf(builder.typeVariables);
@@ -62,7 +63,7 @@ public final class MethodSpec {
     this.parameters = ImmutableList.copyOf(builder.parameters);
     this.varargs = builder.varargs;
     this.exceptions = ImmutableList.copyOf(builder.exceptions);
-    this.snippets = ImmutableList.copyOf(builder.snippets);
+    this.code = code;
   }
 
   private boolean lastParameterIsArray(List<ParameterSpec> parameters) {
@@ -71,7 +72,7 @@ public final class MethodSpec {
 
   void emit(CodeWriter codeWriter, String enclosingName, ImmutableSet<Modifier> implicitModifiers)
       throws IOException {
-    codeWriter.emitJavadoc(javadocSnippets);
+    codeWriter.emitJavadoc(javadoc);
     codeWriter.emitAnnotations(annotations, false);
     codeWriter.emitModifiers(modifiers, implicitModifiers);
 
@@ -112,9 +113,7 @@ public final class MethodSpec {
     codeWriter.emit(" {\n");
 
     codeWriter.indent();
-    for (Snippet snippet : snippets) {
-      codeWriter.emit(snippet);
-    }
+    codeWriter.emit(code);
     codeWriter.unindent();
 
     codeWriter.emit("}\n");
@@ -135,14 +134,14 @@ public final class MethodSpec {
   public static final class Builder {
     private final String name;
 
-    private final List<Snippet> javadocSnippets = new ArrayList<>();
+    private final CodeBlock.Builder javadoc = new CodeBlock.Builder();
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
     private List<TypeVariable<?>> typeVariables = new ArrayList<>();
     private Type returnType;
     private final List<ParameterSpec> parameters = new ArrayList<>();
     private final List<Type> exceptions = new ArrayList<>();
-    private final List<Snippet> snippets = new ArrayList<>();
+    private final CodeBlock.Builder code = new CodeBlock.Builder();
     private boolean varargs;
 
     private Builder(String name) {
@@ -153,7 +152,7 @@ public final class MethodSpec {
     }
 
     public Builder addJavadoc(String format, Object... args) {
-      javadocSnippets.add(new Snippet(format, args));
+      javadoc.add(format, args);
       return this;
     }
 
@@ -203,7 +202,12 @@ public final class MethodSpec {
     }
 
     public Builder addCode(String format, Object... args) {
-      snippets.add(new Snippet(format, args));
+      code.add(format, args);
+      return this;
+    }
+
+    public Builder addCode(CodeBlock codeBlock) {
+      code.add(codeBlock);
       return this;
     }
 

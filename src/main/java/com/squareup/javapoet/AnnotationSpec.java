@@ -36,7 +36,7 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 /** A generated annotation on a declaration. */
 public final class AnnotationSpec {
   public final Type type;
-  public final ImmutableMultimap<String, Snippet> members;
+  public final ImmutableMultimap<String, CodeBlock> members;
 
   private AnnotationSpec(Builder builder) {
     this.type = checkNotNull(builder.type, "type");
@@ -65,9 +65,9 @@ public final class AnnotationSpec {
       //   )
       codeWriter.emit("@$T(" + whitespace, type);
       codeWriter.indent(2);
-      for (Iterator<Map.Entry<String, Collection<Snippet>>> i
+      for (Iterator<Map.Entry<String, Collection<CodeBlock>>> i
           = members.asMap().entrySet().iterator(); i.hasNext();) {
-        Map.Entry<String, Collection<Snippet>> entry = i.next();
+        Map.Entry<String, Collection<CodeBlock>> entry = i.next();
         codeWriter.emit("$L = ", entry.getKey());
         emitAnnotationValue(codeWriter, whitespace, memberSeparator, entry.getValue());
         if (i.hasNext()) codeWriter.emit(memberSeparator);
@@ -78,7 +78,7 @@ public final class AnnotationSpec {
   }
 
   private void emitAnnotationValue(CodeWriter codeWriter, String whitespace, String memberSeparator,
-      Collection<Snippet> value) throws IOException {
+      Collection<CodeBlock> value) throws IOException {
     if (value.size() == 1) {
       codeWriter.indent(2);
       codeWriter.emit(getOnlyElement(value));
@@ -89,9 +89,9 @@ public final class AnnotationSpec {
     codeWriter.emit("{" + whitespace);
     codeWriter.indent(2);
     boolean first = true;
-    for (Snippet snippet : value) {
+    for (CodeBlock codeBlock : value) {
       if (!first) codeWriter.emit(memberSeparator);
-      codeWriter.emit(snippet);
+      codeWriter.emit(codeBlock);
       first = false;
     }
     codeWriter.unindent(2);
@@ -118,15 +118,15 @@ public final class AnnotationSpec {
 
   public static final class Builder {
     private final Type type;
-    private final Multimap<String, Snippet> members = Multimaps.newListMultimap(
-        new TreeMap<String, Collection<Snippet>>(), AnnotationSpec.<Snippet>listSupplier());
+    private final Multimap<String, CodeBlock> members = Multimaps.newListMultimap(
+        new TreeMap<String, Collection<CodeBlock>>(), AnnotationSpec.<CodeBlock>listSupplier());
 
     private Builder(Type type) {
       this.type = type;
     }
 
     public Builder addMember(String name, String format, Object... args) {
-      members.put(name, new Snippet(format, args));
+      members.put(name, CodeBlock.of(format, args));
       return this;
     }
 
