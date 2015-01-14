@@ -113,26 +113,24 @@ final class CodeWriter {
     return this;
   }
 
-  public void emitComment(Snippet snippet) throws IOException {
+  public void emitComment(CodeBlock codeBlock) throws IOException {
     trailingNewline = true; // Force the '//' prefix for the comment.
     comment = true;
     try {
-      emit(snippet);
+      emit(codeBlock);
       emit("\n");
     } finally {
       comment = false;
     }
   }
 
-  public void emitJavadoc(ImmutableList<Snippet> javadocSnippets) throws IOException {
-    if (javadocSnippets.isEmpty()) return;
+  public void emitJavadoc(CodeBlock javadocCodeBlock) throws IOException {
+    if (javadocCodeBlock.isEmpty()) return;
 
     emit("/**\n");
     javadoc = true;
     try {
-      for (Snippet snippet : javadocSnippets) {
-        emit(snippet);
-      }
+      emit(javadocCodeBlock);
     } finally {
       javadoc = false;
     }
@@ -190,32 +188,40 @@ final class CodeWriter {
   }
 
   public CodeWriter emit(String format, Object... args) throws IOException {
-    return emit(new Snippet(format, args));
+    return emit(CodeBlock.of(format, args));
   }
 
-  public CodeWriter emit(Snippet snippet) throws IOException {
+  public CodeWriter emit(CodeBlock codeBlock) throws IOException {
     int a = 0;
-    for (String part : snippet.formatParts) {
+    for (String part : codeBlock.formatParts) {
       switch (part) {
         case "$L":
-          emitLiteral(snippet.args.get(a++));
+          emitLiteral(codeBlock.args.get(a++));
           break;
 
         case "$N":
-          emitName(snippet.args.get(a++));
+          emitName(codeBlock.args.get(a++));
           break;
 
         case "$S":
-          String arg = String.valueOf(snippet.args.get(a++));
+          String arg = String.valueOf(codeBlock.args.get(a++));
           emitAndIndent(stringLiteral(arg));
           break;
 
         case "$T":
-          emitType(snippet.args.get(a++));
+          emitType(codeBlock.args.get(a++));
           break;
 
         case "$$":
           emitAndIndent("$");
+          break;
+
+        case "$>":
+          indent();
+          break;
+
+        case "$<":
+          unindent();
           break;
 
         default:
@@ -233,6 +239,9 @@ final class CodeWriter {
     } else if (o instanceof AnnotationSpec) {
       AnnotationSpec annotationSpec = (AnnotationSpec) o;
       annotationSpec.emit(this, true);
+    } else if (o instanceof CodeBlock) {
+      CodeBlock codeBlock = (CodeBlock) o;
+      emit(codeBlock);
     } else {
       emitAndIndent(String.valueOf(o));
     }

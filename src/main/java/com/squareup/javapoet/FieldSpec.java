@@ -32,18 +32,18 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public final class FieldSpec {
   public final Type type;
   public final String name;
-  public final ImmutableList<Snippet> javadocSnippets;
+  public final CodeBlock javadoc;
   public final ImmutableList<AnnotationSpec> annotations;
   public final ImmutableSet<Modifier> modifiers;
-  public final Snippet initializer;
+  public final CodeBlock initializer;
 
   private FieldSpec(Builder builder) {
     this.type = checkNotNull(builder.type, "type == null");
     this.name = checkNotNull(builder.name, "name == null");
-    this.javadocSnippets = ImmutableList.copyOf(builder.javadocSnippets);
+    this.javadoc = builder.javadoc.build();
     this.annotations = ImmutableList.copyOf(builder.annotations);
     this.modifiers = ImmutableSet.copyOf(builder.modifiers);
-    this.initializer = builder.initializer;
+    this.initializer = builder.initializer.build();
   }
 
   public boolean hasModifier(Modifier modifier) {
@@ -51,11 +51,11 @@ public final class FieldSpec {
   }
 
   void emit(CodeWriter codeWriter, ImmutableSet<Modifier> implicitModifiers) throws IOException {
-    codeWriter.emitJavadoc(javadocSnippets);
+    codeWriter.emitJavadoc(javadoc);
     codeWriter.emitAnnotations(annotations, false);
     codeWriter.emitModifiers(modifiers, implicitModifiers);
     codeWriter.emit("$T $L", type, name);
-    if (initializer != null) {
+    if (!initializer.isEmpty()) {
       codeWriter.emit(" = ");
       codeWriter.emit(initializer);
     }
@@ -75,10 +75,10 @@ public final class FieldSpec {
     private final Type type;
     private final String name;
 
-    private final List<Snippet> javadocSnippets = new ArrayList<>();
+    private final CodeBlock.Builder javadoc = new CodeBlock.Builder();
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
-    private Snippet initializer;
+    private CodeBlock.Builder initializer = new CodeBlock.Builder();
 
     private Builder(Type type, String name) {
       checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
@@ -87,7 +87,7 @@ public final class FieldSpec {
     }
 
     public Builder addJavadoc(String format, Object... args) {
-      javadocSnippets.add(new Snippet(format, args));
+      javadoc.add(format, args);
       return this;
     }
 
@@ -107,7 +107,7 @@ public final class FieldSpec {
     }
 
     public Builder initializer(String format, Object... args) {
-      this.initializer = new Snippet(format, args);
+      this.initializer.add(format, args);
       return this;
     }
 

@@ -31,15 +31,15 @@ import javax.tools.JavaFileObject;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /** Writes generated types to a filesystem using the standard directory structure. */
-public final class JavaWriter {
+public final class JavaPoet {
   private final List<JavaFile> javaFiles = new ArrayList<>();
 
-  public JavaWriter add(JavaFile javaFile) {
+  public JavaPoet add(JavaFile javaFile) {
     javaFiles.add(javaFile);
     return this;
   }
 
-  public JavaWriter add(String packageName, TypeSpec type) {
+  public JavaPoet add(String packageName, TypeSpec type) {
     return add(new JavaFile.Builder()
         .packageName(packageName)
         .typeSpec(type)

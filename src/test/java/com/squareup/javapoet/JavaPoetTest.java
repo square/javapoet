@@ -31,8 +31,8 @@ import org.mockito.Mockito;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
-public final class JavaWriterTest {
-  private final JavaWriter javaWriter = new JavaWriter();
+public final class JavaPoetTest {
+  private final JavaPoet javaPoet = new JavaPoet();
 
   // Used for testing java.io File behavior.
   @Rule public final TemporaryFolder tmp = new TemporaryFolder();
@@ -49,7 +49,7 @@ public final class JavaWriterTest {
     Files.createDirectories(path.getParent());
     Files.createFile(path);
     try {
-      javaWriter.writeTo(path);
+      javaPoet.writeTo(path);
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e.getMessage()).isEqualTo("path /foo/bar exists but is not a directory.");
@@ -60,7 +60,7 @@ public final class JavaWriterTest {
     File file = new File(tmp.newFolder("foo"), "bar");
     file.createNewFile();
     try {
-      javaWriter.writeTo(file);
+      javaPoet.writeTo(file);
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e.getMessage()).containsMatch("path .*?/foo/bar exists but is not a directory.");
@@ -69,7 +69,7 @@ public final class JavaWriterTest {
 
   @Test public void pathDefaultPackage() throws IOException {
     TypeSpec type = TypeSpec.classBuilder("Test").build();
-    javaWriter.add("", type).writeTo(fsRoot);
+    javaPoet.add("", type).writeTo(fsRoot);
 
     Path testPath = fsRoot.resolve("Test.java");
     assertThat(Files.exists(testPath)).isTrue();
@@ -77,7 +77,7 @@ public final class JavaWriterTest {
 
   @Test public void fileDefaultPackage() throws IOException {
     TypeSpec type = TypeSpec.classBuilder("Test").build();
-    javaWriter.add("", type).writeTo(tmp.getRoot());
+    javaPoet.add("", type).writeTo(tmp.getRoot());
 
     File testFile = new File(tmp.getRoot(), "Test.java");
     assertThat(testFile.exists()).isTrue();
@@ -85,7 +85,7 @@ public final class JavaWriterTest {
 
   @Test public void filerDefaultPackage() throws IOException {
     TypeSpec type = TypeSpec.classBuilder("Test").build();
-    javaWriter.add("", type).writeTo(filer);
+    javaPoet.add("", type).writeTo(filer);
 
     Path testPath = fsRoot.resolve("Test.java");
     assertThat(Files.exists(testPath)).isTrue();
@@ -94,7 +94,7 @@ public final class JavaWriterTest {
   @Test public void pathSamePackage() throws IOException {
     TypeSpec test1 = TypeSpec.classBuilder("Test1").build();
     TypeSpec test2 = TypeSpec.classBuilder("Test2").build();
-    javaWriter.add("example", test1).add("example", test2).writeTo(fsRoot);
+    javaPoet.add("example", test1).add("example", test2).writeTo(fsRoot);
 
     Path testPath1 = fsRoot.resolve(fs.getPath("example", "Test1.java"));
     assertThat(Files.exists(testPath1)).isTrue();
@@ -105,7 +105,7 @@ public final class JavaWriterTest {
   @Test public void fileSamePackage() throws IOException {
     TypeSpec test1 = TypeSpec.classBuilder("Test1").build();
     TypeSpec test2 = TypeSpec.classBuilder("Test2").build();
-    javaWriter.add("example", test1).add("example", test2).writeTo(tmp.getRoot());
+    javaPoet.add("example", test1).add("example", test2).writeTo(tmp.getRoot());
 
     File examplePackage = new File(tmp.getRoot(), "example");
     File testFile1 = new File(examplePackage, "Test1.java");
@@ -117,7 +117,7 @@ public final class JavaWriterTest {
   @Test public void filerSamePackage() throws IOException {
     TypeSpec test1 = TypeSpec.classBuilder("Test1").build();
     TypeSpec test2 = TypeSpec.classBuilder("Test2").build();
-    javaWriter.add("example", test1).add("example", test2).writeTo(filer);
+    javaPoet.add("example", test1).add("example", test2).writeTo(filer);
 
     Path testPath1 = fsRoot.resolve(fs.getPath("example", "Test1.java"));
     assertThat(Files.exists(testPath1)).isTrue();
@@ -127,7 +127,7 @@ public final class JavaWriterTest {
 
   @Test public void pathNestedClasses() throws IOException {
     TypeSpec test = TypeSpec.classBuilder("Test").build();
-    javaWriter.add("foo", test)
+    javaPoet.add("foo", test)
         .add("foo.bar", test)
         .add("foo.bar.baz", test)
         .writeTo(fsRoot);
@@ -142,7 +142,7 @@ public final class JavaWriterTest {
 
   @Test public void fileNestedClasses() throws IOException {
     TypeSpec test = TypeSpec.classBuilder("Test").build();
-    javaWriter.add("foo", test)
+    javaPoet.add("foo", test)
         .add("foo.bar", test)
         .add("foo.bar.baz", test)
         .writeTo(tmp.getRoot());
@@ -160,7 +160,7 @@ public final class JavaWriterTest {
 
   @Test public void filerNestedClasses() throws IOException {
     TypeSpec test = TypeSpec.classBuilder("Test").build();
-    javaWriter.add("foo", test)
+    javaPoet.add("foo", test)
         .add("foo.bar", test)
         .add("foo.bar.baz", test)
         .writeTo(filer);
@@ -186,7 +186,7 @@ public final class JavaWriterTest {
         .addOriginatingElement(element2_2)
         .build();
 
-    javaWriter.add("example", test1).add("example", test2).writeTo(filer);
+    javaPoet.add("example", test1).add("example", test2).writeTo(filer);
 
     Path testPath1 = fsRoot.resolve(fs.getPath("example", "Test1.java"));
     assertThat(filer.getOriginatingElements(testPath1)).containsExactly(element1_1);

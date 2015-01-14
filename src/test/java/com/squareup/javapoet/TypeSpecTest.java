@@ -790,6 +790,103 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  @Test public void codeBlocks() throws Exception {
+    CodeBlock ifBlock = new CodeBlock.Builder()
+        .beginControlFlow("if (!a.equals(b))")
+        .statement("return i")
+        .endControlFlow()
+        .build();
+    CodeBlock methodBody = new CodeBlock.Builder()
+        .statement("$T size = $T.min(listA.size(), listB.size())", int.class, Math.class)
+        .beginControlFlow("for ($T i = 0; i < size; i++)", int.class)
+        .statement("$T $N = $N.get(i)", String.class, "a", "listA")
+        .statement("$T $N = $N.get(i)", String.class, "b", "listB")
+        .add("$L", ifBlock)
+        .endControlFlow()
+        .statement("return size")
+        .build();
+    TypeSpec util = TypeSpec.classBuilder("Util")
+        .addMethod(MethodSpec.methodBuilder("commonPrefixLength")
+            .returns(int.class)
+            .addParameter(Types.parameterizedType(List.class, String.class), "listA")
+            .addParameter(Types.parameterizedType(List.class, String.class), "listB")
+            .addCode(methodBody)
+            .build())
+        .build();
+    assertThat(toString(util)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.Math;\n"
+        + "import java.lang.String;\n"
+        + "import java.util.List;\n"
+        + "\n"
+        + "class Util {\n"
+        + "  int commonPrefixLength(List<String> listA, List<String> listB) {\n"
+        + "    int size = Math.min(listA.size(), listB.size());\n"
+        + "    for (int i = 0; i < size; i++) {\n"
+        + "      String a = listA.get(i);\n"
+        + "      String b = listB.get(i);\n"
+        + "      if (!a.equals(b)) {\n"
+        + "        return i;\n"
+        + "      }\n"
+        + "    }\n"
+        + "    return size;\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void elseIf() throws Exception {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addMethod(MethodSpec.methodBuilder("choices")
+            .addCode(new CodeBlock.Builder()
+                .beginControlFlow("if (5 < 4) ")
+                .statement("$T.out.println($S)", System.class, "wat")
+                .nextControlFlow("else if (5 < 6)")
+                .statement("$T.out.println($S)", System.class, "hello")
+                .endControlFlow()
+                .build())
+            .build())
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.System;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  void choices() {\n"
+        + "    if (5 < 4)  {\n"
+        + "      System.out.println(\"wat\");\n"
+        + "    } else if (5 < 6){\n"
+        + "      System.out.println(\"hello\");\n"
+        + "    }\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void doWhile() throws Exception {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addMethod(MethodSpec.methodBuilder("loopForever")
+            .addCode(new CodeBlock.Builder()
+                .beginControlFlow("do")
+                .statement("$T.out.println($S)", System.class, "hello")
+                .endControlFlow("while (5 < 6)")
+                .build())
+            .build())
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.System;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  void loopForever() {\n"
+        + "    do {\n"
+        + "      System.out.println(\"hello\");\n"
+        + "    } while (5 < 6);\n"
+        + "  }\n"
+        + "}\n");
+  }
+
   private String toString(TypeSpec typeSpec) {
     return new JavaFile.Builder()
         .packageName(tacosPackage)
