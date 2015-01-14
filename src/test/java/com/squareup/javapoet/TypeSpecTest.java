@@ -887,6 +887,26 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  @Test public void inlineIndent() throws Exception {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addMethod(MethodSpec.methodBuilder("inlineIndent")
+            .addCode("if (3 < 4) {\n$>$T.out.println($S);\n$<}\n", System.class, "hello")
+            .build())
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.System;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  void inlineIndent() {\n"
+        + "    if (3 < 4) {\n"
+        + "      System.out.println(\"hello\");\n"
+        + "    }\n"
+        + "  }\n"
+        + "}\n");
+  }
+
   private String toString(TypeSpec typeSpec) {
     return new JavaFile.Builder()
         .packageName(tacosPackage)

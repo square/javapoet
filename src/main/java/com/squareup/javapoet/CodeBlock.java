@@ -21,15 +21,23 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * A deferred format string. Unlike {@link java.text.Format} which uses percent {@code %} to escape
- * placeholders, this uses {@code $}, and has its own set of permitted placeholders:
+ * A fragment of a .java file, potentially containing declarations, statements, and documentation.
+ * Code blocks are not necessarily well-formed Java code, and are not validated. This class assumes
+ * javac will check correctness later!
+ *
+ * <p>Code blocks support placeholders like {@link java.text.Format}. Where {@link String#format}
+ * uses percent {@code %} to reference target values, this class uses dollar sign {@code $} and has
+ * its own set of permitted placeholders:
  *
  * <ul>
- *   <li>{@code $L} emits the <em>literal</em> value with no escaping.
- *   <li>{@code $N} emits a <em>name</em>, using name collision avoidance where necessary.
+ *   <li>{@code $L} emits a <em>literal</em> value with no escaping. Arguments for literals may be
+ *       strings, primitives, {@linkplain TypeSpec type declarations}, {@linkplain AnnotationSpec
+ *       annotations} and even other code blocks.
+ *   <li>{@code $N} emits a <em>name</em>, using name collision avoidance where necessary. Arguments
+ *       for names may be strings, {@linkplain ParameterSpec parameters}, {@linkplain FieldSpec
+ *       fields}, {@linkplain MethodSpec methods}, and {@linkplain TypeSpec types}.
  *   <li>{@code $S} escapes the value as a <em>string</em>, wraps it with double quotes, and emits
- *       that.
- *   <li>{@code $T} emits a <em>type</em> reference. Types will be imported if possible.
+ *       that. For example, {@code 6" sandwich} is emitted {@code "6\" sandwich"}.
  *   <li>{@code $$} emits a dollar sign.
  *   <li>{@code $&gt;} increases the indentation level.
  *   <li>{@code $&lt;} decreases the indentation level.
@@ -73,6 +81,8 @@ public final class CodeBlock {
               expectedArgsLength++;
               // Fall through.
             case '$':
+            case '>':
+            case '<':
               nextP = p + 2;
               break;
 
