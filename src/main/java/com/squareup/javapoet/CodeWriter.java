@@ -243,15 +243,7 @@ final class CodeWriter {
 
     if (type instanceof Class<?>) {
       Class<?> classType = (Class<?>) type;
-      if (classType == boolean.class) return emit("boolean");
-      if (classType == byte.class) return emit("byte");
-      if (classType == short.class) return emit("short");
-      if (classType == int.class) return emit("int");
-      if (classType == long.class) return emit("long");
-      if (classType == char.class) return emit("char");
-      if (classType == float.class) return emit("float");
-      if (classType == double.class) return emit("double");
-      if (classType == void.class) return emit("void");
+      if (classType.isPrimitive()) return emit(classType.getName());
       if (classType.isArray()) return emit("$T[]", classType.getComponentType());
       return emitType(ClassName.get(classType));
 
