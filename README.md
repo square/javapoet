@@ -17,14 +17,14 @@ TypeSpec raven = TypeSpec.classBuilder("Raven")
     .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
     .addMethod(MethodSpec.methodBuilder("main")
         .addModifiers(Modifier.PUBLIC)
-        .addCode("$T verses = new $T<>();\n",
+        .addCode("$T verses = new $T();\n",
             Types.parameterizedType(List.class, String.class),
             Types.parameterizedType(ArrayList.class, String.class))
         .addCode("verses.add($S);\n",
             "Once upon a midnight dreary, while I pondered, weak and weary...")
         .addCode("verses.add($S);\n",
             "Over many a quaint and curious volume of forgotten lore—")
-        .addCode("return verses;\n")
+        .addCode("System.out.println(verses);\n")
         .build())
     .build();
 JavaFile ravenSourceFile = new JavaFile.Builder()
@@ -43,10 +43,10 @@ import java.util.List;
 
 public final class Raven {
   public void main() {
-    List<String> verses = new ArrayList<String><>();
+    List<String> verses = new ArrayList<String>();
     verses.add("Once upon a midnight dreary, while I pondered, weak and weary...");
     verses.add("Over many a quaint and curious volume of forgotten lore—");
-    return verses;
+    System.out.println(verses);
   }
 }
 ```
