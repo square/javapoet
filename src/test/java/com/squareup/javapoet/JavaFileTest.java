@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.javawriter;
+package com.squareup.javapoet;
 
 import java.util.Date;
 import javax.lang.model.element.Modifier;
