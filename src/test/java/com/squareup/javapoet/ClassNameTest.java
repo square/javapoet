@@ -90,6 +90,22 @@ public final class ClassNameTest {
         .isEqualTo("com.squareup.javapoet.ClassNameTest.OuterClass.InnerClass");
   }
 
+  @Test public void peerClass() {
+    assertThat(ClassName.get(Double.class).peerClass("Short"))
+        .isEqualTo(ClassName.get(Short.class));
+    assertThat(ClassName.get("", "Double").peerClass("Short"))
+        .isEqualTo(ClassName.get("", "Short"));
+    assertThat(ClassName.get("a.b", "Combo", "Taco").peerClass("Burrito"))
+        .isEqualTo(ClassName.get("a.b", "Combo", "Burrito"));
+  }
+
+  @Test public void nestedClass() {
+    assertThat(ClassName.get(Map.class).nestedClass("Entry"))
+        .isEqualTo(ClassName.get(Map.Entry.class));
+    assertThat(ClassName.get("a.b", "Combo").nestedClass("Taco"))
+        .isEqualTo(ClassName.get("a.b", "Combo", "Taco"));
+  }
+
   @Test public void fromClassRejectionTypes() {
     try {
       ClassName.get(int.class);

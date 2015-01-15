@@ -58,7 +58,7 @@ public final class ParameterSpec {
 
   public static Builder builder(Type type, String name, Modifier... modifiers) {
     return new Builder(type, name)
-        .addModifiers(modifiers);
+        .add(modifiers);
   }
 
   public static ParameterSpec of(Type type, String name, Modifier... modifiers) {
@@ -78,7 +78,7 @@ public final class ParameterSpec {
       this.name = name;
     }
 
-    public Builder addAnnotation(AnnotationSpec annotationSpec) {
+    public Builder add(AnnotationSpec annotationSpec) {
       this.annotations.add(annotationSpec);
       return this;
     }
@@ -88,7 +88,7 @@ public final class ParameterSpec {
       return this;
     }
 
-    public Builder addModifiers(Modifier... modifiers) {
+    public Builder add(Modifier... modifiers) {
       Collections.addAll(this.modifiers, modifiers);
       return this;
     }

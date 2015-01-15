@@ -75,6 +75,19 @@ public final class ClassName implements Type, Comparable<ClassName> {
     return names.subList(1, names.size());
   }
 
+  /** Returns a class enclosed by this class. */
+  public ClassName nestedClass(String name) {
+    return new ClassName(new ImmutableList.Builder<String>().addAll(names).add(name).build());
+  }
+
+  /** Returns a class enclosed by the same package or class as this class. */
+  public ClassName peerClass(String name) {
+    return new ClassName(new ImmutableList.Builder<String>()
+        .addAll(names.subList(0, names.size() - 1))
+        .add(name)
+        .build());
+  }
+
   /** Returns the simple name of this class, like {@code "Entry"} for {@link Map.Entry}. */
   public String simpleName() {
     return Iterables.getLast(names);
