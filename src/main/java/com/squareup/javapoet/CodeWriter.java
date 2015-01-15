@@ -36,7 +36,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.type.TypeMirror;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -421,6 +423,8 @@ final class CodeWriter {
 
   private Type toType(Object arg) {
     if (arg instanceof Type) return (Type) arg;
+    if (arg instanceof TypeMirror) return Types.get((TypeMirror) arg);
+    if (arg instanceof Element) return Types.get(((Element) arg).asType());
     throw new IllegalArgumentException("expected type but was " + arg);
   }
 
@@ -429,7 +433,7 @@ final class CodeWriter {
   }
 
   private String toName(Object o) {
-    if (o instanceof String) return (String) o;
+    if (o instanceof CharSequence) return ((CharSequence) o).toString();
     if (o instanceof ParameterSpec) return ((ParameterSpec) o).name;
     if (o instanceof FieldSpec) return ((FieldSpec) o).name;
     if (o instanceof MethodSpec) return ((MethodSpec) o).name;
