@@ -34,10 +34,14 @@ import static com.google.common.base.Preconditions.checkState;
  *       strings, primitives, {@linkplain TypeSpec type declarations}, {@linkplain AnnotationSpec
  *       annotations} and even other code blocks.
  *   <li>{@code $N} emits a <em>name</em>, using name collision avoidance where necessary. Arguments
- *       for names may be strings, {@linkplain ParameterSpec parameters}, {@linkplain FieldSpec
- *       fields}, {@linkplain MethodSpec methods}, and {@linkplain TypeSpec types}.
+ *       for names may be strings (actually any {@linkplain CharSequence character sequence}),
+ *       {@linkplain ParameterSpec parameters}, {@linkplain FieldSpec fields}, {@linkplain
+ *       MethodSpec methods}, and {@linkplain TypeSpec types}.
  *   <li>{@code $S} escapes the value as a <em>string</em>, wraps it with double quotes, and emits
  *       that. For example, {@code 6" sandwich} is emitted {@code "6\" sandwich"}.
+ *   <li>{@code T} emits a <em>type</em> reference. Types will be imported if possible. Arguments
+ *       for types may be {@linkplain Class classes}, {@linkplain javax.lang.model.type.TypeMirror
+,*       type mirrors}, and {@linkplain javax.lang.model.element.Element elements}.
  *   <li>{@code $$} emits a dollar sign.
  *   <li>{@code $&gt;} increases the indentation level.
  *   <li>{@code $&lt;} decreases the indentation level.
