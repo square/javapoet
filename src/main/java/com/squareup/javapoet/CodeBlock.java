@@ -144,7 +144,7 @@ public final class CodeBlock {
       return this;
     }
 
-    public Builder statement(String format, Object... args) {
+    public Builder addStatement(String format, Object... args) {
       return add(format + ";\n", args);
     }
 

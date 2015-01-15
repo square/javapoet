@@ -270,23 +270,23 @@ public final class TypeSpec {
       return this;
     }
 
-    public Builder addAnnotation(AnnotationSpec annotationSpec) {
+    public Builder add(AnnotationSpec annotationSpec) {
       checkState(anonymousTypeArguments == null);
       this.annotations.add(annotationSpec);
       return this;
     }
 
     public Builder addAnnotation(Type annotation) {
-      return addAnnotation(AnnotationSpec.of(annotation));
+      return add(AnnotationSpec.of(annotation));
     }
 
-    public Builder addModifiers(Modifier... modifiers) {
+    public Builder add(Modifier... modifiers) {
       checkState(anonymousTypeArguments == null);
       Collections.addAll(this.modifiers, modifiers);
       return this;
     }
 
-    public Builder addTypeVariable(TypeVariable<?> typeVariable) {
+    public Builder add(TypeVariable<?> typeVariable) {
       checkState(anonymousTypeArguments == null);
       typeVariables.add(typeVariable);
       return this;
@@ -315,21 +315,17 @@ public final class TypeSpec {
       return this;
     }
 
-    public Builder addField(FieldSpec fieldSpec) {
+    public Builder add(FieldSpec fieldSpec) {
       fieldSpecs.add(fieldSpec);
       return this;
     }
 
-    public Builder addField(Type type, String name, Modifier... modifiers) {
-      return addField(FieldSpec.of(type, name, modifiers));
-    }
-
-    public Builder addMethod(MethodSpec methodSpec) {
+    public Builder add(MethodSpec methodSpec) {
       methodSpecs.add(methodSpec);
       return this;
     }
 
-    public Builder addType(TypeSpec typeSpec) {
+    public Builder add(TypeSpec typeSpec) {
       typeSpecs.add(typeSpec);
       return this;
     }

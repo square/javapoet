@@ -40,7 +40,7 @@ public final class JavaFileTest {
     String source = new JavaFile.Builder()
         .packageName("com.squareup.tacos")
         .typeSpec(TypeSpec.classBuilder("Taco")
-            .addField(FieldSpec.of(Date.class, "madeFreshDate"))
+            .add(FieldSpec.of(Date.class, "madeFreshDate"))
             .build())
         .build()
         .toString();
@@ -58,8 +58,8 @@ public final class JavaFileTest {
     String source = new JavaFile.Builder()
         .packageName("com.squareup.tacos")
         .typeSpec(TypeSpec.classBuilder("Taco")
-            .addField(FieldSpec.of(Date.class, "madeFreshDate"))
-            .addField(FieldSpec.of(java.sql.Date.class, "madeFreshDatabaseDate"))
+            .add(FieldSpec.of(Date.class, "madeFreshDate"))
+            .add(FieldSpec.of(java.sql.Date.class, "madeFreshDatabaseDate"))
             .build())
         .build()
         .toString();
@@ -78,9 +78,8 @@ public final class JavaFileTest {
   @Test public void defaultPackage() throws Exception {
     String source = new JavaFile.Builder()
         .typeSpec(TypeSpec.classBuilder("HelloWorld")
-            .addMethod(MethodSpec.methodBuilder("main")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .addParameter(String[].class, "args")
+            .add(MethodSpec.methodBuilder("main")
+                .add(Modifier.PUBLIC, Modifier.STATIC).add(ParameterSpec.of(String[].class, "args"))
                 .addCode("$T.out.println($S);\n", System.class, "Hello World!")
                 .build())
             .build())

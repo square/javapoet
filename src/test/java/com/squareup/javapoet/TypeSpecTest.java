@@ -38,9 +38,9 @@ public final class TypeSpecTest {
 
   @Test public void basic() throws Exception {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-        .addMethod(MethodSpec.methodBuilder("toString")
+        .add(MethodSpec.methodBuilder("toString")
             .addAnnotation(Override.class)
-            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+            .add(Modifier.PUBLIC, Modifier.FINAL)
             .returns(String.class)
             .addCode("return $S;\n", "taco")
             .build())
@@ -67,9 +67,9 @@ public final class TypeSpecTest {
     ParameterizedType listOfSuper = Types.parameterizedType(
         List.class, Types.supertypeOf(String.class));
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-        .addField(FieldSpec.of(listOfAny, "extendsObject"))
-        .addField(FieldSpec.of(listOfExtends, "extendsSerializable"))
-        .addField(FieldSpec.of(listOfSuper, "superString"))
+        .add(FieldSpec.of(listOfAny, "extendsObject"))
+        .add(FieldSpec.of(listOfExtends, "extendsSerializable"))
+        .add(FieldSpec.of(listOfSuper, "superString"))
         .build();
     assertThat(toString(taco)).isEqualTo(""
         + "package com.squareup.tacos;\n"
@@ -104,26 +104,26 @@ public final class TypeSpecTest {
     ParameterSpec thungParameter = ParameterSpec.of(thungOfSuperFoo, "thung", Modifier.FINAL);
     TypeSpec aSimpleThung = TypeSpec.anonymousClassBuilder("$N", thungParameter)
         .superclass(simpleThungOfBar)
-        .addMethod(MethodSpec.methodBuilder("doSomething")
+        .add(MethodSpec.methodBuilder("doSomething")
             .addAnnotation(Override.class)
-            .addModifiers(Modifier.PUBLIC)
-            .addParameter(bar, "bar")
+            .add(Modifier.PUBLIC)
+            .add(ParameterSpec.of(bar, "bar"))
             .addCode("/* code snippets */\n")
             .build())
         .build();
     TypeSpec aThingThang = TypeSpec.anonymousClassBuilder("")
         .superclass(thingThangOfFooBar)
-        .addMethod(MethodSpec.methodBuilder("call")
+        .add(MethodSpec.methodBuilder("call")
             .addAnnotation(Override.class)
-            .addModifiers(Modifier.PUBLIC)
+            .add(Modifier.PUBLIC)
             .returns(thungOfSuperBar)
-            .addParameter(thungParameter)
+            .add(thungParameter)
             .addCode("return $L;\n", aSimpleThung)
             .build())
         .build();
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-        .addField(FieldSpec.builder(thingThangOfFooBar, "NAME")
-            .addModifiers(Modifier.STATIC, Modifier.FINAL, Modifier.FINAL)
+        .add(FieldSpec.builder(thingThangOfFooBar, "NAME")
+            .add(Modifier.STATIC, Modifier.FINAL, Modifier.FINAL)
             .initializer("$L", aThingThang)
             .build())
         .build();
@@ -150,21 +150,21 @@ public final class TypeSpecTest {
 
   @Test public void annotatedParameters() throws Exception {
     TypeSpec service = TypeSpec.classBuilder("Foo")
-        .addMethod(MethodSpec.constructorBuilder()
-            .addModifiers(Modifier.PUBLIC)
-            .addParameter(long.class, "id")
-            .addParameter(ParameterSpec.builder(String.class, "one")
+        .add(MethodSpec.constructorBuilder()
+            .add(Modifier.PUBLIC)
+            .add(ParameterSpec.of(long.class, "id"))
+            .add(ParameterSpec.builder(String.class, "one")
                 .addAnnotation(ClassName.get(tacosPackage, "Ping"))
                 .build())
-            .addParameter(ParameterSpec.builder(String.class, "two")
+            .add(ParameterSpec.builder(String.class, "two")
                 .addAnnotation(ClassName.get(tacosPackage, "Ping"))
                 .build())
-            .addParameter(ParameterSpec.builder(String.class, "three")
-                .addAnnotation(AnnotationSpec.builder(ClassName.get(tacosPackage, "Pong"))
+            .add(ParameterSpec.builder(String.class, "three")
+                .add(AnnotationSpec.builder(ClassName.get(tacosPackage, "Pong"))
                     .addMember("value", "$S", "pong")
                     .build())
                 .build())
-            .addParameter(ParameterSpec.builder(String.class, "four")
+            .add(ParameterSpec.builder(String.class, "four")
                 .addAnnotation(ClassName.get(tacosPackage, "Ping"))
                 .build())
             .addCode("/* code snippets */\n")
@@ -197,27 +197,27 @@ public final class TypeSpecTest {
     ClassName queryMap = ClassName.get(tacosPackage, "QueryMap");
     ClassName header = ClassName.get(tacosPackage, "Header");
     TypeSpec service = TypeSpec.interfaceBuilder("Service")
-        .addMethod(MethodSpec.methodBuilder("fooBar")
-            .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-            .addAnnotation(AnnotationSpec.builder(headers)
+        .add(MethodSpec.methodBuilder("fooBar")
+            .add(Modifier.PUBLIC, Modifier.ABSTRACT)
+            .add(AnnotationSpec.builder(headers)
                 .addMember("value", "$S", "Accept: application/json")
                 .addMember("value", "$S", "User-Agent: foobar")
                 .build())
-            .addAnnotation(AnnotationSpec.builder(post)
+            .add(AnnotationSpec.builder(post)
                 .addMember("value", "$S", "/foo/bar")
                 .build())
             .returns(Types.parameterizedType(observable, fooBar))
-            .addParameter(ParameterSpec.builder(Types.parameterizedType(things, thing), "things")
+            .add(ParameterSpec.builder(Types.parameterizedType(things, thing), "things")
                 .addAnnotation(body)
                 .build())
-            .addParameter(ParameterSpec.builder(
+            .add(ParameterSpec.builder(
                 Types.parameterizedType(map, string, string), "query")
-                .addAnnotation(AnnotationSpec.builder(queryMap)
+                .add(AnnotationSpec.builder(queryMap)
                     .addMember("encodeValues", "false")
                     .build())
                 .build())
-            .addParameter(ParameterSpec.builder(string, "authorization")
-                .addAnnotation(AnnotationSpec.builder(header)
+            .add(ParameterSpec.builder(string, "authorization")
+                .add(AnnotationSpec.builder(header)
                     .addMember("value", "$S", "Authorization")
                     .build())
                 .build())
@@ -243,8 +243,8 @@ public final class TypeSpecTest {
 
   @Test public void annotatedField() throws Exception {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-        .addField(FieldSpec.builder(String.class, "thing", Modifier.PRIVATE, Modifier.FINAL)
-            .addAnnotation(AnnotationSpec.builder(ClassName.get(tacosPackage, "JsonAdapter"))
+        .add(FieldSpec.builder(String.class, "thing", Modifier.PRIVATE, Modifier.FINAL)
+            .add(AnnotationSpec.builder(ClassName.get(tacosPackage, "JsonAdapter"))
                 .addMember("value", "$T.class", ClassName.get(tacosPackage, "Foo"))
                 .build())
             .build())
@@ -263,12 +263,12 @@ public final class TypeSpecTest {
   @Test public void annotatedClass() throws Exception {
     ClassName someType = ClassName.get(tacosPackage, "SomeType");
     TypeSpec taco = TypeSpec.classBuilder("Foo")
-        .addAnnotation(AnnotationSpec.builder(ClassName.get(tacosPackage, "Something"))
+        .add(AnnotationSpec.builder(ClassName.get(tacosPackage, "Something"))
             .addMember("hi", "$T.$N", someType, "FIELD")
             .addMember("hey", "$L", 12)
             .addMember("hello", "$S", "goodbye")
             .build())
-        .addModifiers(Modifier.PUBLIC)
+        .add(Modifier.PUBLIC)
         .build();
     assertThat(toString(taco)).isEqualTo(""
         + "package com.squareup.tacos;\n"
@@ -283,25 +283,25 @@ public final class TypeSpecTest {
   }
 
   @Test public void enumWithSubclassing() throws Exception {
-      TypeSpec roshambo = TypeSpec.enumBuilder("Roshambo")
-        .addModifiers(Modifier.PUBLIC)
+    TypeSpec roshambo = TypeSpec.enumBuilder("Roshambo")
+        .add(Modifier.PUBLIC)
         .addEnumConstant("ROCK")
         .addEnumConstant("PAPER", TypeSpec.anonymousClassBuilder("$S", "flat")
-            .addMethod(MethodSpec.methodBuilder("toString")
+            .add(MethodSpec.methodBuilder("toString")
                 .addAnnotation(Override.class)
-                .addModifiers(Modifier.PUBLIC)
+                .add(Modifier.PUBLIC)
                 .returns(String.class)
                 .addCode("return $S;\n", "paper airplane!")
                 .build())
             .build())
         .addEnumConstant("SCISSORS", TypeSpec.anonymousClassBuilder("$S", "peace sign")
             .build())
-        .addField(FieldSpec.of(String.class, "handPosition", Modifier.PRIVATE, Modifier.FINAL))
-        .addMethod(MethodSpec.constructorBuilder()
-            .addParameter(String.class, "handPosition")
-            .addCode("this.handPosition = handPosition;\n")
-            .build())
-        .addMethod(MethodSpec.constructorBuilder()
+        .add(FieldSpec.of(String.class, "handPosition", Modifier.PRIVATE, Modifier.FINAL))
+        .add(MethodSpec.constructorBuilder()
+            .add(ParameterSpec.of(String.class, "handPosition"))
+                .addCode("this.handPosition = handPosition;\n")
+                .build())
+        .add(MethodSpec.constructorBuilder()
             .addCode("this($S);\n", "fist")
             .build())
         .build();
@@ -357,9 +357,9 @@ public final class TypeSpecTest {
   @Test public void enumWithMembersButNoConstructorCall() throws Exception {
     TypeSpec roshambo = TypeSpec.enumBuilder("Roshambo")
         .addEnumConstant("SPOCK", TypeSpec.anonymousClassBuilder("")
-            .addMethod(MethodSpec.methodBuilder("toString")
+            .add(MethodSpec.methodBuilder("toString")
                 .addAnnotation(Override.class)
-                .addModifiers(Modifier.PUBLIC)
+                .add(Modifier.PUBLIC)
                 .returns(String.class)
                 .addCode("return $S;\n", "west side")
                 .build())
@@ -383,10 +383,10 @@ public final class TypeSpecTest {
 
   @Test public void methodThrows() throws Exception {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-        .addMethod(MethodSpec.methodBuilder("throwOne")
+        .add(MethodSpec.methodBuilder("throwOne")
             .addException(IOException.class)
             .build())
-        .addMethod(MethodSpec.methodBuilder("throwTwo")
+        .add(MethodSpec.methodBuilder("throwTwo")
             .addException(IOException.class)
             .addException(ClassName.get(tacosPackage, "SourCreamException"))
             .build())
@@ -410,27 +410,27 @@ public final class TypeSpecTest {
     TypeVariable<?> p = Types.typeVariable("P", Number.class);
     ClassName location = ClassName.get(tacosPackage, "Location");
     TypeSpec typeSpec = TypeSpec.classBuilder("Location")
-        .addTypeVariable(t)
-        .addTypeVariable(p)
+        .add(t)
+        .add(p)
         .addSuperinterface(Types.parameterizedType(Comparable.class, p))
-        .addField(FieldSpec.of(t, "label"))
-        .addField(FieldSpec.of(p, "x"))
-        .addField(FieldSpec.of(p, "y"))
-        .addMethod(MethodSpec.methodBuilder("compareTo")
+        .add(FieldSpec.of(t, "label"))
+        .add(FieldSpec.of(p, "x"))
+        .add(FieldSpec.of(p, "y"))
+        .add(MethodSpec.methodBuilder("compareTo")
             .addAnnotation(Override.class)
-            .addModifiers(Modifier.PUBLIC)
+            .add(Modifier.PUBLIC)
             .returns(int.class)
-            .addParameter(p, "p")
+            .add(ParameterSpec.of(p, "p"))
             .addCode("return 0;\n")
             .build())
-        .addMethod(MethodSpec.methodBuilder("of")
-            .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-            .addTypeVariable(t)
-            .addTypeVariable(p)
+        .add(MethodSpec.methodBuilder("of")
+            .add(Modifier.PUBLIC, Modifier.STATIC)
+            .add(t)
+            .add(p)
             .returns(Types.parameterizedType(location, t, p))
-            .addParameter(t, "label")
-            .addParameter(p, "x")
-            .addParameter(p, "y")
+            .add(ParameterSpec.of(t, "label"))
+            .add(ParameterSpec.of(p, "x"))
+            .add(ParameterSpec.of(p, "y"))
             .addCode("throw new $T($S);\n", UnsupportedOperationException.class, "TODO")
             .build())
         .build();
@@ -464,7 +464,7 @@ public final class TypeSpecTest {
     ClassName taco = ClassName.get(tacosPackage, "Taco");
     ClassName food = ClassName.get("com.squareup.tacos", "Food");
     TypeSpec typeSpec = TypeSpec.classBuilder("Taco")
-        .addModifiers(Modifier.ABSTRACT)
+        .add(Modifier.ABSTRACT)
         .superclass(Types.parameterizedType(AbstractSet.class, food))
         .addSuperinterface(Serializable.class)
         .addSuperinterface(Types.parameterizedType(Comparable.class, taco))
@@ -523,23 +523,23 @@ public final class TypeSpecTest {
     ClassName chips = ClassName.get(tacosPackage, "Combo", "Chips");
     ClassName sauce = ClassName.get(tacosPackage, "Combo", "Sauce");
     TypeSpec typeSpec = TypeSpec.classBuilder("Combo")
-        .addField(FieldSpec.of(taco, "taco"))
-        .addField(FieldSpec.of(chips, "chips"))
-        .addType(TypeSpec.classBuilder(taco.simpleName())
-            .addModifiers(Modifier.STATIC)
-            .addField(FieldSpec.of(Types.parameterizedType(List.class, topping), "toppings"))
-            .addField(FieldSpec.of(sauce, "sauce"))
-            .addType(TypeSpec.enumBuilder(topping.simpleName())
+        .add(FieldSpec.of(taco, "taco"))
+        .add(FieldSpec.of(chips, "chips"))
+        .add(TypeSpec.classBuilder(taco.simpleName())
+            .add(Modifier.STATIC)
+            .add(FieldSpec.of(Types.parameterizedType(List.class, topping), "toppings"))
+            .add(FieldSpec.of(sauce, "sauce"))
+            .add(TypeSpec.enumBuilder(topping.simpleName())
                 .addEnumConstant("SHREDDED_CHEESE")
                 .addEnumConstant("LEAN_GROUND_BEEF")
                 .build())
             .build())
-        .addType(TypeSpec.classBuilder(chips.simpleName())
-            .addModifiers(Modifier.STATIC)
-            .addField(FieldSpec.of(topping, "topping"))
-            .addField(FieldSpec.of(sauce, "dippingSauce"))
+        .add(TypeSpec.classBuilder(chips.simpleName())
+            .add(Modifier.STATIC)
+            .add(FieldSpec.of(topping, "topping"))
+            .add(FieldSpec.of(sauce, "dippingSauce"))
             .build())
-        .addType(TypeSpec.enumBuilder(sauce.simpleName())
+        .add(TypeSpec.enumBuilder(sauce.simpleName())
             .addEnumConstant("SOUR_CREAM")
             .addEnumConstant("SALSA")
             .addEnumConstant("QUESO")
@@ -599,20 +599,20 @@ public final class TypeSpecTest {
     FieldSpec externalBottom = FieldSpec.of(
         ClassName.get(donutsPackage, "Bottom"), "externalBottom");
     TypeSpec top = TypeSpec.classBuilder("Top")
-        .addField(internalTop)
-        .addField(internalBottom)
-        .addField(externalTop)
-        .addField(externalBottom)
-        .addType(TypeSpec.classBuilder("Middle")
-            .addField(internalTop)
-            .addField(internalBottom)
-            .addField(externalTop)
-            .addField(externalBottom)
-            .addType(TypeSpec.classBuilder("Bottom")
-                .addField(internalTop)
-                .addField(internalBottom)
-                .addField(externalTop)
-                .addField(externalBottom)
+        .add(internalTop)
+        .add(internalBottom)
+        .add(externalTop)
+        .add(externalBottom)
+        .add(TypeSpec.classBuilder("Middle")
+            .add(internalTop)
+            .add(internalBottom)
+            .add(externalTop)
+            .add(externalBottom)
+            .add(TypeSpec.classBuilder("Bottom")
+                .add(internalTop)
+                .add(internalBottom)
+                .add(externalTop)
+                .add(externalBottom)
                 .build())
             .build())
         .build();
@@ -657,7 +657,7 @@ public final class TypeSpecTest {
     Element innerElement = Mockito.mock(Element.class);
     TypeSpec outer = TypeSpec.classBuilder("Outer")
         .addOriginatingElement(outerElement)
-        .addType(TypeSpec.classBuilder("Inner")
+        .add(TypeSpec.classBuilder("Inner")
             .addOriginatingElement(innerElement)
             .build())
         .build();
@@ -667,8 +667,8 @@ public final class TypeSpecTest {
   @Test public void intersectionType() {
     TypeVariable<?> typeVariable = Types.typeVariable("T", Comparator.class, Serializable.class);
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-        .addMethod(MethodSpec.methodBuilder("getComparator")
-            .addTypeVariable(typeVariable)
+        .add(MethodSpec.methodBuilder("getComparator")
+            .add(typeVariable)
             .returns(typeVariable)
             .addCode("return null;\n")
             .build())
@@ -688,7 +688,7 @@ public final class TypeSpecTest {
 
   @Test public void arrayType() {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-        .addField(FieldSpec.of(int[].class, "ints"))
+        .add(FieldSpec.of(int[].class, "ints"))
         .build();
     assertThat(toString(taco)).isEqualTo(""
         + "package com.squareup.tacos;\n"
@@ -702,14 +702,14 @@ public final class TypeSpecTest {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
         .addJavadoc("A hard or soft tortilla, loosely folded and filled with whatever {@link \n")
         .addJavadoc("{@link $T random} tex-mex stuff we could find in the pantry.\n", Random.class)
-        .addField(FieldSpec.builder(boolean.class, "soft")
+        .add(FieldSpec.builder(boolean.class, "soft")
             .addJavadoc("True for a soft flour tortilla; false for a crunchy corn tortilla.\n")
             .build())
-        .addMethod(MethodSpec.methodBuilder("refold")
+        .add(MethodSpec.methodBuilder("refold")
             .addJavadoc("Folds the back of this taco to reduce sauce leakage.\n"
                 + "\n"
                 + "<p>For {@link $T#KOREAN}, the front may also be folded.\n", Locale.class)
-            .addParameter(Locale.class, "locale")
+            .add(ParameterSpec.of(Locale.class, "locale"))
             .build())
         .build();
     // Mentioning a type in Javadoc will not cause an import to be added (java.util.Random here),
@@ -745,7 +745,7 @@ public final class TypeSpecTest {
     ClassName option = ClassName.get(tacosPackage, "Option");
     ClassName mealDeal = ClassName.get(tacosPackage, "MealDeal");
     TypeSpec menu = TypeSpec.classBuilder("Menu")
-        .addAnnotation(AnnotationSpec.builder(mealDeal)
+        .add(AnnotationSpec.builder(mealDeal)
             .addMember("price", "$L", 500)
             .addMember("options", "$L", AnnotationSpec.builder(option)
                 .addMember("name", "$S", "taco")
@@ -773,9 +773,9 @@ public final class TypeSpecTest {
 
   @Test public void varargs() throws Exception {
     TypeSpec taqueria = TypeSpec.classBuilder("Taqueria")
-        .addMethod(MethodSpec.methodBuilder("prepare")
-            .addParameter(int.class, "workers")
-            .addParameter(Runnable[].class, "jobs")
+        .add(MethodSpec.methodBuilder("prepare")
+            .add(ParameterSpec.of(int.class, "workers"))
+            .add(ParameterSpec.of(Runnable[].class, "jobs"))
             .varargs()
             .build())
         .build();
@@ -793,23 +793,23 @@ public final class TypeSpecTest {
   @Test public void codeBlocks() throws Exception {
     CodeBlock ifBlock = new CodeBlock.Builder()
         .beginControlFlow("if (!a.equals(b))")
-        .statement("return i")
+        .addStatement("return i")
         .endControlFlow()
         .build();
     CodeBlock methodBody = new CodeBlock.Builder()
-        .statement("$T size = $T.min(listA.size(), listB.size())", int.class, Math.class)
+        .addStatement("$T size = $T.min(listA.size(), listB.size())", int.class, Math.class)
         .beginControlFlow("for ($T i = 0; i < size; i++)", int.class)
-        .statement("$T $N = $N.get(i)", String.class, "a", "listA")
-        .statement("$T $N = $N.get(i)", String.class, "b", "listB")
+        .addStatement("$T $N = $N.get(i)", String.class, "a", "listA")
+        .addStatement("$T $N = $N.get(i)", String.class, "b", "listB")
         .add("$L", ifBlock)
         .endControlFlow()
-        .statement("return size")
+        .addStatement("return size")
         .build();
     TypeSpec util = TypeSpec.classBuilder("Util")
-        .addMethod(MethodSpec.methodBuilder("commonPrefixLength")
+        .add(MethodSpec.methodBuilder("commonPrefixLength")
             .returns(int.class)
-            .addParameter(Types.parameterizedType(List.class, String.class), "listA")
-            .addParameter(Types.parameterizedType(List.class, String.class), "listB")
+            .add(ParameterSpec.of(Types.parameterizedType(List.class, String.class), "listA"))
+            .add(ParameterSpec.of(Types.parameterizedType(List.class, String.class), "listB"))
             .addCode(methodBody)
             .build())
         .build();
@@ -837,14 +837,12 @@ public final class TypeSpecTest {
 
   @Test public void elseIf() throws Exception {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-        .addMethod(MethodSpec.methodBuilder("choices")
-            .addCode(new CodeBlock.Builder()
-                .beginControlFlow("if (5 < 4) ")
-                .statement("$T.out.println($S)", System.class, "wat")
-                .nextControlFlow("else if (5 < 6)")
-                .statement("$T.out.println($S)", System.class, "hello")
-                .endControlFlow()
-                .build())
+        .add(MethodSpec.methodBuilder("choices")
+            .beginControlFlow("if (5 < 4) ")
+            .addStatement("$T.out.println($S)", System.class, "wat")
+            .nextControlFlow("else if (5 < 6)")
+            .addStatement("$T.out.println($S)", System.class, "hello")
+            .endControlFlow()
             .build())
         .build();
     assertThat(toString(taco)).isEqualTo(""
@@ -865,12 +863,10 @@ public final class TypeSpecTest {
 
   @Test public void doWhile() throws Exception {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-        .addMethod(MethodSpec.methodBuilder("loopForever")
-            .addCode(new CodeBlock.Builder()
-                .beginControlFlow("do")
-                .statement("$T.out.println($S)", System.class, "hello")
-                .endControlFlow("while (5 < 6)")
-                .build())
+        .add(MethodSpec.methodBuilder("loopForever")
+            .beginControlFlow("do")
+            .addStatement("$T.out.println($S)", System.class, "hello")
+            .endControlFlow("while (5 < 6)")
             .build())
         .build();
     assertThat(toString(taco)).isEqualTo(""
@@ -889,7 +885,7 @@ public final class TypeSpecTest {
 
   @Test public void inlineIndent() throws Exception {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-        .addMethod(MethodSpec.methodBuilder("inlineIndent")
+        .add(MethodSpec.methodBuilder("inlineIndent")
             .addCode("if (3 < 4) {\n$>$T.out.println($S);\n$<}\n", System.class, "hello")
             .build())
         .build();
