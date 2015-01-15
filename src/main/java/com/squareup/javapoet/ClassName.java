@@ -71,7 +71,7 @@ public final class ClassName implements Type, Comparable<ClassName> {
     return new ClassName(names.subList(0, names.size() - 1));
   }
 
-  ImmutableList<String> simpleNames() {
+  public ImmutableList<String> simpleNames() {
     return names.subList(1, names.size());
   }
 
