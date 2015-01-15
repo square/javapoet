@@ -77,6 +77,14 @@ public final class ClassNameTest {
     }
   }
 
+  @Test public void createNestedClass() {
+    ClassName foo = ClassName.get("com.example", "Foo");
+    ClassName bar = foo.nestedClassNamed("Bar");
+    assertThat(bar).isEqualTo(ClassName.get("com.example", "Foo", "Bar"));
+    ClassName baz = bar.nestedClassNamed("Baz");
+    assertThat(baz).isEqualTo(ClassName.get("com.example", "Foo", "Bar", "Baz"));
+  }
+
   @Test public void classNameFromTypeElement() {
     Elements elements = compilationRule.getElements();
     TypeElement element = elements.getTypeElement(Object.class.getCanonicalName());

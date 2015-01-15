@@ -71,6 +71,18 @@ public final class ClassName implements Type, Comparable<ClassName> {
     return new ClassName(names.subList(0, names.size() - 1));
   }
 
+  /**
+   * Returns a new {@link ClassName} instance for the specified {@code name} as nested inside this
+   * class.
+   */
+  public ClassName nestedClassNamed(String name) {
+    checkNotNull(name, "name == null");
+    return new ClassName(new ImmutableList.Builder<String>()
+        .addAll(names)
+        .add(name)
+        .build());
+  }
+
   public ImmutableList<String> simpleNames() {
     return names.subList(1, names.size());
   }
