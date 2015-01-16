@@ -61,10 +61,6 @@ public final class ParameterSpec {
         .addModifiers(modifiers);
   }
 
-  public static ParameterSpec of(Type type, String name, Modifier... modifiers) {
-    return builder(type, name, modifiers).build();
-  }
-
   public static final class Builder {
     private final Type type;
     private final String name;
@@ -84,7 +80,7 @@ public final class ParameterSpec {
     }
 
     public Builder addAnnotation(Type annotation) {
-      this.annotations.add(AnnotationSpec.of(annotation));
+      this.annotations.add(AnnotationSpec.builder(annotation).build());
       return this;
     }
 

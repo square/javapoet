@@ -79,9 +79,9 @@ public final class ClassNameTest {
 
   @Test public void createNestedClass() {
     ClassName foo = ClassName.get("com.example", "Foo");
-    ClassName bar = foo.nestedClassNamed("Bar");
+    ClassName bar = foo.nestedClass("Bar");
     assertThat(bar).isEqualTo(ClassName.get("com.example", "Foo", "Bar"));
-    ClassName baz = bar.nestedClassNamed("Baz");
+    ClassName baz = bar.nestedClass("Baz");
     assertThat(baz).isEqualTo(ClassName.get("com.example", "Foo", "Bar", "Baz"));
   }
 
@@ -96,6 +96,15 @@ public final class ClassNameTest {
         .isEqualTo("java.lang.Object");
     assertThat(ClassName.get(OuterClass.InnerClass.class).toString())
         .isEqualTo("com.squareup.javapoet.ClassNameTest.OuterClass.InnerClass");
+  }
+
+  @Test public void peerClass() {
+    assertThat(ClassName.get(Double.class).peerClass("Short"))
+        .isEqualTo(ClassName.get(Short.class));
+    assertThat(ClassName.get("", "Double").peerClass("Short"))
+        .isEqualTo(ClassName.get("", "Short"));
+    assertThat(ClassName.get("a.b", "Combo", "Taco").peerClass("Burrito"))
+        .isEqualTo(ClassName.get("a.b", "Combo", "Burrito"));
   }
 
   @Test public void fromClassRejectionTypes() {

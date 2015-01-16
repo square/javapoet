@@ -134,14 +134,14 @@ public final class MethodSpec {
   public static final class Builder {
     private final String name;
 
-    private final CodeBlock.Builder javadoc = new CodeBlock.Builder();
+    private final CodeBlock.Builder javadoc = CodeBlock.builder();
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
     private List<TypeVariable<?>> typeVariables = new ArrayList<>();
     private Type returnType;
     private final List<ParameterSpec> parameters = new ArrayList<>();
     private final List<Type> exceptions = new ArrayList<>();
-    private final CodeBlock.Builder code = new CodeBlock.Builder();
+    private final CodeBlock.Builder code = CodeBlock.builder();
     private boolean varargs;
 
     private Builder(String name) {
@@ -162,7 +162,7 @@ public final class MethodSpec {
     }
 
     public Builder addAnnotation(Type annotation) {
-      this.annotations.add(AnnotationSpec.of(annotation));
+      this.annotations.add(AnnotationSpec.builder(annotation).build());
       return this;
     }
 
@@ -188,7 +188,7 @@ public final class MethodSpec {
     }
 
     public Builder addParameter(Type type, String name, Modifier... modifiers) {
-      return addParameter(ParameterSpec.of(type, name, modifiers));
+      return addParameter(ParameterSpec.builder(type, name, modifiers).build());
     }
 
     public Builder varargs() {
@@ -208,6 +208,43 @@ public final class MethodSpec {
 
     public Builder addCode(CodeBlock codeBlock) {
       code.add(codeBlock);
+      return this;
+    }
+
+    /**
+     * @param controlFlow the control flow construct and its code, such as "if (foo == 5)".
+     * Shouldn't contain braces or newline characters.
+     */
+    public Builder beginControlFlow(String controlFlow, Object... args) {
+      code.beginControlFlow(controlFlow, args);
+      return this;
+    }
+
+    /**
+     * @param controlFlow the control flow construct and its code, such as "else if (foo == 10)".
+     *     Shouldn't contain braces or newline characters.
+     */
+    public Builder nextControlFlow(String controlFlow, Object... args) {
+      code.nextControlFlow(controlFlow, args);
+      return this;
+    }
+
+    public Builder endControlFlow() {
+      code.endControlFlow();
+      return this;
+    }
+
+    /**
+     * @param controlFlow the optional control flow construct and its code, such as
+     *     "while(foo == 20)". Only used for "do/while" control flows.
+     */
+    public Builder endControlFlow(String controlFlow, Object... args) {
+      code.endControlFlow(controlFlow, args);
+      return this;
+    }
+
+    public Builder addStatement(String format, Object... args) {
+      code.addStatement(format, args);
       return this;
     }
 

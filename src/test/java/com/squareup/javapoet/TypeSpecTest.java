@@ -67,9 +67,9 @@ public final class TypeSpecTest {
     ParameterizedType listOfSuper = Types.parameterizedType(
         List.class, Types.supertypeOf(String.class));
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-        .addField(FieldSpec.of(listOfAny, "extendsObject"))
-        .addField(FieldSpec.of(listOfExtends, "extendsSerializable"))
-        .addField(FieldSpec.of(listOfSuper, "superString"))
+        .addField(listOfAny, "extendsObject")
+        .addField(listOfExtends, "extendsSerializable")
+        .addField(listOfSuper, "superString")
         .build();
     assertThat(toString(taco)).isEqualTo(""
         + "package com.squareup.tacos;\n"
@@ -101,7 +101,9 @@ public final class TypeSpecTest {
         = Types.parameterizedType(thung, Types.supertypeOf(foo));
     ParameterizedType simpleThungOfBar = Types.parameterizedType(simpleThung, bar);
 
-    ParameterSpec thungParameter = ParameterSpec.of(thungOfSuperFoo, "thung", Modifier.FINAL);
+    ParameterSpec thungParameter = ParameterSpec.builder(thungOfSuperFoo, "thung")
+        .addModifiers(Modifier.FINAL)
+        .build();
     TypeSpec aSimpleThung = TypeSpec.anonymousClassBuilder("$N", thungParameter)
         .superclass(simpleThungOfBar)
         .addMethod(MethodSpec.methodBuilder("doSomething")
@@ -283,7 +285,7 @@ public final class TypeSpecTest {
   }
 
   @Test public void enumWithSubclassing() throws Exception {
-      TypeSpec roshambo = TypeSpec.enumBuilder("Roshambo")
+    TypeSpec roshambo = TypeSpec.enumBuilder("Roshambo")
         .addModifiers(Modifier.PUBLIC)
         .addEnumConstant("ROCK")
         .addEnumConstant("PAPER", TypeSpec.anonymousClassBuilder("$S", "flat")
@@ -296,7 +298,7 @@ public final class TypeSpecTest {
             .build())
         .addEnumConstant("SCISSORS", TypeSpec.anonymousClassBuilder("$S", "peace sign")
             .build())
-        .addField(FieldSpec.of(String.class, "handPosition", Modifier.PRIVATE, Modifier.FINAL))
+        .addField(String.class, "handPosition", Modifier.PRIVATE, Modifier.FINAL)
         .addMethod(MethodSpec.constructorBuilder()
             .addParameter(String.class, "handPosition")
             .addCode("this.handPosition = handPosition;\n")
@@ -413,9 +415,9 @@ public final class TypeSpecTest {
         .addTypeVariable(t)
         .addTypeVariable(p)
         .addSuperinterface(Types.parameterizedType(Comparable.class, p))
-        .addField(FieldSpec.of(t, "label"))
-        .addField(FieldSpec.of(p, "x"))
-        .addField(FieldSpec.of(p, "y"))
+        .addField(t, "label")
+        .addField(p, "x")
+        .addField(p, "y")
         .addMethod(MethodSpec.methodBuilder("compareTo")
             .addAnnotation(Override.class)
             .addModifiers(Modifier.PUBLIC)
@@ -523,12 +525,12 @@ public final class TypeSpecTest {
     ClassName chips = ClassName.get(tacosPackage, "Combo", "Chips");
     ClassName sauce = ClassName.get(tacosPackage, "Combo", "Sauce");
     TypeSpec typeSpec = TypeSpec.classBuilder("Combo")
-        .addField(FieldSpec.of(taco, "taco"))
-        .addField(FieldSpec.of(chips, "chips"))
+        .addField(taco, "taco")
+        .addField(chips, "chips")
         .addType(TypeSpec.classBuilder(taco.simpleName())
             .addModifiers(Modifier.STATIC)
-            .addField(FieldSpec.of(Types.parameterizedType(List.class, topping), "toppings"))
-            .addField(FieldSpec.of(sauce, "sauce"))
+            .addField(Types.parameterizedType(List.class, topping), "toppings")
+            .addField(sauce, "sauce")
             .addType(TypeSpec.enumBuilder(topping.simpleName())
                 .addEnumConstant("SHREDDED_CHEESE")
                 .addEnumConstant("LEAN_GROUND_BEEF")
@@ -536,8 +538,8 @@ public final class TypeSpecTest {
             .build())
         .addType(TypeSpec.classBuilder(chips.simpleName())
             .addModifiers(Modifier.STATIC)
-            .addField(FieldSpec.of(topping, "topping"))
-            .addField(FieldSpec.of(sauce, "dippingSauce"))
+            .addField(topping, "topping")
+            .addField(sauce, "dippingSauce")
             .build())
         .addType(TypeSpec.enumBuilder(sauce.simpleName())
             .addEnumConstant("SOUR_CREAM")
@@ -591,13 +593,14 @@ public final class TypeSpecTest {
   }
 
   @Test public void referencedAndDeclaredSimpleNamesConflict() throws Exception {
-    FieldSpec internalTop = FieldSpec.of(ClassName.get(tacosPackage, "Top"), "internalTop");
-    FieldSpec internalBottom = FieldSpec.of(ClassName.get(tacosPackage,
-        "Top", "Middle", "Bottom"), "internalBottom");
-    FieldSpec externalTop = FieldSpec.of(
-        ClassName.get(donutsPackage, "Top"), "externalTop");
-    FieldSpec externalBottom = FieldSpec.of(
-        ClassName.get(donutsPackage, "Bottom"), "externalBottom");
+    FieldSpec internalTop = FieldSpec.builder(
+        ClassName.get(tacosPackage, "Top"), "internalTop").build();
+    FieldSpec internalBottom = FieldSpec.builder(
+        ClassName.get(tacosPackage, "Top", "Middle", "Bottom"), "internalBottom").build();
+    FieldSpec externalTop = FieldSpec.builder(
+        ClassName.get(donutsPackage, "Top"), "externalTop").build();
+    FieldSpec externalBottom = FieldSpec.builder(
+        ClassName.get(donutsPackage, "Bottom"), "externalBottom").build();
     TypeSpec top = TypeSpec.classBuilder("Top")
         .addField(internalTop)
         .addField(internalBottom)
@@ -688,7 +691,7 @@ public final class TypeSpecTest {
 
   @Test public void arrayType() {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-        .addField(FieldSpec.of(int[].class, "ints"))
+        .addField(int[].class, "ints")
         .build();
     assertThat(toString(taco)).isEqualTo(""
         + "package com.squareup.tacos;\n"
@@ -791,19 +794,19 @@ public final class TypeSpecTest {
   }
 
   @Test public void codeBlocks() throws Exception {
-    CodeBlock ifBlock = new CodeBlock.Builder()
+    CodeBlock ifBlock = CodeBlock.builder()
         .beginControlFlow("if (!a.equals(b))")
-        .statement("return i")
+        .addStatement("return i")
         .endControlFlow()
         .build();
-    CodeBlock methodBody = new CodeBlock.Builder()
-        .statement("$T size = $T.min(listA.size(), listB.size())", int.class, Math.class)
+    CodeBlock methodBody = CodeBlock.builder()
+        .addStatement("$T size = $T.min(listA.size(), listB.size())", int.class, Math.class)
         .beginControlFlow("for ($T i = 0; i < size; i++)", int.class)
-        .statement("$T $N = $N.get(i)", String.class, "a", "listA")
-        .statement("$T $N = $N.get(i)", String.class, "b", "listB")
+        .addStatement("$T $N = $N.get(i)", String.class, "a", "listA")
+        .addStatement("$T $N = $N.get(i)", String.class, "b", "listB")
         .add("$L", ifBlock)
         .endControlFlow()
-        .statement("return size")
+        .addStatement("return size")
         .build();
     TypeSpec util = TypeSpec.classBuilder("Util")
         .addMethod(MethodSpec.methodBuilder("commonPrefixLength")
@@ -838,13 +841,11 @@ public final class TypeSpecTest {
   @Test public void elseIf() throws Exception {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
         .addMethod(MethodSpec.methodBuilder("choices")
-            .addCode(new CodeBlock.Builder()
-                .beginControlFlow("if (5 < 4) ")
-                .statement("$T.out.println($S)", System.class, "wat")
-                .nextControlFlow("else if (5 < 6)")
-                .statement("$T.out.println($S)", System.class, "hello")
-                .endControlFlow()
-                .build())
+            .beginControlFlow("if (5 < 4) ")
+            .addStatement("$T.out.println($S)", System.class, "wat")
+            .nextControlFlow("else if (5 < 6)")
+            .addStatement("$T.out.println($S)", System.class, "hello")
+            .endControlFlow()
             .build())
         .build();
     assertThat(toString(taco)).isEqualTo(""
@@ -866,11 +867,9 @@ public final class TypeSpecTest {
   @Test public void doWhile() throws Exception {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
         .addMethod(MethodSpec.methodBuilder("loopForever")
-            .addCode(new CodeBlock.Builder()
-                .beginControlFlow("do")
-                .statement("$T.out.println($S)", System.class, "hello")
-                .endControlFlow("while (5 < 6)")
-                .build())
+            .beginControlFlow("do")
+            .addStatement("$T.out.println($S)", System.class, "hello")
+            .endControlFlow("while (5 < 6)")
             .build())
         .build();
     assertThat(toString(taco)).isEqualTo(""
@@ -908,10 +907,6 @@ public final class TypeSpecTest {
   }
 
   private String toString(TypeSpec typeSpec) {
-    return new JavaFile.Builder()
-        .packageName(tacosPackage)
-        .typeSpec(typeSpec)
-        .build()
-        .toString();
+    return JavaFile.builder(tacosPackage, typeSpec).build().toString();
   }
 }

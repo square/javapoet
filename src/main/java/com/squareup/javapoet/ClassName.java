@@ -75,7 +75,7 @@ public final class ClassName implements Type, Comparable<ClassName> {
    * Returns a new {@link ClassName} instance for the specified {@code name} as nested inside this
    * class.
    */
-  public ClassName nestedClassNamed(String name) {
+  public ClassName nestedClass(String name) {
     checkNotNull(name, "name == null");
     return new ClassName(new ImmutableList.Builder<String>()
         .addAll(names)
@@ -85,6 +85,18 @@ public final class ClassName implements Type, Comparable<ClassName> {
 
   public ImmutableList<String> simpleNames() {
     return names.subList(1, names.size());
+  }
+
+  /**
+   * Returns a class that shares the same enclosing package or class. If this class is enclosed by
+   * another class, this is equivalent to {@code enclosingClassName().nestedClass(name)}. Otherwise
+   * it is equivalent to {@code get(packageName(), name)}.
+   */
+  public ClassName peerClass(String name) {
+    return new ClassName(new ImmutableList.Builder<String>()
+        .addAll(names.subList(0, names.size() - 1))
+        .add(name)
+        .build());
   }
 
   /** Returns the simple name of this class, like {@code "Entry"} for {@link Map.Entry}. */

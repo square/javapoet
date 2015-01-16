@@ -98,10 +98,6 @@ public final class AnnotationSpec {
     codeWriter.emit(whitespace + "}");
   }
 
-  public static AnnotationSpec of(Type annotation) {
-    return builder(annotation).build();
-  }
-
   public static Builder builder(Type type) {
     return new Builder(type);
   }
@@ -126,7 +122,7 @@ public final class AnnotationSpec {
     }
 
     public Builder addMember(String name, String format, Object... args) {
-      members.put(name, CodeBlock.of(format, args));
+      members.put(name, CodeBlock.builder().add(format, args).build());
       return this;
     }
 

@@ -57,17 +57,20 @@ public final class CodeBlock {
     this.args = builder.args.build();
   }
 
-  public static CodeBlock of(String format, Object... args) {
-    return new Builder().add(format, args).build();
-  }
-
   public boolean isEmpty() {
     return formatParts.isEmpty();
+  }
+
+  public static Builder builder() {
+    return new Builder();
   }
 
   public static final class Builder {
     final ImmutableList.Builder<String> formatParts = ImmutableList.builder();
     final ImmutableList.Builder<Object> args = ImmutableList.builder();
+
+    private Builder() {
+    }
 
     public Builder add(String format, Object... args) {
       int expectedArgsLength = 0;
@@ -144,7 +147,7 @@ public final class CodeBlock {
       return this;
     }
 
-    public Builder statement(String format, Object... args) {
+    public Builder addStatement(String format, Object... args) {
       return add(format + ";\n", args);
     }
 

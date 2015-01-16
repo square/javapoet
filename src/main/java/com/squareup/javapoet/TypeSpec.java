@@ -121,7 +121,9 @@ public final class TypeSpec {
   }
 
   public static Builder anonymousClassBuilder(String typeArgumentsFormat, Object... args) {
-    return new Builder(DeclarationType.CLASS, null, CodeBlock.of(typeArgumentsFormat, args));
+    return new Builder(DeclarationType.CLASS, null, CodeBlock.builder()
+        .add(typeArgumentsFormat, args)
+        .build());
   }
 
   void emit(CodeWriter codeWriter, String enumName) throws IOException {
@@ -244,7 +246,7 @@ public final class TypeSpec {
     private final String name;
     private final CodeBlock anonymousTypeArguments;
 
-    private final CodeBlock.Builder javadoc = new CodeBlock.Builder();
+    private final CodeBlock.Builder javadoc = CodeBlock.builder();
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
     private final List<TypeVariable<?>> typeVariables = new ArrayList<>();
@@ -277,7 +279,7 @@ public final class TypeSpec {
     }
 
     public Builder addAnnotation(Type annotation) {
-      return addAnnotation(AnnotationSpec.of(annotation));
+      return addAnnotation(AnnotationSpec.builder(annotation).build());
     }
 
     public Builder addModifiers(Modifier... modifiers) {
@@ -321,7 +323,7 @@ public final class TypeSpec {
     }
 
     public Builder addField(Type type, String name, Modifier... modifiers) {
-      return addField(FieldSpec.of(type, name, modifiers));
+      return addField(FieldSpec.builder(type, name, modifiers).build());
     }
 
     public Builder addMethod(MethodSpec methodSpec) {

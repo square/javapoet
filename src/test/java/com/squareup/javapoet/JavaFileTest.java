@@ -23,10 +23,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 public final class JavaFileTest {
   @Test public void noImports() throws Exception {
-    String source = new JavaFile.Builder()
-        .packageName("com.squareup.tacos")
-        .typeSpec(TypeSpec.classBuilder("Taco")
-            .build())
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco").build())
         .build()
         .toString();
     assertThat(source).isEqualTo(""
@@ -37,10 +35,9 @@ public final class JavaFileTest {
   }
 
   @Test public void singleImport() throws Exception {
-    String source = new JavaFile.Builder()
-        .packageName("com.squareup.tacos")
-        .typeSpec(TypeSpec.classBuilder("Taco")
-            .addField(FieldSpec.of(Date.class, "madeFreshDate"))
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addField(Date.class, "madeFreshDate")
             .build())
         .build()
         .toString();
@@ -55,11 +52,10 @@ public final class JavaFileTest {
   }
 
   @Test public void conflictingImports() throws Exception {
-    String source = new JavaFile.Builder()
-        .packageName("com.squareup.tacos")
-        .typeSpec(TypeSpec.classBuilder("Taco")
-            .addField(FieldSpec.of(Date.class, "madeFreshDate"))
-            .addField(FieldSpec.of(java.sql.Date.class, "madeFreshDatabaseDate"))
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addField(Date.class, "madeFreshDate")
+            .addField(java.sql.Date.class, "madeFreshDatabaseDate")
             .build())
         .build()
         .toString();
@@ -76,8 +72,8 @@ public final class JavaFileTest {
   }
 
   @Test public void defaultPackage() throws Exception {
-    String source = new JavaFile.Builder()
-        .typeSpec(TypeSpec.classBuilder("HelloWorld")
+    String source = JavaFile.builder("",
+        TypeSpec.classBuilder("HelloWorld")
             .addMethod(MethodSpec.methodBuilder("main")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .addParameter(String[].class, "args")
@@ -98,10 +94,9 @@ public final class JavaFileTest {
   }
 
   @Test public void topOfFileComment() throws Exception {
-    String source = new JavaFile.Builder()
-        .fileComment("Generated $L by JavaWriter. DO NOT EDIT!", "2015-01-13")
-        .packageName("com.squareup.tacos")
-        .typeSpec(TypeSpec.classBuilder("Taco").build())
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco").build())
+        .addFileComment("Generated $L by JavaWriter. DO NOT EDIT!", "2015-01-13")
         .build()
         .toString();
     assertThat(source).isEqualTo(""
@@ -113,11 +108,9 @@ public final class JavaFileTest {
   }
 
   @Test public void emptyLinesInTopOfFileComment() throws Exception {
-    String source = new JavaFile.Builder()
-        .fileComment("\nGENERATED FILE:\n\nDO NOT EDIT!\n")
-        .packageName("com.squareup.tacos")
-        .typeSpec(TypeSpec.classBuilder("Taco")
-            .build())
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco").build())
+        .addFileComment("\nGENERATED FILE:\n\nDO NOT EDIT!\n")
         .build()
         .toString();
     assertThat(source).isEqualTo(""

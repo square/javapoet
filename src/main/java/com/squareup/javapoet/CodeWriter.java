@@ -190,7 +190,7 @@ final class CodeWriter {
   }
 
   public CodeWriter emit(String format, Object... args) throws IOException {
-    return emit(CodeBlock.of(format, args));
+    return emit(CodeBlock.builder().add(format, args).build());
   }
 
   public CodeWriter emit(CodeBlock codeBlock) throws IOException {
