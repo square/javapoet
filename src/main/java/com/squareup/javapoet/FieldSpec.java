@@ -67,18 +67,14 @@ public final class FieldSpec {
         .addModifiers(modifiers);
   }
 
-  public static FieldSpec of(Type type, String name, Modifier... modifiers) {
-    return builder(type, name, modifiers).build();
-  }
-
   public static final class Builder {
     private final Type type;
     private final String name;
 
-    private final CodeBlock.Builder javadoc = new CodeBlock.Builder();
+    private final CodeBlock.Builder javadoc = CodeBlock.builder();
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
-    private CodeBlock.Builder initializer = new CodeBlock.Builder();
+    private CodeBlock.Builder initializer = CodeBlock.builder();
 
     private Builder(Type type, String name) {
       checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
@@ -97,7 +93,7 @@ public final class FieldSpec {
     }
 
     public Builder addAnnotation(Type annotation) {
-      this.annotations.add(AnnotationSpec.of(annotation));
+      this.annotations.add(AnnotationSpec.builder(annotation).build());
       return this;
     }
 

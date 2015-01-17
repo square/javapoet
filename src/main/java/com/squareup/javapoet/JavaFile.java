@@ -89,23 +89,22 @@ public final class JavaFile {
     }
   }
 
+  public static Builder builder(String packageName, TypeSpec typeSpec) {
+    return new Builder(packageName, typeSpec);
+  }
+
   public static final class Builder {
-    private CodeBlock.Builder fileComment = new CodeBlock.Builder();
-    private String packageName = "";
-    private TypeSpec typeSpec;
+    private final String packageName;
+    private final TypeSpec typeSpec;
+    private CodeBlock.Builder fileComment = CodeBlock.builder();
 
-    public Builder fileComment(String format, Object... args) {
+    private Builder(String packageName, TypeSpec typeSpec) {
+      this.packageName = checkNotNull(packageName, "packageName == null");
+      this.typeSpec = checkNotNull(typeSpec, "typeSpec == null");
+    }
+
+    public Builder addFileComment(String format, Object... args) {
       this.fileComment.add(format, args);
-      return this;
-    }
-
-    public Builder packageName(String packageName) {
-      this.packageName = checkNotNull(packageName);
-      return this;
-    }
-
-    public Builder typeSpec(TypeSpec typeSpec) {
-      this.typeSpec = typeSpec;
       return this;
     }
 

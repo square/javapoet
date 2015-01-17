@@ -40,10 +40,7 @@ public final class JavaPoet {
   }
 
   public JavaPoet add(String packageName, TypeSpec type) {
-    return add(new JavaFile.Builder()
-        .packageName(packageName)
-        .typeSpec(type)
-        .build());
+    return add(JavaFile.builder(packageName, type).build());
   }
 
   public void writeTo(Path directory) throws IOException {
