@@ -906,6 +906,63 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  @Test public void defaultModifiersForInterfaceMembers() throws Exception {
+    TypeSpec taco = TypeSpec.interfaceBuilder("Taco")
+        .addField(FieldSpec.builder(String.class, "SHELL")
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+            .initializer("$S", "crunchy corn")
+            .build())
+        .addMethod(MethodSpec.methodBuilder("fold")
+            .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+            .build())
+        .addType(TypeSpec.classBuilder("Topping")
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+            .build())
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.String;\n"
+        + "\n"
+        + "interface Taco {\n"
+        + "  String SHELL = \"crunchy corn\";\n"
+        + "\n"
+        + "  void fold();\n"
+        + "\n"
+        + "  class Topping {\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void defaultModifiersForMemberInterfacesAndEnums() throws Exception {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addType(TypeSpec.classBuilder("Meat")
+            .addModifiers(Modifier.STATIC)
+            .build())
+        .addType(TypeSpec.interfaceBuilder("Tortilla")
+            .addModifiers(Modifier.STATIC)
+            .build())
+        .addType(TypeSpec.enumBuilder("Topping")
+            .addModifiers(Modifier.STATIC)
+            .addEnumConstant("SALSA")
+            .build())
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  static class Meat {\n"
+        + "  }\n"
+        + "\n"
+        + "  interface Tortilla {\n"
+        + "  }\n"
+        + "\n"
+        + "  enum Topping {\n"
+        + "    SALSA\n"
+        + "  }\n"
+        + "}\n");
+  }
+
   private String toString(TypeSpec typeSpec) {
     return JavaFile.builder(tacosPackage, typeSpec).build().toString();
   }

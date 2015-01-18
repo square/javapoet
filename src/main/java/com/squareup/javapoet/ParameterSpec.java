@@ -57,6 +57,8 @@ public final class ParameterSpec {
   }
 
   public static Builder builder(Type type, String name, Modifier... modifiers) {
+    checkNotNull(type, "type == null");
+    checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
     return new Builder(type, name)
         .addModifiers(modifiers);
   }
@@ -69,7 +71,6 @@ public final class ParameterSpec {
     private final List<Modifier> modifiers = new ArrayList<>();
 
     private Builder(Type type, String name) {
-      checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
       this.type = type;
       this.name = name;
     }

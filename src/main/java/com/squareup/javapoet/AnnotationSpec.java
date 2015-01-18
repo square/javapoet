@@ -39,7 +39,7 @@ public final class AnnotationSpec {
   public final ImmutableMultimap<String, CodeBlock> members;
 
   private AnnotationSpec(Builder builder) {
-    this.type = checkNotNull(builder.type, "type");
+    this.type = builder.type;
     this.members = ImmutableListMultimap.copyOf(builder.members);
   }
 
@@ -99,6 +99,7 @@ public final class AnnotationSpec {
   }
 
   public static Builder builder(Type type) {
+    checkNotNull(type, "type == null");
     return new Builder(type);
   }
 

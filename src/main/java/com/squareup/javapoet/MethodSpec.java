@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
 
@@ -70,7 +71,7 @@ public final class MethodSpec {
     return !parameters.isEmpty() && Types.arrayComponent(getLast(parameters).type) != null;
   }
 
-  void emit(CodeWriter codeWriter, String enclosingName, ImmutableSet<Modifier> implicitModifiers)
+  void emit(CodeWriter codeWriter, String enclosingName, Set<Modifier> implicitModifiers)
       throws IOException {
     codeWriter.emitJavadoc(javadoc);
     codeWriter.emitAnnotations(annotations, false);

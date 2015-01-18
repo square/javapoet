@@ -22,6 +22,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
 
@@ -50,7 +51,7 @@ public final class FieldSpec {
     return modifiers.contains(modifier);
   }
 
-  void emit(CodeWriter codeWriter, ImmutableSet<Modifier> implicitModifiers) throws IOException {
+  void emit(CodeWriter codeWriter, Set<Modifier> implicitModifiers) throws IOException {
     codeWriter.emitJavadoc(javadoc);
     codeWriter.emitAnnotations(annotations, false);
     codeWriter.emitModifiers(modifiers, implicitModifiers);
@@ -63,6 +64,8 @@ public final class FieldSpec {
   }
 
   public static Builder builder(Type type, String name, Modifier... modifiers) {
+    checkNotNull(type, "type == null");
+    checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
     return new Builder(type, name)
         .addModifiers(modifiers);
   }
@@ -77,7 +80,6 @@ public final class FieldSpec {
     private CodeBlock.Builder initializer = CodeBlock.builder();
 
     private Builder(Type type, String name) {
-      checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
       this.type = type;
       this.name = name;
     }

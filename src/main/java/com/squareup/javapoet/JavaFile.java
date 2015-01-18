@@ -16,7 +16,9 @@
 package com.squareup.javapoet;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import javax.lang.model.element.Modifier;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -41,7 +43,7 @@ public final class JavaFile {
   private JavaFile(Builder builder) {
     this.fileComment = builder.fileComment.build();
     this.packageName = builder.packageName;
-    this.typeSpec = checkNotNull(builder.typeSpec, "typeSpec == null");
+    this.typeSpec = builder.typeSpec;
   }
 
   public void emit(Appendable out) throws IOException {
@@ -74,7 +76,7 @@ public final class JavaFile {
       codeWriter.emit("\n");
     }
 
-    typeSpec.emit(codeWriter, null);
+    typeSpec.emit(codeWriter, null, ImmutableSet.<Modifier>of());
 
     codeWriter.popPackage();
   }
@@ -90,6 +92,8 @@ public final class JavaFile {
   }
 
   public static Builder builder(String packageName, TypeSpec typeSpec) {
+    checkNotNull(packageName, "packageName == null");
+    checkNotNull(typeSpec, "typeSpec == null");
     return new Builder(packageName, typeSpec);
   }
 
@@ -99,8 +103,8 @@ public final class JavaFile {
     private CodeBlock.Builder fileComment = CodeBlock.builder();
 
     private Builder(String packageName, TypeSpec typeSpec) {
-      this.packageName = checkNotNull(packageName, "packageName == null");
-      this.typeSpec = checkNotNull(typeSpec, "typeSpec == null");
+      this.packageName = packageName;
+      this.typeSpec = typeSpec;
     }
 
     public Builder addFileComment(String format, Object... args) {
