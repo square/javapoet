@@ -177,21 +177,46 @@ public final class TypeSpec {
         codeWriter.emit("\n");
       }
     }
+
+    // Static fields.
     for (FieldSpec fieldSpec : fieldSpecs) {
+      if (!fieldSpec.hasModifier(Modifier.STATIC)) continue;
       if (!firstMember) codeWriter.emit("\n");
       fieldSpec.emit(codeWriter, kind.implicitFieldModifiers);
       firstMember = false;
     }
+
+    // Non-static fields.
+    for (FieldSpec fieldSpec : fieldSpecs) {
+      if (fieldSpec.hasModifier(Modifier.STATIC)) continue;
+      if (!firstMember) codeWriter.emit("\n");
+      fieldSpec.emit(codeWriter, kind.implicitFieldModifiers);
+      firstMember = false;
+    }
+
+    // Constructors.
     for (MethodSpec methodSpec : methodSpecs) {
+      if (!methodSpec.isConstructor()) continue;
       if (!firstMember) codeWriter.emit("\n");
       methodSpec.emit(codeWriter, name, kind.implicitMethodModifiers);
       firstMember = false;
     }
+
+    // Methods (static and non-static).
+    for (MethodSpec methodSpec : methodSpecs) {
+      if (methodSpec.isConstructor()) continue;
+      if (!firstMember) codeWriter.emit("\n");
+      methodSpec.emit(codeWriter, name, kind.implicitMethodModifiers);
+      firstMember = false;
+    }
+
+    // Types.
     for (TypeSpec typeSpec : typeSpecs) {
       if (!firstMember) codeWriter.emit("\n");
       typeSpec.emit(codeWriter, null, kind.implicitTypeModifiers);
       firstMember = false;
     }
+
     codeWriter.unindent();
     codeWriter.popType();
 

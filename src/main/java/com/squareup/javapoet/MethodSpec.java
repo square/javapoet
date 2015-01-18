@@ -82,7 +82,7 @@ public final class MethodSpec {
       codeWriter.emit(" ");
     }
 
-    if (name.equals(CONSTRUCTOR)) {
+    if (isConstructor()) {
       codeWriter.emit("$L(", enclosingName);
     } else {
       codeWriter.emit("$T $L(", returnType, name);
@@ -122,6 +122,10 @@ public final class MethodSpec {
 
   public boolean hasModifier(Modifier modifier) {
     return modifiers.contains(modifier);
+  }
+
+  public boolean isConstructor() {
+    return name.equals(CONSTRUCTOR);
   }
 
   public static Builder methodBuilder(String name) {

@@ -963,6 +963,63 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  @Test public void membersOrdering() throws Exception {
+    // Hand out names in reverse-alphabetical order to defend against unexpected sorting.
+    TypeSpec taco = TypeSpec.classBuilder("Members")
+        .addType(TypeSpec.classBuilder("Z").build())
+        .addType(TypeSpec.classBuilder("Y").build())
+        .addField(String.class, "X", Modifier.STATIC)
+        .addField(String.class, "W")
+        .addField(String.class, "V", Modifier.STATIC)
+        .addField(String.class, "U")
+        .addMethod(MethodSpec.methodBuilder("T").addModifiers(Modifier.STATIC).build())
+        .addMethod(MethodSpec.methodBuilder("S").build())
+        .addMethod(MethodSpec.methodBuilder("R").addModifiers(Modifier.STATIC).build())
+        .addMethod(MethodSpec.methodBuilder("Q").build())
+        .addMethod(MethodSpec.constructorBuilder().addParameter(int.class, "p").build())
+        .addMethod(MethodSpec.constructorBuilder().addParameter(long.class, "o").build())
+        .build();
+    // Static fields, instance fields, constructors, methods, classes.
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.String;\n"
+        + "\n"
+        + "class Members {\n"
+        + "  static String X;\n"
+        + "\n"
+        + "  static String V;\n"
+        + "\n"
+        + "  String W;\n"
+        + "\n"
+        + "  String U;\n"
+        + "\n"
+        + "  Members(int p) {\n"
+        + "  }\n"
+        + "\n"
+        + "  Members(long o) {\n"
+        + "  }\n"
+        + "\n"
+        + "  static void T() {\n"
+        + "  }\n"
+        + "\n"
+        + "  void S() {\n"
+        + "  }\n"
+        + "\n"
+        + "  static void R() {\n"
+        + "  }\n"
+        + "\n"
+        + "  void Q() {\n"
+        + "  }\n"
+        + "\n"
+        + "  class Z {\n"
+        + "  }\n"
+        + "\n"
+        + "  class Y {\n"
+        + "  }\n"
+        + "}\n");
+  }
+
   private String toString(TypeSpec typeSpec) {
     return JavaFile.builder(tacosPackage, typeSpec).build().toString();
   }
