@@ -92,5 +92,18 @@ License
 
 
 
+JavaWriter
+==========
+
+JavaPoet is the successor to [JavaWriter][javawriter]. New projects should prefer JavaPoet because
+it has a stronger code model: it understands types and can manage imports automatically. JavaPoet is
+also better suited to composition: rather than streaming the contents of a `.java` file
+top-to-bottom in a single pass, a file can be assembled as a tree of declarations.
+
+JavaWriter continues to be available in [GitHub][javawriter] and [Maven Central][javawriter_maven].
+
+
  [dl]: https://search.maven.org/remote_content?g=com.squareup&a=javapoet&v=LATEST
  [snap]: https://oss.sonatype.org/content/repositories/snapshots/
+ [javawriter]: https://github.com/square/javapoet/tree/javawriter_2
+ [javawriter_maven]: http://search.maven.org/#artifactdetails%7Ccom.squareup%7Cjavawriter%7C2.5.1%7Cjar
