@@ -19,6 +19,7 @@ import com.google.common.base.Ascii;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -28,6 +29,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
@@ -39,7 +41,7 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 
 /** A generated class, interface, or enum declaration. */
 public final class TypeSpec {
-  public final DeclarationType declarationType;
+  public final Kind kind;
   public final String name;
   public final CodeBlock anonymousTypeArguments;
   public final CodeBlock javadoc;
@@ -55,34 +57,7 @@ public final class TypeSpec {
   public final ImmutableList<Element> originatingElements;
 
   private TypeSpec(Builder builder) {
-    checkArgument(builder.name != null ^ builder.anonymousTypeArguments != null,
-        "types must have either a name or anonymous type arguments");
-    boolean isInterface = builder.declarationType == DeclarationType.INTERFACE;
-    boolean typeIsAbstract = builder.modifiers.contains(Modifier.ABSTRACT) || isInterface;
-    checkArgument(builder.declarationType == DeclarationType.ENUM ^ builder.enumConstants.isEmpty(),
-        "unexpected enum constants %s for type %s", builder.enumConstants, builder.declarationType);
-    for (MethodSpec methodSpec : builder.methodSpecs) {
-      checkArgument(typeIsAbstract || !methodSpec.hasModifier(Modifier.ABSTRACT),
-          "non-abstract type %s cannot declare abstract method %s", builder.name, methodSpec.name);
-      checkArgument(!isInterface || methodSpec.hasModifier(Modifier.ABSTRACT),
-          "interface %s cannot declare non-abstract method %s", builder.name, methodSpec.name);
-      checkArgument(!isInterface || methodSpec.hasModifier(Modifier.PUBLIC),
-          "interface %s cannot declare non-public method %s", builder.name, methodSpec.name);
-    }
-    for (FieldSpec fieldSpec : builder.fieldSpecs) {
-      if (isInterface) {
-        checkArgument(fieldSpec.hasModifier(Modifier.PUBLIC)
-            && fieldSpec.hasModifier(Modifier.STATIC)
-            && fieldSpec.hasModifier(Modifier.FINAL),
-            "interface %s field %s must be public static final", builder.name, fieldSpec.name);
-      }
-    }
-    boolean superclassIsObject = builder.superclass.equals(ClassName.OBJECT);
-    int interestingSupertypeCount = (superclassIsObject ? 0 : 1) + builder.superinterfaces.size();
-    checkArgument(builder.anonymousTypeArguments == null || interestingSupertypeCount <= 1,
-        "anonymous type has too many supertypes");
-
-    this.declarationType = checkNotNull(builder.declarationType, "declarationType == null");
+    this.kind = builder.kind;
     this.name = builder.name;
     this.anonymousTypeArguments = builder.anonymousTypeArguments;
     this.javadoc = builder.javadoc.build();
@@ -109,24 +84,25 @@ public final class TypeSpec {
   }
 
   public static Builder classBuilder(String name) {
-    return new Builder(DeclarationType.CLASS, name, null);
+    return new Builder(Kind.CLASS, checkNotNull(name), null);
   }
 
   public static Builder interfaceBuilder(String name) {
-    return new Builder(DeclarationType.INTERFACE, name, null);
+    return new Builder(Kind.INTERFACE, checkNotNull(name), null);
   }
 
   public static Builder enumBuilder(String name) {
-    return new Builder(DeclarationType.ENUM, name, null);
+    return new Builder(Kind.ENUM, checkNotNull(name), null);
   }
 
   public static Builder anonymousClassBuilder(String typeArgumentsFormat, Object... args) {
-    return new Builder(DeclarationType.CLASS, null, CodeBlock.builder()
+    return new Builder(Kind.CLASS, null, CodeBlock.builder()
         .add(typeArgumentsFormat, args)
         .build());
   }
 
-  void emit(CodeWriter codeWriter, String enumName) throws IOException {
+  void emit(CodeWriter codeWriter, String enumName, Set<Modifier> implicitModifiers)
+      throws IOException {
     if (enumName != null) {
       codeWriter.emit("$L", enumName);
       if (!anonymousTypeArguments.formatParts.isEmpty()) {
@@ -145,13 +121,13 @@ public final class TypeSpec {
     } else {
       codeWriter.emitJavadoc(javadoc);
       codeWriter.emitAnnotations(annotations, false);
-      codeWriter.emitModifiers(modifiers);
-      codeWriter.emit("$L $L", Ascii.toLowerCase(declarationType.name()), name);
+      codeWriter.emitModifiers(modifiers, Sets.union(implicitModifiers, kind.asMemberModifiers));
+      codeWriter.emit("$L $L", Ascii.toLowerCase(kind.name()), name);
       codeWriter.emitTypeVariables(typeVariables);
 
       List<Type> extendsTypes;
       List<Type> implementsTypes;
-      if (declarationType == DeclarationType.INTERFACE) {
+      if (kind == Kind.INTERFACE) {
         extendsTypes = superinterfaces;
         implementsTypes = ImmutableList.of();
       } else {
@@ -191,7 +167,7 @@ public final class TypeSpec {
         i.hasNext();) {
       Map.Entry<String, TypeSpec> enumConstant = i.next();
       if (!firstMember) codeWriter.emit("\n");
-      enumConstant.getValue().emit(codeWriter, enumConstant.getKey());
+      enumConstant.getValue().emit(codeWriter, enumConstant.getKey(), ImmutableSet.<Modifier>of());
       firstMember = false;
       if (i.hasNext()) {
         codeWriter.emit(",\n");
@@ -203,17 +179,17 @@ public final class TypeSpec {
     }
     for (FieldSpec fieldSpec : fieldSpecs) {
       if (!firstMember) codeWriter.emit("\n");
-      fieldSpec.emit(codeWriter, declarationType.implicitFieldModifiers);
+      fieldSpec.emit(codeWriter, kind.implicitFieldModifiers);
       firstMember = false;
     }
     for (MethodSpec methodSpec : methodSpecs) {
       if (!firstMember) codeWriter.emit("\n");
-      methodSpec.emit(codeWriter, name, declarationType.implicitMethodModifiers);
+      methodSpec.emit(codeWriter, name, kind.implicitMethodModifiers);
       firstMember = false;
     }
     for (TypeSpec typeSpec : typeSpecs) {
       if (!firstMember) codeWriter.emit("\n");
-      typeSpec.emit(codeWriter, null);
+      typeSpec.emit(codeWriter, null, kind.implicitTypeModifiers);
       firstMember = false;
     }
     codeWriter.unindent();
@@ -225,24 +201,43 @@ public final class TypeSpec {
     }
   }
 
-  private enum DeclarationType {
-    CLASS(ImmutableSet.<Modifier>of(), ImmutableSet.<Modifier>of()),
-    INTERFACE(ImmutableSet.of(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL),
-        ImmutableSet.of(Modifier.PUBLIC, Modifier.ABSTRACT)),
-    ENUM(ImmutableSet.<Modifier>of(), ImmutableSet.<Modifier>of());
+  private enum Kind {
+    CLASS(
+        ImmutableSet.<Modifier>of(),
+        ImmutableSet.<Modifier>of(),
+        ImmutableSet.<Modifier>of(),
+        ImmutableSet.<Modifier>of()),
+
+    INTERFACE(
+        ImmutableSet.of(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL),
+        ImmutableSet.of(Modifier.PUBLIC, Modifier.ABSTRACT),
+        ImmutableSet.of(Modifier.PUBLIC, Modifier.STATIC),
+        ImmutableSet.of(Modifier.STATIC)),
+
+    ENUM(
+        ImmutableSet.<Modifier>of(),
+        ImmutableSet.<Modifier>of(),
+        ImmutableSet.<Modifier>of(),
+        ImmutableSet.of(Modifier.STATIC));
 
     private final ImmutableSet<Modifier> implicitFieldModifiers;
     private final ImmutableSet<Modifier> implicitMethodModifiers;
+    private final ImmutableSet<Modifier> implicitTypeModifiers;
+    private final ImmutableSet<Modifier> asMemberModifiers;
 
-    private DeclarationType(ImmutableSet<Modifier> implicitFieldModifiers,
-        ImmutableSet<Modifier> implicitMethodModifiers) {
+    private Kind(ImmutableSet<Modifier> implicitFieldModifiers,
+        ImmutableSet<Modifier> implicitMethodModifiers,
+        ImmutableSet<Modifier> implicitTypeModifiers,
+        ImmutableSet<Modifier> asMemberModifiers) {
       this.implicitFieldModifiers = implicitFieldModifiers;
       this.implicitMethodModifiers = implicitMethodModifiers;
+      this.implicitTypeModifiers = implicitTypeModifiers;
+      this.asMemberModifiers = asMemberModifiers;
     }
   }
 
   public static final class Builder {
-    private final DeclarationType declarationType;
+    private final Kind kind;
     private final String name;
     private final CodeBlock anonymousTypeArguments;
 
@@ -258,10 +253,10 @@ public final class TypeSpec {
     private final List<TypeSpec> typeSpecs = new ArrayList<>();
     private final List<Element> originatingElements = new ArrayList<>();
 
-    private Builder(DeclarationType declarationType, String name,
+    private Builder(Kind kind, String name,
         CodeBlock anonymousTypeArguments) {
       checkArgument(name == null || SourceVersion.isName(name), "not a valid name: %s", name);
-      this.declarationType = declarationType;
+      this.kind = kind;
       this.name = name;
       this.anonymousTypeArguments = anonymousTypeArguments;
     }
@@ -309,7 +304,7 @@ public final class TypeSpec {
     }
 
     public Builder addEnumConstant(String name, TypeSpec typeSpec) {
-      checkState(declarationType == DeclarationType.ENUM, "type is not enum");
+      checkState(kind == Kind.ENUM, "%s is not enum", this.name);
       checkArgument(typeSpec.anonymousTypeArguments != null,
           "enum constants must have anonymous type arguments");
       checkArgument(SourceVersion.isName(name), "not a valid enum constant: %s", name);
@@ -318,6 +313,9 @@ public final class TypeSpec {
     }
 
     public Builder addField(FieldSpec fieldSpec) {
+      checkArgument(fieldSpec.modifiers.containsAll(kind.implicitFieldModifiers),
+          "%s %s.%s requires modifiers %s", kind, name, fieldSpec.name,
+          kind.implicitFieldModifiers);
       fieldSpecs.add(fieldSpec);
       return this;
     }
@@ -327,11 +325,17 @@ public final class TypeSpec {
     }
 
     public Builder addMethod(MethodSpec methodSpec) {
+      checkArgument(methodSpec.modifiers.containsAll(kind.implicitMethodModifiers),
+          "%s %s.%s requires modifiers %s", kind, name, methodSpec.name,
+          kind.implicitMethodModifiers);
       methodSpecs.add(methodSpec);
       return this;
     }
 
     public Builder addType(TypeSpec typeSpec) {
+      checkArgument(typeSpec.modifiers.containsAll(kind.implicitTypeModifiers),
+          "%s %s.%s requires modifiers %s", kind, name, typeSpec.name,
+          kind.implicitFieldModifiers);
       typeSpecs.add(typeSpec);
       return this;
     }
@@ -342,6 +346,21 @@ public final class TypeSpec {
     }
 
     public TypeSpec build() {
+      boolean isInterface = kind == Kind.INTERFACE;
+      boolean isAbstract = modifiers.contains(Modifier.ABSTRACT) || isInterface;
+      checkArgument(kind != Kind.ENUM || !enumConstants.isEmpty(),
+          "at least one enum constant is required for %s", name);
+
+      for (MethodSpec methodSpec : methodSpecs) {
+        checkArgument(isAbstract || !methodSpec.hasModifier(Modifier.ABSTRACT),
+            "non-abstract type %s cannot declare abstract method %s", name, methodSpec.name);
+      }
+
+      boolean superclassIsObject = superclass.equals(ClassName.OBJECT);
+      int interestingSupertypeCount = (superclassIsObject ? 0 : 1) + superinterfaces.size();
+      checkArgument(anonymousTypeArguments == null || interestingSupertypeCount <= 1,
+          "anonymous type has too many supertypes");
+
       return new TypeSpec(this);
     }
   }

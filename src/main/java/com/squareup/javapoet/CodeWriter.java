@@ -151,14 +151,13 @@ final class CodeWriter {
    * Emits {@code modifiers} in the standard order. Modifiers in {@code implicitModifiers} will not
    * be emitted.
    */
-  public void emitModifiers(ImmutableSet<Modifier> modifiers,
-      ImmutableSet<Modifier> implicitModifiers) throws IOException {
-    if (!modifiers.isEmpty()) {
-      for (Modifier modifier : EnumSet.copyOf(modifiers)) {
-        if (implicitModifiers.contains(modifier)) continue;
-        emitAndIndent(Ascii.toLowerCase(modifier.name()));
-        emitAndIndent(" ");
-      }
+  public void emitModifiers(Set<Modifier> modifiers, Set<Modifier> implicitModifiers)
+      throws IOException {
+    if (modifiers.isEmpty()) return;
+    for (Modifier modifier : EnumSet.copyOf(modifiers)) {
+      if (implicitModifiers.contains(modifier)) continue;
+      emitAndIndent(Ascii.toLowerCase(modifier.name()));
+      emitAndIndent(" ");
     }
   }
 
@@ -237,7 +236,7 @@ final class CodeWriter {
   private void emitLiteral(Object o) throws IOException {
     if (o instanceof TypeSpec) {
       TypeSpec typeSpec = (TypeSpec) o;
-      typeSpec.emit(this, null);
+      typeSpec.emit(this, null, ImmutableSet.<Modifier>of());
     } else if (o instanceof AnnotationSpec) {
       AnnotationSpec annotationSpec = (AnnotationSpec) o;
       annotationSpec.emit(this, true);
