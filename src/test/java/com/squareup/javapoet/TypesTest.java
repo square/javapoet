@@ -78,16 +78,35 @@ public final class TypesTest {
     assertThat(Types.get(typeVariables.get(0).asType()))
         .isEqualTo(Types.typeVariable("Simple"));
     assertThat(Types.get(typeVariables.get(1).asType()))
-        .isEqualTo(Types.typeVariable("ExtendsClass", Number.class));
+        .isEqualTo(Types.typeVariable("ExtendsClass", ClassName.get(Number.class)));
     assertThat(Types.get(typeVariables.get(2).asType()))
-        .isEqualTo(Types.typeVariable("ExtendsInterface", Runnable.class));
+        .isEqualTo(Types.typeVariable("ExtendsInterface", ClassName.get(Runnable.class)));
     assertThat(Types.get(typeVariables.get(3).asType()))
         .isEqualTo(Types.typeVariable("ExtendsTypeVariable", Types.typeVariable("Simple")));
-    assertThat(Types.get(typeVariables.get(4).asType()))
-        .isEqualTo(Types.typeVariable("Intersection", Number.class, Runnable.class));
-    assertThat(Types.get(typeVariables.get(5).asType()))
-        .isEqualTo(Types.typeVariable("IntersectionOfInterfaces",
-            Runnable.class, Serializable.class));
+    if (classExists("javax.lang.model.type.IntersectionType")) {
+      assertThat(Types.get(typeVariables.get(4).asType()))
+          .isEqualTo(Types.typeVariable("Intersection",
+              Types.intersection(ClassName.get(Number.class), ClassName.get(Runnable.class))));
+      assertThat(Types.get(typeVariables.get(5).asType()))
+          .isEqualTo(Types.typeVariable("IntersectionOfInterfaces",
+              Types.intersection(ClassName.get(Runnable.class), ClassName.get(Serializable.class))));
+    } else {
+      assertThat(Types.get(typeVariables.get(4).asType()))
+          .isEqualTo(Types.typeVariable("Intersection",
+              ClassName.get(Number.class), ClassName.get(Runnable.class)));
+      assertThat(Types.get(typeVariables.get(5).asType()))
+          .isEqualTo(Types.typeVariable("IntersectionOfInterfaces",
+              ClassName.get(Runnable.class), ClassName.get(Serializable.class)));
+    }
+  }
+
+  private boolean classExists(String s) {
+    try {
+      Class.forName(s); // Java 8.
+      return true;
+    } catch (ClassNotFoundException e) {
+      return false; // Java 7.
+    }
   }
 
   @Test public void typeVariableBounds() {
