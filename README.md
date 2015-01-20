@@ -12,7 +12,7 @@ the need to write boilerplate while also keeping a single source of truth for th
 
 Here's a (boring) `HelloWorld` class:
 
-```
+```java
 package com.example.helloworld;
 
 public final class HelloWorld {
@@ -24,7 +24,7 @@ public final class HelloWorld {
 
 And this is the (exciting) code to generate it with JavaPoet:
 
-```
+```java
 MethodSpec main = MethodSpec.methodBuilder("main")
     .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
     .returns(void.class)
@@ -60,7 +60,7 @@ annotations (`AnnotationSpec`).
 But the _body_ of methods and constructors is not modeled. There's no expression class, no
 statement class or syntax tree nodes. Instead, JavaPoet uses strings for code blocks:
 
-```
+```java
 MethodSpec main = MethodSpec.methodBuilder("main")
     .addCode(""
         + "int total = 0;\n"
@@ -72,13 +72,13 @@ MethodSpec main = MethodSpec.methodBuilder("main")
 
 Which generates this:
 
-```
-  void main() {
-    int total = 0;
-    for (int i = 0; i < 10; i++) {
-      total += i;
-    }
+```java
+void main() {
+  int total = 0;
+  for (int i = 0; i < 10; i++) {
+    total += i;
   }
+}
 ```
 
 The manual semicolons, line wrapping, and indentation are tedious and so JavaPoet offers APIs to
@@ -86,7 +86,7 @@ make it easier. There's `addStatement()` which takes care of semicolons and newl
 `beginControlFlow()` + `endControlFlow()` which are used together for braces, newlines, and
 indentation:
 
-```
+```java
 MethodSpec main = MethodSpec.methodBuilder("main")
     .addStatement("int total = 0")
     .beginControlFlow("for (int i = 0; i < 10; i++)")
@@ -98,29 +98,29 @@ MethodSpec main = MethodSpec.methodBuilder("main")
 This example is lame because the generated code is constant! Suppose instead of just adding 0 to 10,
 we want to make the operation and range configurable. Here's a method that generates a method:
 
-```
-  private MethodSpec computeRange(String name, int from, int to, String op) {
-    return MethodSpec.methodBuilder(name)
-        .returns(int.class)
-        .addStatement("int result = 0")
-        .beginControlFlow("for (int i = " + from + "; i < " + to + "; i++)")
-        .addStatement("result = result " + op + " i")
-        .endControlFlow()
-        .addStatement("return result")
-        .build();
-  }
+```java
+private MethodSpec computeRange(String name, int from, int to, String op) {
+  return MethodSpec.methodBuilder(name)
+      .returns(int.class)
+      .addStatement("int result = 0")
+      .beginControlFlow("for (int i = " + from + "; i < " + to + "; i++)")
+      .addStatement("result = result " + op + " i")
+      .endControlFlow()
+      .addStatement("return result")
+      .build();
+}
 ```
 
 And here's what we get when we call `computeRange("multiply10to20", 10, 20, "*")`:
 
-```
-  int multiply10to20() {
-    int result = 0;
-    for (int i = 10; i < 20; i++) {
-      result = result * i;
-    }
-    return result;
+```java
+int multiply10to20() {
+  int result = 0;
+  for (int i = 10; i < 20; i++) {
+    result = result * i;
   }
+  return result;
+}
 ```
 
 Methods generating methods! And since JavaPoet generates source instead of bytecode, you can
@@ -134,17 +134,17 @@ many operators. To address this, JavaPoet offers a syntax inspired-by but incomp
 [`String.format()`][formatter]. It accepts **`$L`** to emit a **literal** value in the output. This
 works just like `Formatter`'s `%s`:
 
-```
-  private MethodSpec computeRange(String name, int from, int to, String op) {
-    return MethodSpec.methodBuilder(name)
-        .returns(int.class)
-        .addStatement("int result = 0")
-        .beginControlFlow("for (int i = $L; i < $L; i++)", from, to)
-        .addStatement("result = result $L i", op)
-        .endControlFlow()
-        .addStatement("return result")
-        .build();
-  }
+```java
+private MethodSpec computeRange(String name, int from, int to, String op) {
+  return MethodSpec.methodBuilder(name)
+      .returns(int.class)
+      .addStatement("int result = 0")
+      .beginControlFlow("for (int i = $L; i < $L; i++)", from, to)
+      .addStatement("result = result $L i", op)
+      .endControlFlow()
+      .addStatement("return result")
+      .build();
+}
 ```
 
 Literals are emitted directly to the output code with no escaping. Arguments for literals may be
@@ -156,30 +156,32 @@ When emitting code that includes string literals, we can use **`$S`** to emit a 
 with wrapping quotation marks and escaping. Here's a program that emits 3 methods, each of which
 returns its own name:
 
-```
-  @Test public void stringLiterals() throws Exception {
-    TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
-        .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-        .addMethod(whatsMyName("slimShady"))
-        .addMethod(whatsMyName("eminem"))
-        .addMethod(whatsMyName("marshallMathers"))
-        .build();
-    JavaFile javaFile = JavaFile.builder("com.example.helloworld", helloWorld)
-        .build();
-    javaFile.emit(System.out);
-  }
+```java
+@Test public void stringLiterals() throws Exception {
+  TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
+      .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+      .addMethod(whatsMyName("slimShady"))
+      .addMethod(whatsMyName("eminem"))
+      .addMethod(whatsMyName("marshallMathers"))
+      .build();
+      
+  JavaFile javaFile = JavaFile.builder("com.example.helloworld", helloWorld)
+      .build();
+      
+  javaFile.emit(System.out);
+}
 
-  private MethodSpec whatsMyName(String name) {
-    return MethodSpec.methodBuilder(name)
-        .returns(String.class)
-        .addStatement("return $S", name)
-        .build();
-  }
+private MethodSpec whatsMyName(String name) {
+  return MethodSpec.methodBuilder(name)
+      .returns(String.class)
+      .addStatement("return $S", name)
+      .build();
+}
 ```
 
 In this case, using `$S` gives us quotation marks:
 
-```
+```java
 public final class HelloWorld {
   String slimShady() {
     return "slimShady";
@@ -201,23 +203,26 @@ We Java programmers love our types: they make our code easier to understand. And
 board. It has rich built-in support for types, including automatic generation of `import`
 statements. Just use **`$T`** to reference **types**:
 
-```
-    MethodSpec today = MethodSpec.methodBuilder("today")
-        .returns(Date.class)
-        .addStatement("return new $T()", Date.class)
-        .build();
-    TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
-        .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-        .addMethod(today)
-        .build();
-    JavaFile javaFile = JavaFile.builder("com.example.helloworld", helloWorld)
-        .build();
-    javaFile.emit(System.out);
+```java
+MethodSpec today = MethodSpec.methodBuilder("today")
+    .returns(Date.class)
+    .addStatement("return new $T()", Date.class)
+    .build();
+    
+TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
+    .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+    .addMethod(today)
+    .build();
+    
+JavaFile javaFile = JavaFile.builder("com.example.helloworld", helloWorld)
+    .build();
+    
+javaFile.emit(System.out);
 ```
 
 That generates the following `.java` file, complete with the necessary `import`:
 
-```
+```java
 package com.example.helloworld;
 
 import java.util.Date;
@@ -233,18 +238,18 @@ We passed `Date.class` to reference a class that just-so-happens to be available
 generating code. This doesn't need to be the case. Here's a similar example, but this one
 references a class that doesn't exist (yet):
 
-```
-    ClassName hoverboard = ClassName.get("com.mattel", "Hoverboard");
+```java
+ClassName hoverboard = ClassName.get("com.mattel", "Hoverboard");
 
-    MethodSpec today = MethodSpec.methodBuilder("tomorrow")
-        .returns(hoverboard)
-        .addStatement("return new $T()", hoverboard)
-        .build();
+MethodSpec today = MethodSpec.methodBuilder("tomorrow")
+    .returns(hoverboard)
+    .addStatement("return new $T()", hoverboard)
+    .build();
 ```
 
 And that not-yet-existent class is imported as well:
 
-```
+```java
 package com.example.helloworld;
 
 import com.mattel.Hoverboard;
@@ -261,25 +266,25 @@ It can identify any _declared_ class. Declared types are just the beginning of J
 system: we also have arrays, parameterized types, wildcard types, and type variables. JavaPoet has a
 `Types` class that can compose each of these:
 
-```
-    ClassName hoverboard = ClassName.get("com.mattel", "Hoverboard");
-    ClassName list = ClassName.get("java.util", "List");
-    ClassName arrayList = ClassName.get("java.util", "ArrayList");
-    Type listOfHoverboards = Types.parameterizedType(list, hoverboard);
+```java
+ClassName hoverboard = ClassName.get("com.mattel", "Hoverboard");
+ClassName list = ClassName.get("java.util", "List");
+ClassName arrayList = ClassName.get("java.util", "ArrayList");
+Type listOfHoverboards = Types.parameterizedType(list, hoverboard);
 
-    MethodSpec today = MethodSpec.methodBuilder("beyond")
-        .returns(listOfHoverboards)
-        .addStatement("$T result = new $T<>()", listOfHoverboards, arrayList)
-        .addStatement("result.add(new $T())", hoverboard)
-        .addStatement("result.add(new $T())", hoverboard)
-        .addStatement("result.add(new $T())", hoverboard)
-        .addStatement("return result")
-        .build();
+MethodSpec today = MethodSpec.methodBuilder("beyond")
+    .returns(listOfHoverboards)
+    .addStatement("$T result = new $T<>()", listOfHoverboards, arrayList)
+    .addStatement("result.add(new $T())", hoverboard)
+    .addStatement("result.add(new $T())", hoverboard)
+    .addStatement("result.add(new $T())", hoverboard)
+    .addStatement("return result")
+    .build();
 ```
 
 JavaPoet will decompose each type and import its components where possible.
 
-```
+```java
 package com.example.helloworld;
 
 import com.mattel.Hoverboard;
@@ -302,36 +307,37 @@ public final class HelloWorld {
 Generated code is often self-referential. Use **`$N`** to refer to another generated declaration by
 its name. Here's a method that calls another:
 
-```
-  public String byteToHex(int b) {
-    char[] result = new char[2];
-    result[0] = hexDigit((b >>> 4) & 0xf);
-    result[1] = hexDigit(b & 0xf);
-    return new String(result);
-  }
+```java
+public String byteToHex(int b) {
+  char[] result = new char[2];
+  result[0] = hexDigit((b >>> 4) & 0xf);
+  result[1] = hexDigit(b & 0xf);
+  return new String(result);
+}
 
-  public char hexDigit(int i) {
-    return (char) (i < 10 ? i + '0' : i - 10 + 'a');
-  }
+public char hexDigit(int i) {
+  return (char) (i < 10 ? i + '0' : i - 10 + 'a');
+}
 ```
 
 When generating the code above, we pass the `hexDigit()` method as an argument to the `byteToHex()`
 method using `$N`:
 
-```
-    MethodSpec hexDigit = MethodSpec.methodBuilder("hexDigit")
-        .addParameter(int.class, "i")
-        .returns(char.class)
-        .addStatement("return (char) (i < 10 ? i + '0' : i - 10 + 'a')")
-        .build();
-    MethodSpec byteToHex = MethodSpec.methodBuilder("byteToHex")
-        .addParameter(int.class, "b")
-        .returns(String.class)
-        .addStatement("char[] result = new char[2]")
-        .addStatement("result[0] = $N((b >>> 4) & 0xf)", hexDigit)
-        .addStatement("result[1] = $N(b & 0xf)", hexDigit)
-        .addStatement("return new String(result)")
-        .build();
+```java
+MethodSpec hexDigit = MethodSpec.methodBuilder("hexDigit")
+    .addParameter(int.class, "i")
+    .returns(char.class)
+    .addStatement("return (char) (i < 10 ? i + '0' : i - 10 + 'a')")
+    .build();
+    
+MethodSpec byteToHex = MethodSpec.methodBuilder("byteToHex")
+    .addParameter(int.class, "b")
+    .returns(String.class)
+    .addStatement("char[] result = new char[2]")
+    .addStatement("result[0] = $N((b >>> 4) & 0xf)", hexDigit)
+    .addStatement("result[1] = $N(b & 0xf)", hexDigit)
+    .addStatement("return new String(result)")
+    .build();
 ```
 
 ### Methods
@@ -339,19 +345,20 @@ method using `$N`:
 All of the above methods have a code body. Use `Modifiers.ABSTRACT` to get a method without any
 body. This is only legal if the enclosing class is either abstract or an interface.
 
-```
-    MethodSpec flux = MethodSpec.methodBuilder("flux")
-        .addModifiers(Modifier.ABSTRACT, Modifier.PROTECTED)
-        .build();
-    TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
-        .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-        .addMethod(flux)
-        .build();
+```java
+MethodSpec flux = MethodSpec.methodBuilder("flux")
+    .addModifiers(Modifier.ABSTRACT, Modifier.PROTECTED)
+    .build();
+    
+TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
+    .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+    .addMethod(flux)
+    .build();
 ```
 
 Which generates this:
 
-```
+```java
 public abstract class HelloWorld {
   protected abstract void flux();
 }
@@ -369,22 +376,23 @@ return type. All of these are configured with `MethodSpec.Builder`.
 
 `MethodSpec` is a slight misnomer; it is also be used for constructors:
 
-```
-    MethodSpec flux = MethodSpec.constructorBuilder()
-        .addModifiers(Modifier.PUBLIC)
-        .addParameter(String.class, "greeting")
-        .addStatement("this.$N = $N", "greeting", "greeting")
-        .build();
-    TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
-        .addModifiers(Modifier.PUBLIC)
-        .addField(String.class, "greeting", Modifier.PRIVATE, Modifier.FINAL)
-        .addMethod(flux)
-        .build();
+```java
+MethodSpec flux = MethodSpec.constructorBuilder()
+    .addModifiers(Modifier.PUBLIC)
+    .addParameter(String.class, "greeting")
+    .addStatement("this.$N = $N", "greeting", "greeting")
+    .build();
+    
+TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
+    .addModifiers(Modifier.PUBLIC)
+    .addField(String.class, "greeting", Modifier.PRIVATE, Modifier.FINAL)
+    .addMethod(flux)
+    .build();
 ```
 
 Which generates this:
 
-```
+```java
 public class HelloWorld {
   private final String greeting;
 
@@ -400,25 +408,25 @@ constructors before methods in the output file.
 ### Parameters
 
 Declare parameters on methods and constructors with either `ParameterSpec.builder()` or
-`MethodSpec`'s convenient  `addParameter()` API:
+`MethodSpec`'s convenient `addParameter()` API:
 
-```
-    ParameterSpec android = ParameterSpec.builder(String.class, "android")
-        .addModifiers(Modifier.FINAL)
-        .build();
+```java
+ParameterSpec android = ParameterSpec.builder(String.class, "android")
+    .addModifiers(Modifier.FINAL)
+    .build();
 
-    MethodSpec welcomeOverlords = MethodSpec.methodBuilder("welcomeOverlords")
-        .addParameter(android)
-        .addParameter(String.class, "robot", Modifier.FINAL)
-        .build();
+MethodSpec welcomeOverlords = MethodSpec.methodBuilder("welcomeOverlords")
+    .addParameter(android)
+    .addParameter(String.class, "robot", Modifier.FINAL)
+    .build();
 ```
 
 Though the code above to generate `android` and `robot` parameters is different, the output is the
 same:
 
-```
-  void welcomeOverlords(final String android, final String robot) {
-  }
+```java
+void welcomeOverlords(final String android, final String robot) {
+}
 ```
 
 The extended `Builder` form is necessary when the parameter has annotations (such as `@Nullable`).
@@ -427,20 +435,21 @@ The extended `Builder` form is necessary when the parameter has annotations (suc
 
 Like parameters, fields can be created either with builders or by using convenient helper methods:
 
-```
-    FieldSpec android = FieldSpec.builder(String.class, "android")
-        .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
-        .build();
-    TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
-        .addModifiers(Modifier.PUBLIC)
-        .addField(android)
-        .addField(String.class, "robot", Modifier.PRIVATE, Modifier.FINAL)
-        .build();
+```java
+FieldSpec android = FieldSpec.builder(String.class, "android")
+    .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+    .build();
+    
+TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
+    .addModifiers(Modifier.PUBLIC)
+    .addField(android)
+    .addField(String.class, "robot", Modifier.PRIVATE, Modifier.FINAL)
+    .build();
 ```
 
 Which generates:
 
-```
+```java
 public class HelloWorld {
   private final String android;
 
@@ -452,17 +461,17 @@ The extended `Builder` form is necessary when a field has Javadoc, annotations, 
 initializer. Field initializers use the same [`String.format()`][formatter]-like syntax as the code
 blocks above:
 
-```
-    FieldSpec android = FieldSpec.builder(String.class, "android")
-        .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
-        .initializer("$S + $L", "Lollipop v.", 5.0d)
-        .build();
+```java
+FieldSpec android = FieldSpec.builder(String.class, "android")
+    .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+    .initializer("$S + $L", "Lollipop v.", 5.0d)
+    .build();
 ```
 
 Which generates:
 
-```
-  private final String android = "Lollipop v." + 5.0;
+```java
+private final String android = "Lollipop v." + 5.0;
 ```
 
 ### Interfaces
@@ -471,23 +480,23 @@ JavaPoet has no trouble with interfaces. Note that interface methods must always
 ABSTRACT` and interface fields must always be `PUBLIC STATIC FINAL`. These modifiers are necessary
 when defining the interface:
 
-```
-    TypeSpec helloWorld = TypeSpec.interfaceBuilder("HelloWorld")
-        .addModifiers(Modifier.PUBLIC)
-        .addField(FieldSpec.builder(String.class, "ONLY_THING_THAT_IS_CONSTANT")
-            .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-            .initializer("$S", "change")
-            .build())
-        .addMethod(MethodSpec.methodBuilder("beep")
-            .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-            .build())
-        .build();
+```java
+TypeSpec helloWorld = TypeSpec.interfaceBuilder("HelloWorld")
+    .addModifiers(Modifier.PUBLIC)
+    .addField(FieldSpec.builder(String.class, "ONLY_THING_THAT_IS_CONSTANT")
+        .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+        .initializer("$S", "change")
+        .build())
+    .addMethod(MethodSpec.methodBuilder("beep")
+        .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+        .build())
+    .build();
 ```
 
 But these modifiers are omitted when the code is generated. These are the defaults so we don't need
 to include them for `javac`'s benefit!
 
-```
+```java
 public interface HelloWorld {
   String ONLY_THING_THAT_IS_CONSTANT = "change";
 
@@ -499,18 +508,18 @@ public interface HelloWorld {
 
 Use `enumBuilder` to create the enum type, and `addEnumConstant()` for each value:
 
-```
-    TypeSpec helloWorld = TypeSpec.enumBuilder("Roshambo")
-        .addModifiers(Modifier.PUBLIC)
-        .addEnumConstant("ROCK")
-        .addEnumConstant("SCISSORS")
-        .addEnumConstant("PAPER")
-        .build();
+```java
+TypeSpec helloWorld = TypeSpec.enumBuilder("Roshambo")
+    .addModifiers(Modifier.PUBLIC)
+    .addEnumConstant("ROCK")
+    .addEnumConstant("SCISSORS")
+    .addEnumConstant("PAPER")
+    .build();
 ```
 
 To generate this:
 
-```
+```java
 public enum Roshambo {
   ROCK,
 
@@ -523,31 +532,31 @@ public enum Roshambo {
 Fancy enums are supported, where the enum values override methods or call a superclass constructor.
 Here's a comprehensive example:
 
-```
-    TypeSpec helloWorld = TypeSpec.enumBuilder("Roshambo")
-        .addModifiers(Modifier.PUBLIC)
-        .addEnumConstant("ROCK", TypeSpec.anonymousClassBuilder("$S", "fist")
-            .addMethod(MethodSpec.methodBuilder("toString")
-                .addAnnotation(Override.class)
-                .addModifiers(Modifier.PUBLIC)
-                .addStatement("return $S", "avalanche!")
-                .build())
+```java
+TypeSpec helloWorld = TypeSpec.enumBuilder("Roshambo")
+    .addModifiers(Modifier.PUBLIC)
+    .addEnumConstant("ROCK", TypeSpec.anonymousClassBuilder("$S", "fist")
+        .addMethod(MethodSpec.methodBuilder("toString")
+            .addAnnotation(Override.class)
+            .addModifiers(Modifier.PUBLIC)
+            .addStatement("return $S", "avalanche!")
             .build())
-        .addEnumConstant("SCISSORS", TypeSpec.anonymousClassBuilder("$S", "peace")
-            .build())
-        .addEnumConstant("PAPER", TypeSpec.anonymousClassBuilder("$S", "flat")
-            .build())
-        .addField(String.class, "handsign", Modifier.PRIVATE, Modifier.FINAL)
-        .addMethod(MethodSpec.constructorBuilder()
-            .addParameter(String.class, "handsign")
-            .addStatement("this.$N = $N", "handsign", "handsign")
-            .build())
-        .build();
+        .build())
+    .addEnumConstant("SCISSORS", TypeSpec.anonymousClassBuilder("$S", "peace")
+        .build())
+    .addEnumConstant("PAPER", TypeSpec.anonymousClassBuilder("$S", "flat")
+        .build())
+    .addField(String.class, "handsign", Modifier.PRIVATE, Modifier.FINAL)
+    .addMethod(MethodSpec.constructorBuilder()
+        .addParameter(String.class, "handsign")
+        .addStatement("this.$N = $N", "handsign", "handsign")
+        .build())
+    .build();
 ```
 
 Which generates this:
 
-```
+```java
 public enum Roshambo {
   ROCK("fist") {
     @Override
@@ -573,37 +582,37 @@ public enum Roshambo {
 In the enum code, we used `Types.anonymousInnerClass()`. Anonymous inner classes can also be used in
 code blocks. They are values that can be referenced with `$L`:
 
-```
-    TypeSpec comparator = TypeSpec.anonymousClassBuilder("")
-        .addSuperinterface(Types.parameterizedType(Comparator.class, String.class))
-        .addMethod(MethodSpec.methodBuilder("compare")
-            .addAnnotation(Override.class)
-            .addModifiers(Modifier.PUBLIC)
-            .addParameter(String.class, "a")
-            .addParameter(String.class, "b")
-            .addStatement("return $N.length() - $N.length()", "a", "b")
-            .build())
-        .build();
+```java
+TypeSpec comparator = TypeSpec.anonymousClassBuilder("")
+    .addSuperinterface(Types.parameterizedType(Comparator.class, String.class))
+    .addMethod(MethodSpec.methodBuilder("compare")
+        .addAnnotation(Override.class)
+        .addModifiers(Modifier.PUBLIC)
+        .addParameter(String.class, "a")
+        .addParameter(String.class, "b")
+        .addStatement("return $N.length() - $N.length()", "a", "b")
+        .build())
+    .build();
 
-    TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
-        .addMethod(MethodSpec.methodBuilder("sortByLength")
-            .addParameter(Types.parameterizedType(List.class, String.class), "strings")
-            .addStatement("$T.sort($N, $L)", Collections.class, "strings", comparator)
-            .build())
-        .build();
+TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
+    .addMethod(MethodSpec.methodBuilder("sortByLength")
+        .addParameter(Types.parameterizedType(List.class, String.class), "strings")
+        .addStatement("$T.sort($N, $L)", Collections.class, "strings", comparator)
+        .build())
+    .build();
 ```
 
 This generates a method that contains a class that contains a method:
 
-```
-  void sortByLength(List<String> strings) {
-    Collections.sort(strings, new Comparator<String>() {
-      @Override
-      public void compare(String a, String b) {
-        return a.length() - b.length();
-      }
-    });
-  }
+```java
+void sortByLength(List<String> strings) {
+  Collections.sort(strings, new Comparator<String>() {
+    @Override
+    public void compare(String a, String b) {
+      return a.length() - b.length();
+    }
+  });
+}
 ```
 
 One particularly tricky part of defining anonymous inner classes is the arguments to the superclass
