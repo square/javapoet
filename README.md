@@ -127,7 +127,7 @@ Methods generating methods! And since JavaPoet generates source instead of bytec
 read through it to make sure it's right.
 
 
-### $L _for_ Literals
+### $L for Literals
 
 The string-concatenation in calls to `beginControlFlow()` and `addStatement` is distracting. Too
 many operators. To address this, JavaPoet offers a syntax inspired-by but incompatible-with
@@ -150,7 +150,7 @@ works just like `Formatter`'s `%s`:
 Literals are emitted directly to the output code with no escaping. Arguments for literals may be
 strings, primitives, and a few JavaPoet types described below.
 
-### $S _for_ Strings
+### $S for Strings
 
 When emitting code that includes string literals, we can use **`$S`** to emit a **string**, complete
 with wrapping quotation marks and escaping. Here's a program that emits 3 methods, each of which
@@ -195,7 +195,7 @@ public final class HelloWorld {
 }
 ```
 
-### $T _for_ Types
+### $T for Types
 
 We Java programmers love our types: they make our code easier to understand. And JavaPoet is on
 board. It has rich built-in support for types, including automatic generation of `import`
@@ -297,7 +297,7 @@ public final class HelloWorld {
 }
 ```
 
-### $N _for_ Names
+### $N for Names
 
 Generated code is often self-referential. Use **`$N`** to refer to another generated declaration by
 its name. Here's a method that calls another:
@@ -333,6 +333,283 @@ method using `$N`:
         .addStatement("return new String(result)")
         .build();
 ```
+
+### Methods
+
+All of the above methods have a code body. Use `Modifiers.ABSTRACT` to get a method without any
+body. This is only legal if the enclosing class is either abstract or an interface.
+
+```
+    MethodSpec flux = MethodSpec.methodBuilder("flux")
+        .addModifiers(Modifier.ABSTRACT, Modifier.PROTECTED)
+        .build();
+    TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
+        .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+        .addMethod(flux)
+        .build();
+```
+
+Which generates this:
+
+```
+public abstract class HelloWorld {
+  protected abstract void flux();
+}
+```
+
+The other modifiers work where permitted. Note that when specifying modifiers, JavaPoet uses
+[`javax.lang.model.element.Modifier`][modifier], a class that is not available on Android. This
+limitation applies to code-generating-code only; the output code runs everywhere: JVMs, Android,
+and GWT.
+
+Methods also have parameters, exceptions, varargs, Javadoc, annotations, type variables, and a
+return type. All of these are configured with `MethodSpec.Builder`.
+
+### Constructors
+
+`MethodSpec` is a slight misnomer; it is also be used for constructors:
+
+```
+    MethodSpec flux = MethodSpec.constructorBuilder()
+        .addModifiers(Modifier.PUBLIC)
+        .addParameter(String.class, "greeting")
+        .addStatement("this.$N = $N", "greeting", "greeting")
+        .build();
+    TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
+        .addModifiers(Modifier.PUBLIC)
+        .addField(String.class, "greeting", Modifier.PRIVATE, Modifier.FINAL)
+        .addMethod(flux)
+        .build();
+```
+
+Which generates this:
+
+```
+public class HelloWorld {
+  private final String greeting;
+
+  public HelloWorld(String greeting) {
+    this.greeting = greeting;
+  }
+}
+```
+
+For the most part, constructors work just like methods. When emitting code, JavaPoet will place
+constructors before methods in the output file.
+
+### Parameters
+
+Declare parameters on methods and constructors with either `ParameterSpec.builder()` or
+`MethodSpec`'s convenient  `addParameter()` API:
+
+```
+    ParameterSpec android = ParameterSpec.builder(String.class, "android")
+        .addModifiers(Modifier.FINAL)
+        .build();
+
+    MethodSpec welcomeOverlords = MethodSpec.methodBuilder("welcomeOverlords")
+        .addParameter(android)
+        .addParameter(String.class, "robot", Modifier.FINAL)
+        .build();
+```
+
+Though the code above to generate `android` and `robot` parameters is different, the output is the
+same:
+
+```
+  void welcomeOverlords(final String android, final String robot) {
+  }
+```
+
+The extended `Builder` form is necessary when the parameter has annotations (such as `@Nullable`).
+
+### Fields
+
+Like parameters, fields can be created either with builders or by using convenient helper methods:
+
+```
+    FieldSpec android = FieldSpec.builder(String.class, "android")
+        .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+        .build();
+    TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
+        .addModifiers(Modifier.PUBLIC)
+        .addField(android)
+        .addField(String.class, "robot", Modifier.PRIVATE, Modifier.FINAL)
+        .build();
+```
+
+Which generates:
+
+```
+public class HelloWorld {
+  private final String android;
+
+  private final String robot;
+}
+```
+
+The extended `Builder` form is necessary when a field has Javadoc, annotations, or a field
+initializer. Field initializers use the same [`String.format()`][formatter]-like syntax as the code
+blocks above:
+
+```
+    FieldSpec android = FieldSpec.builder(String.class, "android")
+        .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+        .initializer("$S + $L", "Lollipop v.", 5.0d)
+        .build();
+```
+
+Which generates:
+
+```
+  private final String android = "Lollipop v." + 5.0;
+```
+
+### Interfaces
+
+JavaPoet has no trouble with interfaces. Note that interface methods must always be `PUBLIC
+ABSTRACT` and interface fields must always be `PUBLIC STATIC FINAL`. These modifiers are necessary
+when defining the interface:
+
+```
+    TypeSpec helloWorld = TypeSpec.interfaceBuilder("HelloWorld")
+        .addModifiers(Modifier.PUBLIC)
+        .addField(FieldSpec.builder(String.class, "ONLY_THING_THAT_IS_CONSTANT")
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+            .initializer("$S", "change")
+            .build())
+        .addMethod(MethodSpec.methodBuilder("beep")
+            .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+            .build())
+        .build();
+```
+
+But these modifiers are omitted when the code is generated. These are the defaults so we don't need
+to include them for `javac`'s benefit!
+
+```
+public interface HelloWorld {
+  String ONLY_THING_THAT_IS_CONSTANT = "change";
+
+  void beep();
+}
+```
+
+### Enums
+
+Use `enumBuilder` to create the enum type, and `addEnumConstant()` for each value:
+
+```
+    TypeSpec helloWorld = TypeSpec.enumBuilder("Roshambo")
+        .addModifiers(Modifier.PUBLIC)
+        .addEnumConstant("ROCK")
+        .addEnumConstant("SCISSORS")
+        .addEnumConstant("PAPER")
+        .build();
+```
+
+To generate this:
+
+```
+public enum Roshambo {
+  ROCK,
+
+  SCISSORS,
+
+  PAPER
+}
+```
+
+Fancy enums are supported, where the enum values override methods or call a superclass constructor.
+Here's a comprehensive example:
+
+```
+    TypeSpec helloWorld = TypeSpec.enumBuilder("Roshambo")
+        .addModifiers(Modifier.PUBLIC)
+        .addEnumConstant("ROCK", TypeSpec.anonymousClassBuilder("$S", "fist")
+            .addMethod(MethodSpec.methodBuilder("toString")
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .addStatement("return $S", "avalanche!")
+                .build())
+            .build())
+        .addEnumConstant("SCISSORS", TypeSpec.anonymousClassBuilder("$S", "peace")
+            .build())
+        .addEnumConstant("PAPER", TypeSpec.anonymousClassBuilder("$S", "flat")
+            .build())
+        .addField(String.class, "handsign", Modifier.PRIVATE, Modifier.FINAL)
+        .addMethod(MethodSpec.constructorBuilder()
+            .addParameter(String.class, "handsign")
+            .addStatement("this.$N = $N", "handsign", "handsign")
+            .build())
+        .build();
+```
+
+Which generates this:
+
+```
+public enum Roshambo {
+  ROCK("fist") {
+    @Override
+    public void toString() {
+      return "avalanche!";
+    }
+  },
+
+  SCISSORS("peace"),
+
+  PAPER("flat");
+
+  private final String handsign;
+
+  Roshambo(String handsign) {
+    this.handsign = handsign;
+  }
+}
+```
+
+### Anonymous Inner Classes
+
+In the enum code, we used `Types.anonymousInnerClass()`. Anonymous inner classes can also be used in
+code blocks. They are values that can be referenced with `$L`:
+
+```
+    TypeSpec comparator = TypeSpec.anonymousClassBuilder("")
+        .addSuperinterface(Types.parameterizedType(Comparator.class, String.class))
+        .addMethod(MethodSpec.methodBuilder("compare")
+            .addAnnotation(Override.class)
+            .addModifiers(Modifier.PUBLIC)
+            .addParameter(String.class, "a")
+            .addParameter(String.class, "b")
+            .addStatement("return $N.length() - $N.length()", "a", "b")
+            .build())
+        .build();
+
+    TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
+        .addMethod(MethodSpec.methodBuilder("sortByLength")
+            .addParameter(Types.parameterizedType(List.class, String.class), "strings")
+            .addStatement("$T.sort($N, $L)", Collections.class, "strings", comparator)
+            .build())
+        .build();
+```
+
+This generates a method that contains a class that contains a method:
+
+```
+  void sortByLength(List<String> strings) {
+    Collections.sort(strings, new Comparator<String>() {
+      @Override
+      public void compare(String a, String b) {
+        return a.length() - b.length();
+      }
+    });
+  }
+```
+
+One particularly tricky part of defining anonymous inner classes is the arguments to the superclass
+constructor. In the above code we're passing the empty string for no arguments:
+`TypeSpec.anonymousClassBuilder("")`. To pass different parameters use JavaPoet's code block
+syntax with commas to separate arguments.
 
 
 Download
@@ -390,3 +667,4 @@ JavaWriter continues to be available in [GitHub][javawriter] and [Maven Central]
  [javawriter]: https://github.com/square/javapoet/tree/javawriter_2
  [javawriter_maven]: http://search.maven.org/#artifactdetails%7Ccom.squareup%7Cjavawriter%7C2.5.1%7Cjar
  [formatter]: http://developer.android.com/reference/java/util/Formatter.html
+ [modifier]: http://docs.oracle.com/javase/8/docs/api/javax/lang/model/element/Modifier.html
