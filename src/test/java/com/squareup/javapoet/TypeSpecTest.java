@@ -385,6 +385,7 @@ public final class TypeSpecTest {
 
   @Test public void methodThrows() throws Exception {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addModifiers(Modifier.ABSTRACT)
         .addMethod(MethodSpec.methodBuilder("throwOne")
             .addException(IOException.class)
             .build())
@@ -392,18 +393,30 @@ public final class TypeSpecTest {
             .addException(IOException.class)
             .addException(ClassName.get(tacosPackage, "SourCreamException"))
             .build())
+        .addMethod(MethodSpec.methodBuilder("abstractThrow")
+            .addModifiers(Modifier.ABSTRACT)
+            .addException(IOException.class)
+            .build())
+        .addMethod(MethodSpec.methodBuilder("nativeThrow")
+            .addModifiers(Modifier.NATIVE)
+            .addException(IOException.class)
+            .build())
         .build();
     assertThat(toString(taco)).isEqualTo(""
         + "package com.squareup.tacos;\n"
         + "\n"
         + "import java.io.IOException;\n"
         + "\n"
-        + "class Taco {\n"
+        + "abstract class Taco {\n"
         + "  void throwOne() throws IOException {\n"
         + "  }\n"
         + "\n"
         + "  void throwTwo() throws IOException, SourCreamException {\n"
         + "  }\n"
+        + "\n"
+        + "  abstract void abstractThrow() throws IOException;\n"
+        + "\n"
+        + "  native void nativeThrow() throws IOException;\n"
         + "}\n");
   }
 
@@ -1017,6 +1030,39 @@ public final class TypeSpecTest {
         + "\n"
         + "  class Y {\n"
         + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void nativeMethods() throws Exception {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addMethod(MethodSpec.methodBuilder("nativeInt")
+            .addModifiers(Modifier.NATIVE)
+            .returns(int.class)
+            .build())
+        // GWT JSNI
+        .addMethod(MethodSpec.methodBuilder("alert")
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.NATIVE)
+            .addParameter(String.class, "msg")
+            .addCode(CodeBlock.builder()
+                .add(" /*-{\n")
+                .indent()
+                .addStatement("$$wnd.alert(msg)")
+                .unindent()
+                .add("}-*/")
+                .build())
+            .build())
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.String;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  native int nativeInt();\n"
+        + "\n"
+        + "  public static native void alert(String msg) /*-{\n"
+        + "    $wnd.alert(msg);\n"
+        + "  }-*/;\n"
         + "}\n");
   }
 
