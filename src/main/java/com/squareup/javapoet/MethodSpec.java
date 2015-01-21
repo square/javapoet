@@ -96,11 +96,6 @@ public final class MethodSpec {
       firstParameter = false;
     }
 
-    if (hasModifier(Modifier.ABSTRACT)) {
-      codeWriter.emit(");\n");
-      return;
-    }
-
     codeWriter.emit(")");
     if (!exceptions.isEmpty()) {
       codeWriter.emit(" throws");
@@ -111,13 +106,22 @@ public final class MethodSpec {
         firstException = false;
       }
     }
-    codeWriter.emit(" {\n");
 
-    codeWriter.indent();
-    codeWriter.emit(code);
-    codeWriter.unindent();
+    if (hasModifier(Modifier.ABSTRACT)) {
+      codeWriter.emit(";\n");
+    } else if (hasModifier(Modifier.NATIVE)) {
+      // Code is allowed to support stuff like GWT JSNI.
+      codeWriter.emit(code);
+      codeWriter.emit(";\n");
+    } else {
+      codeWriter.emit(" {\n");
 
-    codeWriter.emit("}\n");
+      codeWriter.indent();
+      codeWriter.emit(code);
+      codeWriter.unindent();
+
+      codeWriter.emit("}\n");
+    }
   }
 
   public boolean hasModifier(Modifier modifier) {
