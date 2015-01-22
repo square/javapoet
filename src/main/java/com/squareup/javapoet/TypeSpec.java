@@ -371,11 +371,10 @@ public final class TypeSpec {
     }
 
     public TypeSpec build() {
-      boolean isInterface = kind == Kind.INTERFACE;
-      boolean isAbstract = modifiers.contains(Modifier.ABSTRACT) || isInterface;
       checkArgument(kind != Kind.ENUM || !enumConstants.isEmpty(),
           "at least one enum constant is required for %s", name);
 
+      boolean isAbstract = modifiers.contains(Modifier.ABSTRACT) || kind != Kind.CLASS;
       for (MethodSpec methodSpec : methodSpecs) {
         checkArgument(isAbstract || !methodSpec.hasModifier(Modifier.ABSTRACT),
             "non-abstract type %s cannot declare abstract method %s", name, methodSpec.name);
