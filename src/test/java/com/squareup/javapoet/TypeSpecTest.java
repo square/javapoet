@@ -337,6 +337,36 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  /** https://github.com/square/javapoet/issues/193 */
+  @Test public void enumsMayDefineAbstractMethods() throws Exception {
+    TypeSpec roshambo = TypeSpec.enumBuilder("Tortilla")
+        .addModifiers(Modifier.PUBLIC)
+        .addEnumConstant("CORN", TypeSpec.anonymousClassBuilder("")
+            .addMethod(MethodSpec.methodBuilder("fold")
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
+                .build())
+            .build())
+        .addMethod(MethodSpec.methodBuilder("fold")
+            .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+            .build())
+        .build();
+    assertThat(toString(roshambo)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.Override;\n"
+        + "\n"
+        + "public enum Tortilla {\n"
+        + "  CORN {\n"
+        + "    @Override\n"
+        + "    public void fold() {\n"
+        + "    }\n"
+        + "  };\n"
+        + "\n"
+        + "  public abstract void fold();\n"
+        + "}\n");
+  }
+
   @Test public void enumConstantsRequired() throws Exception {
     try {
       TypeSpec.enumBuilder("Roshambo")
