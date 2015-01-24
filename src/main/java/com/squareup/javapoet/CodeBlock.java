@@ -45,6 +45,9 @@ import static com.google.common.base.Preconditions.checkState;
  *   <li>{@code $$} emits a dollar sign.
  *   <li>{@code $&gt;} increases the indentation level.
  *   <li>{@code $&lt;} decreases the indentation level.
+ *   <li>{@code $[} begins a statement. For multiline statements, every line after the first line
+ *       is double-indented.
+ *   <li>{@code $]} ends a statement.
  * </ul>
  */
 public final class CodeBlock {
@@ -90,6 +93,8 @@ public final class CodeBlock {
             case '$':
             case '>':
             case '<':
+            case '[':
+            case ']':
               nextP = p + 2;
               break;
 
@@ -148,7 +153,10 @@ public final class CodeBlock {
     }
 
     public Builder addStatement(String format, Object... args) {
-      return add(format + ";\n", args);
+      add("$[");
+      add(format, args);
+      add(";\n$]");
+      return this;
     }
 
     public Builder add(CodeBlock codeBlock) {
