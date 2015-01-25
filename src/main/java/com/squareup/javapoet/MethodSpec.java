@@ -18,6 +18,7 @@ package com.squareup.javapoet;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
@@ -130,6 +131,17 @@ public final class MethodSpec {
 
   public boolean isConstructor() {
     return name.equals(CONSTRUCTOR);
+  }
+
+  @Override public String toString() {
+    StringWriter out = new StringWriter();
+    try {
+      CodeWriter codeWriter = new CodeWriter(out);
+      emit(codeWriter, "Constructor", ImmutableSet.<Modifier>of());
+      return out.toString();
+    } catch (IOException e) {
+      throw new AssertionError();
+    }
   }
 
   public static Builder methodBuilder(String name) {

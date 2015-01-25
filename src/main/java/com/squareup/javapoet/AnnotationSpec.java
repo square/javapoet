@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -111,6 +112,17 @@ public final class AnnotationSpec {
 
   @Override public int hashCode() {
     return type.hashCode() + 37 * members.hashCode();
+  }
+
+  @Override public String toString() {
+    StringWriter out = new StringWriter();
+    try {
+      CodeWriter codeWriter = new CodeWriter(out);
+      codeWriter.emit("$L", this);
+      return out.toString();
+    } catch (IOException e) {
+      throw new AssertionError();
+    }
   }
 
   public static final class Builder {

@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
@@ -233,6 +234,17 @@ public final class TypeSpec {
       }
     } finally {
       codeWriter.statementLine = previousStatementLine;
+    }
+  }
+
+  @Override public String toString() {
+    StringWriter out = new StringWriter();
+    try {
+      CodeWriter codeWriter = new CodeWriter(out);
+      emit(codeWriter, null, ImmutableSet.<Modifier>of());
+      return out.toString();
+    } catch (IOException e) {
+      throw new AssertionError();
     }
   }
 
