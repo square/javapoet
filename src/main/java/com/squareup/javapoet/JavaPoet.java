@@ -70,8 +70,10 @@ public final class JavaPoet {
 
   public void writeTo(Filer filer) throws IOException {
     for (JavaFile javaFile : javaFiles) {
-      JavaFileObject filerSourceFile = filer.createSourceFile(
-          javaFile.packageName + "." + javaFile.typeSpec.name,
+      String fileName = javaFile.packageName.isEmpty()
+          ? javaFile.typeSpec.name
+          : javaFile.packageName + "." + javaFile.typeSpec.name;
+      JavaFileObject filerSourceFile = filer.createSourceFile(fileName,
           Iterables.toArray(javaFile.typeSpec.originatingElements, Element.class));
       try (Writer writer = filerSourceFile.openWriter()) {
         javaFile.emit(writer);

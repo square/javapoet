@@ -15,7 +15,9 @@
  */
 package com.squareup.javapoet;
 
-import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -49,12 +51,12 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public final class CodeBlock {
   /** A heterogeneous list containing string literals and value placeholders. */
-  final ImmutableList<String> formatParts;
-  final ImmutableList<Object> args;
+  final List<String> formatParts;
+  final List<Object> args;
 
   private CodeBlock(Builder builder) {
-    this.formatParts = builder.formatParts.build();
-    this.args = builder.args.build();
+    this.formatParts = Collections.unmodifiableList(new ArrayList<>(builder.formatParts));
+    this.args = Collections.unmodifiableList(new ArrayList<>(builder.args));
   }
 
   public boolean isEmpty() {
@@ -66,8 +68,8 @@ public final class CodeBlock {
   }
 
   public static final class Builder {
-    final ImmutableList.Builder<String> formatParts = ImmutableList.builder();
-    final ImmutableList.Builder<Object> args = ImmutableList.builder();
+    final List<String> formatParts = new ArrayList<>();
+    final List<Object> args = new ArrayList<>();
 
     private Builder() {
     }
@@ -104,7 +106,7 @@ public final class CodeBlock {
       checkArgument(args.length == expectedArgsLength,
           "expected %s args for %s but was %s", expectedArgsLength, format, args.length);
 
-      this.args.add(args);
+      Collections.addAll(this.args, args);
       return this;
     }
 
