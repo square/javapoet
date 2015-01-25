@@ -1114,6 +1114,95 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  @Test public void annotationToString() throws Exception {
+    AnnotationSpec annotation = AnnotationSpec.builder(SuppressWarnings.class)
+        .addMember("value", "$S", "unused")
+        .build();
+    assertThat(annotation.toString()).isEqualTo("@java.lang.SuppressWarnings(\"unused\")");
+  }
+
+  @Test public void codeBlockToString() throws Exception {
+    CodeBlock codeBlock = CodeBlock.builder()
+        .addStatement("$T $N = $S.substring(0, 3)", String.class, "s", "taco")
+        .build();
+    assertThat(codeBlock.toString()).isEqualTo("java.lang.String s = \"taco\".substring(0, 3);\n");
+  }
+
+  @Test public void fieldToString() throws Exception {
+    FieldSpec field = FieldSpec.builder(String.class, "s", Modifier.FINAL)
+        .initializer("$S.substring(0, 3)", "taco")
+        .build();
+    assertThat(field.toString())
+        .isEqualTo("final java.lang.String s = \"taco\".substring(0, 3);\n");
+  }
+
+  @Test public void methodToString() throws Exception {
+    MethodSpec method = MethodSpec.methodBuilder("toString")
+        .addAnnotation(Override.class)
+        .addModifiers(Modifier.PUBLIC)
+        .returns(String.class)
+        .addStatement("return $S", "taco")
+        .build();
+    assertThat(method.toString()).isEqualTo(""
+        + "@java.lang.Override\n"
+        + "public java.lang.String toString() {\n"
+        + "  return \"taco\";\n"
+        + "}\n");
+  }
+
+  @Test public void constructorToString() throws Exception {
+    MethodSpec constructor = MethodSpec.constructorBuilder()
+        .addModifiers(Modifier.PUBLIC)
+        .addParameter(ClassName.get(tacosPackage, "Taco"), "taco")
+        .addStatement("this.$N = $N", "taco", "taco")
+        .build();
+    assertThat(constructor.toString()).isEqualTo(""
+        + "public Constructor(com.squareup.tacos.Taco taco) {\n"
+        + "  this.taco = taco;\n"
+        + "}\n");
+  }
+
+  @Test public void parameterToString() throws Exception {
+    ParameterSpec parameter = ParameterSpec.builder(ClassName.get(tacosPackage, "Taco"), "taco")
+        .addModifiers(Modifier.FINAL)
+        .addAnnotation(ClassName.get("javax.annotation", "Nullable"))
+        .build();
+    assertThat(parameter.toString())
+        .isEqualTo("@javax.annotation.Nullable final com.squareup.tacos.Taco taco");
+  }
+
+  @Test public void classToString() throws Exception {
+    TypeSpec type = TypeSpec.classBuilder("Taco")
+        .build();
+    assertThat(type.toString()).isEqualTo(""
+        + "class Taco {\n"
+        + "}\n");
+  }
+
+  @Test public void anonymousClassToString() throws Exception {
+    TypeSpec type = TypeSpec.anonymousClassBuilder("")
+        .addSuperinterface(Runnable.class)
+        .addMethod(MethodSpec.methodBuilder("run")
+            .addAnnotation(Override.class)
+            .addModifiers(Modifier.PUBLIC)
+            .build())
+        .build();
+    assertThat(type.toString()).isEqualTo(""
+        + "new java.lang.Runnable() {\n"
+        + "  @java.lang.Override\n"
+        + "  public void run() {\n"
+        + "  }\n"
+        + "}");
+  }
+
+  @Test public void interfaceClassToString() throws Exception {
+    TypeSpec type = TypeSpec.interfaceBuilder("Taco")
+        .build();
+    assertThat(type.toString()).isEqualTo(""
+        + "interface Taco {\n"
+        + "}\n");
+  }
+
   private String toString(TypeSpec typeSpec) {
     return JavaFile.builder(tacosPackage, typeSpec).build().toString();
   }

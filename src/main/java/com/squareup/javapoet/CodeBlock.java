@@ -15,6 +15,8 @@
  */
 package com.squareup.javapoet;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -64,6 +66,16 @@ public final class CodeBlock {
 
   public boolean isEmpty() {
     return formatParts.isEmpty();
+  }
+
+  @Override public String toString() {
+    StringWriter out = new StringWriter();
+    try {
+      new CodeWriter(out).emit(this);
+      return out.toString();
+    } catch (IOException e) {
+      throw new AssertionError();
+    }
   }
 
   public static Builder builder() {

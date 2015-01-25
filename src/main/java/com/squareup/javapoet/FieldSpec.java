@@ -18,6 +18,7 @@ package com.squareup.javapoet;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,6 +62,17 @@ public final class FieldSpec {
       codeWriter.emit(initializer);
     }
     codeWriter.emit(";\n");
+  }
+
+  @Override public String toString() {
+    StringWriter out = new StringWriter();
+    try {
+      CodeWriter codeWriter = new CodeWriter(out);
+      emit(codeWriter, ImmutableSet.<Modifier>of());
+      return out.toString();
+    } catch (IOException e) {
+      throw new AssertionError();
+    }
   }
 
   public static Builder builder(Type type, String name, Modifier... modifiers) {

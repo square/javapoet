@@ -18,6 +18,7 @@ package com.squareup.javapoet;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,6 +54,17 @@ public final class ParameterSpec {
       codeWriter.emit("$T... $L", Types.arrayComponent(type), name);
     } else {
       codeWriter.emit("$T $L", type, name);
+    }
+  }
+
+  @Override public String toString() {
+    StringWriter out = new StringWriter();
+    try {
+      CodeWriter codeWriter = new CodeWriter(out);
+      emit(codeWriter, false);
+      return out.toString();
+    } catch (IOException e) {
+      throw new AssertionError();
     }
   }
 
