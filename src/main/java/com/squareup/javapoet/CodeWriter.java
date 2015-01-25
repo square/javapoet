@@ -61,6 +61,13 @@ final class CodeWriter {
   private final Set<ClassName> importableTypes = new LinkedHashSet<>();
   private boolean trailingNewline;
 
+  /**
+   * When emitting a statement, this is the line of the statement currently being written. The first
+   * line of a statement is indented normally and subsequent wrapped lines are double-indented. This
+   * is -1 when the currently-written line isn't part of a statement.
+   */
+  int statementLine = -1;
+
   public CodeWriter(Appendable out) {
     this(out, ImmutableMap.<ClassName, String>of());
   }
@@ -226,6 +233,19 @@ final class CodeWriter {
 
         case "$<":
           unindent();
+          break;
+
+        case "$[":
+          checkState(statementLine == -1, "statements cannot be re-entrant");
+          statementLine = 0;
+          break;
+
+        case "$]":
+          checkState(statementLine != -1, "statement exit has no matching statement enter");
+          if (statementLine > 0) {
+            unindent(2); // End a multi-line statement. Decrease the indentation level.
+          }
+          statementLine = -1;
           break;
 
         default:
@@ -396,6 +416,12 @@ final class CodeWriter {
         }
         out.append('\n');
         trailingNewline = true;
+        if (statementLine != -1) {
+          if (statementLine == 0) {
+            indent(2); // Begin multiple-line statement. Increase the indentation level.
+          }
+          statementLine++;
+        }
       }
 
       first = false;

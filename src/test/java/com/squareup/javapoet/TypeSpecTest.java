@@ -18,8 +18,10 @@ package com.squareup.javapoet;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.AbstractSet;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -1114,5 +1116,94 @@ public final class TypeSpecTest {
 
   private String toString(TypeSpec typeSpec) {
     return JavaFile.builder(tacosPackage, typeSpec).build().toString();
+  }
+
+  @Test public void multilineStatement() throws Exception {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addMethod(MethodSpec.methodBuilder("toString")
+            .addAnnotation(Override.class)
+            .addModifiers(Modifier.PUBLIC)
+            .returns(String.class)
+            .addStatement("return $S\n+ $S\n+ $S\n+ $S\n+ $S",
+                "Taco(", "beef,", "lettuce,", "cheese", ")")
+            .build())
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.Override;\n"
+        + "import java.lang.String;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  @Override\n"
+        + "  public String toString() {\n"
+        + "    return \"Taco(\"\n"
+        + "        + \"beef,\"\n"
+        + "        + \"lettuce,\"\n"
+        + "        + \"cheese\"\n"
+        + "        + \")\";\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void multilineStatementWithAnonymousClass() throws Exception {
+    Type stringComparator = Types.parameterizedType(Comparator.class, String.class);
+    Type listOfString = Types.parameterizedType(List.class, String.class);
+    TypeSpec prefixComparator = TypeSpec.anonymousClassBuilder("")
+        .addSuperinterface(stringComparator)
+        .addMethod(MethodSpec.methodBuilder("compare")
+            .addAnnotation(Override.class)
+            .addModifiers(Modifier.PUBLIC)
+            .returns(int.class)
+            .addParameter(String.class, "a")
+            .addParameter(String.class, "b")
+            .addStatement("return a.substring(0, length)\n"
+                + ".compareTo(b.substring(0, length))")
+            .build())
+        .build();
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addMethod(MethodSpec.methodBuilder("comparePrefix")
+            .returns(stringComparator)
+            .addParameter(int.class, "length", Modifier.FINAL)
+            .addStatement("return $L", prefixComparator)
+            .build())
+        .addMethod(MethodSpec.methodBuilder("sortPrefix")
+            .addParameter(listOfString, "list")
+            .addParameter(int.class, "length", Modifier.FINAL)
+            .addStatement("$T.sort(\nlist,\n$L)", Collections.class, prefixComparator)
+            .build())
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.Override;\n"
+        + "import java.lang.String;\n"
+        + "import java.util.Collections;\n"
+        + "import java.util.Comparator;\n"
+        + "import java.util.List;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  Comparator<String> comparePrefix(final int length) {\n"
+        + "    return new Comparator<String>() {\n"
+        + "      @Override\n"
+        + "      public int compare(String a, String b) {\n"
+        + "        return a.substring(0, length)\n"
+        + "            .compareTo(b.substring(0, length));\n"
+        + "      }\n"
+        + "    };\n"
+        + "  }\n"
+        + "\n"
+        + "  void sortPrefix(List<String> list, final int length) {\n"
+        + "    Collections.sort(\n"
+        + "        list,\n"
+        + "        new Comparator<String>() {\n"
+        + "          @Override\n"
+        + "          public int compare(String a, String b) {\n"
+        + "            return a.substring(0, length)\n"
+        + "                .compareTo(b.substring(0, length));\n"
+        + "          }\n"
+        + "        });\n"
+        + "  }\n"
+        + "}\n");
   }
 }
