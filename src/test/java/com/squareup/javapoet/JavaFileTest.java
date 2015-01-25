@@ -96,11 +96,11 @@ public final class JavaFileTest {
   @Test public void topOfFileComment() throws Exception {
     String source = JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("Taco").build())
-        .addFileComment("Generated $L by JavaWriter. DO NOT EDIT!", "2015-01-13")
+        .addFileComment("Generated $L by JavaPoet. DO NOT EDIT!", "2015-01-13")
         .build()
         .toString();
     assertThat(source).isEqualTo(""
-        + "// Generated 2015-01-13 by JavaWriter. DO NOT EDIT!\n"
+        + "// Generated 2015-01-13 by JavaPoet. DO NOT EDIT!\n"
         + "package com.squareup.tacos;\n"
         + "\n"
         + "class Taco {\n"

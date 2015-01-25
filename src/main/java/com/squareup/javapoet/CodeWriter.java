@@ -49,7 +49,7 @@ import static com.google.common.base.Preconditions.checkState;
  * honors imports, indentation, and deferred variable names.
  */
 final class CodeWriter {
-  private final String indent = "  ";
+  private final String indent;
   private final Appendable out;
   private int indentLevel;
 
@@ -68,12 +68,13 @@ final class CodeWriter {
    */
   int statementLine = -1;
 
-  public CodeWriter(Appendable out) {
-    this(out, ImmutableMap.<ClassName, String>of());
+  public CodeWriter(Appendable out, String indent) {
+    this(out, indent, ImmutableMap.<ClassName, String>of());
   }
 
-  public CodeWriter(Appendable out, ImmutableMap<ClassName, String> importedTypes) {
+  public CodeWriter(Appendable out, String indent, ImmutableMap<ClassName, String> importedTypes) {
     this.out = checkNotNull(out);
+    this.indent = checkNotNull(indent);
     this.importedTypes = checkNotNull(importedTypes);
   }
 

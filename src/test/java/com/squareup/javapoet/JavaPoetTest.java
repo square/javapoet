@@ -22,7 +22,9 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Date;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.Modifier;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -192,5 +194,36 @@ public final class JavaPoetTest {
     assertThat(filer.getOriginatingElements(testPath1)).containsExactly(element1_1);
     Path testPath2 = fsRoot.resolve(fs.getPath("example", "Test2.java"));
     assertThat(filer.getOriginatingElements(testPath2)).containsExactly(element2_1, element2_2);
+  }
+
+  @Test public void filerClassesWithTabIndent() throws IOException {
+    TypeSpec test = TypeSpec.classBuilder("Test")
+        .addField(Date.class, "madeFreshDate")
+        .addMethod(MethodSpec.methodBuilder("main")
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+            .addParameter(String[].class, "args")
+            .addCode("$T.out.println($S);\n", System.class, "Hello World!")
+            .build())
+        .build();
+    javaPoet.add("foo", test).setIndent("\t").writeTo(filer);
+
+    Path fooPath = fsRoot.resolve(fs.getPath("foo", "Test.java"));
+    assertThat(Files.exists(fooPath)).isTrue();
+    String source = new String(Files.readAllBytes(fooPath));
+
+    assertThat(source).isEqualTo(""
+        + "package foo;\n"
+        + "\n"
+        + "import java.lang.String;\n"
+        + "import java.lang.System;\n"
+        + "import java.util.Date;\n"
+        + "\n"
+        + "class Test {\n"
+        + "\tDate madeFreshDate;\n"
+        + "\n"
+        + "\tpublic static void main(String[] args) {\n"
+        + "\t\tSystem.out.println(\"Hello World!\");\n"
+        + "\t}\n"
+        + "}\n");
   }
 }
