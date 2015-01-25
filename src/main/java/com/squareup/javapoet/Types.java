@@ -16,21 +16,22 @@
 package com.squareup.javapoet;
 
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.GenericDeclaration;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
@@ -70,36 +71,17 @@ public final class Types {
    * Returns a new parameterized type, applying {@code typeArguments} to {@code rawType} and
    * with no enclosing owner type.
    */
-  public static ParameterizedType parameterizedType(
-      final Type rawType, final Type... typeArguments) {
+  public static ParameterizedType parameterizedType(Type rawType, Type... typeArguments) {
     checkNotPrimitive(rawType);
     for (Type typeArgument : typeArguments) {
       checkNotPrimitive(typeArgument);
     }
-
-    return new ParameterizedType() {
-      @Override public Type[] getActualTypeArguments() {
-        return typeArguments.clone();
-      }
-      @Override public Type getRawType() {
-        return rawType;
-      }
-      @Override public Type getOwnerType() {
-        return null;
-      }
-      @Override public boolean equals(Object other) {
-        return other instanceof ParameterizedType
-            && ((ParameterizedType) other).getOwnerType() == null
-            && rawType.equals(((ParameterizedType) other).getRawType())
-            && Arrays.equals(typeArguments, ((ParameterizedType) other).getActualTypeArguments());
-      }
-      @Override public int hashCode() {
-        return Arrays.hashCode(typeArguments) ^ rawType.hashCode();
-      }
-      @Override public String toString() {
-        return typeToString(this);
-      }
-    };
+    Map<String, Object> accessors = new LinkedHashMap<>();
+    accessors.put("getActualTypeArguments", typeArguments.clone());
+    accessors.put("getRawType", rawType);
+    accessors.put("getOwnerType", null);
+    int hashCode = Arrays.hashCode(typeArguments) ^ rawType.hashCode();
+    return newType(ParameterizedType.class, accessors, hashCode);
   }
 
   /**
@@ -111,24 +93,13 @@ public final class Types {
   }
 
   /** Returns an array type whose elements are all instances of {@code componentType}. */
-  public static GenericArrayType arrayOf(final Type componentType) {
+  public static GenericArrayType arrayOf(Type componentType) {
     checkNotNull(componentType, "componentType == null");
 
-    return new GenericArrayType() {
-      @Override public Type getGenericComponentType() {
-        return componentType;
-      }
-      @Override public boolean equals(Object o) {
-        return o instanceof GenericArrayType
-            && Objects.equal(componentType, ((GenericArrayType) o).getGenericComponentType());
-      }
-      @Override public int hashCode() {
-        return componentType.hashCode();
-      }
-      @Override public String toString() {
-        return typeToString(this);
-      }
-    };
+    Map<String, Object> accessors = new LinkedHashMap<>();
+    accessors.put("getGenericComponentType", componentType);
+    int hashCode = componentType.hashCode();
+    return newType(GenericArrayType.class, accessors, hashCode);
   }
 
   /**
@@ -151,69 +122,25 @@ public final class Types {
     return wildcardType(new Type[] {Object.class}, new Type[] {bound});
   }
 
-  private static WildcardType wildcardType(final Type[] upperBounds, final Type[] lowerBounds) {
-    return new WildcardType() {
-      @Override public Type[] getUpperBounds() {
-        return upperBounds.clone();
-      }
-      @Override public Type[] getLowerBounds() {
-        return lowerBounds.clone();
-      }
-      @Override public boolean equals(Object o) {
-        return o instanceof WildcardType
-            && Arrays.equals(upperBounds, ((WildcardType) o).getUpperBounds())
-            && Arrays.equals(lowerBounds, ((WildcardType) o).getLowerBounds());
-      }
-      @Override public int hashCode() {
-        return Arrays.hashCode(lowerBounds) ^ Arrays.hashCode(upperBounds);
-      }
-      @Override public String toString() {
-        return typeToString(this);
-      }
-    };
+  private static WildcardType wildcardType(Type[] upperBounds, Type[] lowerBounds) {
+    Map<String, Object> accessors = new LinkedHashMap<>();
+    accessors.put("getUpperBounds", upperBounds.clone());
+    accessors.put("getLowerBounds", lowerBounds.clone());
+    int hashCode = Arrays.hashCode(lowerBounds) ^ Arrays.hashCode(upperBounds);
+    return newType(WildcardType.class, accessors, hashCode);
   }
 
-  public static TypeVariable<?> typeVariable(final String name, final Type... bounds) {
+  public static TypeVariable<?> typeVariable(String name, Type... bounds) {
     checkNotNull(name);
     for (Type bound : bounds) {
       checkNotPrimitive(bound);
     }
 
-    return new TypeVariable<GenericDeclaration>() {
-      @Override public Type[] getBounds() {
-        return bounds.clone();
-      }
-      @Override public String getName() {
-        return name;
-      }
-      @Override public GenericDeclaration getGenericDeclaration() {
-        throw new UnsupportedOperationException();
-      }
-      @Override public boolean equals(Object o) {
-        return o instanceof TypeVariable
-            && name.equals(((TypeVariable<?>) o).getName());
-      }
-      @Override public int hashCode() {
-        return name.hashCode();
-      }
-      @Override public String toString() {
-        return typeToString(this);
-      }
-
-      // Java 8 requires these methods. We have them to compile, but we don't exercise them.
-      @Override public AnnotatedType[] getAnnotatedBounds() {
-        throw new UnsupportedOperationException();
-      }
-      @Override public <T extends Annotation> T getAnnotation(Class<T> aClass) {
-        throw new UnsupportedOperationException();
-      }
-      @Override public Annotation[] getAnnotations() {
-        throw new UnsupportedOperationException();
-      }
-      @Override public Annotation[] getDeclaredAnnotations() {
-        throw new UnsupportedOperationException();
-      }
-    };
+    Map<String, Object> accessors = new LinkedHashMap<>();
+    accessors.put("getBounds", bounds.clone());
+    accessors.put("getName", name);
+    int hashCode = name.hashCode();
+    return newType(TypeVariable.class, accessors, hashCode);
   }
 
   public static Type get(TypeMirror mirror) {
@@ -321,21 +248,14 @@ public final class Types {
         .transform(FOR_TYPE_MIRROR)
         .filter(Predicates.not(Predicates.<Type>equalTo(ClassName.OBJECT)))
         .toArray(Type.class);
-    return new IntersectionType() {
-      @Override public Type[] getBounds() {
-        return bounds;
-      }
-      @Override public int hashCode() {
-        return Arrays.hashCode(bounds);
-      }
-      @Override public boolean equals(Object o) {
-        return o instanceof IntersectionType
-            && Arrays.equals(bounds, ((IntersectionType) o).getBounds());
-      }
-      @Override public String toString() {
-        return typeToString(this);
-      }
-    };
+    return intersection(bounds);
+  }
+
+  static Type intersection(Type... bounds) {
+    Map<String, Object> accessors = new LinkedHashMap<>();
+    accessors.put("getBounds", bounds.clone());
+    int hashCode = Arrays.hashCode(bounds);
+    return newType(IntersectionType.class, accessors, hashCode);
   }
 
   private static void checkNotPrimitive(Type type) {
@@ -363,5 +283,49 @@ public final class Types {
     } else {
       return null;
     }
+  }
+
+  /**
+   * Implement reflective types using a dynamic proxy so we can compile on both Java 7 and Java 8,
+   * even though {@link TypeVariable} gained new methods in Java 8 that won't compile on Java 7.
+   */
+  @SuppressWarnings("unchecked")
+  private static <T extends Type> T newType(
+      final Class<T> type, final Map<String, Object> accessors, final int hashCode) {
+    ClassLoader classLoader = Types.class.getClassLoader();
+    Class[] classes = {type};
+    return (T) Proxy.newProxyInstance(classLoader, classes, new InvocationHandler() {
+      @Override public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
+        switch (method.getName()) {
+          case "equals":
+            Object other = objects[0];
+            if (!type.isInstance(other)) return false;
+            for (Map.Entry<String, Object> entry : accessors.entrySet()) {
+              Object otherProperty = other.getClass().getMethod(entry.getKey()).invoke(other);
+              if (!equal(otherProperty, entry.getValue())) return false;
+            }
+            return true;
+
+          case "hashCode":
+            return hashCode;
+
+          case "toString":
+            return typeToString((Type) o);
+
+          default:
+            Object result = accessors.get(method.getName());
+            if (result == null && !accessors.containsKey(method.getName())) {
+              throw new UnsupportedOperationException(method.getName());
+            }
+            return result instanceof Object[] ? ((Object[]) result).clone() : result;
+        }
+      }
+
+      boolean equal(Object a, Object b) {
+        if (a == null) return b == null;
+        if (a instanceof Object[]) return Arrays.equals((Object[]) a, (Object[]) b);
+        return a.equals(b);
+      }
+    });
   }
 }
