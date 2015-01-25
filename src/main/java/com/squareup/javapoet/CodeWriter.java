@@ -205,8 +205,11 @@ final class CodeWriter {
           break;
 
         case "$S":
-          String arg = String.valueOf(codeBlock.args.get(a++));
-          emitAndIndent(stringLiteral(arg));
+          Object arg = codeBlock.args.get(a++);
+          // Emit null as a literal null: no quotes.
+          emitAndIndent(arg != null
+              ? stringLiteral(String.valueOf(arg))
+              : "null");
           break;
 
         case "$T":

@@ -1096,6 +1096,22 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  @Test public void nullStringLiteral() throws Exception {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addField(FieldSpec.builder(String.class, "NULL")
+            .initializer("$S", (Object) null)
+            .build())
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.String;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  String NULL = null;\n"
+        + "}\n");
+  }
+
   private String toString(TypeSpec typeSpec) {
     return JavaFile.builder(tacosPackage, typeSpec).build().toString();
   }
