@@ -621,6 +621,119 @@ constructor. In the above code we're passing the empty string for no arguments:
 syntax with commas to separate arguments.
 
 
+### Annotations
+
+Simple annotations are easy:
+
+```java
+MethodSpec toString = MethodSpec.methodBuilder("toString")
+    .addAnnotation(Override.class)
+    .returns(String.class)
+    .addModifiers(Modifier.PUBLIC)
+    .addStatement("return $S", "Hoverboard")
+    .build();
+```
+
+Which generates this method with an `@Override` annotation:
+
+```java
+  @Override
+  public String toString() {
+    return "Hoverboard";
+  }
+```
+
+Use `AnnotationSpec.builder()` to set properties on annotations:
+
+```java
+MethodSpec logRecord = MethodSpec.methodBuilder("recordEvent")
+    .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+    .addAnnotation(AnnotationSpec.builder(Headers.class)
+        .addMember("accept", "$S", "application/json; charset=utf-8")
+        .addMember("userAgent", "$S", "Square Cash")
+        .build())
+    .addParameter(LogRecord.class, "logRecord")
+    .returns(LogReceipt.class)
+    .build();
+```
+
+Which generates this annotation with `accept` and `userAgent` properties:
+
+```java
+@Headers(
+    accept = "application/json; charset=utf-8",
+    userAgent = "Square Cash"
+)
+LogReceipt recordEvent(LogRecord logRecord);
+```
+
+When you get fancy, annotation values can be annotations themselves. Use `$L` for embedded
+annotations:
+
+```java
+MethodSpec logRecord = MethodSpec.methodBuilder("recordEvent")
+    .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+    .addAnnotation(AnnotationSpec.builder(HeaderList.class)
+        .addMember("value", "$L", AnnotationSpec.builder(Header.class)
+            .addMember("name", "$S", "Accept")
+            .addMember("value", "$S", "application/json; charset=utf-8")
+            .build())
+        .addMember("value", "$L", AnnotationSpec.builder(Header.class)
+            .addMember("name", "$S", "User-Agent")
+            .addMember("value", "$S", "Square Cash")
+            .build())
+        .build())
+    .addParameter(LogRecord.class, "logRecord")
+    .returns(LogReceipt.class)
+    .build();
+```
+
+Which generates this:
+
+```java
+@HeaderList({
+    @Header(name = "Accept", value = "application/json; charset=utf-8"),
+    @Header(name = "User-Agent", value = "Square Cash")
+})
+LogReceipt recordEvent(LogRecord logRecord);
+```
+
+Note that you can call `addMember()` multiple times with the same property name to populate a list
+of values for that property.
+
+### Javadoc
+
+Fields, methods and types can be documented with Javadoc:
+
+```java
+MethodSpec dismiss = MethodSpec.methodBuilder("dismiss")
+    .addJavadoc("Hides {@code message} from the caller's history. Other\n"
+        + "participants in the conversation will continue to see the\n"
+        + "message in their own history unless they also delete it.\n")
+    .addJavadoc("\n")
+    .addJavadoc("<p>Use {@link #delete($T)} to delete the entire\n"
+        + "conversation for all participants.\n", Conversation.class)
+    .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+    .addParameter(Message.class, "message")
+    .build();
+```
+
+Which generates this:
+
+```java
+  /**
+   * Hides {@code message} from the caller's history. Other
+   * participants in the conversation will continue to see the
+   * message in their own history unless they also delete it.
+   *
+   * <p>Use {@link #delete(Conversation)} to delete the entire
+   * conversation for all participants.
+   */
+  void dismiss(Message message);
+```
+
+Use `$T` when referencing types in Javadoc to get automatic imports.
+
 Download
 --------
 
