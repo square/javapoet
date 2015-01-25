@@ -46,14 +46,14 @@ public final class JavaFile {
     this.typeSpec = builder.typeSpec;
   }
 
-  public void emit(Appendable out) throws IOException {
+  public void emit(Appendable out, String indent) throws IOException {
     // First pass: emit the entire class, just to collect the types we'll need to import.
-    CodeWriter importsCollector = new CodeWriter(NULL_APPENDABLE);
+    CodeWriter importsCollector = new CodeWriter(NULL_APPENDABLE, indent);
     emit(importsCollector);
     ImmutableMap<ClassName, String> suggestedImports = importsCollector.suggestedImports();
 
     // Second pass: write the code, taking advantage of the imports.
-    CodeWriter codeWriter = new CodeWriter(out, suggestedImports);
+    CodeWriter codeWriter = new CodeWriter(out, indent, suggestedImports);
     emit(codeWriter);
   }
 
@@ -84,7 +84,7 @@ public final class JavaFile {
   public String toString() {
     try {
       StringBuilder result = new StringBuilder();
-      emit(result);
+      emit(result, "  ");
       return result.toString();
     } catch (IOException e) {
       throw new AssertionError();

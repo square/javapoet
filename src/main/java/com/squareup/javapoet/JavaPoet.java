@@ -33,6 +33,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 /** Writes generated types to a filesystem using the standard directory structure. */
 public final class JavaPoet {
   private final List<JavaFile> javaFiles = new ArrayList<>();
+  private String indent = "  ";
+
+  public JavaPoet setIndent(String indent) {
+    this.indent = indent;
+    return this;
+  }
 
   public JavaPoet add(JavaFile javaFile) {
     javaFiles.add(javaFile);
@@ -59,7 +65,7 @@ public final class JavaPoet {
 
       Path outputPath = outputDirectory.resolve(javaFile.typeSpec.name + ".java");
       try (Writer writer = new OutputStreamWriter(Files.newOutputStream(outputPath))) {
-        javaFile.emit(writer);
+        javaFile.emit(writer, indent);
       }
     }
   }
@@ -76,7 +82,7 @@ public final class JavaPoet {
       JavaFileObject filerSourceFile = filer.createSourceFile(fileName,
           Iterables.toArray(javaFile.typeSpec.originatingElements, Element.class));
       try (Writer writer = filerSourceFile.openWriter()) {
-        javaFile.emit(writer);
+        javaFile.emit(writer, indent);
       } catch (Exception e) {
         try {
           filerSourceFile.delete();
