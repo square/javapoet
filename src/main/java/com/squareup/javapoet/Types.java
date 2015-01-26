@@ -274,7 +274,7 @@ public final class Types {
   private static String typeToString(Type type) {
     try {
       StringBuilder result = new StringBuilder();
-      new CodeWriter(result, "  ").emit("$T", type);
+      new CodeWriter(result).emit("$T", type);
       return result.toString();
     } catch (IOException e) {
       throw new AssertionError();
