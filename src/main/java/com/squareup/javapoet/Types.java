@@ -207,7 +207,7 @@ public final class Types {
    * is made gnarly by the need to unpack Java 8's new IntersectionType with reflection. We don't
    * have that type in Java 7, and {@link TypeVariable}'s array of bounds is sufficient anyway.
    */
-  @SuppressWarnings("unchecked") // Gross things in support of multiple Java 7 and Java 8.
+  @SuppressWarnings("unchecked") // Gross things in support of Java 7 and Java 8.
   private static List<? extends TypeMirror> typeVariableBounds(
       javax.lang.model.type.TypeVariable typeVariable) {
     TypeMirror upperBound = typeVariable.getUpperBound();
