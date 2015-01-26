@@ -315,14 +315,6 @@ final class CodeWriter {
     } else if (type instanceof GenericArrayType) {
       return emit("$T[]", ((GenericArrayType) type).getGenericComponentType());
 
-    } else if (type instanceof IntersectionType) {
-      boolean firstBound = true;
-      for (Type bound : ((IntersectionType) type).getBounds()) {
-        if (!firstBound) emit(" & ");
-        emit("$T", bound);
-        firstBound = false;
-      }
-      return this;
     }
 
     throw new UnsupportedOperationException("unexpected type: " + arg);

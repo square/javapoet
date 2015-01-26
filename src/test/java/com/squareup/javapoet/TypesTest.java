@@ -19,7 +19,6 @@ import com.google.testing.compile.CompilationRule;
 import java.io.Serializable;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.nio.charset.Charset;
@@ -75,39 +74,25 @@ public final class TypesTest {
     List<? extends TypeParameterElement> typeVariables =
         getElement(Parameterized.class).getTypeParameters();
 
+    // Members of converted types use ClassName and not Class<?>.
+    ClassName number = ClassName.get(Number.class);
+    ClassName runnable = ClassName.get(Runnable.class);
+    ClassName serializable = ClassName.get(Serializable.class);
+
     assertThat(Types.get(typeVariables.get(0).asType()))
         .isEqualTo(Types.typeVariable("Simple"));
     assertThat(Types.get(typeVariables.get(1).asType()))
-        .isEqualTo(Types.typeVariable("ExtendsClass", Number.class));
+        .isEqualTo(Types.typeVariable("ExtendsClass", number));
     assertThat(Types.get(typeVariables.get(2).asType()))
-        .isEqualTo(Types.typeVariable("ExtendsInterface", Runnable.class));
+        .isEqualTo(Types.typeVariable("ExtendsInterface", runnable));
     assertThat(Types.get(typeVariables.get(3).asType()))
         .isEqualTo(Types.typeVariable("ExtendsTypeVariable", Types.typeVariable("Simple")));
     assertThat(Types.get(typeVariables.get(4).asType()))
-        .isEqualTo(Types.typeVariable("Intersection", Number.class, Runnable.class));
+        .isEqualTo(Types.typeVariable("Intersection", number, runnable));
     assertThat(Types.get(typeVariables.get(5).asType()))
-        .isEqualTo(Types.typeVariable("IntersectionOfInterfaces",
-            Runnable.class, Serializable.class));
-  }
-
-  @Test public void typeVariableBounds() {
-    List<? extends TypeParameterElement> typeVariables =
-        getElement(Parameterized.class).getTypeParameters();
-    TypeVariable typeVariable = (TypeVariable) Types.get(typeVariables.get(4).asType());
-    Type[] bounds = typeVariable.getBounds();
-
-    if (bounds.length == 1) {
-      // Java 8.
-      IntersectionType intersectionType = (IntersectionType) bounds[0];
-      assertThat(intersectionType.getBounds()).asList()
-          .containsExactly(ClassName.get(Number.class), ClassName.get(Runnable.class));
-      assertThat(intersectionType.toString())
-          .isEqualTo("java.lang.Number & java.lang.Runnable");
-    } else {
-      // Java ≤ 7.
-      assertThat(bounds).asList()
-          .containsExactly(ClassName.get(Number.class), ClassName.get(Runnable.class));
-    }
+        .isEqualTo(Types.typeVariable("IntersectionOfInterfaces", runnable, serializable));
+    assertThat(((TypeVariable) Types.get(typeVariables.get(4).asType())).getBounds()).asList()
+        .containsExactly(number, runnable);
   }
 
   @Test public void getPrimitiveTypeMirror() {

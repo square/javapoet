@@ -1,14 +1,11 @@
 language: java
 
 jdk:
+  - oraclejdk7
   - oraclejdk8
 
-script:
-  - mvn test -B
-  - jdk_switcher use openjdk7 && mvn surefire:test -B
-
 after_success:
-  - jdk_switcher use oraclejdk8 && .buildscript/deploy_snapshot.sh
+  - .buildscript/deploy_snapshot.sh
 
 env:
   global:

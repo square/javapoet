@@ -16,21 +16,23 @@
 package com.squareup.javapoet;
 
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.GenericDeclaration;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
@@ -70,36 +72,17 @@ public final class Types {
    * Returns a new parameterized type, applying {@code typeArguments} to {@code rawType} and
    * with no enclosing owner type.
    */
-  public static ParameterizedType parameterizedType(
-      final Type rawType, final Type... typeArguments) {
+  public static ParameterizedType parameterizedType(Type rawType, Type... typeArguments) {
     checkNotPrimitive(rawType);
     for (Type typeArgument : typeArguments) {
       checkNotPrimitive(typeArgument);
     }
-
-    return new ParameterizedType() {
-      @Override public Type[] getActualTypeArguments() {
-        return typeArguments.clone();
-      }
-      @Override public Type getRawType() {
-        return rawType;
-      }
-      @Override public Type getOwnerType() {
-        return null;
-      }
-      @Override public boolean equals(Object other) {
-        return other instanceof ParameterizedType
-            && ((ParameterizedType) other).getOwnerType() == null
-            && rawType.equals(((ParameterizedType) other).getRawType())
-            && Arrays.equals(typeArguments, ((ParameterizedType) other).getActualTypeArguments());
-      }
-      @Override public int hashCode() {
-        return Arrays.hashCode(typeArguments) ^ rawType.hashCode();
-      }
-      @Override public String toString() {
-        return typeToString(this);
-      }
-    };
+    Map<String, Object> accessors = new LinkedHashMap<>();
+    accessors.put("getActualTypeArguments", typeArguments.clone());
+    accessors.put("getRawType", rawType);
+    accessors.put("getOwnerType", null);
+    int hashCode = Arrays.hashCode(typeArguments) ^ rawType.hashCode();
+    return newType(ParameterizedType.class, accessors, hashCode);
   }
 
   /**
@@ -111,24 +94,13 @@ public final class Types {
   }
 
   /** Returns an array type whose elements are all instances of {@code componentType}. */
-  public static GenericArrayType arrayOf(final Type componentType) {
+  public static GenericArrayType arrayOf(Type componentType) {
     checkNotNull(componentType, "componentType == null");
 
-    return new GenericArrayType() {
-      @Override public Type getGenericComponentType() {
-        return componentType;
-      }
-      @Override public boolean equals(Object o) {
-        return o instanceof GenericArrayType
-            && Objects.equal(componentType, ((GenericArrayType) o).getGenericComponentType());
-      }
-      @Override public int hashCode() {
-        return componentType.hashCode();
-      }
-      @Override public String toString() {
-        return typeToString(this);
-      }
-    };
+    Map<String, Object> accessors = new LinkedHashMap<>();
+    accessors.put("getGenericComponentType", componentType);
+    int hashCode = componentType.hashCode();
+    return newType(GenericArrayType.class, accessors, hashCode);
   }
 
   /**
@@ -151,69 +123,25 @@ public final class Types {
     return wildcardType(new Type[] {Object.class}, new Type[] {bound});
   }
 
-  private static WildcardType wildcardType(final Type[] upperBounds, final Type[] lowerBounds) {
-    return new WildcardType() {
-      @Override public Type[] getUpperBounds() {
-        return upperBounds.clone();
-      }
-      @Override public Type[] getLowerBounds() {
-        return lowerBounds.clone();
-      }
-      @Override public boolean equals(Object o) {
-        return o instanceof WildcardType
-            && Arrays.equals(upperBounds, ((WildcardType) o).getUpperBounds())
-            && Arrays.equals(lowerBounds, ((WildcardType) o).getLowerBounds());
-      }
-      @Override public int hashCode() {
-        return Arrays.hashCode(lowerBounds) ^ Arrays.hashCode(upperBounds);
-      }
-      @Override public String toString() {
-        return typeToString(this);
-      }
-    };
+  private static WildcardType wildcardType(Type[] upperBounds, Type[] lowerBounds) {
+    Map<String, Object> accessors = new LinkedHashMap<>();
+    accessors.put("getUpperBounds", upperBounds.clone());
+    accessors.put("getLowerBounds", lowerBounds.clone());
+    int hashCode = Arrays.hashCode(lowerBounds) ^ Arrays.hashCode(upperBounds);
+    return newType(WildcardType.class, accessors, hashCode);
   }
 
-  public static TypeVariable<?> typeVariable(final String name, final Type... bounds) {
+  public static TypeVariable<?> typeVariable(String name, Type... bounds) {
     checkNotNull(name);
     for (Type bound : bounds) {
       checkNotPrimitive(bound);
     }
 
-    return new TypeVariable<GenericDeclaration>() {
-      @Override public Type[] getBounds() {
-        return bounds.clone();
-      }
-      @Override public String getName() {
-        return name;
-      }
-      @Override public GenericDeclaration getGenericDeclaration() {
-        throw new UnsupportedOperationException();
-      }
-      @Override public boolean equals(Object o) {
-        return o instanceof TypeVariable
-            && name.equals(((TypeVariable<?>) o).getName());
-      }
-      @Override public int hashCode() {
-        return name.hashCode();
-      }
-      @Override public String toString() {
-        return typeToString(this);
-      }
-
-      // Java 8 requires these methods. We have them to compile, but we don't exercise them.
-      @Override public AnnotatedType[] getAnnotatedBounds() {
-        throw new UnsupportedOperationException();
-      }
-      @Override public <T extends Annotation> T getAnnotation(Class<T> aClass) {
-        throw new UnsupportedOperationException();
-      }
-      @Override public Annotation[] getAnnotations() {
-        throw new UnsupportedOperationException();
-      }
-      @Override public Annotation[] getDeclaredAnnotations() {
-        throw new UnsupportedOperationException();
-      }
-    };
+    Map<String, Object> accessors = new LinkedHashMap<>();
+    accessors.put("getBounds", bounds.clone());
+    accessors.put("getName", name);
+    int hashCode = name.hashCode();
+    return newType(TypeVariable.class, accessors, hashCode);
   }
 
   public static Type get(TypeMirror mirror) {
@@ -235,10 +163,6 @@ public final class Types {
       }
 
       @Override public Type visitTypeVariable(javax.lang.model.type.TypeVariable t, Void p) {
-        return get(t);
-      }
-
-      @Override public Type visitIntersection(javax.lang.model.type.IntersectionType t, Void p) {
         return get(t);
       }
 
@@ -266,25 +190,50 @@ public final class Types {
 
   private static TypeVariable<?> get(javax.lang.model.type.TypeVariable mirror) {
     String name = mirror.asElement().getSimpleName().toString();
+    List<? extends TypeMirror> boundsMirrors = typeVariableBounds(mirror);
 
-    TypeMirror upperBound = mirror.getUpperBound();
-    FluentIterable<TypeMirror> bounds = FluentIterable.from(ImmutableList.of(upperBound));
-    // Try to detect intersection types for Java 7 (Java 8+ has a new TypeKind for that)
-    // Unfortunately, we can't put this logic into Types.get() as this heuristic only really works
-    // in the context of a TypeVariable's upper bound.
-    if (upperBound.getKind() == TypeKind.DECLARED) {
-      TypeElement bound = (TypeElement) ((DeclaredType) upperBound).asElement();
-      if (bound.getNestingKind() == NestingKind.ANONYMOUS) {
-        // This is (likely) an intersection type.
-        bounds = FluentIterable
-            .from(ImmutableList.of(bound.getSuperclass()))
-            .append(bound.getInterfaces());
+    List<Type> boundsTypes = new ArrayList<>();
+    for (TypeMirror typeMirror : boundsMirrors) {
+      Type bound = get(typeMirror);
+      if (bound.equals(ClassName.OBJECT)) continue; // Omit java.lang.Object bounds.
+      boundsTypes.add(bound);
+    }
+
+    return typeVariable(name, boundsTypes.toArray(new Type[boundsTypes.size()]));
+  }
+
+  /**
+   * Returns a list of type mirrors representing the unpacked bounds of {@code typeVariable}. This
+   * is made gnarly by the need to unpack Java 8's new IntersectionType with reflection. We don't
+   * have that type in Java 7, and {@link TypeVariable}'s array of bounds is sufficient anyway.
+   */
+  @SuppressWarnings("unchecked") // Gross things in support of multiple Java 7 and Java 8.
+  private static List<? extends TypeMirror> typeVariableBounds(
+      javax.lang.model.type.TypeVariable typeVariable) {
+    TypeMirror upperBound = typeVariable.getUpperBound();
+
+    // On Java 8, unwrap an intersection type into its component bounds.
+    if ("INTERSECTION".equals(upperBound.getKind().name())) {
+      try {
+        Method method = upperBound.getClass().getMethod("getBounds");
+        return (List<? extends TypeMirror>) method.invoke(upperBound);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
       }
     }
-    Type[] types = bounds.transform(FOR_TYPE_MIRROR)
-        .filter(Predicates.not(Predicates.<Type>equalTo(ClassName.OBJECT)))
-        .toArray(Type.class);
-    return typeVariable(name, types);
+
+    // On Java 7, intersection types exist but without explicit API. Use a (clumsy) heuristic.
+    if (upperBound.getKind() == TypeKind.DECLARED) {
+      TypeElement upperBoundElement = (TypeElement) ((DeclaredType) upperBound).asElement();
+      if (upperBoundElement.getNestingKind() == NestingKind.ANONYMOUS) {
+        return ImmutableList.<TypeMirror>builder()
+            .add(upperBoundElement.getSuperclass())
+            .addAll(upperBoundElement.getInterfaces())
+            .build();
+      }
+    }
+
+    return ImmutableList.of(upperBound);
   }
 
   private static Type get(javax.lang.model.type.WildcardType mirror) {
@@ -316,28 +265,6 @@ public final class Types {
     }
   }
 
-  private static Type get(javax.lang.model.type.IntersectionType mirror) {
-    final Type[] bounds = FluentIterable.from(mirror.getBounds())
-        .transform(FOR_TYPE_MIRROR)
-        .filter(Predicates.not(Predicates.<Type>equalTo(ClassName.OBJECT)))
-        .toArray(Type.class);
-    return new IntersectionType() {
-      @Override public Type[] getBounds() {
-        return bounds;
-      }
-      @Override public int hashCode() {
-        return Arrays.hashCode(bounds);
-      }
-      @Override public boolean equals(Object o) {
-        return o instanceof IntersectionType
-            && Arrays.equals(bounds, ((IntersectionType) o).getBounds());
-      }
-      @Override public String toString() {
-        return typeToString(this);
-      }
-    };
-  }
-
   private static void checkNotPrimitive(Type type) {
     checkNotNull(type, "type cannot be primitive.");
     checkArgument(!(type instanceof Class<?>) || !((Class<?>) type).isPrimitive(),
@@ -363,5 +290,49 @@ public final class Types {
     } else {
       return null;
     }
+  }
+
+  /**
+   * Implement reflective types using a dynamic proxy so we can compile on both Java 7 and Java 8,
+   * even though {@link TypeVariable} gained new methods in Java 8 that won't compile on Java 7.
+   */
+  @SuppressWarnings("unchecked")
+  private static <T extends Type> T newType(
+      final Class<T> type, final Map<String, Object> accessors, final int hashCode) {
+    ClassLoader classLoader = Types.class.getClassLoader();
+    Class[] classes = {type};
+    return (T) Proxy.newProxyInstance(classLoader, classes, new InvocationHandler() {
+      @Override public Object invoke(Object o, Method method, Object[] objects) throws Throwable {
+        switch (method.getName()) {
+          case "equals":
+            Object other = objects[0];
+            if (!type.isInstance(other)) return false;
+            for (Map.Entry<String, Object> entry : accessors.entrySet()) {
+              Object otherProperty = other.getClass().getMethod(entry.getKey()).invoke(other);
+              if (!equal(otherProperty, entry.getValue())) return false;
+            }
+            return true;
+
+          case "hashCode":
+            return hashCode;
+
+          case "toString":
+            return typeToString((Type) o);
+
+          default:
+            Object result = accessors.get(method.getName());
+            if (result == null && !accessors.containsKey(method.getName())) {
+              throw new UnsupportedOperationException(method.getName());
+            }
+            return result instanceof Object[] ? ((Object[]) result).clone() : result;
+        }
+      }
+
+      boolean equal(Object a, Object b) {
+        if (a == null) return b == null;
+        if (a instanceof Object[]) return Arrays.equals((Object[]) a, (Object[]) b);
+        return a.equals(b);
+      }
+    });
   }
 }
