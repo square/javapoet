@@ -85,15 +85,15 @@ public final class TypeSpec {
   }
 
   public static Builder classBuilder(String name) {
-    return new Builder(Kind.CLASS, checkNotNull(name), null);
+    return new Builder(Kind.CLASS, checkNotNull(name, "name == null"), null);
   }
 
   public static Builder interfaceBuilder(String name) {
-    return new Builder(Kind.INTERFACE, checkNotNull(name), null);
+    return new Builder(Kind.INTERFACE, checkNotNull(name, "name == null"), null);
   }
 
   public static Builder enumBuilder(String name) {
-    return new Builder(Kind.ENUM, checkNotNull(name), null);
+    return new Builder(Kind.ENUM, checkNotNull(name, "name == null"), null);
   }
 
   public static Builder anonymousClassBuilder(String typeArgumentsFormat, Object... args) {
@@ -309,13 +309,13 @@ public final class TypeSpec {
     }
 
     public Builder addJavadoc(String format, Object... args) {
-      checkState(anonymousTypeArguments == null);
+      checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
       javadoc.add(format, args);
       return this;
     }
 
     public Builder addAnnotation(AnnotationSpec annotationSpec) {
-      checkState(anonymousTypeArguments == null);
+      checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
       this.annotations.add(annotationSpec);
       return this;
     }
@@ -325,13 +325,13 @@ public final class TypeSpec {
     }
 
     public Builder addModifiers(Modifier... modifiers) {
-      checkState(anonymousTypeArguments == null);
+      checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
       Collections.addAll(this.modifiers, modifiers);
       return this;
     }
 
     public Builder addTypeVariable(TypeVariable<?> typeVariable) {
-      checkState(anonymousTypeArguments == null);
+      checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
       typeVariables.add(typeVariable);
       return this;
     }
