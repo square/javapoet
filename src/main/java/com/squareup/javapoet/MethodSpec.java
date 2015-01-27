@@ -15,8 +15,6 @@
  */
 package com.squareup.javapoet;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
@@ -29,10 +27,9 @@ import java.util.Set;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Iterables.getLast;
+import static com.squareup.javapoet.Util.checkArgument;
+import static com.squareup.javapoet.Util.checkNotNull;
+import static com.squareup.javapoet.Util.checkState;
 
 /** A generated constructor or method declaration. */
 public final class MethodSpec {
@@ -40,13 +37,13 @@ public final class MethodSpec {
 
   public final String name;
   public final CodeBlock javadoc;
-  public final ImmutableList<AnnotationSpec> annotations;
-  public final ImmutableSet<Modifier> modifiers;
-  public final ImmutableList<TypeVariable<?>> typeVariables;
+  public final List<AnnotationSpec> annotations;
+  public final Set<Modifier> modifiers;
+  public final List<TypeVariable<?>> typeVariables;
   public final Type returnType;
-  public final ImmutableList<ParameterSpec> parameters;
+  public final List<ParameterSpec> parameters;
   public final boolean varargs;
-  public final ImmutableList<Type> exceptions;
+  public final List<Type> exceptions;
   public final CodeBlock code;
 
   private MethodSpec(Builder builder) {
@@ -58,18 +55,19 @@ public final class MethodSpec {
 
     this.name = checkNotNull(builder.name, "name == null");
     this.javadoc = builder.javadoc.build();
-    this.annotations = ImmutableList.copyOf(builder.annotations);
-    this.modifiers = ImmutableSet.copyOf(builder.modifiers);
-    this.typeVariables = ImmutableList.copyOf(builder.typeVariables);
+    this.annotations = Util.immutableList(builder.annotations);
+    this.modifiers = Util.immutableSet(builder.modifiers);
+    this.typeVariables = Util.immutableList(builder.typeVariables);
     this.returnType = builder.returnType;
-    this.parameters = ImmutableList.copyOf(builder.parameters);
+    this.parameters = Util.immutableList(builder.parameters);
     this.varargs = builder.varargs;
-    this.exceptions = ImmutableList.copyOf(builder.exceptions);
+    this.exceptions = Util.immutableList(builder.exceptions);
     this.code = code;
   }
 
   private boolean lastParameterIsArray(List<ParameterSpec> parameters) {
-    return !parameters.isEmpty() && Types.arrayComponent(getLast(parameters).type) != null;
+    return !parameters.isEmpty()
+        && Types.arrayComponent(parameters.get(parameters.size() - 1).type) != null;
   }
 
   void emit(CodeWriter codeWriter, String enclosingName, Set<Modifier> implicitModifiers)
@@ -137,7 +135,7 @@ public final class MethodSpec {
     StringWriter out = new StringWriter();
     try {
       CodeWriter codeWriter = new CodeWriter(out);
-      emit(codeWriter, "Constructor", ImmutableSet.<Modifier>of());
+      emit(codeWriter, "Constructor", Collections.<Modifier>emptySet());
       return out.toString();
     } catch (IOException e) {
       throw new AssertionError();

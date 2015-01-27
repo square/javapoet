@@ -15,33 +15,25 @@
  */
 package com.squareup.javapoet;
 
-import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.collect.Iterables.getOnlyElement;
+import static com.squareup.javapoet.Util.checkNotNull;
 
 /** A generated annotation on a declaration. */
 public final class AnnotationSpec {
   public final Type type;
-  public final ImmutableMultimap<String, CodeBlock> members;
+  public final Map<String, List<CodeBlock>> members;
 
   private AnnotationSpec(Builder builder) {
     this.type = builder.type;
-    this.members = ImmutableListMultimap.copyOf(builder.members);
+    this.members = Util.immutableMultimap(builder.members);
   }
 
   void emit(CodeWriter codeWriter, boolean inline) throws IOException {
@@ -50,10 +42,10 @@ public final class AnnotationSpec {
     if (members.isEmpty()) {
       // @Singleton
       codeWriter.emit("@$T", type);
-    } else if (members.keySet().equals(ImmutableSet.of("value"))) {
+    } else if (members.size() == 1 && members.containsKey("value")) {
       // @Named("foo")
       codeWriter.emit("@$T(", type);
-      emitAnnotationValue(codeWriter, whitespace, memberSeparator, members.values());
+      emitAnnotationValues(codeWriter, whitespace, memberSeparator, members.get("value"));
       codeWriter.emit(")");
     } else {
       // Inline:
@@ -66,11 +58,11 @@ public final class AnnotationSpec {
       //   )
       codeWriter.emit("@$T(" + whitespace, type);
       codeWriter.indent(2);
-      for (Iterator<Map.Entry<String, Collection<CodeBlock>>> i
-          = members.asMap().entrySet().iterator(); i.hasNext();) {
-        Map.Entry<String, Collection<CodeBlock>> entry = i.next();
+      for (Iterator<Map.Entry<String, List<CodeBlock>>> i
+          = members.entrySet().iterator(); i.hasNext();) {
+        Map.Entry<String, List<CodeBlock>> entry = i.next();
         codeWriter.emit("$L = ", entry.getKey());
-        emitAnnotationValue(codeWriter, whitespace, memberSeparator, entry.getValue());
+        emitAnnotationValues(codeWriter, whitespace, memberSeparator, entry.getValue());
         if (i.hasNext()) codeWriter.emit(memberSeparator);
       }
       codeWriter.unindent(2);
@@ -78,11 +70,11 @@ public final class AnnotationSpec {
     }
   }
 
-  private void emitAnnotationValue(CodeWriter codeWriter, String whitespace, String memberSeparator,
-      Collection<CodeBlock> value) throws IOException {
-    if (value.size() == 1) {
+  private void emitAnnotationValues(CodeWriter codeWriter, String whitespace,
+      String memberSeparator, List<CodeBlock> values) throws IOException {
+    if (values.size() == 1) {
       codeWriter.indent(2);
-      codeWriter.emit(getOnlyElement(value));
+      codeWriter.emit(values.get(0));
       codeWriter.unindent(2);
       return;
     }
@@ -90,7 +82,7 @@ public final class AnnotationSpec {
     codeWriter.emit("{" + whitespace);
     codeWriter.indent(2);
     boolean first = true;
-    for (CodeBlock codeBlock : value) {
+    for (CodeBlock codeBlock : values) {
       if (!first) codeWriter.emit(memberSeparator);
       codeWriter.emit(codeBlock);
       first = false;
@@ -127,28 +119,28 @@ public final class AnnotationSpec {
 
   public static final class Builder {
     private final Type type;
-    private final Multimap<String, CodeBlock> members = Multimaps.newListMultimap(
-        new TreeMap<String, Collection<CodeBlock>>(), AnnotationSpec.<CodeBlock>listSupplier());
+    private final Map<String, List<CodeBlock>> members = new LinkedHashMap<>();
 
     private Builder(Type type) {
       this.type = type;
     }
 
     public Builder addMember(String name, String format, Object... args) {
-      members.put(name, CodeBlock.builder().add(format, args).build());
+      return addMember(name, CodeBlock.builder().add(format, args).build());
+    }
+
+    public Builder addMember(String name, CodeBlock codeBlock) {
+      List<CodeBlock> values = members.get(name);
+      if (values == null) {
+        values = new ArrayList<>();
+        members.put(name, values);
+      }
+      values.add(codeBlock);
       return this;
     }
 
     public AnnotationSpec build() {
       return new AnnotationSpec(this);
     }
-  }
-
-  private static <T> Supplier<List<T>> listSupplier() {
-    return new Supplier<List<T>>() {
-      @Override public List<T> get() {
-        return new ArrayList<>();
-      }
-    };
   }
 }

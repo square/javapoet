@@ -15,13 +15,6 @@
  */
 package com.squareup.javapoet;
 
-import com.google.common.base.Ascii;
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,12 +23,11 @@ import java.util.Map;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.squareup.javapoet.Util.checkArgument;
+import static com.squareup.javapoet.Util.checkNotNull;
 import static javax.lang.model.element.NestingKind.MEMBER;
 import static javax.lang.model.element.NestingKind.TOP_LEVEL;
 
@@ -44,17 +36,17 @@ public final class ClassName implements Type, Comparable<ClassName> {
   public static final ClassName OBJECT = ClassName.get(Object.class);
 
   /** From top to bottom. This will be ["java.util", "Map", "Entry"] for {@link Map.Entry}. */
-  final ImmutableList<String> names;
+  final List<String> names;
   final String canonicalName;
 
   private ClassName(List<String> names) {
     for (int i = 1; i < names.size(); i++) {
       checkArgument(SourceVersion.isName(names.get(i)), "part '%s' is keyword", names.get(i));
     }
-    this.names = ImmutableList.copyOf(names);
-    this.canonicalName = Joiner.on(".").join(names.get(0).isEmpty()
-        ? names.subList(1, names.size())
-        : names);
+    this.names = Util.immutableList(names);
+    this.canonicalName = names.get(0).isEmpty()
+        ? Util.join(".", names.subList(1, names.size()))
+        : Util.join(".", names);
   }
 
   /** Returns the package name, like {@code "java.util"} for {@code Map.Entry}. */
@@ -77,13 +69,13 @@ public final class ClassName implements Type, Comparable<ClassName> {
    */
   public ClassName nestedClass(String name) {
     checkNotNull(name, "name == null");
-    return new ClassName(new ImmutableList.Builder<String>()
-        .addAll(names)
-        .add(name)
-        .build());
+    List<String> result = new ArrayList<>(names.size() + 1);
+    result.addAll(names);
+    result.add(name);
+    return new ClassName(result);
   }
 
-  public ImmutableList<String> simpleNames() {
+  public List<String> simpleNames() {
     return names.subList(1, names.size());
   }
 
@@ -93,15 +85,14 @@ public final class ClassName implements Type, Comparable<ClassName> {
    * it is equivalent to {@code get(packageName(), name)}.
    */
   public ClassName peerClass(String name) {
-    return new ClassName(new ImmutableList.Builder<String>()
-        .addAll(names.subList(0, names.size() - 1))
-        .add(name)
-        .build());
+    List<String> result = new ArrayList<>(names);
+    result.set(result.size() - 1, name);
+    return new ClassName(result);
   }
 
   /** Returns the simple name of this class, like {@code "Entry"} for {@link Map.Entry}. */
   public String simpleName() {
-    return Iterables.getLast(names);
+    return names.get(names.size() - 1);
   }
 
   public static ClassName get(Class<?> clazz) {
@@ -131,15 +122,15 @@ public final class ClassName implements Type, Comparable<ClassName> {
 
     // Add the package name, like "java.util.concurrent", or "" for no package.
     int p = 0;
-    while (p < classNameString.length() && Ascii.isLowerCase(classNameString.charAt(p))) {
+    while (p < classNameString.length() && Util.isLowerCase(classNameString.charAt(p))) {
       p = classNameString.indexOf('.', p) + 1;
       checkArgument(p != 0, "couldn't make a guess for %s", classNameString);
     }
     names.add(p != 0 ? classNameString.substring(0, p - 1) : "");
 
     // Add the class names, like "Map" and "Entry".
-    for (String part : Splitter.on('.').split(classNameString.substring(p))) {
-      checkArgument(!part.isEmpty() && Ascii.isUpperCase(part.charAt(0)),
+    for (String part : classNameString.substring(p).split("\\.", -1)) {
+      checkArgument(!part.isEmpty() && Util.isUpperCase(part.charAt(0)),
           "couldn't make a guess for %s", classNameString);
       names.add(part);
     }
@@ -153,22 +144,20 @@ public final class ClassName implements Type, Comparable<ClassName> {
    * {@code "java.util"} and simple names {@code "Map"}, {@code "Entry"} yields {@link Map.Entry}.
    */
   public static ClassName get(String packageName, String simpleName, String... simpleNames) {
-    return new ClassName(new ImmutableList.Builder<String>()
-        .add(packageName)
-        .add(simpleName)
-        .add(simpleNames)
-        .build());
+    List<String> result = new ArrayList<>();
+    result.add(packageName);
+    result.add(simpleName);
+    Collections.addAll(result, simpleNames);
+    return new ClassName(result);
   }
-
-  private static final ImmutableSet<NestingKind> ACCEPTABLE_NESTING_KINDS =
-      Sets.immutableEnumSet(TOP_LEVEL, MEMBER);
 
   /** Returns the class name for {@code element}. */
   public static ClassName get(TypeElement element) {
     checkNotNull(element, "element == null");
     List<String> names = new ArrayList<>();
     for (Element e = element; isClassOrInterface(e); e = e.getEnclosingElement()) {
-      checkArgument(ACCEPTABLE_NESTING_KINDS.contains(element.getNestingKind()));
+      checkArgument(element.getNestingKind() == TOP_LEVEL || element.getNestingKind() == MEMBER,
+          "unexpected type testing");
       names.add(e.getSimpleName().toString());
     }
     names.add(getPackage(element).getQualifiedName().toString());

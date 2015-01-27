@@ -15,12 +15,12 @@
  */
 package com.squareup.javapoet;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
 import javax.lang.model.element.Modifier;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.squareup.javapoet.Util.checkNotNull;
 
 /** A Java file containing a single top level class. */
 public final class JavaFile {
@@ -52,7 +52,7 @@ public final class JavaFile {
     // First pass: emit the entire class, just to collect the types we'll need to import.
     CodeWriter importsCollector = new CodeWriter(NULL_APPENDABLE, indent);
     emit(importsCollector);
-    ImmutableMap<ClassName, String> suggestedImports = importsCollector.suggestedImports();
+    Map<ClassName, String> suggestedImports = importsCollector.suggestedImports();
 
     // Second pass: write the code, taking advantage of the imports.
     CodeWriter codeWriter = new CodeWriter(out, indent, suggestedImports);
@@ -82,7 +82,7 @@ public final class JavaFile {
       codeWriter.emit("\n");
     }
 
-    typeSpec.emit(codeWriter, null, ImmutableSet.<Modifier>of());
+    typeSpec.emit(codeWriter, null, Collections.<Modifier>emptySet());
 
     codeWriter.popPackage();
   }

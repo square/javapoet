@@ -15,12 +15,6 @@
  */
 package com.squareup.javapoet;
 
-import com.google.common.base.Ascii;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
 import java.io.IOException;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
@@ -28,21 +22,24 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Formatter;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.type.TypeMirror;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import static com.squareup.javapoet.Util.checkArgument;
+import static com.squareup.javapoet.Util.checkNotNull;
+import static com.squareup.javapoet.Util.checkState;
 
 /**
  * Converts a {@link JavaFile} to a string suitable to both human- and javac-consumption. This
@@ -57,7 +54,7 @@ final class CodeWriter {
   private boolean comment = false;
   private String packageName;
   private final List<TypeSpec> typeSpecStack = new ArrayList<>();
-  private final ImmutableMap<ClassName, String> importedTypes;
+  private final Map<ClassName, String> importedTypes;
   private final Set<ClassName> importableTypes = new LinkedHashSet<>();
   private boolean trailingNewline;
 
@@ -73,16 +70,16 @@ final class CodeWriter {
   }
 
   public CodeWriter(Appendable out, String indent) {
-    this(out, indent, ImmutableMap.<ClassName, String>of());
+    this(out, indent, Collections.<ClassName, String>emptyMap());
   }
 
-  public CodeWriter(Appendable out, String indent, ImmutableMap<ClassName, String> importedTypes) {
+  public CodeWriter(Appendable out, String indent, Map<ClassName, String> importedTypes) {
     this.out = checkNotNull(out, "out == null");
     this.indent = checkNotNull(indent, "indent == null");
     this.importedTypes = checkNotNull(importedTypes, "importedTypes == null");
   }
 
-  public ImmutableMap<ClassName, String> importedTypes() {
+  public Map<ClassName, String> importedTypes() {
     return importedTypes;
   }
 
@@ -151,8 +148,7 @@ final class CodeWriter {
     emit(" */\n");
   }
 
-  public void emitAnnotations(ImmutableList<AnnotationSpec> annotations, boolean inline)
-      throws IOException {
+  public void emitAnnotations(List<AnnotationSpec> annotations, boolean inline) throws IOException {
     for (AnnotationSpec annotationSpec : annotations) {
       annotationSpec.emit(this, inline);
       emit(inline ? " " : "\n");
@@ -168,20 +164,20 @@ final class CodeWriter {
     if (modifiers.isEmpty()) return;
     for (Modifier modifier : EnumSet.copyOf(modifiers)) {
       if (implicitModifiers.contains(modifier)) continue;
-      emitAndIndent(Ascii.toLowerCase(modifier.name()));
+      emitAndIndent(modifier.name().toLowerCase(Locale.US));
       emitAndIndent(" ");
     }
   }
 
-  public void emitModifiers(ImmutableSet<Modifier> modifiers) throws IOException {
-    emitModifiers(modifiers, ImmutableSet.<Modifier>of());
+  public void emitModifiers(Set<Modifier> modifiers) throws IOException {
+    emitModifiers(modifiers, Collections.<Modifier>emptySet());
   }
 
   /**
    * Emit type variables with their bounds. This should only be used when declaring type variables;
    * everywhere else bounds are omitted.
    */
-  public void emitTypeVariables(ImmutableList<TypeVariable<?>> typeVariables) throws IOException {
+  public void emitTypeVariables(List<TypeVariable<?>> typeVariables) throws IOException {
     if (typeVariables.isEmpty()) return;
 
     emit("<");
@@ -264,7 +260,7 @@ final class CodeWriter {
   private void emitLiteral(Object o) throws IOException {
     if (o instanceof TypeSpec) {
       TypeSpec typeSpec = (TypeSpec) o;
-      typeSpec.emit(this, null, ImmutableSet.<Modifier>of());
+      typeSpec.emit(this, null, Collections.<Modifier>emptySet());
     } else if (o instanceof AnnotationSpec) {
       AnnotationSpec annotationSpec = (AnnotationSpec) o;
       annotationSpec.emit(this, true);
@@ -305,7 +301,7 @@ final class CodeWriter {
       if (superBounds.length == 1) {
         return emit("? super $T", superBounds[0]);
       }
-      checkArgument(extendsBounds.length == 1);
+      checkArgument(extendsBounds.length == 1, "unexpected extends bounds: %s", type);
       return isObject(extendsBounds[0])
           ? emit("?")
           : emit("? extends $T", extendsBounds[0]);
@@ -358,13 +354,13 @@ final class CodeWriter {
     }
 
     // Look for the longest common prefix, which we can omit.
-    ImmutableList<String> classNames = className.simpleNames();
+    List<String> classNames = className.simpleNames();
     int prefixLength = commonPrefixLength(classNames);
     if (prefixLength == classNames.size()) {
       return className.simpleName(); // Special case: a class referring to itself!
     }
 
-    return Joiner.on('.').join(classNames.subList(prefixLength, classNames.size()));
+    return Util.join(".", classNames.subList(prefixLength, classNames.size()));
   }
 
   /**
@@ -387,7 +383,7 @@ final class CodeWriter {
    * List}, 1 for {@code AbstractMap}, 1 for {@code AbstractMap.SimpleImmutableEntry}, and 2 for
    * {@code AbstractMap.SimpleEntry} itself.
    */
-  private int commonPrefixLength(ImmutableList<String> classNames) {
+  private int commonPrefixLength(List<String> classNames) {
     int size = Math.min(classNames.size(), typeSpecStack.size());
     for (int i = 0; i < size; i++) {
       String a = classNames.get(i);
@@ -470,7 +466,7 @@ final class CodeWriter {
    * Returns the types that should have been imported for this code. If there were any simple name
    * collisions, that type's first use is imported.
    */
-  ImmutableMap<ClassName, String> suggestedImports() {
+  Map<ClassName, String> suggestedImports() {
     // Find the simple names that can be imported, and the classes that they target.
     Map<String, ClassName> simpleNameToType = new LinkedHashMap<>();
     for (Type type : importableTypes) {
@@ -481,8 +477,7 @@ final class CodeWriter {
     }
 
     // Invert the map.
-    ImmutableSortedMap.Builder<ClassName, String> typeToSimpleName
-        = ImmutableSortedMap.naturalOrder();
+    TreeMap<ClassName, String> typeToSimpleName = new TreeMap<>();
     for (Map.Entry<String, ClassName> entry : simpleNameToType.entrySet()) {
       typeToSimpleName.put(entry.getValue(), entry.getKey());
     }
@@ -490,7 +485,7 @@ final class CodeWriter {
     // TODO(jwilson): omit imports from java.lang, unless their simple names is also present in the
     //     current class's package. (Yuck.)
 
-    return typeToSimpleName.build();
+    return typeToSimpleName;
   }
 
   /** Returns the string literal representing {@code data}, including wrapping quotes. */
