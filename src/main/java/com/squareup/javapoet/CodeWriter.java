@@ -68,6 +68,10 @@ final class CodeWriter {
    */
   int statementLine = -1;
 
+  CodeWriter(Appendable out) {
+    this(out, "  ");
+  }
+
   public CodeWriter(Appendable out, String indent) {
     this(out, indent, ImmutableMap.<ClassName, String>of());
   }
