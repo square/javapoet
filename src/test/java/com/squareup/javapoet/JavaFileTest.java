@@ -71,6 +71,48 @@ public final class JavaFileTest {
         + "}\n");
   }
 
+  @Test public void skipJavaLangImportsWithConflictingClassLast() throws Exception {
+    // Whatever is used first wins! In this case the Float in java.lang is imported.
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addField(ClassName.get("java.lang", "Float"), "litres")
+            .addField(ClassName.get("com.squareup.soda", "Float"), "beverage")
+            .build())
+        .skipJavaLangImports(true)
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  Float litres;\n"
+        + "\n"
+        + "  com.squareup.soda.Float beverage;\n" // Second 'Float' is fully qualified.
+        + "}\n");
+  }
+
+  @Test public void skipJavaLangImportsWithConflictingClassFirst() throws Exception {
+    // Whatever is used first wins! In this case the Float in com.squareup.soda is imported.
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addField(ClassName.get("com.squareup.soda", "Float"), "beverage")
+            .addField(ClassName.get("java.lang", "Float"), "litres")
+            .build())
+        .skipJavaLangImports(true)
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.soda.Float;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  Float beverage;\n"
+        + "\n"
+        + "  java.lang.Float litres;\n" // Second 'Float' is fully qualified.
+        + "}\n");
+  }
+
   @Test public void defaultPackage() throws Exception {
     String source = JavaFile.builder("",
         TypeSpec.classBuilder("HelloWorld")
