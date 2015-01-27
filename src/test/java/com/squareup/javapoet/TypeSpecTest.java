@@ -1295,4 +1295,23 @@ public final class TypeSpecTest {
         + "  }\n"
         + "}\n");
   }
+
+  @Test public void multilineStrings() throws Exception {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addField(FieldSpec.builder(String.class, "toppings")
+            .initializer("$S", "shell\nbeef\nlettuce\ncheese\n")
+            .build())
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.String;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  String toppings = \"shell\\n\"\n"
+        + "      + \"beef\\n\"\n"
+        + "      + \"lettuce\\n\"\n"
+        + "      + \"cheese\\n\";\n"
+        + "}\n");
+  }
 }

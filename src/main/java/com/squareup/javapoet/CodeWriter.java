@@ -494,7 +494,7 @@ final class CodeWriter {
   }
 
   /** Returns the string literal representing {@code data}, including wrapping quotes. */
-  static String stringLiteral(String value) {
+  String stringLiteral(String value) {
     StringBuilder result = new StringBuilder();
     result.append('"');
     for (int i = 0; i < value.length(); i++) {
@@ -514,6 +514,9 @@ final class CodeWriter {
           break;
         case '\n':
           result.append("\\n");
+          if (i + 1 < value.length()) {
+            result.append("\"\n").append(indent).append(indent).append("+ \"");
+          }
           break;
         case '\f':
           result.append("\\f");
