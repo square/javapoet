@@ -39,11 +39,13 @@ public final class JavaFile {
   public final CodeBlock fileComment;
   public final String packageName;
   public final TypeSpec typeSpec;
+  public final boolean skipJavaLangImports;
 
   private JavaFile(Builder builder) {
     this.fileComment = builder.fileComment.build();
     this.packageName = builder.packageName;
     this.typeSpec = builder.typeSpec;
+    this.skipJavaLangImports = builder.skipJavaLangImports;
   }
 
   public void emit(Appendable out, String indent) throws IOException {
@@ -69,10 +71,14 @@ public final class JavaFile {
       codeWriter.emit("\n");
     }
 
-    if (!codeWriter.importedTypes().isEmpty()) {
-      for (ClassName className : codeWriter.importedTypes().keySet()) {
-        codeWriter.emit("import $L;\n", className);
-      }
+    int importedTypesCount = 0;
+    for (ClassName className : codeWriter.importedTypes().keySet()) {
+      if (skipJavaLangImports && className.packageName().equals("java.lang")) continue;
+      codeWriter.emit("import $L;\n", className);
+      importedTypesCount++;
+    }
+
+    if (importedTypesCount > 0) {
       codeWriter.emit("\n");
     }
 
@@ -101,6 +107,7 @@ public final class JavaFile {
     private final String packageName;
     private final TypeSpec typeSpec;
     private CodeBlock.Builder fileComment = CodeBlock.builder();
+    private boolean skipJavaLangImports;
 
     private Builder(String packageName, TypeSpec typeSpec) {
       this.packageName = packageName;
@@ -109,6 +116,19 @@ public final class JavaFile {
 
     public Builder addFileComment(String format, Object... args) {
       this.fileComment.add(format, args);
+      return this;
+    }
+
+    /**
+     * Call this to omit imports for classes in {@code java.lang}, such as {@code java.lang.String}.
+     *
+     * <p>By default, JavaPoet explicitly imports types in {@code java.lang} to defend against
+     * naming conflicts. Suppose an (ill-advised) class is named {@code com.example.String}. When
+     * {@code java.lang} imports are skipped, generated code in {@code com.example} that references
+     * {@code java.lang.String} will get {@code com.example.String} instead.
+     */
+    public Builder skipJavaLangImports(boolean skipJavaLangImports) {
+      this.skipJavaLangImports = skipJavaLangImports;
       return this;
     }
 
