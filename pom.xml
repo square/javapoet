@@ -22,7 +22,6 @@
 
     <java.version>1.7</java.version>
     <junit.version>4.12</junit.version>
-    <guava.version>18.0</guava.version>
     <truth.version>1.0-SNAPSHOT</truth.version>
     <compile-testing.version>1.0-SNAPSHOT</compile-testing.version>
   </properties>
@@ -52,11 +51,6 @@
   </organization>
 
   <dependencies>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>${guava.version}</version>
-    </dependency>
     <dependency>
       <groupId>com.google.truth</groupId>
       <artifactId>truth</artifactId>

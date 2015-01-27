@@ -15,7 +15,6 @@
  */
 package com.squareup.javapoet;
 
-import com.google.common.collect.Iterables;
 import com.google.common.jimfs.Jimfs;
 import java.io.File;
 import java.io.IOException;
@@ -41,7 +40,7 @@ public final class JavaPoetTest {
 
   // Used for testing java.nio.file Path behavior.
   private final FileSystem fs = Jimfs.newFileSystem();
-  private final Path fsRoot = Iterables.getOnlyElement(fs.getRootDirectories());
+  private final Path fsRoot = fs.getRootDirectories().iterator().next();
 
   // Used for testing annotation processor Filer behavior.
   private final TestFiler filer = new TestFiler(fs, fsRoot);

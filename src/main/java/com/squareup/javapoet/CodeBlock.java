@@ -21,8 +21,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
+import static com.squareup.javapoet.Util.checkArgument;
+import static com.squareup.javapoet.Util.checkState;
 
 /**
  * A fragment of a .java file, potentially containing declarations, statements, and documentation.
@@ -60,8 +60,8 @@ public final class CodeBlock {
   final List<Object> args;
 
   private CodeBlock(Builder builder) {
-    this.formatParts = Collections.unmodifiableList(new ArrayList<>(builder.formatParts));
-    this.args = Collections.unmodifiableList(new ArrayList<>(builder.args));
+    this.formatParts = Util.immutableList(builder.formatParts);
+    this.args = Util.immutableList(builder.args);
   }
 
   public boolean isEmpty() {

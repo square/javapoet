@@ -15,7 +15,6 @@
  */
 package com.squareup.javapoet;
 
-import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -28,7 +27,7 @@ import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
 import javax.tools.JavaFileObject;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static com.squareup.javapoet.Util.checkArgument;
 
 /** Writes generated types to a filesystem using the standard directory structure. */
 public final class JavaPoet {
@@ -79,8 +78,9 @@ public final class JavaPoet {
       String fileName = javaFile.packageName.isEmpty()
           ? javaFile.typeSpec.name
           : javaFile.packageName + "." + javaFile.typeSpec.name;
+      List<Element> originatingElements = javaFile.typeSpec.originatingElements;
       JavaFileObject filerSourceFile = filer.createSourceFile(fileName,
-          Iterables.toArray(javaFile.typeSpec.originatingElements, Element.class));
+          originatingElements.toArray(new Element[originatingElements.size()]));
       try (Writer writer = filerSourceFile.openWriter()) {
         javaFile.emit(writer, indent);
       } catch (Exception e) {

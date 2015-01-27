@@ -15,30 +15,26 @@
  */
 package com.squareup.javapoet;
 
-import com.google.common.base.Ascii;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.collect.Iterables.getOnlyElement;
+import static com.squareup.javapoet.Util.checkArgument;
+import static com.squareup.javapoet.Util.checkNotNull;
+import static com.squareup.javapoet.Util.checkState;
 
 /** A generated class, interface, or enum declaration. */
 public final class TypeSpec {
@@ -46,38 +42,38 @@ public final class TypeSpec {
   public final String name;
   public final CodeBlock anonymousTypeArguments;
   public final CodeBlock javadoc;
-  public final ImmutableList<AnnotationSpec> annotations;
-  public final ImmutableSet<Modifier> modifiers;
-  public final ImmutableList<TypeVariable<?>> typeVariables;
+  public final List<AnnotationSpec> annotations;
+  public final Set<Modifier> modifiers;
+  public final List<TypeVariable<?>> typeVariables;
   public final Type superclass;
-  public final ImmutableList<Type> superinterfaces;
-  public final ImmutableMap<String, TypeSpec> enumConstants;
-  public final ImmutableList<FieldSpec> fieldSpecs;
-  public final ImmutableList<MethodSpec> methodSpecs;
-  public final ImmutableList<TypeSpec> typeSpecs;
-  public final ImmutableList<Element> originatingElements;
+  public final List<Type> superinterfaces;
+  public final Map<String, TypeSpec> enumConstants;
+  public final List<FieldSpec> fieldSpecs;
+  public final List<MethodSpec> methodSpecs;
+  public final List<TypeSpec> typeSpecs;
+  public final List<Element> originatingElements;
 
   private TypeSpec(Builder builder) {
     this.kind = builder.kind;
     this.name = builder.name;
     this.anonymousTypeArguments = builder.anonymousTypeArguments;
     this.javadoc = builder.javadoc.build();
-    this.annotations = ImmutableList.copyOf(builder.annotations);
-    this.modifiers = ImmutableSet.copyOf(builder.modifiers);
-    this.typeVariables = ImmutableList.copyOf(builder.typeVariables);
+    this.annotations = Util.immutableList(builder.annotations);
+    this.modifiers = Util.immutableSet(builder.modifiers);
+    this.typeVariables = Util.immutableList(builder.typeVariables);
     this.superclass = builder.superclass;
-    this.superinterfaces = ImmutableList.copyOf(builder.superinterfaces);
-    this.enumConstants = ImmutableMap.copyOf(builder.enumConstants);
-    this.fieldSpecs = ImmutableList.copyOf(builder.fieldSpecs);
-    this.methodSpecs = ImmutableList.copyOf(builder.methodSpecs);
-    this.typeSpecs = ImmutableList.copyOf(builder.typeSpecs);
+    this.superinterfaces = Util.immutableList(builder.superinterfaces);
+    this.enumConstants = Util.immutableMap(builder.enumConstants);
+    this.fieldSpecs = Util.immutableList(builder.fieldSpecs);
+    this.methodSpecs = Util.immutableList(builder.methodSpecs);
+    this.typeSpecs = Util.immutableList(builder.typeSpecs);
 
-    ImmutableList.Builder<Element> originatingElementsBuilder = ImmutableList.builder();
-    originatingElementsBuilder.addAll(builder.originatingElements);
+    List<Element> originatingElementsMutable = new ArrayList<>();
+    originatingElementsMutable.addAll(builder.originatingElements);
     for (TypeSpec typeSpec : builder.typeSpecs) {
-      originatingElementsBuilder.addAll(typeSpec.originatingElements);
+      originatingElementsMutable.addAll(typeSpec.originatingElements);
     }
-    this.originatingElements = originatingElementsBuilder.build();
+    this.originatingElements = Util.immutableList(originatingElementsMutable);
   }
 
   public boolean hasModifier(Modifier modifier) {
@@ -122,25 +118,26 @@ public final class TypeSpec {
         }
         codeWriter.emit(" {\n");
       } else if (anonymousTypeArguments != null) {
-        codeWriter.emit("new $T(", getOnlyElement(superinterfaces, superclass));
+        Type supertype = !superinterfaces.isEmpty() ? superinterfaces.get(0) : superclass;
+        codeWriter.emit("new $T(", supertype);
         codeWriter.emit(anonymousTypeArguments);
         codeWriter.emit(") {\n");
       } else {
         codeWriter.emitJavadoc(javadoc);
         codeWriter.emitAnnotations(annotations, false);
-        codeWriter.emitModifiers(modifiers, Sets.union(implicitModifiers, kind.asMemberModifiers));
-        codeWriter.emit("$L $L", Ascii.toLowerCase(kind.name()), name);
+        codeWriter.emitModifiers(modifiers, Util.union(implicitModifiers, kind.asMemberModifiers));
+        codeWriter.emit("$L $L", kind.name().toLowerCase(Locale.US), name);
         codeWriter.emitTypeVariables(typeVariables);
 
         List<Type> extendsTypes;
         List<Type> implementsTypes;
         if (kind == Kind.INTERFACE) {
           extendsTypes = superinterfaces;
-          implementsTypes = ImmutableList.of();
+          implementsTypes = Collections.emptyList();
         } else {
           extendsTypes = superclass.equals(ClassName.OBJECT)
-              ? ImmutableList.<Type>of()
-              : ImmutableList.of(superclass);
+              ? Collections.<Type>emptyList()
+              : Collections.singletonList(superclass);
           implementsTypes = superinterfaces;
         }
 
@@ -175,7 +172,7 @@ public final class TypeSpec {
         Map.Entry<String, TypeSpec> enumConstant = i.next();
         if (!firstMember) codeWriter.emit("\n");
         enumConstant.getValue()
-            .emit(codeWriter, enumConstant.getKey(), ImmutableSet.<Modifier>of());
+            .emit(codeWriter, enumConstant.getKey(), Collections.<Modifier>emptySet());
         firstMember = false;
         if (i.hasNext()) {
           codeWriter.emit(",\n");
@@ -241,7 +238,7 @@ public final class TypeSpec {
     StringWriter out = new StringWriter();
     try {
       CodeWriter codeWriter = new CodeWriter(out);
-      emit(codeWriter, null, ImmutableSet.<Modifier>of());
+      emit(codeWriter, null, Collections.<Modifier>emptySet());
       return out.toString();
     } catch (IOException e) {
       throw new AssertionError();
@@ -250,32 +247,32 @@ public final class TypeSpec {
 
   private enum Kind {
     CLASS(
-        ImmutableSet.<Modifier>of(),
-        ImmutableSet.<Modifier>of(),
-        ImmutableSet.<Modifier>of(),
-        ImmutableSet.<Modifier>of()),
+        Collections.<Modifier>emptySet(),
+        Collections.<Modifier>emptySet(),
+        Collections.<Modifier>emptySet(),
+        Collections.<Modifier>emptySet()),
 
     INTERFACE(
-        ImmutableSet.of(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL),
-        ImmutableSet.of(Modifier.PUBLIC, Modifier.ABSTRACT),
-        ImmutableSet.of(Modifier.PUBLIC, Modifier.STATIC),
-        ImmutableSet.of(Modifier.STATIC)),
+        Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)),
+        Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.ABSTRACT)),
+        Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC)),
+        Util.immutableSet(Arrays.asList(Modifier.STATIC))),
 
     ENUM(
-        ImmutableSet.<Modifier>of(),
-        ImmutableSet.<Modifier>of(),
-        ImmutableSet.<Modifier>of(),
-        ImmutableSet.of(Modifier.STATIC));
+        Collections.<Modifier>emptySet(),
+        Collections.<Modifier>emptySet(),
+        Collections.<Modifier>emptySet(),
+        Collections.singleton(Modifier.STATIC));
 
-    private final ImmutableSet<Modifier> implicitFieldModifiers;
-    private final ImmutableSet<Modifier> implicitMethodModifiers;
-    private final ImmutableSet<Modifier> implicitTypeModifiers;
-    private final ImmutableSet<Modifier> asMemberModifiers;
+    private final Set<Modifier> implicitFieldModifiers;
+    private final Set<Modifier> implicitMethodModifiers;
+    private final Set<Modifier> implicitTypeModifiers;
+    private final Set<Modifier> asMemberModifiers;
 
-    private Kind(ImmutableSet<Modifier> implicitFieldModifiers,
-        ImmutableSet<Modifier> implicitMethodModifiers,
-        ImmutableSet<Modifier> implicitTypeModifiers,
-        ImmutableSet<Modifier> asMemberModifiers) {
+    private Kind(Set<Modifier> implicitFieldModifiers,
+        Set<Modifier> implicitMethodModifiers,
+        Set<Modifier> implicitTypeModifiers,
+        Set<Modifier> asMemberModifiers) {
       this.implicitFieldModifiers = implicitFieldModifiers;
       this.implicitMethodModifiers = implicitMethodModifiers;
       this.implicitTypeModifiers = implicitTypeModifiers;

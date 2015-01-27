@@ -15,10 +15,6 @@
  */
 package com.squareup.javapoet;
 
-import com.google.common.base.Function;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationHandler;
@@ -30,6 +26,8 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,20 +42,13 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleTypeVisitor6;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.squareup.javapoet.Util.checkArgument;
+import static com.squareup.javapoet.Util.checkNotNull;
 
 /** Static methods for working with types. */
 // Forked from a similar class in Gson.
 public final class Types {
   private static final Type[] EMPTY_TYPE_ARRAY = new Type[] {};
-
-  private static final Function<TypeMirror, Type> FOR_TYPE_MIRROR =
-      new Function<TypeMirror, Type>() {
-        @Override public Type apply(TypeMirror input) {
-          return get(input);
-        }
-      };
 
   static final Type NULL = new Type() {
     @Override public String toString() {
@@ -89,8 +80,8 @@ public final class Types {
    * Returns a new parameterized type, applying {@code typeArguments} to {@code rawType} and
    * with no enclosing owner type.
    */
-  public static ParameterizedType parameterizedType(Type rawType, Iterable<Type> typeArguments) {
-    return parameterizedType(rawType, Iterables.toArray(typeArguments, Type.class));
+  public static ParameterizedType parameterizedType(Type rawType, Collection<Type> typeArguments) {
+    return parameterizedType(rawType, typeArguments.toArray(new Type[typeArguments.size()]));
   }
 
   /** Returns an array type whose elements are all instances of {@code componentType}. */
@@ -182,10 +173,15 @@ public final class Types {
   }
 
   private static Type get(DeclaredType t) {
-    return t.getTypeArguments().isEmpty()
-        ? ClassName.get((TypeElement) t.asElement())
-        : parameterizedType(ClassName.get((TypeElement) t.asElement()),
-            FluentIterable.from(t.getTypeArguments()).transform(FOR_TYPE_MIRROR));
+    List<? extends TypeMirror> typeArguments = t.getTypeArguments();
+    if (typeArguments.isEmpty()) {
+      return ClassName.get((TypeElement) t.asElement());
+    }
+    List<Type> typeParameters = new ArrayList<>();
+    for (TypeMirror typeMirror : typeArguments) {
+      typeParameters.add(get(typeMirror));
+    }
+    return parameterizedType(ClassName.get((TypeElement) t.asElement()), typeParameters);
   }
 
   private static TypeVariable<?> get(javax.lang.model.type.TypeVariable mirror) {
@@ -226,14 +222,14 @@ public final class Types {
     if (upperBound.getKind() == TypeKind.DECLARED) {
       TypeElement upperBoundElement = (TypeElement) ((DeclaredType) upperBound).asElement();
       if (upperBoundElement.getNestingKind() == NestingKind.ANONYMOUS) {
-        return ImmutableList.<TypeMirror>builder()
-            .add(upperBoundElement.getSuperclass())
-            .addAll(upperBoundElement.getInterfaces())
-            .build();
+        List<TypeMirror> result = new ArrayList<>();
+        result.add(upperBoundElement.getSuperclass());
+        result.addAll(upperBoundElement.getInterfaces());
+        return result;
       }
     }
 
-    return ImmutableList.of(upperBound);
+    return Collections.singletonList(upperBound);
   }
 
   private static Type get(javax.lang.model.type.WildcardType mirror) {

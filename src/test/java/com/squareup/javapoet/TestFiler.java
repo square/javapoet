@@ -15,9 +15,6 @@
  */
 package com.squareup.javapoet;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.SetMultimap;
 import com.sun.tools.javac.nio.JavacPathFileManager;
 import com.sun.tools.javac.nio.PathFileManager;
 import com.sun.tools.javac.util.Context;
@@ -25,6 +22,8 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
@@ -38,27 +37,26 @@ final class TestFiler implements Filer {
   private final String separator;
   private final Path fileSystemRoot;
   private final PathFileManager fileManager;
-  private final SetMultimap<Path, Element> originatingElementsMap;
+  private final Map<Path, Set<Element>> originatingElementsMap;
 
   public TestFiler(FileSystem fileSystem, Path fsRoot) {
     separator = fileSystem.getSeparator();
     fileSystemRoot = fsRoot;
     fileManager = new JavacPathFileManager(new Context(), false, UTF_8);
     fileManager.setDefaultFileSystem(fileSystem);
-    originatingElementsMap = LinkedHashMultimap.create();
+    originatingElementsMap = new LinkedHashMap<>();
   }
 
   public Set<Element> getOriginatingElements(Path path) {
     return originatingElementsMap.get(path);
   }
 
-  @Override
-  public JavaFileObject createSourceFile(CharSequence name, Element... originatingElements)
-      throws IOException {
-    String relative = name.toString().replace(".", separator) + ".java"; // Not robust, assumes well-formed.
+  @Override public JavaFileObject createSourceFile(
+      CharSequence name, Element... originatingElements) throws IOException {
+    String relative = name.toString().replace(".", separator) + ".java"; // Assumes well-formed.
     Path path = fileSystemRoot.resolve(relative);
-    originatingElementsMap.putAll(path, Arrays.asList(originatingElements));
-    return Iterables.getOnlyElement(fileManager.getJavaFileObjects(path));
+    originatingElementsMap.put(path, Util.immutableSet(Arrays.asList(originatingElements)));
+    return fileManager.getJavaFileObjects(path).iterator().next();
   }
 
   @Override public JavaFileObject createClassFile(CharSequence name, Element... originatingElements)
