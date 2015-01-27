@@ -76,14 +76,6 @@ final class Util {
     return result.toString();
   }
 
-  public static boolean isLowerCase(char c) {
-    return c >= 'a' && c <= 'z';
-  }
-
-  public static boolean isUpperCase(char c) {
-    return c >= 'A' && c <= 'Z';
-  }
-
   public static <T> Set<T> union(Set<T> a, Set<T> b) {
     Set<T> result = new LinkedHashSet<>();
     result.addAll(a);
