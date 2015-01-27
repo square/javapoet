@@ -77,9 +77,9 @@ final class CodeWriter {
   }
 
   public CodeWriter(Appendable out, String indent, ImmutableMap<ClassName, String> importedTypes) {
-    this.out = checkNotNull(out);
-    this.indent = checkNotNull(indent);
-    this.importedTypes = checkNotNull(importedTypes);
+    this.out = checkNotNull(out, "out == null");
+    this.indent = checkNotNull(indent, "indent == null");
+    this.importedTypes = checkNotNull(importedTypes, "importedTypes == null");
   }
 
   public ImmutableMap<ClassName, String> importedTypes() {
@@ -100,19 +100,19 @@ final class CodeWriter {
   }
 
   public CodeWriter unindent(int levels) {
-    checkArgument(indentLevel - levels >= 0);
+    checkArgument(indentLevel - levels >= 0, "cannot unindent %s from %s", levels, indentLevel);
     indentLevel -= levels;
     return this;
   }
 
   public CodeWriter pushPackage(String packageName) {
-    checkState(this.packageName == null);
-    this.packageName = checkNotNull(packageName);
+    checkState(this.packageName == null, "package already set: %s", this.packageName);
+    this.packageName = checkNotNull(packageName, "packageName == null");
     return this;
   }
 
   public CodeWriter popPackage() {
-    checkState(this.packageName != null);
+    checkState(this.packageName != null, "package already set: %s", this.packageName);
     this.packageName = null;
     return this;
   }

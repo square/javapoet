@@ -132,7 +132,7 @@ public final class Types {
   }
 
   public static TypeVariable<?> typeVariable(String name, Type... bounds) {
-    checkNotNull(name);
+    checkNotNull(name, "name == null");
     for (Type bound : bounds) {
       checkNotPrimitive(bound);
     }
