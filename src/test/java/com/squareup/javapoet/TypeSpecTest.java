@@ -27,6 +27,8 @@ import java.util.Random;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableMap;
@@ -34,6 +36,7 @@ import com.google.common.collect.ImmutableMap;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
+@RunWith(JUnit4.class)
 public final class TypeSpecTest {
   private final String tacosPackage = "com.squareup.tacos";
   private static final String donutsPackage = "com.squareup.donuts";

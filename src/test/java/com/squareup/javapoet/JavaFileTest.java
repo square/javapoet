@@ -18,9 +18,12 @@ package com.squareup.javapoet;
 import java.util.Date;
 import javax.lang.model.element.Modifier;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 import static com.google.common.truth.Truth.assertThat;
 
+@RunWith(JUnit4.class)
 public final class JavaFileTest {
   @Test public void noImports() throws Exception {
     String source = JavaFile.builder("com.squareup.tacos",
