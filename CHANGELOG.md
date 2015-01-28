@@ -1,14 +1,15 @@
 Change Log
 ==========
 
-JavaPoet 1.0.0 *(unreleased)*
+JavaPoet 1.0.0 *(2015-01-28)*
 ----------------------------
 
- * Project name is now `javapoet`. We renamed the project so you could simultaneously
-   use the old JavaWriter API and our new builder-based APIs in one project.
- * Package name is now `com.squareup.javapoet`.
- * Builders.
- * Automatic imports.
+ * This update is a complete rewrite. The project name is now `javapoet`. We renamed the it so you
+   can simultaneously use the old JavaWriter API and our new builder-based APIs in one project.
+ * Immutable value objects and builders. Instead of streaming the `.java` file from top to bottom,
+   you now define members in whatever way is convenient.
+ * We now use our own models for type names.
+ * Imports are now added automatically.
 
 
 JavaWriter 2.5.1 *(2014-12-03)*
