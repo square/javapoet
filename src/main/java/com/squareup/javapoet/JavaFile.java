@@ -48,6 +48,10 @@ public final class JavaFile {
     this.skipJavaLangImports = builder.skipJavaLangImports;
   }
 
+  public void emit(Appendable out) throws IOException {
+    emit(out, "  ");
+  }
+
   public void emit(Appendable out, String indent) throws IOException {
     // First pass: emit the entire class, just to collect the types we'll need to import.
     CodeWriter importsCollector = new CodeWriter(NULL_APPENDABLE, indent);

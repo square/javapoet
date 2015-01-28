@@ -18,7 +18,6 @@ package com.squareup.javapoet;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,9 +43,9 @@ public final class TypeSpec {
   public final CodeBlock javadoc;
   public final List<AnnotationSpec> annotations;
   public final Set<Modifier> modifiers;
-  public final List<TypeVariable<?>> typeVariables;
-  public final Type superclass;
-  public final List<Type> superinterfaces;
+  public final List<TypeVariableName> typeVariables;
+  public final TypeName superclass;
+  public final List<TypeName> superinterfaces;
   public final Map<String, TypeSpec> enumConstants;
   public final List<FieldSpec> fieldSpecs;
   public final List<MethodSpec> methodSpecs;
@@ -118,7 +117,7 @@ public final class TypeSpec {
         }
         codeWriter.emit(" {\n");
       } else if (anonymousTypeArguments != null) {
-        Type supertype = !superinterfaces.isEmpty() ? superinterfaces.get(0) : superclass;
+        TypeName supertype = !superinterfaces.isEmpty() ? superinterfaces.get(0) : superclass;
         codeWriter.emit("new $T(", supertype);
         codeWriter.emit(anonymousTypeArguments);
         codeWriter.emit(") {\n");
@@ -129,14 +128,14 @@ public final class TypeSpec {
         codeWriter.emit("$L $L", kind.name().toLowerCase(Locale.US), name);
         codeWriter.emitTypeVariables(typeVariables);
 
-        List<Type> extendsTypes;
-        List<Type> implementsTypes;
+        List<TypeName> extendsTypes;
+        List<TypeName> implementsTypes;
         if (kind == Kind.INTERFACE) {
           extendsTypes = superinterfaces;
           implementsTypes = Collections.emptyList();
         } else {
           extendsTypes = superclass.equals(ClassName.OBJECT)
-              ? Collections.<Type>emptyList()
+              ? Collections.<TypeName>emptyList()
               : Collections.singletonList(superclass);
           implementsTypes = superinterfaces;
         }
@@ -144,7 +143,7 @@ public final class TypeSpec {
         if (!extendsTypes.isEmpty()) {
           codeWriter.emit(" extends");
           boolean firstType = true;
-          for (Type type : extendsTypes) {
+          for (TypeName type : extendsTypes) {
             if (!firstType) codeWriter.emit(",");
             codeWriter.emit(" $T", type);
             firstType = false;
@@ -154,7 +153,7 @@ public final class TypeSpec {
         if (!implementsTypes.isEmpty()) {
           codeWriter.emit(" implements");
           boolean firstType = true;
-          for (Type type : implementsTypes) {
+          for (TypeName type : implementsTypes) {
             if (!firstType) codeWriter.emit(",");
             codeWriter.emit(" $T", type);
             firstType = false;
@@ -288,9 +287,9 @@ public final class TypeSpec {
     private final CodeBlock.Builder javadoc = CodeBlock.builder();
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
-    private final List<TypeVariable<?>> typeVariables = new ArrayList<>();
-    private Type superclass = ClassName.OBJECT;
-    private final List<Type> superinterfaces = new ArrayList<>();
+    private final List<TypeVariableName> typeVariables = new ArrayList<>();
+    private TypeName superclass = ClassName.OBJECT;
+    private final List<TypeName> superinterfaces = new ArrayList<>();
     private final Map<String, TypeSpec> enumConstants = new LinkedHashMap<>();
     private final List<FieldSpec> fieldSpecs = new ArrayList<>();
     private final List<MethodSpec> methodSpecs = new ArrayList<>();
@@ -317,8 +316,12 @@ public final class TypeSpec {
       return this;
     }
 
-    public Builder addAnnotation(Type annotation) {
+    public Builder addAnnotation(ClassName annotation) {
       return addAnnotation(AnnotationSpec.builder(annotation).build());
+    }
+
+    public Builder addAnnotation(Class<?> annotation) {
+      return addAnnotation(ClassName.get(annotation));
     }
 
     public Builder addModifiers(Modifier... modifiers) {
@@ -327,20 +330,28 @@ public final class TypeSpec {
       return this;
     }
 
-    public Builder addTypeVariable(TypeVariable<?> typeVariable) {
+    public Builder addTypeVariable(TypeVariableName typeVariable) {
       checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
       typeVariables.add(typeVariable);
       return this;
     }
 
-    public Builder superclass(Type superclass) {
+    public Builder superclass(TypeName superclass) {
       this.superclass = superclass;
       return this;
     }
 
-    public Builder addSuperinterface(Type superinterface) {
+    public Builder superclass(Type superclass) {
+      return superclass(TypeName.get(superclass));
+    }
+
+    public Builder addSuperinterface(TypeName superinterface) {
       this.superinterfaces.add(superinterface);
       return this;
+    }
+
+    public Builder addSuperinterface(Type superinterface) {
+      return addSuperinterface(TypeName.get(superinterface));
     }
 
     public Builder addEnumConstant(String name) {
@@ -364,8 +375,12 @@ public final class TypeSpec {
       return this;
     }
 
-    public Builder addField(Type type, String name, Modifier... modifiers) {
+    public Builder addField(TypeName type, String name, Modifier... modifiers) {
       return addField(FieldSpec.builder(type, name, modifiers).build());
+    }
+
+    public Builder addField(Type type, String name, Modifier... modifiers) {
+      return addField(TypeName.get(type), name, modifiers);
     }
 
     public Builder addMethod(MethodSpec methodSpec) {

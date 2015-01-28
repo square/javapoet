@@ -15,7 +15,7 @@
  */
 package com.squareup.javapoet;
 
-import java.lang.reflect.Type;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +32,7 @@ import static javax.lang.model.element.NestingKind.MEMBER;
 import static javax.lang.model.element.NestingKind.TOP_LEVEL;
 
 /** A fully-qualified class name for top-level and member classes. */
-public final class ClassName implements Type, Comparable<ClassName> {
+public final class ClassName extends TypeName implements Comparable<ClassName> {
   public static final ClassName OBJECT = ClassName.get(Object.class);
 
   /** From top to bottom. This will be ["java.util", "Map", "Entry"] for {@link Map.Entry}. */
@@ -189,7 +189,7 @@ public final class ClassName implements Type, Comparable<ClassName> {
     return canonicalName.compareTo(o.canonicalName);
   }
 
-  @Override public String toString() {
-    return canonicalName;
+  @Override CodeWriter emit(CodeWriter out) throws IOException {
+    return out.emitAndIndent(out.lookupName(this));
   }
 }
