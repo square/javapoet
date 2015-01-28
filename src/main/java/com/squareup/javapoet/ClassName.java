@@ -122,7 +122,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
 
     // Add the package name, like "java.util.concurrent", or "" for no package.
     int p = 0;
-    while (p < classNameString.length() && Util.isLowerCase(classNameString.charAt(p))) {
+    while (p < classNameString.length() && Character.isLowerCase(classNameString.codePointAt(p))) {
       p = classNameString.indexOf('.', p) + 1;
       checkArgument(p != 0, "couldn't make a guess for %s", classNameString);
     }
@@ -130,7 +130,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
 
     // Add the class names, like "Map" and "Entry".
     for (String part : classNameString.substring(p).split("\\.", -1)) {
-      checkArgument(!part.isEmpty() && Util.isUpperCase(part.charAt(0)),
+      checkArgument(!part.isEmpty() && Character.isUpperCase(part.codePointAt(0)),
           "couldn't make a guess for %s", classNameString);
       names.add(part);
     }

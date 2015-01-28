@@ -23,6 +23,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public final class ClassNameTest {
@@ -31,6 +32,13 @@ public final class ClassNameTest {
   @Test public void bestGuessForString_simpleClass() {
     assertThat(ClassName.bestGuess(String.class.getName()))
         .isEqualTo(ClassName.get("java.lang", "String"));
+  }
+
+  @Test public void bestGuessNonAscii() {
+    ClassName className = ClassName.bestGuess(
+        "com.\ud835\udc1andro\ud835\udc22d.\ud835\udc00ctiv\ud835\udc22ty");
+    assertEquals("com.\ud835\udc1andro\ud835\udc22d", className.packageName());
+    assertEquals("\ud835\udc00ctiv\ud835\udc22ty", className.simpleName());
   }
 
   static class OuterClass {
