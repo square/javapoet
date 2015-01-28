@@ -33,7 +33,7 @@ public final class ParameterSpec {
   public final String name;
   public final List<AnnotationSpec> annotations;
   public final Set<Modifier> modifiers;
-  public final Type type;
+  public final TypeName type;
 
   private ParameterSpec(Builder builder) {
     this.name = checkNotNull(builder.name, "name == null");
@@ -50,7 +50,7 @@ public final class ParameterSpec {
     codeWriter.emitAnnotations(annotations, true);
     codeWriter.emitModifiers(modifiers);
     if (varargs) {
-      codeWriter.emit("$T... $L", Types.arrayComponent(type), name);
+      codeWriter.emit("$T... $L", TypeName.arrayComponent(type), name);
     } else {
       codeWriter.emit("$T $L", type, name);
     }
@@ -67,21 +67,25 @@ public final class ParameterSpec {
     }
   }
 
-  public static Builder builder(Type type, String name, Modifier... modifiers) {
+  public static Builder builder(TypeName type, String name, Modifier... modifiers) {
     checkNotNull(type, "type == null");
     checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
     return new Builder(type, name)
         .addModifiers(modifiers);
   }
 
+  public static Builder builder(Type type, String name, Modifier... modifiers) {
+    return builder(TypeName.get(type), name, modifiers);
+  }
+
   public static final class Builder {
-    private final Type type;
+    private final TypeName type;
     private final String name;
 
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
 
-    private Builder(Type type, String name) {
+    private Builder(TypeName type, String name) {
       this.type = type;
       this.name = name;
     }
@@ -91,9 +95,13 @@ public final class ParameterSpec {
       return this;
     }
 
-    public Builder addAnnotation(Type annotation) {
+    public Builder addAnnotation(ClassName annotation) {
       this.annotations.add(AnnotationSpec.builder(annotation).build());
       return this;
+    }
+
+    public Builder addAnnotation(Class<?> annotation) {
+      return addAnnotation(ClassName.get(annotation));
     }
 
     public Builder addModifiers(Modifier... modifiers) {

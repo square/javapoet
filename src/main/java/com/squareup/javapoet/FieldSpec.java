@@ -30,7 +30,7 @@ import static com.squareup.javapoet.Util.checkNotNull;
 
 /** A generated field declaration. */
 public final class FieldSpec {
-  public final Type type;
+  public final TypeName type;
   public final String name;
   public final CodeBlock javadoc;
   public final List<AnnotationSpec> annotations;
@@ -73,15 +73,19 @@ public final class FieldSpec {
     }
   }
 
-  public static Builder builder(Type type, String name, Modifier... modifiers) {
+  public static Builder builder(TypeName type, String name, Modifier... modifiers) {
     checkNotNull(type, "type == null");
     checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
     return new Builder(type, name)
         .addModifiers(modifiers);
   }
 
+  public static Builder builder(Type type, String name, Modifier... modifiers) {
+    return builder(TypeName.get(type), name, modifiers);
+  }
+
   public static final class Builder {
-    private final Type type;
+    private final TypeName type;
     private final String name;
 
     private final CodeBlock.Builder javadoc = CodeBlock.builder();
@@ -89,7 +93,7 @@ public final class FieldSpec {
     private final List<Modifier> modifiers = new ArrayList<>();
     private CodeBlock.Builder initializer = CodeBlock.builder();
 
-    private Builder(Type type, String name) {
+    private Builder(TypeName type, String name) {
       this.type = type;
       this.name = name;
     }
@@ -104,9 +108,13 @@ public final class FieldSpec {
       return this;
     }
 
-    public Builder addAnnotation(Type annotation) {
+    public Builder addAnnotation(ClassName annotation) {
       this.annotations.add(AnnotationSpec.builder(annotation).build());
       return this;
+    }
+
+    public Builder addAnnotation(Class<?> annotation) {
+      return addAnnotation(ClassName.get(annotation));
     }
 
     public Builder addModifiers(Modifier... modifiers) {

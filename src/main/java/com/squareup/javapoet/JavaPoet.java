@@ -30,6 +30,7 @@ import javax.tools.JavaFileObject;
 import static com.squareup.javapoet.Util.checkArgument;
 
 /** Writes generated types to a filesystem using the standard directory structure. */
+// TODO(jwilson): fold this into JavaFile.
 public final class JavaPoet {
   private final List<JavaFile> javaFiles = new ArrayList<>();
   private String indent = "  ";
