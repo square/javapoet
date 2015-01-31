@@ -15,6 +15,10 @@
  */
 package com.squareup.javapoet;
 
+import static com.squareup.javapoet.Util.checkArgument;
+import static com.squareup.javapoet.Util.checkNotNull;
+import static com.squareup.javapoet.Util.checkState;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
@@ -22,11 +26,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
-
-import static com.squareup.javapoet.Util.checkArgument;
-import static com.squareup.javapoet.Util.checkNotNull;
 
 /** A generated field declaration. */
 public final class FieldSpec {
@@ -43,7 +45,9 @@ public final class FieldSpec {
     this.javadoc = builder.javadoc.build();
     this.annotations = Util.immutableList(builder.annotations);
     this.modifiers = Util.immutableSet(builder.modifiers);
-    this.initializer = builder.initializer.build();
+    this.initializer = (builder.initializer == null)
+        ? CodeBlock.builder().build()
+        : builder.initializer;
   }
 
   public boolean hasModifier(Modifier modifier) {
@@ -91,7 +95,7 @@ public final class FieldSpec {
     private final CodeBlock.Builder javadoc = CodeBlock.builder();
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
-    private CodeBlock.Builder initializer = CodeBlock.builder();
+    private CodeBlock initializer = null;
 
     private Builder(TypeName type, String name) {
       this.type = type;
@@ -123,7 +127,12 @@ public final class FieldSpec {
     }
 
     public Builder initializer(String format, Object... args) {
-      this.initializer.add(format, args);
+      return initializer(CodeBlock.builder().add(format, args).build());
+    }
+
+    public Builder initializer(CodeBlock codeBlock) {
+      checkState(this.initializer == null, "initializer was already set");
+      this.initializer = checkNotNull(codeBlock, "codeBlock == null");
       return this;
     }
 

@@ -22,11 +22,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import com.google.common.collect.ImmutableMap;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
@@ -847,7 +850,23 @@ public final class TypeSpecTest {
         .endControlFlow()
         .addStatement("return size")
         .build();
+    CodeBlock fieldBlock = CodeBlock.builder()
+        .add("$>$>")
+        .add("\n$T.<$T, $T>builder()$>$>", ImmutableMap.class, String.class, String.class)
+        .add("\n.add($S, $S)", '\'', "&#39;")
+        .add("\n.add($S, $S)", '&', "&amp;")
+        .add("\n.add($S, $S)", '<', "&lt;")
+        .add("\n.add($S, $S)", '>', "&gt;")
+        .add("\n.build()$<$<")
+        .add("$<$<")
+        .build();
+    FieldSpec escapeHtml = FieldSpec.builder(ParameterizedTypeName.get(
+        Map.class, String.class, String.class), "ESCAPE_HTML")
+        .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+        .initializer(fieldBlock)
+        .build();
     TypeSpec util = TypeSpec.classBuilder("Util")
+        .addField(escapeHtml)
         .addMethod(MethodSpec.methodBuilder("commonPrefixLength")
             .returns(int.class)
             .addParameter(ParameterizedTypeName.get(List.class, String.class), "listA")
@@ -858,11 +877,21 @@ public final class TypeSpecTest {
     assertThat(toString(util)).isEqualTo(""
         + "package com.squareup.tacos;\n"
         + "\n"
+        + "import com.google.common.collect.ImmutableMap;\n"
         + "import java.lang.Math;\n"
         + "import java.lang.String;\n"
         + "import java.util.List;\n"
+        + "import java.util.Map;\n"
         + "\n"
         + "class Util {\n"
+        + "  private static final Map<String, String> ESCAPE_HTML = \n"
+        + "      ImmutableMap.<String, String>builder()\n"
+        + "          .add(\"\'\", \"&#39;\")\n"
+        + "          .add(\"&\", \"&amp;\")\n"
+        + "          .add(\"<\", \"&lt;\")\n"
+        + "          .add(\">\", \"&gt;\")\n"
+        + "          .build();\n"
+        + "\n"
         + "  int commonPrefixLength(List<String> listA, List<String> listB) {\n"
         + "    int size = Math.min(listA.size(), listB.size());\n"
         + "    for (int i = 0; i < size; i++) {\n"
@@ -1307,5 +1336,23 @@ public final class TypeSpecTest {
         + "      + \"lettuce\\n\"\n"
         + "      + \"cheese\\n\";\n"
         + "}\n");
+  }
+
+  @Test public void doubleFieldInitialization() {
+    try {
+      FieldSpec.builder(String.class, "listA")
+          .initializer("foo")
+          .initializer("bar")
+          .build();
+      fail();
+    } catch (IllegalStateException expected) {}
+
+    try {
+      FieldSpec.builder(String.class, "listA")
+          .initializer(CodeBlock.builder().add("foo").build())
+          .initializer(CodeBlock.builder().add("bar").build())
+          .build();
+      fail();
+    } catch (IllegalStateException expected) {}
   }
 }
