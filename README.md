@@ -374,7 +374,7 @@ return type. All of these are configured with `MethodSpec.Builder`.
 
 ### Constructors
 
-`MethodSpec` is a slight misnomer; it is also be used for constructors:
+`MethodSpec` is a slight misnomer; it can also be used for constructors:
 
 ```java
 MethodSpec flux = MethodSpec.constructorBuilder()
