@@ -17,7 +17,6 @@ package com.squareup.javapoet;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -28,7 +27,7 @@ import static com.squareup.javapoet.Util.checkNotNull;
 
 /** A generated annotation on a declaration. */
 public final class AnnotationSpec {
-  public final Type type;
+  public final TypeName type;
   public final Map<String, List<CodeBlock>> members;
 
   private AnnotationSpec(Builder builder) {
@@ -91,9 +90,13 @@ public final class AnnotationSpec {
     codeWriter.emit(whitespace + "}");
   }
 
-  public static Builder builder(Type type) {
+  public static Builder builder(ClassName type) {
     checkNotNull(type, "type == null");
     return new Builder(type);
+  }
+
+  public static Builder builder(Class<?> type) {
+    return builder(ClassName.get(type));
   }
 
   @Override public boolean equals(Object o) {
@@ -118,10 +121,10 @@ public final class AnnotationSpec {
   }
 
   public static final class Builder {
-    private final Type type;
+    private final TypeName type;
     private final Map<String, List<CodeBlock>> members = new LinkedHashMap<>();
 
-    private Builder(Type type) {
+    private Builder(TypeName type) {
       this.type = type;
     }
 

@@ -17,14 +17,12 @@ package com.squareup.javapoet;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.AbstractSet;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
@@ -32,6 +30,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
+
+import com.google.common.collect.ImmutableMap;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
@@ -65,12 +65,12 @@ public final class TypeSpecTest {
   }
 
   @Test public void interestingTypes() throws Exception {
-    ParameterizedType listOfAny = Types.parameterizedType(
-        List.class, Types.subtypeOf(Object.class));
-    ParameterizedType listOfExtends = Types.parameterizedType(
-        List.class, Types.subtypeOf(Serializable.class));
-    ParameterizedType listOfSuper = Types.parameterizedType(
-        List.class, Types.supertypeOf(String.class));
+    TypeName listOfAny = ParameterizedTypeName.get(
+        ClassName.get(List.class), WildcardTypeName.subtypeOf(Object.class));
+    TypeName listOfExtends = ParameterizedTypeName.get(
+        ClassName.get(List.class), WildcardTypeName.subtypeOf(Serializable.class));
+    TypeName listOfSuper = ParameterizedTypeName.get(ClassName.get(List.class),
+        WildcardTypeName.supertypeOf(String.class));
     TypeSpec taco = TypeSpec.classBuilder("Taco")
         .addField(listOfAny, "extendsObject")
         .addField(listOfExtends, "extendsSerializable")
@@ -96,15 +96,12 @@ public final class TypeSpecTest {
     ClassName foo = ClassName.get(tacosPackage, "Foo");
     ClassName bar = ClassName.get(tacosPackage, "Bar");
     ClassName thingThang = ClassName.get(tacosPackage, "Thing", "Thang");
-    ParameterizedType thingThangOfFooBar
-        = Types.parameterizedType(thingThang, foo, bar);
+    TypeName thingThangOfFooBar = ParameterizedTypeName.get(thingThang, foo, bar);
     ClassName thung = ClassName.get(tacosPackage, "Thung");
     ClassName simpleThung = ClassName.get(tacosPackage, "SimpleThung");
-    ParameterizedType thungOfSuperBar
-        = Types.parameterizedType(thung, Types.supertypeOf(bar));
-    ParameterizedType thungOfSuperFoo
-        = Types.parameterizedType(thung, Types.supertypeOf(foo));
-    ParameterizedType simpleThungOfBar = Types.parameterizedType(simpleThung, bar);
+    TypeName thungOfSuperBar = ParameterizedTypeName.get(thung, WildcardTypeName.supertypeOf(bar));
+    TypeName thungOfSuperFoo = ParameterizedTypeName.get(thung, WildcardTypeName.supertypeOf(foo));
+    TypeName simpleThungOfBar = ParameterizedTypeName.get(simpleThung, bar);
 
     ParameterSpec thungParameter = ParameterSpec.builder(thungOfSuperFoo, "thung")
         .addModifiers(Modifier.FINAL)
@@ -213,12 +210,12 @@ public final class TypeSpecTest {
             .addAnnotation(AnnotationSpec.builder(post)
                 .addMember("value", "$S", "/foo/bar")
                 .build())
-            .returns(Types.parameterizedType(observable, fooBar))
-            .addParameter(ParameterSpec.builder(Types.parameterizedType(things, thing), "things")
+            .returns(ParameterizedTypeName.get(observable, fooBar))
+            .addParameter(ParameterSpec.builder(ParameterizedTypeName.get(things, thing), "things")
                 .addAnnotation(body)
                 .build())
             .addParameter(ParameterSpec.builder(
-                Types.parameterizedType(map, string, string), "query")
+                ParameterizedTypeName.get(map, string, string), "query")
                 .addAnnotation(AnnotationSpec.builder(queryMap)
                     .addMember("encodeValues", "false")
                     .build())
@@ -456,13 +453,13 @@ public final class TypeSpecTest {
   }
 
   @Test public void typeVariables() throws Exception {
-    TypeVariable<?> t = Types.typeVariable("T");
-    TypeVariable<?> p = Types.typeVariable("P", Number.class);
+    TypeVariableName t = TypeVariableName.get("T");
+    TypeVariableName p = TypeVariableName.get("P", Number.class);
     ClassName location = ClassName.get(tacosPackage, "Location");
     TypeSpec typeSpec = TypeSpec.classBuilder("Location")
         .addTypeVariable(t)
         .addTypeVariable(p)
-        .addSuperinterface(Types.parameterizedType(Comparable.class, p))
+        .addSuperinterface(ParameterizedTypeName.get(ClassName.get(Comparable.class), p))
         .addField(t, "label")
         .addField(p, "x")
         .addField(p, "y")
@@ -477,7 +474,7 @@ public final class TypeSpecTest {
             .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
             .addTypeVariable(t)
             .addTypeVariable(p)
-            .returns(Types.parameterizedType(location, t, p))
+            .returns(ParameterizedTypeName.get(location, t, p))
             .addParameter(t, "label")
             .addParameter(p, "x")
             .addParameter(p, "y")
@@ -515,9 +512,9 @@ public final class TypeSpecTest {
     ClassName food = ClassName.get("com.squareup.tacos", "Food");
     TypeSpec typeSpec = TypeSpec.classBuilder("Taco")
         .addModifiers(Modifier.ABSTRACT)
-        .superclass(Types.parameterizedType(AbstractSet.class, food))
+        .superclass(ParameterizedTypeName.get(ClassName.get(AbstractSet.class), food))
         .addSuperinterface(Serializable.class)
-        .addSuperinterface(Types.parameterizedType(Comparable.class, taco))
+        .addSuperinterface(ParameterizedTypeName.get(ClassName.get(Comparable.class), taco))
         .build();
     assertThat(toString(typeSpec)).isEqualTo(""
         + "package com.squareup.tacos;\n"
@@ -555,7 +552,7 @@ public final class TypeSpecTest {
     ClassName taco = ClassName.get(tacosPackage, "Taco");
     TypeSpec typeSpec = TypeSpec.interfaceBuilder("Taco")
         .addSuperinterface(Serializable.class)
-        .addSuperinterface(Types.parameterizedType(Comparable.class, taco))
+        .addSuperinterface(ParameterizedTypeName.get(ClassName.get(Comparable.class), taco))
         .build();
     assertThat(toString(typeSpec)).isEqualTo(""
         + "package com.squareup.tacos;\n"
@@ -577,7 +574,7 @@ public final class TypeSpecTest {
         .addField(chips, "chips")
         .addType(TypeSpec.classBuilder(taco.simpleName())
             .addModifiers(Modifier.STATIC)
-            .addField(Types.parameterizedType(List.class, topping), "toppings")
+            .addField(ParameterizedTypeName.get(ClassName.get(List.class), topping), "toppings")
             .addField(sauce, "sauce")
             .addType(TypeSpec.enumBuilder(topping.simpleName())
                 .addEnumConstant("SHREDDED_CHEESE")
@@ -716,7 +713,7 @@ public final class TypeSpecTest {
   }
 
   @Test public void intersectionType() {
-    TypeVariable<?> typeVariable = Types.typeVariable("T", Comparator.class, Serializable.class);
+    TypeVariableName typeVariable = TypeVariableName.get("T", Comparator.class, Serializable.class);
     TypeSpec taco = TypeSpec.classBuilder("Taco")
         .addMethod(MethodSpec.methodBuilder("getComparator")
             .addTypeVariable(typeVariable)
@@ -856,22 +853,48 @@ public final class TypeSpecTest {
         .endControlFlow()
         .addStatement("return size")
         .build();
+    CodeBlock fieldBlock = CodeBlock.builder()
+        .add("$>$>")
+        .add("\n$T.<$T, $T>builder()$>$>", ImmutableMap.class, String.class, String.class)
+        .add("\n.add($S, $S)", '\'', "&#39;")
+        .add("\n.add($S, $S)", '&', "&amp;")
+        .add("\n.add($S, $S)", '<', "&lt;")
+        .add("\n.add($S, $S)", '>', "&gt;")
+        .add("\n.build()$<$<")
+        .add("$<$<")
+        .build();
+    FieldSpec escapeHtml = FieldSpec.builder(ParameterizedTypeName.get(
+        Map.class, String.class, String.class), "ESCAPE_HTML")
+        .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+        .initializer(fieldBlock)
+        .build();
     TypeSpec util = TypeSpec.classBuilder("Util")
+        .addField(escapeHtml)
         .addMethod(MethodSpec.methodBuilder("commonPrefixLength")
             .returns(int.class)
-            .addParameter(Types.parameterizedType(List.class, String.class), "listA")
-            .addParameter(Types.parameterizedType(List.class, String.class), "listB")
+            .addParameter(ParameterizedTypeName.get(List.class, String.class), "listA")
+            .addParameter(ParameterizedTypeName.get(List.class, String.class), "listB")
             .addCode(methodBody)
             .build())
         .build();
     assertThat(toString(util)).isEqualTo(""
         + "package com.squareup.tacos;\n"
         + "\n"
+        + "import com.google.common.collect.ImmutableMap;\n"
         + "import java.lang.Math;\n"
         + "import java.lang.String;\n"
         + "import java.util.List;\n"
+        + "import java.util.Map;\n"
         + "\n"
         + "class Util {\n"
+        + "  private static final Map<String, String> ESCAPE_HTML = \n"
+        + "      ImmutableMap.<String, String>builder()\n"
+        + "          .add(\"\'\", \"&#39;\")\n"
+        + "          .add(\"&\", \"&amp;\")\n"
+        + "          .add(\"<\", \"&lt;\")\n"
+        + "          .add(\">\", \"&gt;\")\n"
+        + "          .build();\n"
+        + "\n"
         + "  int commonPrefixLength(List<String> listA, List<String> listB) {\n"
         + "    int size = Math.min(listA.size(), listB.size());\n"
         + "    for (int i = 0; i < size; i++) {\n"
@@ -1239,8 +1262,8 @@ public final class TypeSpecTest {
   }
 
   @Test public void multilineStatementWithAnonymousClass() throws Exception {
-    Type stringComparator = Types.parameterizedType(Comparator.class, String.class);
-    Type listOfString = Types.parameterizedType(List.class, String.class);
+    TypeName stringComparator = ParameterizedTypeName.get(Comparator.class, String.class);
+    TypeName listOfString = ParameterizedTypeName.get(List.class, String.class);
     TypeSpec prefixComparator = TypeSpec.anonymousClassBuilder("")
         .addSuperinterface(stringComparator)
         .addMethod(MethodSpec.methodBuilder("compare")
@@ -1316,5 +1339,23 @@ public final class TypeSpecTest {
         + "      + \"lettuce\\n\"\n"
         + "      + \"cheese\\n\";\n"
         + "}\n");
+  }
+
+  @Test public void doubleFieldInitialization() {
+    try {
+      FieldSpec.builder(String.class, "listA")
+          .initializer("foo")
+          .initializer("bar")
+          .build();
+      fail();
+    } catch (IllegalStateException expected) {}
+
+    try {
+      FieldSpec.builder(String.class, "listA")
+          .initializer(CodeBlock.builder().add("foo").build())
+          .initializer(CodeBlock.builder().add("bar").build())
+          .build();
+      fail();
+    } catch (IllegalStateException expected) {}
   }
 }

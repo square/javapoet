@@ -167,7 +167,7 @@ with wrapping quotation marks and escaping. Here's a program that emits 3 method
 returns its own name:
 
 ```java
-@Test public void stringLiterals() throws Exception {
+public static void main(String[] args) throws Exception {
   TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
       .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
       .addMethod(whatsMyName("slimShady"))
@@ -181,7 +181,7 @@ returns its own name:
   javaFile.emit(System.out);
 }
 
-private MethodSpec whatsMyName(String name) {
+private static MethodSpec whatsMyName(String name) {
   return MethodSpec.methodBuilder(name)
       .returns(String.class)
       .addStatement("return $S", name)
@@ -273,14 +273,14 @@ public final class HelloWorld {
 
 The `ClassName` type is very important, and you'll need it frequently when you're using JavaPoet.
 It can identify any _declared_ class. Declared types are just the beginning of Java's rich type
-system: we also have arrays, parameterized types, wildcard types, and type variables. JavaPoet has a
-`Types` class that can compose each of these:
+system: we also have arrays, parameterized types, wildcard types, and type variables. JavaPoet has
+classes for building each of these:
 
 ```java
 ClassName hoverboard = ClassName.get("com.mattel", "Hoverboard");
 ClassName list = ClassName.get("java.util", "List");
 ClassName arrayList = ClassName.get("java.util", "ArrayList");
-Type listOfHoverboards = Types.parameterizedType(list, hoverboard);
+TypeName listOfHoverboards = ParameterizedTypeName.get(list, hoverboard);
 
 MethodSpec today = MethodSpec.methodBuilder("beyond")
     .returns(listOfHoverboards)
@@ -384,7 +384,7 @@ return type. All of these are configured with `MethodSpec.Builder`.
 
 ### Constructors
 
-`MethodSpec` is a slight misnomer; it is also be used for constructors:
+`MethodSpec` is a slight misnomer; it can also be used for constructors:
 
 ```java
 MethodSpec flux = MethodSpec.constructorBuilder()
@@ -594,7 +594,7 @@ code blocks. They are values that can be referenced with `$L`:
 
 ```java
 TypeSpec comparator = TypeSpec.anonymousClassBuilder("")
-    .addSuperinterface(Types.parameterizedType(Comparator.class, String.class))
+    .addSuperinterface(ParameterizedTypeName.get(Comparator.class, String.class))
     .addMethod(MethodSpec.methodBuilder("compare")
         .addAnnotation(Override.class)
         .addModifiers(Modifier.PUBLIC)
@@ -606,7 +606,7 @@ TypeSpec comparator = TypeSpec.anonymousClassBuilder("")
 
 TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
     .addMethod(MethodSpec.methodBuilder("sortByLength")
-        .addParameter(Types.parameterizedType(List.class, String.class), "strings")
+        .addParameter(ParameterizedTypeName.get(List.class, String.class), "strings")
         .addStatement("$T.sort($N, $L)", Collections.class, "strings", comparator)
         .build())
     .build();
