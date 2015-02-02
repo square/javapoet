@@ -20,6 +20,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import javax.lang.model.SourceVersion;
@@ -88,6 +89,12 @@ public final class ParameterSpec {
     private Builder(TypeName type, String name) {
       this.type = type;
       this.name = name;
+    }
+
+    public Builder addAnnotations(Collection<AnnotationSpec> annotationSpecs) {
+      checkArgument(annotationSpecs != null, "annotationSpecs == null");
+      this.annotations.addAll(annotationSpecs);
+      return this;
     }
 
     public Builder addAnnotation(AnnotationSpec annotationSpec) {

@@ -20,6 +20,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -174,6 +175,12 @@ public final class MethodSpec {
       return this;
     }
 
+    public Builder addAnnotations(Collection<AnnotationSpec> annotationSpecs) {
+      checkArgument(annotationSpecs != null, "annotationSpecs == null");
+      this.annotations.addAll(annotationSpecs);
+      return this;
+    }
+
     public Builder addAnnotation(AnnotationSpec annotationSpec) {
       this.annotations.add(annotationSpec);
       return this;
@@ -193,6 +200,12 @@ public final class MethodSpec {
       return this;
     }
 
+    public Builder addTypeVariables(Collection<TypeVariableName> typeVariables) {
+      checkArgument(typeVariables != null, "typeVariables == null");
+      this.typeVariables.addAll(typeVariables);
+      return this;
+    }
+
     public Builder addTypeVariable(TypeVariableName typeVariable) {
       typeVariables.add(typeVariable);
       return this;
@@ -206,6 +219,12 @@ public final class MethodSpec {
 
     public Builder returns(Type returnType) {
       return returns(TypeName.get(returnType));
+    }
+
+    public Builder addParameters(Collection<ParameterSpec> parameterSpecs) {
+      checkArgument(parameterSpecs != null, "parameterSpecs == null");
+      this.parameters.addAll(parameterSpecs);
+      return this;
     }
 
     public Builder addParameter(ParameterSpec parameterSpec) {
@@ -223,6 +242,12 @@ public final class MethodSpec {
 
     public Builder varargs() {
       this.varargs = true;
+      return this;
+    }
+
+    public Builder addExceptions(Collection<TypeName> exceptions) {
+      checkArgument(exceptions != null, "exceptions == null");
+      this.exceptions.addAll(exceptions);
       return this;
     }
 

@@ -24,6 +24,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -104,6 +105,12 @@ public final class FieldSpec {
 
     public Builder addJavadoc(String format, Object... args) {
       javadoc.add(format, args);
+      return this;
+    }
+
+    public Builder addAnnotations(Collection<AnnotationSpec> annotationSpecs) {
+      checkArgument(annotationSpecs != null, "annotationSpecs == null");
+      this.annotations.addAll(annotationSpecs);
       return this;
     }
 

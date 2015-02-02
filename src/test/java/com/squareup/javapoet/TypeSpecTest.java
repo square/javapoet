@@ -15,29 +15,25 @@
  */
 package com.squareup.javapoet;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.AbstractSet;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Random;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.Modifier;
+import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
-import com.google.common.collect.ImmutableMap;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.Modifier;
+import java.io.IOException;
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.*;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 @RunWith(JUnit4.class)
 public final class TypeSpecTest {
+
   private final String tacosPackage = "com.squareup.tacos";
   private static final String donutsPackage = "com.squareup.donuts";
 
@@ -1357,5 +1353,197 @@ public final class TypeSpecTest {
           .build();
       fail();
     } catch (IllegalStateException expected) {}
+  }
+
+  @Test public void nullAnnotationsAddition() {
+    try {
+      TypeSpec.classBuilder("Taco").addAnnotations(null);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected.getMessage())
+          .isEqualTo("annotationSpecs == null");
+    }
+  }
+
+  @Test public void multipleAnnotationAddition() {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addAnnotations(Arrays.asList(
+            AnnotationSpec.builder(SuppressWarnings.class)
+                .addMember("value", "$S", "unchecked")
+                .build(),
+            AnnotationSpec.builder(Deprecated.class).build()
+        ))
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.Deprecated;\n"
+        + "import java.lang.SuppressWarnings;\n"
+        + "\n"
+        + "@SuppressWarnings(\"unchecked\")\n"
+        + "@Deprecated\n"
+        + "class Taco {\n"
+        + "}\n"
+          );
+  }
+
+  @Test public void nullFieldsAddition() {
+    try {
+      TypeSpec.classBuilder("Taco").addFields(null);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected.getMessage())
+          .isEqualTo("fieldSpecs == null");
+    }
+  }
+
+  @Test public void multipleFieldAddition() {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addFields(Arrays.asList(
+            FieldSpec.builder(int.class, "ANSWER", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+                .initializer("$L", 42)
+                .build(),
+            FieldSpec.builder(BigDecimal.class, "price", Modifier.PRIVATE).build()
+        ))
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.math.BigDecimal;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  private static final int ANSWER = 42;\n"
+        + "\n"
+        + "  private BigDecimal price;\n"
+        + "}\n"
+    );
+  }
+
+  @Test public void nullMethodsAddition() {
+    try {
+      TypeSpec.classBuilder("Taco").addMethods(null);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected.getMessage())
+          .isEqualTo("methodSpecs == null");
+    }
+  }
+
+  @Test public void multipleMethodAddition() {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addMethods(Arrays.asList(
+            MethodSpec.methodBuilder("getAnswer")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(int.class)
+                .addStatement("return $L", 42)
+                .build(),
+            MethodSpec.methodBuilder("getRandomQuantity")
+                .addModifiers(Modifier.PUBLIC)
+                .returns(int.class)
+                .addJavadoc("chosen by fair dice roll ;)")
+                .addStatement("return $L", 4)
+                .build()
+        ))
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  public static int getAnswer() {\n"
+        + "    return 42;\n"
+        + "  }\n"
+        + "\n"
+        + "  /**\n"
+        + "   * chosen by fair dice roll ;) */\n"
+        + "  public int getRandomQuantity() {\n"
+        + "    return 4;\n"
+        + "  }\n"
+        + "}\n"
+    );
+  }
+
+  @Test public void nullSuperinterfacesAddition() {
+    try {
+      TypeSpec.classBuilder("Taco").addSuperinterfaces(null);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected.getMessage())
+          .isEqualTo("superinterfaces == null");
+    }
+  }
+
+  @Test public void multipleSuperinterfaceAddition() {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addSuperinterfaces(Arrays.asList(
+            TypeName.get(Serializable.class),
+            TypeName.get(EventListener.class)
+        ))
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.io.Serializable;\n"
+        + "import java.util.EventListener;\n"
+        + "\n"
+        + "class Taco implements Serializable, EventListener {\n"
+        + "}\n"
+    );
+  }
+
+  @Test public void nullTypeVariablesAddition() {
+    try {
+      TypeSpec.classBuilder("Taco").addTypeVariables(null);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected.getMessage())
+          .isEqualTo("typeVariables == null");
+    }
+  }
+
+  @Test public void multipleTypeVariableAddition() {
+    TypeSpec location = TypeSpec.classBuilder("Location")
+        .addTypeVariables(Arrays.asList(
+            TypeVariableName.get("T"),
+            TypeVariableName.get("P", Number.class)
+        ))
+        .build();
+    assertThat(toString(location)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.Number;\n"
+        + "\n"
+        + "class Location<T, P extends Number> {\n"
+        + "}\n"
+    );
+  }
+
+  @Test public void nullTypesAddition() {
+    try {
+      TypeSpec.classBuilder("Taco").addTypes(null);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected.getMessage())
+          .isEqualTo("typeSpecs == null");
+    }
+  }
+
+  @Test public void multipleTypeAddition() {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addTypes(Arrays.asList(
+            TypeSpec.classBuilder("Topping").build(),
+            TypeSpec.classBuilder("Sauce").build()
+        ))
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  class Topping {\n"
+        + "  }\n"
+        + "\n"
+        + "  class Sauce {\n"
+        + "  }\n"
+        + "}\n"
+    );
   }
 }
