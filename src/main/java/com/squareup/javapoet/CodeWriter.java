@@ -16,11 +16,7 @@
 package com.squareup.javapoet;
 
 import java.io.IOException;
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -177,17 +173,16 @@ final class CodeWriter {
    * Emit type variables with their bounds. This should only be used when declaring type variables;
    * everywhere else bounds are omitted.
    */
-  public void emitTypeVariables(List<TypeVariable<?>> typeVariables) throws IOException {
+  public void emitTypeVariables(List<TypeVariableName> typeVariables) throws IOException {
     if (typeVariables.isEmpty()) return;
 
     emit("<");
     boolean firstTypeVariable = true;
-    for (TypeVariable<?> typeVariable : typeVariables) {
+    for (TypeVariableName typeVariable : typeVariables) {
       if (!firstTypeVariable) emit(", ");
-      emit("$L", typeVariable.getName());
+      emit("$L", typeVariable.name);
       boolean firstBound = true;
-      for (Type bound : typeVariable.getBounds()) {
-        if (isObject(bound)) continue;
+      for (TypeName bound : typeVariable.bounds) {
         emit(firstBound ? " extends $T" : " & $T", bound);
         firstBound = false;
       }
@@ -221,7 +216,7 @@ final class CodeWriter {
           break;
 
         case "$T":
-          emitType(codeBlock.args.get(a++));
+          toType(codeBlock.args.get(a++)).emit(this);
           break;
 
         case "$$":
@@ -272,64 +267,12 @@ final class CodeWriter {
     }
   }
 
-  private CodeWriter emitType(Object arg) throws IOException {
-    Type type = toType(arg);
-
-    if (type instanceof Class<?>) {
-      Class<?> classType = (Class<?>) type;
-      if (classType.isPrimitive()) return emit(classType.getName());
-      if (classType.isArray()) return emit("$T[]", classType.getComponentType());
-      return emitType(ClassName.get(classType));
-
-    } else if (type instanceof ParameterizedType) {
-      ParameterizedType parameterizedType = (ParameterizedType) type;
-      emitType(parameterizedType.getRawType());
-      emitAndIndent("<");
-      boolean firstParameter = true;
-      for (Type parameter : parameterizedType.getActualTypeArguments()) {
-        if (!firstParameter) emitAndIndent(", ");
-        emitType(parameter);
-        firstParameter = false;
-      }
-      emitAndIndent(">");
-      return this;
-
-    } else if (type instanceof WildcardType) {
-      WildcardType wildcardName = (WildcardType) type;
-      Type[] extendsBounds = wildcardName.getUpperBounds();
-      Type[] superBounds = wildcardName.getLowerBounds();
-      if (superBounds.length == 1) {
-        return emit("? super $T", superBounds[0]);
-      }
-      checkArgument(extendsBounds.length == 1, "unexpected extends bounds: %s", type);
-      return isObject(extendsBounds[0])
-          ? emit("?")
-          : emit("? extends $T", extendsBounds[0]);
-
-    } else if (type instanceof TypeVariable<?>) {
-      return emitAndIndent(((TypeVariable) type).getName());
-
-    } else if (type instanceof ClassName) {
-      return emitAndIndent(lookupName((ClassName) type));
-
-    } else if (type instanceof GenericArrayType) {
-      return emit("$T[]", ((GenericArrayType) type).getGenericComponentType());
-
-    }
-
-    throw new UnsupportedOperationException("unexpected type: " + arg);
-  }
-
-  private boolean isObject(Type bound) {
-    return bound == Object.class || bound.equals(ClassName.OBJECT);
-  }
-
   /**
    * Returns the best name to identify {@code className} with in the current context. This uses the
    * available imports and the current scope to find the shortest name available. It does not honor
    * names visible due to inheritance.
    */
-  private String lookupName(ClassName className) {
+  String lookupName(ClassName className) {
     // Different package than current? Just look for an import.
     if (!className.packageName().equals(packageName)) {
       if (conflictsWithLocalName(className)) {
@@ -350,7 +293,7 @@ final class CodeWriter {
 
       // Fall back to the fully-qualified name. Mark the type as importable for a future pass.
       if (!javadoc) importableTypes.add(className);
-      return className.toString();
+      return className.canonicalName;
     }
 
     // Look for the longest common prefix, which we can omit.
@@ -398,7 +341,7 @@ final class CodeWriter {
    * {@link #out} does it through here, since we emit indentation lazily in order to avoid
    * unnecessary trailing whitespace.
    */
-  private CodeWriter emitAndIndent(String s) throws IOException {
+  CodeWriter emitAndIndent(String s) throws IOException {
     boolean first = true;
     for (String line : s.split("\n", -1)) {
       // Emit a newline character. Make sure blank lines in Javadoc & comments look good.
@@ -442,10 +385,11 @@ final class CodeWriter {
     }
   }
 
-  private Type toType(Object arg) {
-    if (arg instanceof Type) return (Type) arg;
-    if (arg instanceof TypeMirror) return Types.get((TypeMirror) arg);
-    if (arg instanceof Element) return Types.get(((Element) arg).asType());
+  private TypeName toType(Object arg) {
+    if (arg instanceof TypeName) return (TypeName) arg;
+    if (arg instanceof TypeMirror) return TypeName.get((TypeMirror) arg);
+    if (arg instanceof Element) return TypeName.get(((Element) arg).asType());
+    if (arg instanceof Type) return TypeName.get((Type) arg);
     throw new IllegalArgumentException("expected type but was " + arg);
   }
 
@@ -454,7 +398,7 @@ final class CodeWriter {
   }
 
   private String toName(Object o) {
-    if (o instanceof CharSequence) return ((CharSequence) o).toString();
+    if (o instanceof CharSequence) return o.toString();
     if (o instanceof ParameterSpec) return ((ParameterSpec) o).name;
     if (o instanceof FieldSpec) return ((FieldSpec) o).name;
     if (o instanceof MethodSpec) return ((MethodSpec) o).name;
@@ -469,9 +413,7 @@ final class CodeWriter {
   Map<ClassName, String> suggestedImports() {
     // Find the simple names that can be imported, and the classes that they target.
     Map<String, ClassName> simpleNameToType = new LinkedHashMap<>();
-    for (Type type : importableTypes) {
-      if (!(type instanceof ClassName)) continue;
-      ClassName className = (ClassName) type;
+    for (ClassName className : importableTypes) {
       if (simpleNameToType.containsKey(className.simpleName())) continue;
       simpleNameToType.put(className.simpleName(), className);
     }
