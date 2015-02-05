@@ -26,6 +26,9 @@ import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.WildcardType;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -154,6 +157,30 @@ public final class TypesTest {
 
   @Test public void wildcardSuperType() throws Exception {
     WildcardTypeName type = WildcardTypeName.supertypeOf(String.class);
+    assertThat(type.toString()).isEqualTo("? super java.lang.String");
+  }
+
+  @Test public void wildcardMirrorNoBounds() throws Exception {
+    WildcardType wildcard = compilation.getTypes().getWildcardType(null, null);
+    TypeName type = TypeName.get(wildcard);
+    assertThat(type.toString()).isEqualTo("?");
+  }
+
+  @Test public void wildcardMirrorExtendsType() throws Exception {
+    Types types = compilation.getTypes();
+    Elements elements = compilation.getElements();
+    TypeMirror charSequence = elements.getTypeElement(CharSequence.class.getName()).asType();
+    WildcardType wildcard = types.getWildcardType(charSequence, null);
+    TypeName type = TypeName.get(wildcard);
+    assertThat(type.toString()).isEqualTo("? extends java.lang.CharSequence");
+  }
+
+  @Test public void wildcardMirrorSuperType() throws Exception {
+    Types types = compilation.getTypes();
+    Elements elements = compilation.getElements();
+    TypeMirror string = elements.getTypeElement(String.class.getName()).asType();
+    WildcardType wildcard = types.getWildcardType(null, string);
+    TypeName type = TypeName.get(wildcard);
     assertThat(type.toString()).isEqualTo("? super java.lang.String");
   }
 
