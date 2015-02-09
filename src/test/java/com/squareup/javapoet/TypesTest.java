@@ -158,4 +158,30 @@ public final class TypesTest {
     TypeVariableName type = TypeVariableName.get("T", CharSequence.class);
     assertThat(type.toString()).isEqualTo("T"); // (Bounds are only emitted in declaration.)
   }
+
+  @Test public void box() throws Exception {
+    assertThat(TypeName.INT.box()).isEqualTo(ClassName.get(Integer.class));
+    assertThat(TypeName.VOID.box()).isEqualTo(ClassName.get(Void.class));
+    assertThat(ClassName.get(Integer.class).box()).isEqualTo(ClassName.get(Integer.class));
+    assertThat(ClassName.get(Void.class).box()).isEqualTo(ClassName.get(Void.class));
+    assertThat(TypeName.OBJECT.box()).isEqualTo(TypeName.OBJECT);
+    assertThat(ClassName.get(String.class).box()).isEqualTo(ClassName.get(String.class));
+  }
+
+  @Test public void unbox() throws Exception {
+    assertThat(TypeName.INT).isEqualTo(TypeName.INT.unbox());
+    assertThat(TypeName.VOID).isEqualTo(TypeName.VOID.unbox());
+    assertThat(ClassName.get(Integer.class).unbox()).isEqualTo(TypeName.INT.unbox());
+    assertThat(ClassName.get(Void.class).unbox()).isEqualTo(TypeName.VOID.unbox());
+    try {
+      TypeName.OBJECT.unbox();
+      fail();
+    } catch (UnsupportedOperationException expected) {
+    }
+    try {
+      ClassName.get(String.class).unbox();
+      fail();
+    } catch (UnsupportedOperationException expected) {
+    }
+  }
 }
