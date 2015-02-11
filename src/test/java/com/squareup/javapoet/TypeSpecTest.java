@@ -1546,4 +1546,31 @@ public final class TypeSpecTest {
         + "}\n"
     );
   }
+
+  @Test public void tryCatch() {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+      .addMethod(
+        MethodSpec.methodBuilder("addTopping")
+          .addParameter(ClassName.get("com.squareup.tacos", "Topping"), "topping")
+          .beginControlFlow("try")
+          .addCode("/* do something tricky with the topping */\n")
+          .nextControlFlow("catch ($T e)",
+            ClassName.get("com.squareup.tacos", "IllegalToppingException"))
+          .endControlFlow()
+          .build()
+      )
+      .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  void addTopping(Topping topping) {\n"
+        + "    try {\n"
+        + "      /* do something tricky with the topping */\n"
+        + "    } catch (IllegalToppingException e) {\n"
+        + "    }\n"
+        + "  }\n"
+        + "}\n"
+    );
+  }
 }

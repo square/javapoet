@@ -143,9 +143,7 @@ public final class CodeBlock {
      */
     public Builder nextControlFlow(String controlFlow, Object... args) {
       unindent();
-      add("} ", args);
-      add(controlFlow, args);
-      add(" {\n", args);
+      add("} " + controlFlow + " {\n", args);
       indent();
       return this;
     }
