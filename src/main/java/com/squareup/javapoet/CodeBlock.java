@@ -145,7 +145,7 @@ public final class CodeBlock {
       unindent();
       add("} ", args);
       add(controlFlow, args);
-      add("{\n", args);
+      add(" {\n", args);
       indent();
       return this;
     }

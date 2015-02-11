@@ -924,7 +924,7 @@ public final class TypeSpecTest {
         + "  void choices() {\n"
         + "    if (5 < 4)  {\n"
         + "      System.out.println(\"wat\");\n"
-        + "    } else if (5 < 6){\n"
+        + "    } else if (5 < 6) {\n"
         + "      System.out.println(\"hello\");\n"
         + "    }\n"
         + "  }\n"
