@@ -20,6 +20,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -310,6 +311,13 @@ public final class TypeSpec {
       return this;
     }
 
+    public Builder addAnnotations(Collection<AnnotationSpec> annotationSpecs) {
+      checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
+      checkArgument(annotationSpecs != null, "annotationSpecs == null");
+      this.annotations.addAll(annotationSpecs);
+      return this;
+    }
+
     public Builder addAnnotation(AnnotationSpec annotationSpec) {
       checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
       this.annotations.add(annotationSpec);
@@ -330,6 +338,13 @@ public final class TypeSpec {
       return this;
     }
 
+    public Builder addTypeVariables(Collection<TypeVariableName> typeVariables) {
+      checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
+      checkArgument(typeVariables != null, "typeVariables == null");
+      this.typeVariables.addAll(typeVariables);
+      return this;
+    }
+
     public Builder addTypeVariable(TypeVariableName typeVariable) {
       checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
       typeVariables.add(typeVariable);
@@ -343,6 +358,12 @@ public final class TypeSpec {
 
     public Builder superclass(Type superclass) {
       return superclass(TypeName.get(superclass));
+    }
+
+    public Builder addSuperinterfaces(Collection<TypeName> superinterfaces) {
+      checkArgument(superinterfaces != null, "superinterfaces == null");
+      this.superinterfaces.addAll(superinterfaces);
+      return this;
     }
 
     public Builder addSuperinterface(TypeName superinterface) {
@@ -367,6 +388,14 @@ public final class TypeSpec {
       return this;
     }
 
+    public Builder addFields(Collection<FieldSpec> fieldSpecs) {
+      checkArgument(fieldSpecs != null, "fieldSpecs == null");
+      for (FieldSpec fieldSpec : fieldSpecs) {
+        addField(fieldSpec);
+      }
+      return this;
+    }
+
     public Builder addField(FieldSpec fieldSpec) {
       checkArgument(fieldSpec.modifiers.containsAll(kind.implicitFieldModifiers),
           "%s %s.%s requires modifiers %s", kind, name, fieldSpec.name,
@@ -383,11 +412,27 @@ public final class TypeSpec {
       return addField(TypeName.get(type), name, modifiers);
     }
 
+    public Builder addMethods(Collection<MethodSpec> methodSpecs) {
+      checkArgument(methodSpecs != null, "methodSpecs == null");
+      for (MethodSpec methodSpec : methodSpecs) {
+        addMethod(methodSpec);
+      }
+      return this;
+    }
+
     public Builder addMethod(MethodSpec methodSpec) {
       checkArgument(methodSpec.modifiers.containsAll(kind.implicitMethodModifiers),
           "%s %s.%s requires modifiers %s", kind, name, methodSpec.name,
           kind.implicitMethodModifiers);
       methodSpecs.add(methodSpec);
+      return this;
+    }
+
+    public Builder addTypes(Collection<TypeSpec> typeSpecs) {
+      checkArgument(typeSpecs != null, "typeSpecs == null");
+      for (TypeSpec typeSpec : typeSpecs) {
+        addType(typeSpec);
+      }
       return this;
     }
 

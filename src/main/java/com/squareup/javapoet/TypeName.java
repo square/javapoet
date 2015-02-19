@@ -71,6 +71,16 @@ public class TypeName {
   public static final TypeName DOUBLE = new TypeName("double");
   public static final ClassName OBJECT = ClassName.get("java.lang", "Object");
 
+  private static final ClassName BOXED_VOID = ClassName.get("java.lang", "Void");
+  private static final ClassName BOXED_BOOLEAN = ClassName.get("java.lang", "Boolean");
+  private static final ClassName BOXED_BYTE = ClassName.get("java.lang", "Byte");
+  private static final ClassName BOXED_SHORT = ClassName.get("java.lang", "Short");
+  private static final ClassName BOXED_INT = ClassName.get("java.lang", "Integer");
+  private static final ClassName BOXED_LONG = ClassName.get("java.lang", "Long");
+  private static final ClassName BOXED_CHAR = ClassName.get("java.lang", "Character");
+  private static final ClassName BOXED_FLOAT = ClassName.get("java.lang", "Float");
+  private static final ClassName BOXED_DOUBLE = ClassName.get("java.lang", "Double");
+
   /** The name of this type if it is a keyword, or null. */
   private final String keyword;
 
@@ -85,6 +95,44 @@ public class TypeName {
 
   public boolean isPrimitive() {
     return keyword != null && this != VOID;
+  }
+
+  /**
+   * Returns a boxed type if this is a primitive type (like {@code Integer} for {@code int}) or
+   * {@code void}. Returns this type if boxing doesn't apply.
+   */
+  public TypeName box() {
+    if (keyword == null) return this; // Doesn't need boxing.
+    if (this == VOID) return BOXED_VOID;
+    if (this == BOOLEAN) return BOXED_BOOLEAN;
+    if (this == BYTE) return BOXED_BYTE;
+    if (this == SHORT) return BOXED_SHORT;
+    if (this == INT) return BOXED_INT;
+    if (this == LONG) return BOXED_LONG;
+    if (this == CHAR) return BOXED_CHAR;
+    if (this == FLOAT) return BOXED_FLOAT;
+    if (this == DOUBLE) return BOXED_DOUBLE;
+    throw new AssertionError(keyword);
+  }
+
+  /**
+   * Returns an unboxed type if this is a boxed primitive type (like {@code int} for {@code
+   * Integer}) or {@code Void}. Returns this type if it is already unboxed.
+   *
+   * @throws UnsupportedOperationException if this type isn't eligible for unboxing.
+   */
+  public TypeName unbox() {
+    if (keyword != null) return this; // Already unboxed.
+    if (this.equals(BOXED_VOID)) return VOID;
+    if (this.equals(BOXED_BOOLEAN)) return BOOLEAN;
+    if (this.equals(BOXED_BYTE)) return BYTE;
+    if (this.equals(BOXED_SHORT)) return SHORT;
+    if (this.equals(BOXED_INT)) return INT;
+    if (this.equals(BOXED_LONG)) return LONG;
+    if (this.equals(BOXED_CHAR)) return CHAR;
+    if (this.equals(BOXED_FLOAT)) return FLOAT;
+    if (this.equals(BOXED_DOUBLE)) return DOUBLE;
+    throw new UnsupportedOperationException("cannot unbox " + this);
   }
 
   @Override public final String toString() {
