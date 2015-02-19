@@ -26,6 +26,9 @@ import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.WildcardType;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -157,8 +160,58 @@ public final class TypesTest {
     assertThat(type.toString()).isEqualTo("? super java.lang.String");
   }
 
+  @Test public void wildcardMirrorNoBounds() throws Exception {
+    WildcardType wildcard = compilation.getTypes().getWildcardType(null, null);
+    TypeName type = TypeName.get(wildcard);
+    assertThat(type.toString()).isEqualTo("?");
+  }
+
+  @Test public void wildcardMirrorExtendsType() throws Exception {
+    Types types = compilation.getTypes();
+    Elements elements = compilation.getElements();
+    TypeMirror charSequence = elements.getTypeElement(CharSequence.class.getName()).asType();
+    WildcardType wildcard = types.getWildcardType(charSequence, null);
+    TypeName type = TypeName.get(wildcard);
+    assertThat(type.toString()).isEqualTo("? extends java.lang.CharSequence");
+  }
+
+  @Test public void wildcardMirrorSuperType() throws Exception {
+    Types types = compilation.getTypes();
+    Elements elements = compilation.getElements();
+    TypeMirror string = elements.getTypeElement(String.class.getName()).asType();
+    WildcardType wildcard = types.getWildcardType(null, string);
+    TypeName type = TypeName.get(wildcard);
+    assertThat(type.toString()).isEqualTo("? super java.lang.String");
+  }
+
   @Test public void typeVariable() throws Exception {
     TypeVariableName type = TypeVariableName.get("T", CharSequence.class);
     assertThat(type.toString()).isEqualTo("T"); // (Bounds are only emitted in declaration.)
+  }
+
+  @Test public void box() throws Exception {
+    assertThat(TypeName.INT.box()).isEqualTo(ClassName.get(Integer.class));
+    assertThat(TypeName.VOID.box()).isEqualTo(ClassName.get(Void.class));
+    assertThat(ClassName.get(Integer.class).box()).isEqualTo(ClassName.get(Integer.class));
+    assertThat(ClassName.get(Void.class).box()).isEqualTo(ClassName.get(Void.class));
+    assertThat(TypeName.OBJECT.box()).isEqualTo(TypeName.OBJECT);
+    assertThat(ClassName.get(String.class).box()).isEqualTo(ClassName.get(String.class));
+  }
+
+  @Test public void unbox() throws Exception {
+    assertThat(TypeName.INT).isEqualTo(TypeName.INT.unbox());
+    assertThat(TypeName.VOID).isEqualTo(TypeName.VOID.unbox());
+    assertThat(ClassName.get(Integer.class).unbox()).isEqualTo(TypeName.INT.unbox());
+    assertThat(ClassName.get(Void.class).unbox()).isEqualTo(TypeName.VOID.unbox());
+    try {
+      TypeName.OBJECT.unbox();
+      fail();
+    } catch (UnsupportedOperationException expected) {
+    }
+    try {
+      ClassName.get(String.class).unbox();
+      fail();
+    } catch (UnsupportedOperationException expected) {
+    }
   }
 }

@@ -21,6 +21,7 @@ import java.lang.reflect.WildcardType;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import javax.lang.model.type.TypeMirror;
 
 import static com.squareup.javapoet.Util.checkArgument;
 
@@ -89,9 +90,17 @@ public final class WildcardTypeName extends TypeName {
   }
 
   public static TypeName get(javax.lang.model.type.WildcardType mirror) {
-    TypeName extendsBound = TypeName.get(mirror.getExtendsBound());
-    TypeName superBound = TypeName.get(mirror.getSuperBound());
-    return superBound != null ? supertypeOf(superBound) : subtypeOf(extendsBound);
+    TypeMirror extendsBound = mirror.getExtendsBound();
+    if (extendsBound == null) {
+      TypeMirror superBound = mirror.getSuperBound();
+      if (superBound == null) {
+        return subtypeOf(Object.class);
+      } else {
+        return supertypeOf(TypeName.get(superBound));
+      }
+    } else {
+      return subtypeOf(TypeName.get(extendsBound));
+    }
   }
 
   public static TypeName get(WildcardType wildcardName) {
