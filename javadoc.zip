@@ -1,1 +1,0 @@
-curl -L https://search.maven.org/remote_content?g=com.squareup&a=javapoet&v=LATEST&c=javadoc
