@@ -16,7 +16,6 @@
 package com.squareup.javapoet;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -29,9 +28,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
-import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.type.TypeMirror;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
@@ -204,19 +201,20 @@ final class CodeWriter {
           break;
 
         case "$N":
-          emitName(codeBlock.args.get(a++));
+          emitAndIndent((String) codeBlock.args.get(a++));
           break;
 
         case "$S":
-          Object arg = codeBlock.args.get(a++);
+          String string = (String) codeBlock.args.get(a++);
           // Emit null as a literal null: no quotes.
-          emitAndIndent(arg != null
-              ? stringLiteral(String.valueOf(arg))
+          emitAndIndent(string != null
+              ? stringLiteral(string)
               : "null");
           break;
 
         case "$T":
-          toType(codeBlock.args.get(a++)).emit(this);
+          TypeName typeName = (TypeName) codeBlock.args.get(a++);
+          typeName.emit(this);
           break;
 
         case "$$":
@@ -383,27 +381,6 @@ final class CodeWriter {
     for (int j = 0; j < indentLevel; j++) {
       out.append(indent);
     }
-  }
-
-  private TypeName toType(Object arg) {
-    if (arg instanceof TypeName) return (TypeName) arg;
-    if (arg instanceof TypeMirror) return TypeName.get((TypeMirror) arg);
-    if (arg instanceof Element) return TypeName.get(((Element) arg).asType());
-    if (arg instanceof Type) return TypeName.get((Type) arg);
-    throw new IllegalArgumentException("expected type but was " + arg);
-  }
-
-  private void emitName(Object o) throws IOException {
-    emitAndIndent(toName(o));
-  }
-
-  private String toName(Object o) {
-    if (o instanceof CharSequence) return o.toString();
-    if (o instanceof ParameterSpec) return ((ParameterSpec) o).name;
-    if (o instanceof FieldSpec) return ((FieldSpec) o).name;
-    if (o instanceof MethodSpec) return ((MethodSpec) o).name;
-    if (o instanceof TypeSpec) return ((TypeSpec) o).name;
-    throw new IllegalArgumentException("expected name but was " + o);
   }
 
   /**

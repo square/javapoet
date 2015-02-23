@@ -16,26 +16,43 @@
 package com.squareup.javapoet;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.testing.compile.CompilationRule;
+import java.io.IOException;
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.AbstractSet;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.EventListener;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Random;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
-
-import javax.lang.model.element.Element;
-import javax.lang.model.element.Modifier;
-import java.io.IOException;
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.*;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 @RunWith(JUnit4.class)
 public final class TypeSpecTest {
-
   private final String tacosPackage = "com.squareup.tacos";
   private static final String donutsPackage = "com.squareup.donuts";
+
+  @Rule public final CompilationRule compilation = new CompilationRule();
+
+  private TypeElement getElement(Class<?> clazz) {
+    return compilation.getElements().getTypeElement(clazz.getCanonicalName());
+  }
 
   @Test public void basic() throws Exception {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
@@ -1371,8 +1388,7 @@ public final class TypeSpecTest {
             AnnotationSpec.builder(SuppressWarnings.class)
                 .addMember("value", "$S", "unchecked")
                 .build(),
-            AnnotationSpec.builder(Deprecated.class).build()
-        ))
+            AnnotationSpec.builder(Deprecated.class).build()))
         .build();
     assertThat(toString(taco)).isEqualTo(""
         + "package com.squareup.tacos;\n"
@@ -1383,8 +1399,7 @@ public final class TypeSpecTest {
         + "@SuppressWarnings(\"unchecked\")\n"
         + "@Deprecated\n"
         + "class Taco {\n"
-        + "}\n"
-          );
+        + "}\n");
   }
 
   @Test public void nullFieldsAddition() {
@@ -1400,11 +1415,8 @@ public final class TypeSpecTest {
   @Test public void multipleFieldAddition() {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
         .addFields(Arrays.asList(
-            FieldSpec.builder(int.class, "ANSWER", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
-                .initializer("$L", 42)
-                .build(),
-            FieldSpec.builder(BigDecimal.class, "price", Modifier.PRIVATE).build()
-        ))
+            FieldSpec.builder(int.class, "ANSWER", Modifier.STATIC, Modifier.FINAL).build(),
+            FieldSpec.builder(BigDecimal.class, "price", Modifier.PRIVATE).build()))
         .build();
     assertThat(toString(taco)).isEqualTo(""
         + "package com.squareup.tacos;\n"
@@ -1412,11 +1424,10 @@ public final class TypeSpecTest {
         + "import java.math.BigDecimal;\n"
         + "\n"
         + "class Taco {\n"
-        + "  private static final int ANSWER = 42;\n"
+        + "  static final int ANSWER;\n"
         + "\n"
         + "  private BigDecimal price;\n"
-        + "}\n"
-    );
+        + "}\n");
   }
 
   @Test public void nullMethodsAddition() {
@@ -1442,8 +1453,7 @@ public final class TypeSpecTest {
                 .returns(int.class)
                 .addJavadoc("chosen by fair dice roll ;)")
                 .addStatement("return $L", 4)
-                .build()
-        ))
+                .build()))
         .build();
     assertThat(toString(taco)).isEqualTo(""
         + "package com.squareup.tacos;\n"
@@ -1458,8 +1468,7 @@ public final class TypeSpecTest {
         + "  public int getRandomQuantity() {\n"
         + "    return 4;\n"
         + "  }\n"
-        + "}\n"
-    );
+        + "}\n");
   }
 
   @Test public void nullSuperinterfacesAddition() {
@@ -1476,8 +1485,7 @@ public final class TypeSpecTest {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
         .addSuperinterfaces(Arrays.asList(
             TypeName.get(Serializable.class),
-            TypeName.get(EventListener.class)
-        ))
+            TypeName.get(EventListener.class)))
         .build();
     assertThat(toString(taco)).isEqualTo(""
         + "package com.squareup.tacos;\n"
@@ -1486,8 +1494,7 @@ public final class TypeSpecTest {
         + "import java.util.EventListener;\n"
         + "\n"
         + "class Taco implements Serializable, EventListener {\n"
-        + "}\n"
-    );
+        + "}\n");
   }
 
   @Test public void nullTypeVariablesAddition() {
@@ -1504,8 +1511,7 @@ public final class TypeSpecTest {
     TypeSpec location = TypeSpec.classBuilder("Location")
         .addTypeVariables(Arrays.asList(
             TypeVariableName.get("T"),
-            TypeVariableName.get("P", Number.class)
-        ))
+            TypeVariableName.get("P", Number.class)))
         .build();
     assertThat(toString(location)).isEqualTo(""
         + "package com.squareup.tacos;\n"
@@ -1513,8 +1519,7 @@ public final class TypeSpecTest {
         + "import java.lang.Number;\n"
         + "\n"
         + "class Location<T, P extends Number> {\n"
-        + "}\n"
-    );
+        + "}\n");
   }
 
   @Test public void nullTypesAddition() {
@@ -1531,8 +1536,7 @@ public final class TypeSpecTest {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
         .addTypes(Arrays.asList(
             TypeSpec.classBuilder("Topping").build(),
-            TypeSpec.classBuilder("Sauce").build()
-        ))
+            TypeSpec.classBuilder("Sauce").build()))
         .build();
     assertThat(toString(taco)).isEqualTo(""
         + "package com.squareup.tacos;\n"
@@ -1543,23 +1547,20 @@ public final class TypeSpecTest {
         + "\n"
         + "  class Sauce {\n"
         + "  }\n"
-        + "}\n"
-    );
+        + "}\n");
   }
 
   @Test public void tryCatch() {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-      .addMethod(
-        MethodSpec.methodBuilder("addTopping")
-          .addParameter(ClassName.get("com.squareup.tacos", "Topping"), "topping")
-          .beginControlFlow("try")
-          .addCode("/* do something tricky with the topping */\n")
-          .nextControlFlow("catch ($T e)",
-            ClassName.get("com.squareup.tacos", "IllegalToppingException"))
-          .endControlFlow()
-          .build()
-      )
-      .build();
+        .addMethod(MethodSpec.methodBuilder("addTopping")
+            .addParameter(ClassName.get("com.squareup.tacos", "Topping"), "topping")
+            .beginControlFlow("try")
+            .addCode("/* do something tricky with the topping */\n")
+            .nextControlFlow("catch ($T e)",
+                ClassName.get("com.squareup.tacos", "IllegalToppingException"))
+            .endControlFlow()
+            .build())
+        .build();
     assertThat(toString(taco)).isEqualTo(""
         + "package com.squareup.tacos;\n"
         + "\n"
@@ -1570,7 +1571,115 @@ public final class TypeSpecTest {
         + "    } catch (IllegalToppingException e) {\n"
         + "    }\n"
         + "  }\n"
-        + "}\n"
-    );
+        + "}\n");
+  }
+
+  @Test public void literalFromAnything() {
+    Object value = new Object() {
+      @Override public String toString() {
+        return "foo";
+      }
+    };
+    assertThat(codeBlock("$L", value).toString()).isEqualTo("foo");
+  }
+
+  @Test public void nameFromCharSequence() {
+    assertThat(codeBlock("$N", "text").toString()).isEqualTo("text");
+  }
+
+  @Test public void nameFromField() {
+    FieldSpec field = FieldSpec.builder(String.class, "field").build();
+    assertThat(codeBlock("$N", field).toString()).isEqualTo("field");
+  }
+
+  @Test public void nameFromParameter() {
+    ParameterSpec parameter = ParameterSpec.builder(String.class, "parameter").build();
+    assertThat(codeBlock("$N", parameter).toString()).isEqualTo("parameter");
+  }
+
+  @Test public void nameFromMethod() {
+    MethodSpec method = MethodSpec.methodBuilder("method")
+        .addModifiers(Modifier.ABSTRACT)
+        .returns(String.class)
+        .build();
+    assertThat(codeBlock("$N", method).toString()).isEqualTo("method");
+  }
+
+  @Test public void nameFromType() {
+    TypeSpec type = TypeSpec.classBuilder("Type").build();
+    assertThat(codeBlock("$N", type).toString()).isEqualTo("Type");
+  }
+
+  @Test public void nameFromUnsupportedType() {
+    try {
+      CodeBlock.builder().add("$N", String.class);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("expected name but was " + String.class);
+    }
+  }
+
+  @Test public void stringFromAnything() {
+    Object value = new Object() {
+      @Override public String toString() {
+        return "foo";
+      }
+    };
+    assertThat(codeBlock("$S", value).toString()).isEqualTo("\"foo\"");
+  }
+
+  @Test public void stringFromNull() {
+    assertThat(codeBlock("$S", new Object[] { null }).toString()).isEqualTo("null");
+  }
+
+  @Test public void typeFromTypeName() {
+    TypeName typeName = TypeName.get(String.class);
+    assertThat(codeBlock("$T", typeName).toString()).isEqualTo("java.lang.String");
+  }
+
+  @Test public void typeFromTypeMirror() {
+    TypeMirror mirror = getElement(String.class).asType();
+    assertThat(codeBlock("$T", mirror).toString()).isEqualTo("java.lang.String");
+  }
+
+  @Test public void typeFromTypeElement() {
+    TypeElement element = getElement(String.class);
+    assertThat(codeBlock("$T", element).toString()).isEqualTo("java.lang.String");
+  }
+
+  @Test public void typeFromReflectType() {
+    assertThat(codeBlock("$T", String.class).toString()).isEqualTo("java.lang.String");
+  }
+
+  @Test public void typeFromUnsupportedType() {
+    try {
+      CodeBlock.builder().add("$T", "java.lang.String");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("expected type but was java.lang.String");
+    }
+  }
+
+  @Test public void tooManyArguments() {
+    try {
+      CodeBlock.builder().add("$$", "foo");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("unexpected args for $$: [foo]");
+    }
+  }
+
+  @Test public void tooFewArguments() {
+    try {
+      CodeBlock.builder().add("$S");
+      fail();
+    } catch (NoSuchElementException expected) {
+    }
+  }
+
+  private CodeBlock codeBlock(String format, Object... args) {
+    return CodeBlock.builder()
+        .add(format, args)
+        .build();
   }
 }

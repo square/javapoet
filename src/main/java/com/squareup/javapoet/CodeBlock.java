@@ -17,9 +17,13 @@ package com.squareup.javapoet;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import javax.lang.model.element.Element;
+import javax.lang.model.type.TypeMirror;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkState;
@@ -90,7 +94,7 @@ public final class CodeBlock {
     }
 
     public Builder add(String format, Object... args) {
-      int expectedArgsLength = 0;
+      Iterator<Object> i = Arrays.asList(args).iterator();
       for (int p = 0, nextP; p < format.length(); p = nextP) {
         if (format.charAt(p) != '$') {
           nextP = format.indexOf('$', p + 1);
@@ -98,33 +102,61 @@ public final class CodeBlock {
         } else {
           checkState(p + 1 < format.length(), "dangling $ in format string %s", format);
           switch (format.charAt(p + 1)) {
-            case 'L':
             case 'N':
+              this.args.add(argToName(i.next()));
+              break;
+            case 'L':
+              this.args.add(argToLiteral(i.next()));
+              break;
             case 'S':
+              this.args.add(argToString(i.next()));
+              break;
             case 'T':
-              expectedArgsLength++;
-              // Fall through.
+              this.args.add(argToType(i.next()));
+              break;
             case '$':
             case '>':
             case '<':
             case '[':
             case ']':
-              nextP = p + 2;
               break;
-
             default:
               throw new IllegalArgumentException("invalid format string: " + format);
           }
+
+          nextP = p + 2;
         }
 
         formatParts.add(format.substring(p, nextP));
       }
 
-      checkArgument(args.length == expectedArgsLength,
-          "expected %s args for %s but was %s", expectedArgsLength, format, args.length);
-
-      Collections.addAll(this.args, args);
+      checkArgument(!i.hasNext(), "unexpected args for %s: %s", format, Arrays.asList(args));
       return this;
+    }
+
+    private String argToName(Object o) {
+      if (o instanceof CharSequence) return o.toString();
+      if (o instanceof ParameterSpec) return ((ParameterSpec) o).name;
+      if (o instanceof FieldSpec) return ((FieldSpec) o).name;
+      if (o instanceof MethodSpec) return ((MethodSpec) o).name;
+      if (o instanceof TypeSpec) return ((TypeSpec) o).name;
+      throw new IllegalArgumentException("expected name but was " + o);
+    }
+
+    private Object argToLiteral(Object o) {
+      return o;
+    }
+
+    private String argToString(Object o) {
+      return o != null ? String.valueOf(o) : null;
+    }
+
+    private TypeName argToType(Object o) {
+      if (o instanceof TypeName) return (TypeName) o;
+      if (o instanceof TypeMirror) return TypeName.get((TypeMirror) o);
+      if (o instanceof Element) return TypeName.get(((Element) o).asType());
+      if (o instanceof Type) return TypeName.get((Type) o);
+      throw new IllegalArgumentException("expected type but was " + o);
     }
 
     /**
