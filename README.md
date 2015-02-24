@@ -41,6 +41,7 @@ public final class Person {
 }
 ```
 
+The [Javadoc][javadoc] catalogs the complete JavaWriter API.
 
 
 Download
@@ -78,3 +79,4 @@ License
 
 
  [dl]: http://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.squareup&a=javawriter&v=LATEST
+ [javadoc]: https://square.github.io/javapoet/javadoc/javawriter/
