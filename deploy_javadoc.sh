@@ -23,10 +23,15 @@ git checkout -t origin/gh-pages
 # Delete everything
 rm -rf *
 
-# Download the latest javadoc
-curl -L "https://search.maven.org/remote_content?g=$GROUP_ID&a=$ARTIFACT_ID&v=LATEST&c=javadoc" > javadoc.zip
-unzip javadoc.zip
-rm javadoc.zip
+# Download the latest javadoc to directories like 'javadoc/javapoet'.
+for DOCUMENTED_ARTIFACT in javawriter javapoet
+do
+  curl -L "https://search.maven.org/remote_content?g=$GROUP_ID&a=$DOCUMENTED_ARTIFACT&v=LATEST&c=javadoc" > javadoc.zip
+  JAVADOC_DIR="javadoc/${DOCUMENTED_ARTIFACT}"
+  mkdir -p $JAVADOC_DIR
+  unzip javadoc.zip -d $JAVADOC_DIR
+  rm javadoc.zip
+done
 
 # Stage all files in git and create a commit
 git add .
