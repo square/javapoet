@@ -98,6 +98,10 @@ public final class TypeSpec {
         .build());
   }
 
+  public static Builder annotationBuilder(String name) {
+    return new Builder(Kind.ANNOTATION, checkNotNull(name, "name == null"), null);
+  }
+
   void emit(CodeWriter codeWriter, String enumName, Set<Modifier> implicitModifiers)
       throws IOException {
     // Nested classes interrupt wrapped line indentation. Stash the current wrapping state and put
@@ -126,7 +130,11 @@ public final class TypeSpec {
         codeWriter.emitJavadoc(javadoc);
         codeWriter.emitAnnotations(annotations, false);
         codeWriter.emitModifiers(modifiers, Util.union(implicitModifiers, kind.asMemberModifiers));
-        codeWriter.emit("$L $L", kind.name().toLowerCase(Locale.US), name);
+        if (kind == Kind.ANNOTATION) {
+          codeWriter.emit("$L $L", "@interface", name);
+        } else {
+          codeWriter.emit("$L $L", kind.name().toLowerCase(Locale.US), name);
+        }
         codeWriter.emitTypeVariables(typeVariables);
 
         List<TypeName> extendsTypes;
@@ -262,7 +270,13 @@ public final class TypeSpec {
         Collections.<Modifier>emptySet(),
         Collections.<Modifier>emptySet(),
         Collections.<Modifier>emptySet(),
-        Collections.singleton(Modifier.STATIC));
+        Collections.singleton(Modifier.STATIC)),
+
+    ANNOTATION(
+        Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)),
+        Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.ABSTRACT)),
+        Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC)),
+        Util.immutableSet(Arrays.asList(Modifier.STATIC)));
 
     private final Set<Modifier> implicitFieldModifiers;
     private final Set<Modifier> implicitMethodModifiers;
@@ -424,6 +438,9 @@ public final class TypeSpec {
       checkArgument(methodSpec.modifiers.containsAll(kind.implicitMethodModifiers),
           "%s %s.%s requires modifiers %s", kind, name, methodSpec.name,
           kind.implicitMethodModifiers);
+      if (kind != Kind.ANNOTATION) {
+        checkState(methodSpec.defaultValue == null, "default method != null");
+      }
       methodSpecs.add(methodSpec);
       return this;
     }
