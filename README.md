@@ -50,7 +50,7 @@ that to a `HelloWorld.java` file.
 In this case we write the file to `System.out`, but we could also get it as a string
 (`JavaFile.toString()`) or write it to the file system (`JavaPoet.writeTo()`).
 
-The [JavaPoet Javadoc][javadoc] catalogs the complete JavaPoet API, which we explore below.
+The [Javadoc][javadoc] catalogs the complete JavaPoet API, which we explore below.
 
 ### Code & Control Flow
 
