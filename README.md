@@ -50,6 +50,8 @@ that to a `HelloWorld.java` file.
 In this case we write the file to `System.out`, but we could also get it as a string
 (`JavaFile.toString()`) or write it to the file system (`JavaPoet.writeTo()`).
 
+The [JavaPoet Javadoc][javadoc] catalogs the complete JavaPoet API, which we explore below.
+
 ### Code & Control Flow
 
 Most of JavaPoet's API uses plain old immutable Java objects. There's also builders, method chaining
@@ -786,6 +788,7 @@ JavaWriter continues to be available in [GitHub][javawriter] and [Maven Central]
 
  [dl]: https://search.maven.org/remote_content?g=com.squareup&a=javapoet&v=LATEST
  [snap]: https://oss.sonatype.org/content/repositories/snapshots/
+ [javadoc]: https://square.github.io/javapoet/javadoc/javapoet/
  [javawriter]: https://github.com/square/javapoet/tree/javawriter_2
  [javawriter_maven]: http://search.maven.org/#artifactdetails%7Ccom.squareup%7Cjavawriter%7C2.5.1%7Cjar
  [formatter]: http://developer.android.com/reference/java/util/Formatter.html
