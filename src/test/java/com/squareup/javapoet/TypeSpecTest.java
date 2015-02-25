@@ -650,6 +650,59 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  @Test public void annotation() throws Exception {
+    TypeSpec annotation = TypeSpec.annotationBuilder("MyAnnotation")
+        .addModifiers(Modifier.PUBLIC)
+        .addMethod(MethodSpec.methodBuilder("test")
+                .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+                .defaultValue("$L", 0)
+                .returns(int.class)
+                .build())
+        .build();
+
+    assertThat(toString(annotation)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "public @interface MyAnnotation {\n"
+        + "  int test() default 0;\n"
+        + "}\n"
+    );
+  }
+
+  @Test public void innerAnnotationInAnnotationDeclaration() throws Exception {
+    TypeSpec bar = TypeSpec.annotationBuilder("Bar")
+        .addMethod(MethodSpec.methodBuilder("value")
+            .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+            .defaultValue("@$T", Deprecated.class)
+            .returns(Deprecated.class)
+            .build())
+        .build();
+
+    assertThat(toString(bar)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.Deprecated;\n"
+        + "\n"
+        + "@interface Bar {\n"
+        + "  Deprecated value() default @Deprecated;\n"
+        + "}\n"
+    );
+  }
+
+  @Test
+  public void classCannotHaveDefaultValueForMethod() throws Exception {
+    try {
+      TypeSpec.classBuilder("Tacos")
+          .addMethod(MethodSpec.methodBuilder("test")
+              .addModifiers(Modifier.PUBLIC)
+              .defaultValue("0")
+              .returns(int.class)
+              .build())
+          .build();
+      fail();
+    } catch (IllegalStateException expected) {}
+  }
+
   @Test public void referencedAndDeclaredSimpleNamesConflict() throws Exception {
     FieldSpec internalTop = FieldSpec.builder(
         ClassName.get(tacosPackage, "Top"), "internalTop").build();
@@ -1239,6 +1292,14 @@ public final class TypeSpecTest {
         .build();
     assertThat(type.toString()).isEqualTo(""
         + "interface Taco {\n"
+        + "}\n");
+  }
+
+  @Test public void annotationDeclarationToString() throws Exception {
+    TypeSpec type = TypeSpec.annotationBuilder("Taco")
+        .build();
+    assertThat(type.toString()).isEqualTo(""
+        + "@interface Taco {\n"
         + "}\n");
   }
 
