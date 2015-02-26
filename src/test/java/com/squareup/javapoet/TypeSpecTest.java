@@ -1635,6 +1635,34 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  @Test public void ifElse() {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addMethod(
+            MethodSpec.methodBuilder("isDelicious")
+                .addParameter(TypeName.INT, "count")
+                .returns(TypeName.BOOLEAN)
+                .beginControlFlow("if (count > 0)")
+                .addStatement("return true")
+                .nextControlFlow("else")
+                .addStatement("return false")
+                .endControlFlow()
+                .build()
+        )
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  boolean isDelicious(int count) {\n"
+        + "    if (count > 0) {\n"
+        + "      return true;\n"
+        + "    } else {\n"
+        + "      return false;\n"
+        + "    }\n"
+        + "  }\n"
+        + "}\n");
+  }
+
   @Test public void literalFromAnything() {
     Object value = new Object() {
       @Override public String toString() {
