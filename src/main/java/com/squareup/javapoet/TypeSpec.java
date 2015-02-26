@@ -366,6 +366,9 @@ public final class TypeSpec {
     }
 
     public Builder superclass(TypeName superclass) {
+      checkState(this.superclass == ClassName.OBJECT,
+          "superclass already set to " + this.superclass);
+      checkArgument(!superclass.isPrimitive(), "superclass may not be a primitive");
       this.superclass = superclass;
       return this;
     }

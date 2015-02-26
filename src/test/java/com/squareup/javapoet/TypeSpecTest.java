@@ -1766,6 +1766,22 @@ public final class TypeSpecTest {
     }
   }
 
+  @Test public void invalidSuperClass() {
+    try {
+      TypeSpec.classBuilder("foo")
+          .superclass(ClassName.get(List.class))
+          .superclass(ClassName.get(Map.class));
+      fail();
+    } catch (IllegalStateException expected) {
+    }
+    try {
+      TypeSpec.classBuilder("foo")
+          .superclass(TypeName.INT);
+      fail();
+    } catch (IllegalArgumentException expected) {
+    }
+  }
+
   private CodeBlock codeBlock(String format, Object... args) {
     return CodeBlock.builder()
         .add(format, args)
