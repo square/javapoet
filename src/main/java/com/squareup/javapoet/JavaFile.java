@@ -141,7 +141,7 @@ public final class JavaFile {
     codeWriter.popPackage();
   }
 
-  public String toString() {
+  @Override public String toString() {
     try {
       StringBuilder result = new StringBuilder();
       writeTo(result);
