@@ -210,6 +210,21 @@ public final class MethodSpec {
     return methodBuilder;
   }
 
+  public Builder toBuilder() {
+    Builder builder = new Builder(name);
+    builder.javadoc.add(javadoc);
+    builder.annotations.addAll(annotations);
+    builder.modifiers.addAll(modifiers);
+    builder.typeVariables.addAll(typeVariables);
+    builder.returnType = returnType;
+    builder.parameters.addAll(parameters);
+    builder.exceptions.addAll(exceptions);
+    builder.code.add(code);
+    builder.varargs = varargs;
+    builder.defaultValue = defaultValue;
+    return builder;
+  }
+
   public static final class Builder {
     private final String name;
 

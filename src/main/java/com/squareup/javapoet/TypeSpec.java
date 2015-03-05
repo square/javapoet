@@ -102,6 +102,21 @@ public final class TypeSpec {
     return new Builder(Kind.ANNOTATION, checkNotNull(name, "name == null"), null);
   }
 
+  public Builder toBuilder() {
+    Builder builder = new Builder(kind, name, anonymousTypeArguments);
+    builder.javadoc.add(javadoc);
+    builder.annotations.addAll(annotations);
+    builder.modifiers.addAll(modifiers);
+    builder.typeVariables.addAll(typeVariables);
+    builder.superclass = superclass;
+    builder.superinterfaces.addAll(superinterfaces);
+    builder.enumConstants.putAll(enumConstants);
+    builder.fieldSpecs.addAll(fieldSpecs);
+    builder.methodSpecs.addAll(methodSpecs);
+    builder.typeSpecs.addAll(typeSpecs);
+    return builder;
+  }
+
   void emit(CodeWriter codeWriter, String enumName, Set<Modifier> implicitModifiers)
       throws IOException {
     // Nested classes interrupt wrapped line indentation. Stash the current wrapping state and put

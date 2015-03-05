@@ -79,6 +79,13 @@ public final class ParameterSpec {
     return builder(TypeName.get(type), name, modifiers);
   }
 
+  public Builder toBuilder() {
+    Builder builder = new Builder(type, name);
+    builder.annotations.addAll(annotations);
+    builder.modifiers.addAll(modifiers);
+    return builder;
+  }
+
   public static final class Builder {
     private final TypeName type;
     private final String name;

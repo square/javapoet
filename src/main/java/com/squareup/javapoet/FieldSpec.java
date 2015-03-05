@@ -89,6 +89,15 @@ public final class FieldSpec {
     return builder(TypeName.get(type), name, modifiers);
   }
 
+  public Builder toBuilder() {
+    Builder builder = new Builder(type, name);
+    builder.javadoc.add(javadoc);
+    builder.annotations.addAll(annotations);
+    builder.modifiers.addAll(modifiers);
+    builder.initializer = initializer.isEmpty() ? null : initializer;
+    return builder;
+  }
+
   public static final class Builder {
     private final TypeName type;
     private final String name;
