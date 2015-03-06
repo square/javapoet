@@ -157,6 +157,14 @@ public final class JavaFile {
     return new Builder(packageName, typeSpec);
   }
 
+  public Builder toBuilder() {
+    Builder builder = new Builder(packageName, typeSpec);
+    builder.fileComment.add(fileComment);
+    builder.skipJavaLangImports = skipJavaLangImports;
+    builder.indent = indent;
+    return builder;
+  }
+
   public static final class Builder {
     private final String packageName;
     private final TypeSpec typeSpec;

@@ -99,6 +99,12 @@ public final class AnnotationSpec {
     return builder(ClassName.get(type));
   }
 
+  public Builder toBuilder() {
+    Builder builder = new Builder(type);
+    builder.members.putAll(members);
+    return builder;
+  }
+
   @Override public boolean equals(Object o) {
     return o instanceof AnnotationSpec
         && ((AnnotationSpec) o).type.equals(type)
