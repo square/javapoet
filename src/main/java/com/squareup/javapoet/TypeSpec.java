@@ -102,7 +102,7 @@ public final class TypeSpec {
     return new Builder(Kind.ANNOTATION, checkNotNull(name, "name == null"), null);
   }
 
-  public Builder toBuilder() {
+  public Builder builder() {
     Builder builder = new Builder(kind, name, anonymousTypeArguments);
     builder.javadoc.add(javadoc);
     builder.annotations.addAll(annotations);

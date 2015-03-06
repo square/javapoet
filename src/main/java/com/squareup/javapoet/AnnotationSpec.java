@@ -99,7 +99,7 @@ public final class AnnotationSpec {
     return builder(ClassName.get(type));
   }
 
-  public Builder toBuilder() {
+  public Builder builder() {
     Builder builder = new Builder(type);
     builder.members.putAll(members);
     return builder;
