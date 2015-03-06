@@ -157,7 +157,7 @@ public final class JavaFile {
     return new Builder(packageName, typeSpec);
   }
 
-  public Builder toBuilder() {
+  public Builder builder() {
     Builder builder = new Builder(packageName, typeSpec);
     builder.fileComment.add(fileComment);
     builder.skipJavaLangImports = skipJavaLangImports;

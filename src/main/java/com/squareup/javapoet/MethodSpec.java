@@ -210,7 +210,7 @@ public final class MethodSpec {
     return methodBuilder;
   }
 
-  public Builder toBuilder() {
+  public Builder builder() {
     Builder builder = new Builder(name);
     builder.javadoc.add(javadoc);
     builder.annotations.addAll(annotations);

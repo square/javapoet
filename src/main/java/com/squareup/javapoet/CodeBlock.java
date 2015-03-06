@@ -86,13 +86,6 @@ public final class CodeBlock {
     return new Builder();
   }
 
-  public Builder toBuilder() {
-    Builder builder = new Builder();
-    builder.formatParts.addAll(formatParts);
-    builder.args.addAll(args);
-    return builder;
-  }
-
   public static final class Builder {
     final List<String> formatParts = new ArrayList<>();
     final List<Object> args = new ArrayList<>();

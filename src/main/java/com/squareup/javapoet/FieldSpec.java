@@ -89,7 +89,7 @@ public final class FieldSpec {
     return builder(TypeName.get(type), name, modifiers);
   }
 
-  public Builder toBuilder() {
+  public Builder builder() {
     Builder builder = new Builder(type, name);
     builder.javadoc.add(javadoc);
     builder.annotations.addAll(annotations);
