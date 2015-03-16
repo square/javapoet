@@ -15,6 +15,7 @@
  */
 package com.squareup.javapoet;
 
+import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import java.io.File;
 import java.io.IOException;
@@ -40,7 +41,7 @@ public final class FileWritingTest {
   @Rule public final TemporaryFolder tmp = new TemporaryFolder();
 
   // Used for testing java.nio.file Path behavior.
-  private final FileSystem fs = Jimfs.newFileSystem();
+  private final FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
   private final Path fsRoot = fs.getRootDirectories().iterator().next();
 
   // Used for testing annotation processor Filer behavior.
