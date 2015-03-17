@@ -70,7 +70,8 @@ public final class FileWritingTest {
       javaFile.writeTo(file);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e.getMessage()).containsMatch("path .*?/foo/bar exists but is not a directory.");
+      assertThat(e.getMessage()).isEqualTo(
+          "path " + file.getPath() + " exists but is not a directory.");
     }
   }
 
