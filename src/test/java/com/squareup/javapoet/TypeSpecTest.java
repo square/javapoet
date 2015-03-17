@@ -17,6 +17,7 @@ package com.squareup.javapoet;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.testing.compile.CompilationRule;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -30,10 +31,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Random;
+
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,6 +45,7 @@ import org.mockito.Mockito;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
 @RunWith(JUnit4.class)
 public final class TypeSpecTest {
@@ -52,6 +56,10 @@ public final class TypeSpecTest {
 
   private TypeElement getElement(Class<?> clazz) {
     return compilation.getElements().getTypeElement(clazz.getCanonicalName());
+  }
+
+  private boolean isJava8() {
+    return Util.DEFAULT != null;
   }
 
   @Test public void basic() throws Exception {
@@ -701,6 +709,43 @@ public final class TypeSpecTest {
           .build();
       fail();
     } catch (IllegalStateException expected) {}
+  }
+
+  @Test
+  public void classCannotHaveDefaultMethods() throws Exception {
+    assumeTrue(isJava8());
+    try {
+      TypeSpec.classBuilder("Tacos")
+          .addMethod(MethodSpec.methodBuilder("test")
+              .addModifiers(Modifier.PUBLIC, Modifier.valueOf("DEFAULT"))
+              .returns(int.class)
+              .addCode(CodeBlock.builder().addStatement("return 0").build())
+              .build())
+          .build();
+      fail();
+    } catch (IllegalStateException expected) {}
+  }
+
+  @Test
+  public void interfaceDefaultMethods() throws Exception {
+    assumeTrue(isJava8());
+    TypeSpec bar = TypeSpec.interfaceBuilder("Tacos")
+        .addMethod(MethodSpec.methodBuilder("test")
+            .addModifiers(Modifier.PUBLIC, Modifier.valueOf("DEFAULT"))
+            .returns(int.class)
+            .addCode(CodeBlock.builder().addStatement("return 0").build())
+            .build())
+        .build();
+    
+    assertThat(toString(bar)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "interface Tacos {\n"
+        + "  default int test() {\n"
+        + "    return 0;\n"
+        + "  }\n"
+        + "}\n"
+    );
   }
 
   @Test public void referencedAndDeclaredSimpleNamesConflict() throws Exception {

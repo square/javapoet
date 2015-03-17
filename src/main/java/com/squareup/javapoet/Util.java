@@ -24,12 +24,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.lang.model.element.Modifier;
+
 /**
  * Like Guava, but worse and standalone. This makes it easier to mix JavaPoet with libraries that
  * bring their own version of Guava.
  */
 final class Util {
   private Util() {
+  }
+
+  public static final Modifier DEFAULT;
+  static {
+    Modifier def = null;
+    try {
+      def = Modifier.valueOf("DEFAULT");
+    } catch (IllegalArgumentException ignored) {
+    }
+    DEFAULT = def;
   }
 
   public static <K, V> Map<K, List<V>> immutableMultimap(Map<K, List<V>> multimap) {
@@ -81,5 +93,64 @@ final class Util {
     result.addAll(a);
     result.addAll(b);
     return result;
+  }
+
+  public static <T> Set<Set<T>> powerSet(Set<T> originalSet) {
+    Set<Set<T>> sets = new LinkedHashSet<>();
+    if (originalSet.isEmpty()) {
+      sets.add(new LinkedHashSet<T>());
+      return sets;
+    }
+    List<T> list = new ArrayList<T>(originalSet);
+    T head = list.get(0);
+    Set<T> rest = new LinkedHashSet<T>(list.subList(1, list.size()));
+    for (Set<T> set : powerSet(rest)) {
+      Set<T> newSet = new LinkedHashSet<T>();
+      newSet.add(head);
+      newSet.addAll(set);
+      sets.add(newSet);
+      sets.add(set);
+    }
+    return sets;
+}
+
+  /**
+   * Finds a subset of {@code set} in {@code modifiers}. Ignores empty subsets,
+   * and if {@code set} is empty then {@code true} is always returned.
+   *
+   * @param modifiers
+   *          - The input modifiers
+   * @param set
+   *          - The set of modifiers to make subsets of
+   */
+  public static void requireSubsetOf(Set<Modifier> set, Set<Modifier> modifiers) {
+    Set<Set<Modifier>> powerSet = powerSet(set);
+    boolean containsSubset = set.isEmpty();
+    for (Set<Modifier> subset : powerSet) {
+      if (subset.isEmpty()) {
+        continue;
+      }
+      containsSubset |= modifiers.containsAll(subset);
+    }
+    checkState(containsSubset, "%s should contain a subset of %s", modifiers, set);
+  }
+
+  public static void requireExactlyOneOf(Set<Modifier> set, Set<Modifier> modifiers) {
+    boolean containsOne = false;
+    boolean containsMany = false;
+    for (Modifier check : set) {
+      boolean containsCheck = modifiers.contains(check);
+      containsMany = containsOne && containsCheck;
+      if (containsMany) {
+        break;
+      }
+      containsOne |= containsCheck;
+    }
+    checkState(containsOne, "%s must contain one of %s", modifiers, set);
+    checkState(!containsMany, "%s must contain only one of %s", modifiers, set);
+  }
+
+  public static boolean hasDefaultModifier(Collection<Modifier> modifiers) {
+    return DEFAULT != null && modifiers.contains(DEFAULT);
   }
 }

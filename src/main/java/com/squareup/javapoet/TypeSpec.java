@@ -22,12 +22,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
@@ -35,6 +37,8 @@ import javax.lang.model.element.Modifier;
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
 import static com.squareup.javapoet.Util.checkState;
+import static com.squareup.javapoet.Util.hasDefaultModifier;
+import static com.squareup.javapoet.Util.requireExactlyOneOf;
 
 /** A generated class, interface, or enum declaration. */
 public final class TypeSpec {
@@ -429,9 +433,14 @@ public final class TypeSpec {
     }
 
     public Builder addField(FieldSpec fieldSpec) {
-      checkArgument(fieldSpec.modifiers.containsAll(kind.implicitFieldModifiers),
-          "%s %s.%s requires modifiers %s", kind, name, fieldSpec.name,
-          kind.implicitFieldModifiers);
+      checkState(kind != Kind.ANNOTATION, "%s %s cannot have fields", kind, name);
+      if (kind == Kind.INTERFACE) {
+        requireExactlyOneOf(EnumSet.of(Modifier.PUBLIC, Modifier.PRIVATE),
+            fieldSpec.modifiers);
+        Set<Modifier> check = EnumSet.of(Modifier.STATIC, Modifier.FINAL);
+        checkState(fieldSpec.modifiers.containsAll(check), "%s %s.%s requires modifiers %s",
+            kind, name, fieldSpec.name, check);
+      }
       fieldSpecs.add(fieldSpec);
       return this;
     }
@@ -453,11 +462,25 @@ public final class TypeSpec {
     }
 
     public Builder addMethod(MethodSpec methodSpec) {
-      checkArgument(methodSpec.modifiers.containsAll(kind.implicitMethodModifiers),
-          "%s %s.%s requires modifiers %s", kind, name, methodSpec.name,
-          kind.implicitMethodModifiers);
+      if (kind == Kind.INTERFACE) {
+        Set<Modifier> mods = EnumSet.of(Modifier.ABSTRACT, Modifier.STATIC);
+        if (Util.DEFAULT != null) {
+          mods.add(Util.DEFAULT);
+        }
+        requireExactlyOneOf(mods, methodSpec.modifiers);
+        requireExactlyOneOf(EnumSet.of(Modifier.PUBLIC, Modifier.PRIVATE),
+            methodSpec.modifiers);
+      } else if (kind == Kind.ANNOTATION) {
+        checkState(methodSpec.modifiers.containsAll(kind.implicitMethodModifiers),
+            "%s %s.%s cannot have modifiers", kind, name, methodSpec.name);
+      }
       if (kind != Kind.ANNOTATION) {
-        checkState(methodSpec.defaultValue == null, "default method != null");
+        checkState(methodSpec.defaultValue == null, "%s %s.%s cannot have a default value",
+            kind, name, methodSpec.name);
+      }
+      if (kind != Kind.INTERFACE) {
+        checkState(!hasDefaultModifier(methodSpec.modifiers), "%s %s.%s cannot be default",
+            kind, name, methodSpec.name);
       }
       methodSpecs.add(methodSpec);
       return this;
@@ -474,7 +497,7 @@ public final class TypeSpec {
     public Builder addType(TypeSpec typeSpec) {
       checkArgument(typeSpec.modifiers.containsAll(kind.implicitTypeModifiers),
           "%s %s.%s requires modifiers %s", kind, name, typeSpec.name,
-          kind.implicitFieldModifiers);
+          kind.implicitTypeModifiers);
       typeSpecs.add(typeSpec);
       return this;
     }
