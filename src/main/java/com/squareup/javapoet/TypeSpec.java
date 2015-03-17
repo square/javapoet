@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
@@ -435,8 +434,7 @@ public final class TypeSpec {
     public Builder addField(FieldSpec fieldSpec) {
       checkState(kind != Kind.ANNOTATION, "%s %s cannot have fields", kind, name);
       if (kind == Kind.INTERFACE) {
-        requireExactlyOneOf(EnumSet.of(Modifier.PUBLIC, Modifier.PRIVATE),
-            fieldSpec.modifiers);
+        requireExactlyOneOf(fieldSpec.modifiers, Modifier.PUBLIC, Modifier.PRIVATE);
         Set<Modifier> check = EnumSet.of(Modifier.STATIC, Modifier.FINAL);
         checkState(fieldSpec.modifiers.containsAll(check), "%s %s.%s requires modifiers %s",
             kind, name, fieldSpec.name, check);
@@ -463,13 +461,8 @@ public final class TypeSpec {
 
     public Builder addMethod(MethodSpec methodSpec) {
       if (kind == Kind.INTERFACE) {
-        Set<Modifier> mods = EnumSet.of(Modifier.ABSTRACT, Modifier.STATIC);
-        if (Util.DEFAULT != null) {
-          mods.add(Util.DEFAULT);
-        }
-        requireExactlyOneOf(mods, methodSpec.modifiers);
-        requireExactlyOneOf(EnumSet.of(Modifier.PUBLIC, Modifier.PRIVATE),
-            methodSpec.modifiers);
+        requireExactlyOneOf(methodSpec.modifiers, Modifier.ABSTRACT, Modifier.STATIC, Util.DEFAULT);
+        requireExactlyOneOf(methodSpec.modifiers, Modifier.PUBLIC, Modifier.PRIVATE);
       } else if (kind == Kind.ANNOTATION) {
         checkState(methodSpec.modifiers.containsAll(kind.implicitMethodModifiers),
             "%s %s.%s cannot have modifiers", kind, name, methodSpec.name);
