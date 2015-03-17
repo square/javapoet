@@ -23,7 +23,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.lang.model.element.Modifier;
 
 /**
@@ -34,6 +33,7 @@ final class Util {
   private Util() {
   }
 
+  /** Modifier.DEFAULT doesn't exist until Java 8, but we want to run on earlier releases. */
   public static final Modifier DEFAULT;
   static {
     Modifier def = null;
@@ -95,59 +95,13 @@ final class Util {
     return result;
   }
 
-  public static <T> Set<Set<T>> powerSet(Set<T> originalSet) {
-    Set<Set<T>> sets = new LinkedHashSet<>();
-    if (originalSet.isEmpty()) {
-      sets.add(new LinkedHashSet<T>());
-      return sets;
+  public static void requireExactlyOneOf(Set<Modifier> modifiers, Modifier... mutuallyExclusive) {
+    int count = 0;
+    for (Modifier check : mutuallyExclusive) {
+      if (check == null && Util.DEFAULT == null) continue; // Skip 'DEFAULT' if it doesn't exist!
+      if (modifiers.contains(check)) count++;
     }
-    List<T> list = new ArrayList<T>(originalSet);
-    T head = list.get(0);
-    Set<T> rest = new LinkedHashSet<T>(list.subList(1, list.size()));
-    for (Set<T> set : powerSet(rest)) {
-      Set<T> newSet = new LinkedHashSet<T>();
-      newSet.add(head);
-      newSet.addAll(set);
-      sets.add(newSet);
-      sets.add(set);
-    }
-    return sets;
-}
-
-  /**
-   * Finds a subset of {@code set} in {@code modifiers}. Ignores empty subsets,
-   * and if {@code set} is empty then {@code true} is always returned.
-   *
-   * @param modifiers
-   *          - The input modifiers
-   * @param set
-   *          - The set of modifiers to make subsets of
-   */
-  public static void requireSubsetOf(Set<Modifier> set, Set<Modifier> modifiers) {
-    Set<Set<Modifier>> powerSet = powerSet(set);
-    boolean containsSubset = set.isEmpty();
-    for (Set<Modifier> subset : powerSet) {
-      if (subset.isEmpty()) {
-        continue;
-      }
-      containsSubset |= modifiers.containsAll(subset);
-    }
-    checkState(containsSubset, "%s should contain a subset of %s", modifiers, set);
-  }
-
-  public static void requireExactlyOneOf(Set<Modifier> set, Set<Modifier> modifiers) {
-    boolean containsOne = false;
-    boolean containsMany = false;
-    for (Modifier check : set) {
-      boolean containsCheck = modifiers.contains(check);
-      containsMany = containsOne && containsCheck;
-      if (containsMany) {
-        break;
-      }
-      containsOne |= containsCheck;
-    }
-    checkState(containsOne, "%s must contain one of %s", modifiers, set);
-    checkState(!containsMany, "%s must contain only one of %s", modifiers, set);
+    checkArgument(count == 1, "%s must contain one of %s", modifiers, mutuallyExclusive);
   }
 
   public static boolean hasDefaultModifier(Collection<Modifier> modifiers) {
