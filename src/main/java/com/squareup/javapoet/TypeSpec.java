@@ -51,6 +51,7 @@ public final class TypeSpec {
   public final TypeName superclass;
   public final List<TypeName> superinterfaces;
   public final Map<String, TypeSpec> enumConstants;
+  public final List<CodeBlock> codeBlocks;
   public final List<FieldSpec> fieldSpecs;
   public final List<MethodSpec> methodSpecs;
   public final List<TypeSpec> typeSpecs;
@@ -67,6 +68,7 @@ public final class TypeSpec {
     this.superclass = builder.superclass;
     this.superinterfaces = Util.immutableList(builder.superinterfaces);
     this.enumConstants = Util.immutableMap(builder.enumConstants);
+    this.codeBlocks = Util.immutableList(builder.codeBlocks);
     this.fieldSpecs = Util.immutableList(builder.fieldSpecs);
     this.methodSpecs = Util.immutableList(builder.methodSpecs);
     this.typeSpecs = Util.immutableList(builder.typeSpecs);
@@ -209,6 +211,12 @@ public final class TypeSpec {
         }
       }
 
+      // Code blocks.
+      for (CodeBlock codeBlock : codeBlocks) {
+        codeWriter.emit(codeBlock);
+        firstMember = false;
+      }
+
       // Static fields.
       for (FieldSpec fieldSpec : fieldSpecs) {
         if (!fieldSpec.hasModifier(Modifier.STATIC)) continue;
@@ -324,6 +332,7 @@ public final class TypeSpec {
     private TypeName superclass = ClassName.OBJECT;
     private final List<TypeName> superinterfaces = new ArrayList<>();
     private final Map<String, TypeSpec> enumConstants = new LinkedHashMap<>();
+    private final List<CodeBlock> codeBlocks = new ArrayList<>();
     private final List<FieldSpec> fieldSpecs = new ArrayList<>();
     private final List<MethodSpec> methodSpecs = new ArrayList<>();
     private final List<TypeSpec> typeSpecs = new ArrayList<>();
@@ -420,6 +429,12 @@ public final class TypeSpec {
           "enum constants must have anonymous type arguments");
       checkArgument(SourceVersion.isName(name), "not a valid enum constant: %s", name);
       enumConstants.put(name, typeSpec);
+      return this;
+    }
+
+    public Builder addBlock(CodeBlock codeBlock) {
+      checkArgument(codeBlock != null, "codeBlock == null");
+      codeBlocks.add(codeBlock);
       return this;
     }
 

@@ -736,7 +736,7 @@ public final class TypeSpecTest {
             .addCode(CodeBlock.builder().addStatement("return 0").build())
             .build())
         .build();
-    
+
     assertThat(toString(bar)).isEqualTo(""
         + "package com.squareup.tacos;\n"
         + "\n"
@@ -1825,6 +1825,35 @@ public final class TypeSpecTest {
       fail();
     } catch (IllegalArgumentException expected) {
     }
+  }
+
+  @Test public void staticCodeBlock() {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+            .addBlock(CodeBlock.builder()
+                    .beginControlFlow("static")
+                    .endControlFlow()
+                    .build())
+            .addMethod(MethodSpec.methodBuilder("toString")
+                    .addAnnotation(Override.class)
+                    .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                    .returns(String.class)
+                    .addCode("return $S;\n", "taco")
+                    .build())
+            .build();
+    assertThat(toString(taco)).isEqualTo(""
+            + "package com.squareup.tacos;\n"
+            + "\n"
+            + "import java.lang.Override;\n"
+            + "import java.lang.String;\n"
+            + "\n"
+            + "class Taco {\n"
+            + "  static {\n"
+            + "  }\n\n"
+            + "  @Override\n"
+            + "  public final String toString() {\n"
+            + "    return \"taco\";\n"
+            + "  }\n"
+            + "}\n");
   }
 
   private CodeBlock codeBlock(String format, Object... args) {
