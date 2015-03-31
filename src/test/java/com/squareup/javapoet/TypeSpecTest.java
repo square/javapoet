@@ -811,6 +811,25 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  @Test public void simpleNamesConflictInThisAndOtherPackage() throws Exception {
+    FieldSpec internalOther = FieldSpec.builder(
+        ClassName.get(tacosPackage, "Other"), "internalOther").build();
+    FieldSpec externalOther = FieldSpec.builder(
+        ClassName.get(donutsPackage, "Other"), "externalOther").build();
+    TypeSpec gen = TypeSpec.classBuilder("Gen")
+        .addField(internalOther)
+        .addField(externalOther)
+        .build();
+    assertThat(toString(gen)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Gen {\n"
+        + "  Other internalOther;\n"
+        + "\n"
+        + "  com.squareup.donuts.Other externalOther;\n"
+        + "}\n");
+  }
+
   @Test public void originatingElementsIncludesThoseOfNestedTypes() {
     Element outerElement = Mockito.mock(Element.class);
     Element innerElement = Mockito.mock(Element.class);
