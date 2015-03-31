@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -35,6 +36,8 @@ import javax.lang.model.element.Modifier;
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
 import static com.squareup.javapoet.Util.checkState;
+import static com.squareup.javapoet.Util.hasDefaultModifier;
+import static com.squareup.javapoet.Util.requireExactlyOneOf;
 
 /** A generated class, interface, or enum declaration. */
 public final class TypeSpec {
@@ -98,6 +101,25 @@ public final class TypeSpec {
         .build());
   }
 
+  public static Builder annotationBuilder(String name) {
+    return new Builder(Kind.ANNOTATION, checkNotNull(name, "name == null"), null);
+  }
+
+  public Builder toBuilder() {
+    Builder builder = new Builder(kind, name, anonymousTypeArguments);
+    builder.javadoc.add(javadoc);
+    builder.annotations.addAll(annotations);
+    builder.modifiers.addAll(modifiers);
+    builder.typeVariables.addAll(typeVariables);
+    builder.superclass = superclass;
+    builder.superinterfaces.addAll(superinterfaces);
+    builder.enumConstants.putAll(enumConstants);
+    builder.fieldSpecs.addAll(fieldSpecs);
+    builder.methodSpecs.addAll(methodSpecs);
+    builder.typeSpecs.addAll(typeSpecs);
+    return builder;
+  }
+
   void emit(CodeWriter codeWriter, String enumName, Set<Modifier> implicitModifiers)
       throws IOException {
     // Nested classes interrupt wrapped line indentation. Stash the current wrapping state and put
@@ -126,7 +148,11 @@ public final class TypeSpec {
         codeWriter.emitJavadoc(javadoc);
         codeWriter.emitAnnotations(annotations, false);
         codeWriter.emitModifiers(modifiers, Util.union(implicitModifiers, kind.asMemberModifiers));
-        codeWriter.emit("$L $L", kind.name().toLowerCase(Locale.US), name);
+        if (kind == Kind.ANNOTATION) {
+          codeWriter.emit("$L $L", "@interface", name);
+        } else {
+          codeWriter.emit("$L $L", kind.name().toLowerCase(Locale.US), name);
+        }
         codeWriter.emitTypeVariables(typeVariables);
 
         List<TypeName> extendsTypes;
@@ -262,7 +288,13 @@ public final class TypeSpec {
         Collections.<Modifier>emptySet(),
         Collections.<Modifier>emptySet(),
         Collections.<Modifier>emptySet(),
-        Collections.singleton(Modifier.STATIC));
+        Collections.singleton(Modifier.STATIC)),
+
+    ANNOTATION(
+        Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)),
+        Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.ABSTRACT)),
+        Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC)),
+        Util.immutableSet(Arrays.asList(Modifier.STATIC)));
 
     private final Set<Modifier> implicitFieldModifiers;
     private final Set<Modifier> implicitMethodModifiers;
@@ -352,6 +384,9 @@ public final class TypeSpec {
     }
 
     public Builder superclass(TypeName superclass) {
+      checkState(this.superclass == ClassName.OBJECT,
+          "superclass already set to " + this.superclass);
+      checkArgument(!superclass.isPrimitive(), "superclass may not be a primitive");
       this.superclass = superclass;
       return this;
     }
@@ -397,9 +432,13 @@ public final class TypeSpec {
     }
 
     public Builder addField(FieldSpec fieldSpec) {
-      checkArgument(fieldSpec.modifiers.containsAll(kind.implicitFieldModifiers),
-          "%s %s.%s requires modifiers %s", kind, name, fieldSpec.name,
-          kind.implicitFieldModifiers);
+      checkState(kind != Kind.ANNOTATION, "%s %s cannot have fields", kind, name);
+      if (kind == Kind.INTERFACE) {
+        requireExactlyOneOf(fieldSpec.modifiers, Modifier.PUBLIC, Modifier.PRIVATE);
+        Set<Modifier> check = EnumSet.of(Modifier.STATIC, Modifier.FINAL);
+        checkState(fieldSpec.modifiers.containsAll(check), "%s %s.%s requires modifiers %s",
+            kind, name, fieldSpec.name, check);
+      }
       fieldSpecs.add(fieldSpec);
       return this;
     }
@@ -421,9 +460,21 @@ public final class TypeSpec {
     }
 
     public Builder addMethod(MethodSpec methodSpec) {
-      checkArgument(methodSpec.modifiers.containsAll(kind.implicitMethodModifiers),
-          "%s %s.%s requires modifiers %s", kind, name, methodSpec.name,
-          kind.implicitMethodModifiers);
+      if (kind == Kind.INTERFACE) {
+        requireExactlyOneOf(methodSpec.modifiers, Modifier.ABSTRACT, Modifier.STATIC, Util.DEFAULT);
+        requireExactlyOneOf(methodSpec.modifiers, Modifier.PUBLIC, Modifier.PRIVATE);
+      } else if (kind == Kind.ANNOTATION) {
+        checkState(methodSpec.modifiers.containsAll(kind.implicitMethodModifiers),
+            "%s %s.%s cannot have modifiers", kind, name, methodSpec.name);
+      }
+      if (kind != Kind.ANNOTATION) {
+        checkState(methodSpec.defaultValue == null, "%s %s.%s cannot have a default value",
+            kind, name, methodSpec.name);
+      }
+      if (kind != Kind.INTERFACE) {
+        checkState(!hasDefaultModifier(methodSpec.modifiers), "%s %s.%s cannot be default",
+            kind, name, methodSpec.name);
+      }
       methodSpecs.add(methodSpec);
       return this;
     }
@@ -439,7 +490,7 @@ public final class TypeSpec {
     public Builder addType(TypeSpec typeSpec) {
       checkArgument(typeSpec.modifiers.containsAll(kind.implicitTypeModifiers),
           "%s %s.%s requires modifiers %s", kind, name, typeSpec.name,
-          kind.implicitFieldModifiers);
+          kind.implicitTypeModifiers);
       typeSpecs.add(typeSpec);
       return this;
     }

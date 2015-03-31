@@ -141,7 +141,7 @@ public final class JavaFile {
     codeWriter.popPackage();
   }
 
-  public String toString() {
+  @Override public String toString() {
     try {
       StringBuilder result = new StringBuilder();
       writeTo(result);
@@ -155,6 +155,14 @@ public final class JavaFile {
     checkNotNull(packageName, "packageName == null");
     checkNotNull(typeSpec, "typeSpec == null");
     return new Builder(packageName, typeSpec);
+  }
+
+  public Builder toBuilder() {
+    Builder builder = new Builder(packageName, typeSpec);
+    builder.fileComment.add(fileComment);
+    builder.skipJavaLangImports = skipJavaLangImports;
+    builder.indent = indent;
+    return builder;
   }
 
   public static final class Builder {

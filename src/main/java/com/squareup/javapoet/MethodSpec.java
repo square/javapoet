@@ -51,6 +51,7 @@ public final class MethodSpec {
   public final boolean varargs;
   public final List<TypeName> exceptions;
   public final CodeBlock code;
+  public final CodeBlock defaultValue;
 
   private MethodSpec(Builder builder) {
     CodeBlock code = builder.code.build();
@@ -68,6 +69,7 @@ public final class MethodSpec {
     this.parameters = Util.immutableList(builder.parameters);
     this.varargs = builder.varargs;
     this.exceptions = Util.immutableList(builder.exceptions);
+    this.defaultValue = builder.defaultValue;
     this.code = code;
   }
 
@@ -102,6 +104,12 @@ public final class MethodSpec {
     }
 
     codeWriter.emit(")");
+
+    if (defaultValue != null && !defaultValue.isEmpty()) {
+      codeWriter.emit(" default ");
+      codeWriter.emit(defaultValue);
+    }
+
     if (!exceptions.isEmpty()) {
       codeWriter.emit(" throws");
       boolean firstException = true;
@@ -202,6 +210,21 @@ public final class MethodSpec {
     return methodBuilder;
   }
 
+  public Builder toBuilder() {
+    Builder builder = new Builder(name);
+    builder.javadoc.add(javadoc);
+    builder.annotations.addAll(annotations);
+    builder.modifiers.addAll(modifiers);
+    builder.typeVariables.addAll(typeVariables);
+    builder.returnType = returnType;
+    builder.parameters.addAll(parameters);
+    builder.exceptions.addAll(exceptions);
+    builder.code.add(code);
+    builder.varargs = varargs;
+    builder.defaultValue = defaultValue;
+    return builder;
+  }
+
   public static final class Builder {
     private final String name;
 
@@ -214,6 +237,7 @@ public final class MethodSpec {
     private final List<TypeName> exceptions = new ArrayList<>();
     private final CodeBlock.Builder code = CodeBlock.builder();
     private boolean varargs;
+    private CodeBlock defaultValue;
 
     private Builder(String name) {
       checkArgument(name.equals(CONSTRUCTOR) || SourceVersion.isName(name),
@@ -325,6 +349,16 @@ public final class MethodSpec {
 
     public Builder addCode(CodeBlock codeBlock) {
       code.add(codeBlock);
+      return this;
+    }
+
+    public Builder defaultValue(String format, Object... args) {
+      return defaultValue(CodeBlock.builder().add(format, args).build());
+    }
+
+    public Builder defaultValue(CodeBlock codeBlock) {
+      checkState(this.defaultValue == null, "defaultValue was already set");
+      this.defaultValue = checkNotNull(codeBlock, "codeBlock == null");
       return this;
     }
 

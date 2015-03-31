@@ -50,7 +50,7 @@ TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
 JavaFile javaFile = JavaFile.builder("com.example.helloworld", helloWorld)
     .build();
 
-javaFile.emit(System.out);
+javaFile.writeTo(System.out);
 ```
 
 To declare the main method, we've created a `MethodSpec` "main" configured with modifiers, return
@@ -59,6 +59,8 @@ that to a `HelloWorld.java` file.
 
 In this case we write the file to `System.out`, but we could also get it as a string
 (`JavaFile.toString()`) or write it to the file system (`JavaPoet.writeTo()`).
+
+The [Javadoc][javadoc] catalogs the complete JavaPoet API, which we explore below.
 
 ### Code & Control Flow
 
@@ -178,7 +180,7 @@ public static void main(String[] args) throws Exception {
   JavaFile javaFile = JavaFile.builder("com.example.helloworld", helloWorld)
       .build();
       
-  javaFile.emit(System.out);
+  javaFile.writeTo(System.out);
 }
 
 private static MethodSpec whatsMyName(String name) {
@@ -227,7 +229,7 @@ TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
 JavaFile javaFile = JavaFile.builder("com.example.helloworld", helloWorld)
     .build();
     
-javaFile.emit(System.out);
+javaFile.writeTo(System.out);
 ```
 
 That generates the following `.java` file, complete with the necessary `import`:
@@ -796,6 +798,7 @@ JavaWriter continues to be available in [GitHub][javawriter] and [Maven Central]
  [dl]: https://oss.sonatype.org/content/repositories/snapshots/com/google/javapoet/javapoet/1.0-SNAPSHOT/
  [square]: http://github.com/square/javawriter
  [snap]: https://oss.sonatype.org/content/repositories/snapshots/
+ [javadoc]: https://square.github.io/javapoet/javadoc/javapoet/
  [javawriter]: https://github.com/square/javapoet/tree/javawriter_2
  [javawriter_maven]: http://search.maven.org/#artifactdetails%7Ccom.squareup%7Cjavawriter%7C2.5.1%7Cjar
  [formatter]: http://developer.android.com/reference/java/util/Formatter.html
