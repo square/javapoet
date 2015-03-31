@@ -15,11 +15,21 @@
  */
 package com.squareup.javapoet;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import javax.annotation.processing.Filer;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
+import javax.tools.JavaFileObject;
 
+import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
 
 /** A Java file containing a single top level class. */
@@ -40,15 +50,17 @@ public final class JavaFile {
   public final String packageName;
   public final TypeSpec typeSpec;
   public final boolean skipJavaLangImports;
+  private final String indent;
 
   private JavaFile(Builder builder) {
     this.fileComment = builder.fileComment.build();
     this.packageName = builder.packageName;
     this.typeSpec = builder.typeSpec;
     this.skipJavaLangImports = builder.skipJavaLangImports;
+    this.indent = builder.indent;
   }
 
-  public void emit(Appendable out, String indent) throws IOException {
+  public void writeTo(Appendable out) throws IOException {
     // First pass: emit the entire class, just to collect the types we'll need to import.
     CodeWriter importsCollector = new CodeWriter(NULL_APPENDABLE, indent);
     emit(importsCollector);
@@ -57,6 +69,48 @@ public final class JavaFile {
     // Second pass: write the code, taking advantage of the imports.
     CodeWriter codeWriter = new CodeWriter(out, indent, suggestedImports);
     emit(codeWriter);
+  }
+
+  /** Writes this to {@code directory} the standard directory structure. */
+  public void writeTo(Path directory) throws IOException {
+    checkArgument(Files.notExists(directory) || Files.isDirectory(directory),
+        "path %s exists but is not a directory.", directory);
+    Path outputDirectory = directory;
+    if (!packageName.isEmpty()) {
+      for (String packageComponent : packageName.split("\\.")) {
+        outputDirectory = outputDirectory.resolve(packageComponent);
+      }
+      Files.createDirectories(outputDirectory);
+    }
+
+    Path outputPath = outputDirectory.resolve(typeSpec.name + ".java");
+    try (Writer writer = new OutputStreamWriter(Files.newOutputStream(outputPath))) {
+      writeTo(writer);
+    }
+  }
+
+  /** Writes this to {@code directory} the standard directory structure. */
+  public void writeTo(File directory) throws IOException {
+    writeTo(directory.toPath());
+  }
+
+  /** Writes this to {@code filer}. */
+  public void writeTo(Filer filer) throws IOException {
+    String fileName = packageName.isEmpty()
+        ? typeSpec.name
+        : packageName + "." + typeSpec.name;
+    List<Element> originatingElements = typeSpec.originatingElements;
+    JavaFileObject filerSourceFile = filer.createSourceFile(fileName,
+        originatingElements.toArray(new Element[originatingElements.size()]));
+    try (Writer writer = filerSourceFile.openWriter()) {
+      writeTo(writer);
+    } catch (Exception e) {
+      try {
+        filerSourceFile.delete();
+      } catch (Exception ignored) {
+      }
+      throw e;
+    }
   }
 
   private void emit(CodeWriter codeWriter) throws IOException {
@@ -87,10 +141,10 @@ public final class JavaFile {
     codeWriter.popPackage();
   }
 
-  public String toString() {
+  @Override public String toString() {
     try {
       StringBuilder result = new StringBuilder();
-      emit(result, "  ");
+      writeTo(result);
       return result.toString();
     } catch (IOException e) {
       throw new AssertionError();
@@ -103,11 +157,20 @@ public final class JavaFile {
     return new Builder(packageName, typeSpec);
   }
 
+  public Builder toBuilder() {
+    Builder builder = new Builder(packageName, typeSpec);
+    builder.fileComment.add(fileComment);
+    builder.skipJavaLangImports = skipJavaLangImports;
+    builder.indent = indent;
+    return builder;
+  }
+
   public static final class Builder {
     private final String packageName;
     private final TypeSpec typeSpec;
     private CodeBlock.Builder fileComment = CodeBlock.builder();
     private boolean skipJavaLangImports;
+    private String indent = "  ";
 
     private Builder(String packageName, TypeSpec typeSpec) {
       this.packageName = packageName;
@@ -129,6 +192,11 @@ public final class JavaFile {
      */
     public Builder skipJavaLangImports(boolean skipJavaLangImports) {
       this.skipJavaLangImports = skipJavaLangImports;
+      return this;
+    }
+
+    public Builder indent(String indent) {
+      this.indent = indent;
       return this;
     }
 

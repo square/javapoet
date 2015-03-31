@@ -15,22 +15,25 @@
  */
 package com.squareup.javapoet;
 
+import static com.squareup.javapoet.Util.checkArgument;
+import static com.squareup.javapoet.Util.checkNotNull;
+import static com.squareup.javapoet.Util.checkState;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
 
-import static com.squareup.javapoet.Util.checkArgument;
-import static com.squareup.javapoet.Util.checkNotNull;
-
 /** A generated field declaration. */
 public final class FieldSpec {
-  public final Type type;
+  public final TypeName type;
   public final String name;
   public final CodeBlock javadoc;
   public final List<AnnotationSpec> annotations;
@@ -43,7 +46,9 @@ public final class FieldSpec {
     this.javadoc = builder.javadoc.build();
     this.annotations = Util.immutableList(builder.annotations);
     this.modifiers = Util.immutableSet(builder.modifiers);
-    this.initializer = builder.initializer.build();
+    this.initializer = (builder.initializer == null)
+        ? CodeBlock.builder().build()
+        : builder.initializer;
   }
 
   public boolean hasModifier(Modifier modifier) {
@@ -73,23 +78,36 @@ public final class FieldSpec {
     }
   }
 
-  public static Builder builder(Type type, String name, Modifier... modifiers) {
+  public static Builder builder(TypeName type, String name, Modifier... modifiers) {
     checkNotNull(type, "type == null");
     checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
     return new Builder(type, name)
         .addModifiers(modifiers);
   }
 
+  public static Builder builder(Type type, String name, Modifier... modifiers) {
+    return builder(TypeName.get(type), name, modifiers);
+  }
+
+  public Builder toBuilder() {
+    Builder builder = new Builder(type, name);
+    builder.javadoc.add(javadoc);
+    builder.annotations.addAll(annotations);
+    builder.modifiers.addAll(modifiers);
+    builder.initializer = initializer.isEmpty() ? null : initializer;
+    return builder;
+  }
+
   public static final class Builder {
-    private final Type type;
+    private final TypeName type;
     private final String name;
 
     private final CodeBlock.Builder javadoc = CodeBlock.builder();
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
-    private CodeBlock.Builder initializer = CodeBlock.builder();
+    private CodeBlock initializer = null;
 
-    private Builder(Type type, String name) {
+    private Builder(TypeName type, String name) {
       this.type = type;
       this.name = name;
     }
@@ -99,14 +117,24 @@ public final class FieldSpec {
       return this;
     }
 
+    public Builder addAnnotations(Collection<AnnotationSpec> annotationSpecs) {
+      checkArgument(annotationSpecs != null, "annotationSpecs == null");
+      this.annotations.addAll(annotationSpecs);
+      return this;
+    }
+
     public Builder addAnnotation(AnnotationSpec annotationSpec) {
       this.annotations.add(annotationSpec);
       return this;
     }
 
-    public Builder addAnnotation(Type annotation) {
+    public Builder addAnnotation(ClassName annotation) {
       this.annotations.add(AnnotationSpec.builder(annotation).build());
       return this;
+    }
+
+    public Builder addAnnotation(Class<?> annotation) {
+      return addAnnotation(ClassName.get(annotation));
     }
 
     public Builder addModifiers(Modifier... modifiers) {
@@ -115,7 +143,12 @@ public final class FieldSpec {
     }
 
     public Builder initializer(String format, Object... args) {
-      this.initializer.add(format, args);
+      return initializer(CodeBlock.builder().add(format, args).build());
+    }
+
+    public Builder initializer(CodeBlock codeBlock) {
+      checkState(this.initializer == null, "initializer was already set");
+      this.initializer = checkNotNull(codeBlock, "codeBlock == null");
       return this;
     }
 

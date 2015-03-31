@@ -15,6 +15,7 @@
  */
 package com.squareup.javapoet;
 
+import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import java.io.File;
 import java.io.IOException;
@@ -27,30 +28,33 @@ import javax.lang.model.element.Modifier;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
-public final class JavaPoetTest {
-  private final JavaPoet javaPoet = new JavaPoet();
-
+@RunWith(JUnit4.class)
+public final class FileWritingTest {
   // Used for testing java.io File behavior.
   @Rule public final TemporaryFolder tmp = new TemporaryFolder();
 
   // Used for testing java.nio.file Path behavior.
-  private final FileSystem fs = Jimfs.newFileSystem();
+  private final FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
   private final Path fsRoot = fs.getRootDirectories().iterator().next();
 
   // Used for testing annotation processor Filer behavior.
   private final TestFiler filer = new TestFiler(fs, fsRoot);
 
   @Test public void pathNotDirectory() throws IOException {
+    TypeSpec type = TypeSpec.classBuilder("Test").build();
+    JavaFile javaFile = JavaFile.builder("example", type).build();
     Path path = fs.getPath("/foo/bar");
     Files.createDirectories(path.getParent());
     Files.createFile(path);
     try {
-      javaPoet.writeTo(path);
+      javaFile.writeTo(path);
       fail();
     } catch (IllegalArgumentException e) {
       assertThat(e.getMessage()).isEqualTo("path /foo/bar exists but is not a directory.");
@@ -58,19 +62,22 @@ public final class JavaPoetTest {
   }
 
   @Test public void fileNotDirectory() throws IOException {
+    TypeSpec type = TypeSpec.classBuilder("Test").build();
+    JavaFile javaFile = JavaFile.builder("example", type).build();
     File file = new File(tmp.newFolder("foo"), "bar");
     file.createNewFile();
     try {
-      javaPoet.writeTo(file);
+      javaFile.writeTo(file);
       fail();
     } catch (IllegalArgumentException e) {
-      assertThat(e.getMessage()).containsMatch("path .*?/foo/bar exists but is not a directory.");
+      assertThat(e.getMessage()).isEqualTo(
+          "path " + file.getPath() + " exists but is not a directory.");
     }
   }
 
   @Test public void pathDefaultPackage() throws IOException {
     TypeSpec type = TypeSpec.classBuilder("Test").build();
-    javaPoet.add("", type).writeTo(fsRoot);
+    JavaFile.builder("", type).build().writeTo(fsRoot);
 
     Path testPath = fsRoot.resolve("Test.java");
     assertThat(Files.exists(testPath)).isTrue();
@@ -78,7 +85,7 @@ public final class JavaPoetTest {
 
   @Test public void fileDefaultPackage() throws IOException {
     TypeSpec type = TypeSpec.classBuilder("Test").build();
-    javaPoet.add("", type).writeTo(tmp.getRoot());
+    JavaFile.builder("", type).build().writeTo(tmp.getRoot());
 
     File testFile = new File(tmp.getRoot(), "Test.java");
     assertThat(testFile.exists()).isTrue();
@@ -86,52 +93,17 @@ public final class JavaPoetTest {
 
   @Test public void filerDefaultPackage() throws IOException {
     TypeSpec type = TypeSpec.classBuilder("Test").build();
-    javaPoet.add("", type).writeTo(filer);
+    JavaFile.builder("", type).build().writeTo(filer);
 
     Path testPath = fsRoot.resolve("Test.java");
     assertThat(Files.exists(testPath)).isTrue();
   }
 
-  @Test public void pathSamePackage() throws IOException {
-    TypeSpec test1 = TypeSpec.classBuilder("Test1").build();
-    TypeSpec test2 = TypeSpec.classBuilder("Test2").build();
-    javaPoet.add("example", test1).add("example", test2).writeTo(fsRoot);
-
-    Path testPath1 = fsRoot.resolve(fs.getPath("example", "Test1.java"));
-    assertThat(Files.exists(testPath1)).isTrue();
-    Path testPath2 = fsRoot.resolve(fs.getPath("example", "Test2.java"));
-    assertThat(Files.exists(testPath2)).isTrue();
-  }
-
-  @Test public void fileSamePackage() throws IOException {
-    TypeSpec test1 = TypeSpec.classBuilder("Test1").build();
-    TypeSpec test2 = TypeSpec.classBuilder("Test2").build();
-    javaPoet.add("example", test1).add("example", test2).writeTo(tmp.getRoot());
-
-    File examplePackage = new File(tmp.getRoot(), "example");
-    File testFile1 = new File(examplePackage, "Test1.java");
-    assertThat(testFile1.exists()).isTrue();
-    File testFile2 = new File(examplePackage, "Test2.java");
-    assertThat(testFile2.exists()).isTrue();
-  }
-
-  @Test public void filerSamePackage() throws IOException {
-    TypeSpec test1 = TypeSpec.classBuilder("Test1").build();
-    TypeSpec test2 = TypeSpec.classBuilder("Test2").build();
-    javaPoet.add("example", test1).add("example", test2).writeTo(filer);
-
-    Path testPath1 = fsRoot.resolve(fs.getPath("example", "Test1.java"));
-    assertThat(Files.exists(testPath1)).isTrue();
-    Path testPath2 = fsRoot.resolve(fs.getPath("example", "Test2.java"));
-    assertThat(Files.exists(testPath2)).isTrue();
-  }
-
   @Test public void pathNestedClasses() throws IOException {
-    TypeSpec test = TypeSpec.classBuilder("Test").build();
-    javaPoet.add("foo", test)
-        .add("foo.bar", test)
-        .add("foo.bar.baz", test)
-        .writeTo(fsRoot);
+    TypeSpec type = TypeSpec.classBuilder("Test").build();
+    JavaFile.builder("foo", type).build().writeTo(fsRoot);
+    JavaFile.builder("foo.bar", type).build().writeTo(fsRoot);
+    JavaFile.builder("foo.bar.baz", type).build().writeTo(fsRoot);
 
     Path fooPath = fsRoot.resolve(fs.getPath("foo", "Test.java"));
     Path barPath = fsRoot.resolve(fs.getPath("foo", "bar", "Test.java"));
@@ -142,11 +114,10 @@ public final class JavaPoetTest {
   }
 
   @Test public void fileNestedClasses() throws IOException {
-    TypeSpec test = TypeSpec.classBuilder("Test").build();
-    javaPoet.add("foo", test)
-        .add("foo.bar", test)
-        .add("foo.bar.baz", test)
-        .writeTo(tmp.getRoot());
+    TypeSpec type = TypeSpec.classBuilder("Test").build();
+    JavaFile.builder("foo", type).build().writeTo(tmp.getRoot());
+    JavaFile.builder("foo.bar", type).build().writeTo(tmp.getRoot());
+    JavaFile.builder("foo.bar.baz", type).build().writeTo(tmp.getRoot());
 
     File fooDir = new File(tmp.getRoot(), "foo");
     File fooFile = new File(fooDir, "Test.java");
@@ -160,11 +131,10 @@ public final class JavaPoetTest {
   }
 
   @Test public void filerNestedClasses() throws IOException {
-    TypeSpec test = TypeSpec.classBuilder("Test").build();
-    javaPoet.add("foo", test)
-        .add("foo.bar", test)
-        .add("foo.bar.baz", test)
-        .writeTo(filer);
+    TypeSpec type = TypeSpec.classBuilder("Test").build();
+    JavaFile.builder("foo", type).build().writeTo(filer);
+    JavaFile.builder("foo.bar", type).build().writeTo(filer);
+    JavaFile.builder("foo.bar.baz", type).build().writeTo(filer);
 
     Path fooPath = fsRoot.resolve(fs.getPath("foo", "Test.java"));
     Path barPath = fsRoot.resolve(fs.getPath("foo", "bar", "Test.java"));
@@ -187,7 +157,8 @@ public final class JavaPoetTest {
         .addOriginatingElement(element2_2)
         .build();
 
-    javaPoet.add("example", test1).add("example", test2).writeTo(filer);
+    JavaFile.builder("example", test1).build().writeTo(filer);
+    JavaFile.builder("example", test2).build().writeTo(filer);
 
     Path testPath1 = fsRoot.resolve(fs.getPath("example", "Test1.java"));
     assertThat(filer.getOriginatingElements(testPath1)).containsExactly(element1_1);
@@ -204,7 +175,7 @@ public final class JavaPoetTest {
             .addCode("$T.out.println($S);\n", System.class, "Hello World!")
             .build())
         .build();
-    javaPoet.add("foo", test).setIndent("\t").writeTo(filer);
+    JavaFile.builder("foo", test).indent("\t").build().writeTo(filer);
 
     Path fooPath = fsRoot.resolve(fs.getPath("foo", "Test.java"));
     assertThat(Files.exists(fooPath)).isTrue();

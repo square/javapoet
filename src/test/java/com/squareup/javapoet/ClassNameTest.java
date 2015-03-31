@@ -21,16 +21,27 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+@RunWith(JUnit4.class)
 public final class ClassNameTest {
   @Rule public CompilationRule compilationRule = new CompilationRule();
 
   @Test public void bestGuessForString_simpleClass() {
     assertThat(ClassName.bestGuess(String.class.getName()))
         .isEqualTo(ClassName.get("java.lang", "String"));
+  }
+
+  @Test public void bestGuessNonAscii() {
+    ClassName className = ClassName.bestGuess(
+        "com.\ud835\udc1andro\ud835\udc22d.\ud835\udc00ctiv\ud835\udc22ty");
+    assertEquals("com.\ud835\udc1andro\ud835\udc22d", className.packageName());
+    assertEquals("\ud835\udc00ctiv\ud835\udc22ty", className.simpleName());
   }
 
   static class OuterClass {

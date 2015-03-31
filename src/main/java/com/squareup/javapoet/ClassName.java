@@ -15,7 +15,7 @@
  */
 package com.squareup.javapoet;
 
-import java.lang.reflect.Type;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +32,7 @@ import static javax.lang.model.element.NestingKind.MEMBER;
 import static javax.lang.model.element.NestingKind.TOP_LEVEL;
 
 /** A fully-qualified class name for top-level and member classes. */
-public final class ClassName implements Type, Comparable<ClassName> {
+public final class ClassName extends TypeName implements Comparable<ClassName> {
   public static final ClassName OBJECT = ClassName.get(Object.class);
 
   /** From top to bottom. This will be ["java.util", "Map", "Entry"] for {@link Map.Entry}. */
@@ -122,7 +122,7 @@ public final class ClassName implements Type, Comparable<ClassName> {
 
     // Add the package name, like "java.util.concurrent", or "" for no package.
     int p = 0;
-    while (p < classNameString.length() && Util.isLowerCase(classNameString.charAt(p))) {
+    while (p < classNameString.length() && Character.isLowerCase(classNameString.codePointAt(p))) {
       p = classNameString.indexOf('.', p) + 1;
       checkArgument(p != 0, "couldn't make a guess for %s", classNameString);
     }
@@ -130,7 +130,7 @@ public final class ClassName implements Type, Comparable<ClassName> {
 
     // Add the class names, like "Map" and "Entry".
     for (String part : classNameString.substring(p).split("\\.", -1)) {
-      checkArgument(!part.isEmpty() && Util.isUpperCase(part.charAt(0)),
+      checkArgument(!part.isEmpty() && Character.isUpperCase(part.codePointAt(0)),
           "couldn't make a guess for %s", classNameString);
       names.add(part);
     }
@@ -189,7 +189,7 @@ public final class ClassName implements Type, Comparable<ClassName> {
     return canonicalName.compareTo(o.canonicalName);
   }
 
-  @Override public String toString() {
-    return canonicalName;
+  @Override CodeWriter emit(CodeWriter out) throws IOException {
+    return out.emitAndIndent(out.lookupName(this));
   }
 }

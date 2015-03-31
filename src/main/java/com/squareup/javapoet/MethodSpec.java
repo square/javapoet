@@ -18,14 +18,20 @@ package com.squareup.javapoet;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
@@ -39,12 +45,13 @@ public final class MethodSpec {
   public final CodeBlock javadoc;
   public final List<AnnotationSpec> annotations;
   public final Set<Modifier> modifiers;
-  public final List<TypeVariable<?>> typeVariables;
-  public final Type returnType;
+  public final List<TypeVariableName> typeVariables;
+  public final TypeName returnType;
   public final List<ParameterSpec> parameters;
   public final boolean varargs;
-  public final List<Type> exceptions;
+  public final List<TypeName> exceptions;
   public final CodeBlock code;
+  public final CodeBlock defaultValue;
 
   private MethodSpec(Builder builder) {
     CodeBlock code = builder.code.build();
@@ -62,12 +69,13 @@ public final class MethodSpec {
     this.parameters = Util.immutableList(builder.parameters);
     this.varargs = builder.varargs;
     this.exceptions = Util.immutableList(builder.exceptions);
+    this.defaultValue = builder.defaultValue;
     this.code = code;
   }
 
   private boolean lastParameterIsArray(List<ParameterSpec> parameters) {
     return !parameters.isEmpty()
-        && Types.arrayComponent(parameters.get(parameters.size() - 1).type) != null;
+        && TypeName.arrayComponent(parameters.get(parameters.size() - 1).type) != null;
   }
 
   void emit(CodeWriter codeWriter, String enclosingName, Set<Modifier> implicitModifiers)
@@ -96,10 +104,16 @@ public final class MethodSpec {
     }
 
     codeWriter.emit(")");
+
+    if (defaultValue != null && !defaultValue.isEmpty()) {
+      codeWriter.emit(" default ");
+      codeWriter.emit(defaultValue);
+    }
+
     if (!exceptions.isEmpty()) {
       codeWriter.emit(" throws");
       boolean firstException = true;
-      for (Type exception : exceptions) {
+      for (TypeName exception : exceptions) {
         if (!firstException) codeWriter.emit(",");
         codeWriter.emit(" $T", exception);
         firstException = false;
@@ -150,28 +164,96 @@ public final class MethodSpec {
     return new Builder(CONSTRUCTOR);
   }
 
+  /**
+   * Create a builder which overrides {@code method}. This will copy its visibility modifiers, type
+   * parameters, return type, name, parameters, and throws declarations. An {@link Override}
+   * annotation will be added.
+   */
+  public static Builder overriding(ExecutableElement method) {
+    checkNotNull(method, "method == null");
+
+    Set<Modifier> modifiers = method.getModifiers();
+    if (modifiers.contains(Modifier.PRIVATE)
+        || modifiers.contains(Modifier.FINAL)
+        || modifiers.contains(Modifier.STATIC)) {
+      throw new IllegalArgumentException("cannot override method with modifiers: " + modifiers);
+    }
+
+    String methodName = method.getSimpleName().toString();
+    MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName);
+
+    // TODO copy method annotations.
+    // TODO check to ensure we're not duplicating override annotation.
+    methodBuilder.addAnnotation(Override.class);
+
+    modifiers = new LinkedHashSet<>(modifiers); // Local copy so we can remove.
+    modifiers.remove(Modifier.ABSTRACT);
+    methodBuilder.addModifiers(modifiers);
+
+    for (TypeParameterElement typeParameterElement : method.getTypeParameters()) {
+      methodBuilder.addTypeVariable(
+          TypeVariableName.get((TypeVariable) typeParameterElement.asType()));
+    }
+
+    methodBuilder.returns(TypeName.get(method.getReturnType()));
+
+    for (VariableElement parameter : method.getParameters()) {
+      // TODO copy parameter annotations.
+      methodBuilder.addParameter(TypeName.get(parameter.asType()),
+          parameter.getSimpleName().toString());
+    }
+
+    for (TypeMirror thrownType : method.getThrownTypes()) {
+      methodBuilder.addException(TypeName.get(thrownType));
+    }
+
+    return methodBuilder;
+  }
+
+  public Builder toBuilder() {
+    Builder builder = new Builder(name);
+    builder.javadoc.add(javadoc);
+    builder.annotations.addAll(annotations);
+    builder.modifiers.addAll(modifiers);
+    builder.typeVariables.addAll(typeVariables);
+    builder.returnType = returnType;
+    builder.parameters.addAll(parameters);
+    builder.exceptions.addAll(exceptions);
+    builder.code.add(code);
+    builder.varargs = varargs;
+    builder.defaultValue = defaultValue;
+    return builder;
+  }
+
   public static final class Builder {
     private final String name;
 
     private final CodeBlock.Builder javadoc = CodeBlock.builder();
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
-    private List<TypeVariable<?>> typeVariables = new ArrayList<>();
-    private Type returnType;
+    private List<TypeVariableName> typeVariables = new ArrayList<>();
+    private TypeName returnType;
     private final List<ParameterSpec> parameters = new ArrayList<>();
-    private final List<Type> exceptions = new ArrayList<>();
+    private final List<TypeName> exceptions = new ArrayList<>();
     private final CodeBlock.Builder code = CodeBlock.builder();
     private boolean varargs;
+    private CodeBlock defaultValue;
 
     private Builder(String name) {
       checkArgument(name.equals(CONSTRUCTOR) || SourceVersion.isName(name),
           "not a valid name: %s", name);
       this.name = name;
-      this.returnType = name.equals(CONSTRUCTOR) ? null : void.class;
+      this.returnType = name.equals(CONSTRUCTOR) ? null : TypeName.VOID;
     }
 
     public Builder addJavadoc(String format, Object... args) {
       javadoc.add(format, args);
+      return this;
+    }
+
+    public Builder addAnnotations(Collection<AnnotationSpec> annotationSpecs) {
+      checkArgument(annotationSpecs != null, "annotationSpecs == null");
+      this.annotations.addAll(annotationSpecs);
       return this;
     }
 
@@ -180,9 +262,13 @@ public final class MethodSpec {
       return this;
     }
 
-    public Builder addAnnotation(Type annotation) {
+    public Builder addAnnotation(ClassName annotation) {
       this.annotations.add(AnnotationSpec.builder(annotation).build());
       return this;
+    }
+
+    public Builder addAnnotation(Class<?> annotation) {
+      return addAnnotation(ClassName.get(annotation));
     }
 
     public Builder addModifiers(Modifier... modifiers) {
@@ -190,14 +276,36 @@ public final class MethodSpec {
       return this;
     }
 
-    public Builder addTypeVariable(TypeVariable typeVariable) {
+    public Builder addModifiers(Collection<Modifier> modifiers) {
+      checkNotNull(modifiers, "modifiers == null");
+      this.modifiers.addAll(modifiers);
+      return this;
+    }
+
+    public Builder addTypeVariables(Collection<TypeVariableName> typeVariables) {
+      checkArgument(typeVariables != null, "typeVariables == null");
+      this.typeVariables.addAll(typeVariables);
+      return this;
+    }
+
+    public Builder addTypeVariable(TypeVariableName typeVariable) {
       typeVariables.add(typeVariable);
       return this;
     }
 
-    public Builder returns(Type returnType) {
+    public Builder returns(TypeName returnType) {
       checkState(!name.equals(CONSTRUCTOR), "constructor cannot have return type.");
       this.returnType = returnType;
+      return this;
+    }
+
+    public Builder returns(Type returnType) {
+      return returns(TypeName.get(returnType));
+    }
+
+    public Builder addParameters(Collection<ParameterSpec> parameterSpecs) {
+      checkArgument(parameterSpecs != null, "parameterSpecs == null");
+      this.parameters.addAll(parameterSpecs);
       return this;
     }
 
@@ -206,8 +314,12 @@ public final class MethodSpec {
       return this;
     }
 
-    public Builder addParameter(Type type, String name, Modifier... modifiers) {
+    public Builder addParameter(TypeName type, String name, Modifier... modifiers) {
       return addParameter(ParameterSpec.builder(type, name, modifiers).build());
+    }
+
+    public Builder addParameter(Type type, String name, Modifier... modifiers) {
+      return addParameter(TypeName.get(type), name, modifiers);
     }
 
     public Builder varargs() {
@@ -215,9 +327,19 @@ public final class MethodSpec {
       return this;
     }
 
-    public Builder addException(Type exception) {
+    public Builder addExceptions(Collection<TypeName> exceptions) {
+      checkArgument(exceptions != null, "exceptions == null");
+      this.exceptions.addAll(exceptions);
+      return this;
+    }
+
+    public Builder addException(TypeName exception) {
       this.exceptions.add(exception);
       return this;
+    }
+
+    public Builder addException(Type exception) {
+      return addException(TypeName.get(exception));
     }
 
     public Builder addCode(String format, Object... args) {
@@ -227,6 +349,16 @@ public final class MethodSpec {
 
     public Builder addCode(CodeBlock codeBlock) {
       code.add(codeBlock);
+      return this;
+    }
+
+    public Builder defaultValue(String format, Object... args) {
+      return defaultValue(CodeBlock.builder().add(format, args).build());
+    }
+
+    public Builder defaultValue(CodeBlock codeBlock) {
+      checkState(this.defaultValue == null, "defaultValue was already set");
+      this.defaultValue = checkNotNull(codeBlock, "codeBlock == null");
       return this;
     }
 

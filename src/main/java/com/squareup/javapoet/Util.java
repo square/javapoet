@@ -23,6 +23,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.lang.model.element.Modifier;
 
 /**
  * Like Guava, but worse and standalone. This makes it easier to mix JavaPoet with libraries that
@@ -30,6 +31,17 @@ import java.util.Set;
  */
 final class Util {
   private Util() {
+  }
+
+  /** Modifier.DEFAULT doesn't exist until Java 8, but we want to run on earlier releases. */
+  public static final Modifier DEFAULT;
+  static {
+    Modifier def = null;
+    try {
+      def = Modifier.valueOf("DEFAULT");
+    } catch (IllegalArgumentException ignored) {
+    }
+    DEFAULT = def;
   }
 
   public static <K, V> Map<K, List<V>> immutableMultimap(Map<K, List<V>> multimap) {
@@ -76,18 +88,23 @@ final class Util {
     return result.toString();
   }
 
-  public static boolean isLowerCase(char c) {
-    return c >= 'a' && c <= 'z';
-  }
-
-  public static boolean isUpperCase(char c) {
-    return c >= 'A' && c <= 'Z';
-  }
-
   public static <T> Set<T> union(Set<T> a, Set<T> b) {
     Set<T> result = new LinkedHashSet<>();
     result.addAll(a);
     result.addAll(b);
     return result;
+  }
+
+  public static void requireExactlyOneOf(Set<Modifier> modifiers, Modifier... mutuallyExclusive) {
+    int count = 0;
+    for (Modifier check : mutuallyExclusive) {
+      if (check == null && Util.DEFAULT == null) continue; // Skip 'DEFAULT' if it doesn't exist!
+      if (modifiers.contains(check)) count++;
+    }
+    checkArgument(count == 1, "%s must contain one of %s", modifiers, mutuallyExclusive);
+  }
+
+  public static boolean hasDefaultModifier(Collection<Modifier> modifiers) {
+    return DEFAULT != null && modifiers.contains(DEFAULT);
   }
 }

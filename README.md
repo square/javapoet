@@ -50,7 +50,7 @@ TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
 JavaFile javaFile = JavaFile.builder("com.example.helloworld", helloWorld)
     .build();
 
-javaFile.emit(System.out);
+javaFile.writeTo(System.out);
 ```
 
 To declare the main method, we've created a `MethodSpec` "main" configured with modifiers, return
@@ -59,6 +59,8 @@ that to a `HelloWorld.java` file.
 
 In this case we write the file to `System.out`, but we could also get it as a string
 (`JavaFile.toString()`) or write it to the file system (`JavaPoet.writeTo()`).
+
+The [Javadoc][javadoc] catalogs the complete JavaPoet API, which we explore below.
 
 ### Code & Control Flow
 
@@ -167,7 +169,7 @@ with wrapping quotation marks and escaping. Here's a program that emits 3 method
 returns its own name:
 
 ```java
-@Test public void stringLiterals() throws Exception {
+public static void main(String[] args) throws Exception {
   TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
       .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
       .addMethod(whatsMyName("slimShady"))
@@ -178,10 +180,10 @@ returns its own name:
   JavaFile javaFile = JavaFile.builder("com.example.helloworld", helloWorld)
       .build();
       
-  javaFile.emit(System.out);
+  javaFile.writeTo(System.out);
 }
 
-private MethodSpec whatsMyName(String name) {
+private static MethodSpec whatsMyName(String name) {
   return MethodSpec.methodBuilder(name)
       .returns(String.class)
       .addStatement("return $S", name)
@@ -227,7 +229,7 @@ TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
 JavaFile javaFile = JavaFile.builder("com.example.helloworld", helloWorld)
     .build();
     
-javaFile.emit(System.out);
+javaFile.writeTo(System.out);
 ```
 
 That generates the following `.java` file, complete with the necessary `import`:
@@ -273,14 +275,14 @@ public final class HelloWorld {
 
 The `ClassName` type is very important, and you'll need it frequently when you're using JavaPoet.
 It can identify any _declared_ class. Declared types are just the beginning of Java's rich type
-system: we also have arrays, parameterized types, wildcard types, and type variables. JavaPoet has a
-`Types` class that can compose each of these:
+system: we also have arrays, parameterized types, wildcard types, and type variables. JavaPoet has
+classes for building each of these:
 
 ```java
 ClassName hoverboard = ClassName.get("com.mattel", "Hoverboard");
 ClassName list = ClassName.get("java.util", "List");
 ClassName arrayList = ClassName.get("java.util", "ArrayList");
-Type listOfHoverboards = Types.parameterizedType(list, hoverboard);
+TypeName listOfHoverboards = ParameterizedTypeName.get(list, hoverboard);
 
 MethodSpec today = MethodSpec.methodBuilder("beyond")
     .returns(listOfHoverboards)
@@ -384,7 +386,7 @@ return type. All of these are configured with `MethodSpec.Builder`.
 
 ### Constructors
 
-`MethodSpec` is a slight misnomer; it is also be used for constructors:
+`MethodSpec` is a slight misnomer; it can also be used for constructors:
 
 ```java
 MethodSpec flux = MethodSpec.constructorBuilder()
@@ -594,7 +596,7 @@ code blocks. They are values that can be referenced with `$L`:
 
 ```java
 TypeSpec comparator = TypeSpec.anonymousClassBuilder("")
-    .addSuperinterface(Types.parameterizedType(Comparator.class, String.class))
+    .addSuperinterface(ParameterizedTypeName.get(Comparator.class, String.class))
     .addMethod(MethodSpec.methodBuilder("compare")
         .addAnnotation(Override.class)
         .addModifiers(Modifier.PUBLIC)
@@ -606,7 +608,7 @@ TypeSpec comparator = TypeSpec.anonymousClassBuilder("")
 
 TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
     .addMethod(MethodSpec.methodBuilder("sortByLength")
-        .addParameter(Types.parameterizedType(List.class, String.class), "strings")
+        .addParameter(ParameterizedTypeName.get(List.class, String.class), "strings")
         .addStatement("$T.sort($N, $L)", Collections.class, "strings", comparator)
         .build())
     .build();
@@ -796,6 +798,7 @@ JavaWriter continues to be available in [GitHub][javawriter] and [Maven Central]
  [dl]: https://oss.sonatype.org/content/repositories/snapshots/com/google/javapoet/javapoet/1.0-SNAPSHOT/
  [square]: http://github.com/square/javawriter
  [snap]: https://oss.sonatype.org/content/repositories/snapshots/
+ [javadoc]: https://square.github.io/javapoet/javadoc/javapoet/
  [javawriter]: https://github.com/square/javapoet/tree/javawriter_2
  [javawriter_maven]: http://search.maven.org/#artifactdetails%7Ccom.squareup%7Cjavawriter%7C2.5.1%7Cjar
  [formatter]: http://developer.android.com/reference/java/util/Formatter.html
