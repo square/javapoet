@@ -104,8 +104,9 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     for (Class<?> c = clazz; c != null; c = c.getEnclosingClass()) {
       names.add(c.getSimpleName());
     }
-    if (clazz.getPackage() != null)
+    if (clazz.getPackage() != null) {
       names.add(clazz.getPackage().getName());
+    }
     Collections.reverse(names);
     return new ClassName(names);
   }
