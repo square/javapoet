@@ -28,6 +28,8 @@ import javax.lang.model.element.TypeElement;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
@@ -36,6 +38,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@RunWith(JUnit4.class)
 public final class MethodSpecTest {
   @Rule public final CompilationRule compilation = new CompilationRule();
 
