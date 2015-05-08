@@ -122,6 +122,9 @@ public final class AnnotationSpec {
   public Builder toBuilder() {
     Builder builder = new Builder(type);
     builder.members.putAll(members);
+    for (Map.Entry<String, List<CodeBlock>> entry : builder.members.entrySet()) {
+      entry.setValue(new ArrayList<>(entry.getValue()));
+    }
     return builder;
   }
 
@@ -215,6 +218,15 @@ public final class AnnotationSpec {
     @Override
     public Builder visitType(TypeMirror t, Entry entry) {
       return builder.addMember(entry.name, "$T.class", t);
+    }
+
+    @Override
+    public Builder visitArray(List<? extends AnnotationValue> values, Entry entry) {
+      Visitor visitor = new Visitor(builder);
+      for (AnnotationValue value : values) {
+        value.accept(visitor, new Entry(entry.name, value));
+      }
+      return builder;
     }
   }
 
