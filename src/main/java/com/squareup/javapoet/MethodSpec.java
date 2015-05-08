@@ -22,16 +22,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeParameterElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.TypeVariable;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
@@ -98,7 +92,8 @@ public final class MethodSpec {
     boolean firstParameter = true;
     for (Iterator<ParameterSpec> i = parameters.iterator(); i.hasNext();) {
       ParameterSpec parameter = i.next();
-      if (!firstParameter) codeWriter.emit(", ");
+      if (!firstParameter)
+        codeWriter.emit(", ");
       parameter.emit(codeWriter, !i.hasNext() && varargs);
       firstParameter = false;
     }
@@ -114,7 +109,8 @@ public final class MethodSpec {
       codeWriter.emit(" throws");
       boolean firstException = true;
       for (TypeName exception : exceptions) {
-        if (!firstException) codeWriter.emit(",");
+        if (!firstException)
+          codeWriter.emit(",");
         codeWriter.emit(" $T", exception);
         firstException = false;
       }
@@ -145,7 +141,8 @@ public final class MethodSpec {
     return name.equals(CONSTRUCTOR);
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     StringWriter out = new StringWriter();
     try {
       CodeWriter codeWriter = new CodeWriter(out);
@@ -162,52 +159,6 @@ public final class MethodSpec {
 
   public static Builder constructorBuilder() {
     return new Builder(CONSTRUCTOR);
-  }
-
-  /**
-   * Create a builder which overrides {@code method}. This will copy its visibility modifiers, type
-   * parameters, return type, name, parameters, and throws declarations. An {@link Override}
-   * annotation will be added.
-   */
-  public static Builder overriding(ExecutableElement method) {
-    checkNotNull(method, "method == null");
-
-    Set<Modifier> modifiers = method.getModifiers();
-    if (modifiers.contains(Modifier.PRIVATE)
-        || modifiers.contains(Modifier.FINAL)
-        || modifiers.contains(Modifier.STATIC)) {
-      throw new IllegalArgumentException("cannot override method with modifiers: " + modifiers);
-    }
-
-    String methodName = method.getSimpleName().toString();
-    MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName);
-
-    // TODO copy method annotations.
-    // TODO check to ensure we're not duplicating override annotation.
-    methodBuilder.addAnnotation(Override.class);
-
-    modifiers = new LinkedHashSet<>(modifiers); // Local copy so we can remove.
-    modifiers.remove(Modifier.ABSTRACT);
-    methodBuilder.addModifiers(modifiers);
-
-    for (TypeParameterElement typeParameterElement : method.getTypeParameters()) {
-      methodBuilder.addTypeVariable(
-          TypeVariableName.get((TypeVariable) typeParameterElement.asType()));
-    }
-
-    methodBuilder.returns(TypeName.get(method.getReturnType()));
-
-    for (VariableElement parameter : method.getParameters()) {
-      // TODO copy parameter annotations.
-      methodBuilder.addParameter(TypeName.get(parameter.asType()),
-          parameter.getSimpleName().toString());
-    }
-
-    for (TypeMirror thrownType : method.getThrownTypes()) {
-      methodBuilder.addException(TypeName.get(thrownType));
-    }
-
-    return methodBuilder;
   }
 
   public Builder toBuilder() {
@@ -240,8 +191,8 @@ public final class MethodSpec {
     private CodeBlock defaultValue;
 
     private Builder(String name) {
-      checkArgument(name.equals(CONSTRUCTOR) || SourceVersion.isName(name),
-          "not a valid name: %s", name);
+      checkArgument(name.equals(CONSTRUCTOR) || SourceVersion.isName(name), "not a valid name: %s",
+          name);
       this.name = name;
       this.returnType = name.equals(CONSTRUCTOR) ? null : TypeName.VOID;
     }
@@ -363,8 +314,9 @@ public final class MethodSpec {
     }
 
     /**
-     * @param controlFlow the control flow construct and its code, such as "if (foo == 5)".
-     * Shouldn't contain braces or newline characters.
+     * @param controlFlow
+     *          the control flow construct and its code, such as "if (foo == 5)". Shouldn't contain
+     *          braces or newline characters.
      */
     public Builder beginControlFlow(String controlFlow, Object... args) {
       code.beginControlFlow(controlFlow, args);
@@ -372,8 +324,9 @@ public final class MethodSpec {
     }
 
     /**
-     * @param controlFlow the control flow construct and its code, such as "else if (foo == 10)".
-     *     Shouldn't contain braces or newline characters.
+     * @param controlFlow
+     *          the control flow construct and its code, such as "else if (foo == 10)". Shouldn't
+     *          contain braces or newline characters.
      */
     public Builder nextControlFlow(String controlFlow, Object... args) {
       code.nextControlFlow(controlFlow, args);
@@ -386,8 +339,9 @@ public final class MethodSpec {
     }
 
     /**
-     * @param controlFlow the optional control flow construct and its code, such as
-     *     "while(foo == 20)". Only used for "do/while" control flows.
+     * @param controlFlow
+     *          the optional control flow construct and its code, such as "while(foo == 20)". Only
+     *          used for "do/while" control flows.
      */
     public Builder endControlFlow(String controlFlow, Object... args) {
       code.endControlFlow(controlFlow, args);
