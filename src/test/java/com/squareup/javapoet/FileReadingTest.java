@@ -15,19 +15,13 @@
  */
 package com.squareup.javapoet;
 
-import static com.google.common.truth.Truth.assertThat;
-
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.concurrent.Callable;
-
 import javax.lang.model.element.Modifier;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
@@ -37,14 +31,14 @@ import javax.tools.JavaFileObject.Kind;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
 import com.google.common.io.ByteStreams;
+
+import static com.google.common.truth.Truth.assertThat;
 
 @RunWith(JUnit4.class)
 public class FileReadingTest {
@@ -107,8 +101,8 @@ public class FileReadingTest {
     DiagnosticCollector<JavaFileObject> diagnosticCollector = new DiagnosticCollector<>();
     StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnosticCollector, 
         Locale.getDefault(), StandardCharsets.UTF_8);
-    File classOutput = temporaryFolder.newFolder();
-    fileManager.setLocation(StandardLocation.CLASS_OUTPUT, Collections.singleton(classOutput));
+    fileManager.setLocation(StandardLocation.CLASS_OUTPUT,
+        Collections.singleton(temporaryFolder.newFolder()));
     CompilationTask task = compiler.getTask(null, 
         fileManager,
         diagnosticCollector,
@@ -119,7 +113,7 @@ public class FileReadingTest {
     assertThat(task.call()).isTrue();
     assertThat(diagnosticCollector.getDiagnostics()).isEmpty();
 
-    ClassLoader loader = new URLClassLoader(new URL[] { classOutput.toURI().toURL() });
+    ClassLoader loader = fileManager.getClassLoader(StandardLocation.CLASS_OUTPUT);
     Callable<?> test = Class.forName("foo.Test", true, loader).asSubclass(Callable.class).newInstance();
     assertThat(Callable.class.getMethod("call").invoke(test)).isEqualTo(value);
   }
