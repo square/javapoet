@@ -323,7 +323,11 @@ public final class MethodSpec {
     }
 
     public Builder varargs() {
-      this.varargs = true;
+      return varargs(true);
+    }
+
+    public Builder varargs(boolean varargs) {
+      this.varargs = varargs;
       return this;
     }
 
