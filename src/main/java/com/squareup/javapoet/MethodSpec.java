@@ -22,16 +22,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeParameterElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.type.TypeVariable;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
@@ -169,45 +167,9 @@ public final class MethodSpec {
    * parameters, return type, name, parameters, and throws declarations. An {@link Override}
    * annotation will be added.
    */
-  public static Builder overriding(ExecutableElement method) {
-    checkNotNull(method, "method == null");
-
-    Set<Modifier> modifiers = method.getModifiers();
-    if (modifiers.contains(Modifier.PRIVATE)
-        || modifiers.contains(Modifier.FINAL)
-        || modifiers.contains(Modifier.STATIC)) {
-      throw new IllegalArgumentException("cannot override method with modifiers: " + modifiers);
-    }
-
-    String methodName = method.getSimpleName().toString();
-    MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName);
-
-    // TODO copy method annotations.
-    // TODO check to ensure we're not duplicating override annotation.
-    methodBuilder.addAnnotation(Override.class);
-
-    modifiers = new LinkedHashSet<>(modifiers); // Local copy so we can remove.
-    modifiers.remove(Modifier.ABSTRACT);
-    methodBuilder.addModifiers(modifiers);
-
-    for (TypeParameterElement typeParameterElement : method.getTypeParameters()) {
-      methodBuilder.addTypeVariable(
-          TypeVariableName.get((TypeVariable) typeParameterElement.asType()));
-    }
-
-    methodBuilder.returns(TypeName.get(method.getReturnType()));
-
-    for (VariableElement parameter : method.getParameters()) {
-      // TODO copy parameter annotations.
-      methodBuilder.addParameter(TypeName.get(parameter.asType()),
-          parameter.getSimpleName().toString());
-    }
-
-    for (TypeMirror thrownType : method.getThrownTypes()) {
-      methodBuilder.addException(TypeName.get(thrownType));
-    }
-
-    return methodBuilder;
+  public static Builder overriding(Elements elements, Types types, ExecutableElement method,
+      DeclaredType containing) {
+    return new JavaxLangModelPoet(elements, types).overriding(method, containing);
   }
 
   public Builder toBuilder() {
@@ -251,6 +213,10 @@ public final class MethodSpec {
       return this;
     }
 
+    List<AnnotationSpec> annotations() {
+      return annotations;
+    }
+
     public Builder addAnnotations(Collection<AnnotationSpec> annotationSpecs) {
       checkArgument(annotationSpecs != null, "annotationSpecs == null");
       this.annotations.addAll(annotationSpecs);
@@ -269,6 +235,10 @@ public final class MethodSpec {
 
     public Builder addAnnotation(Class<?> annotation) {
       return addAnnotation(ClassName.get(annotation));
+    }
+
+    List<Modifier> modifiers() {
+      return modifiers;
     }
 
     public Builder addModifiers(Modifier... modifiers) {
