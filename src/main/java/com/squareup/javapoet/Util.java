@@ -109,4 +109,38 @@ final class Util {
   public static boolean hasDefaultModifier(Collection<Modifier> modifiers) {
     return DEFAULT != null && modifiers.contains(DEFAULT);
   }
+
+  /**
+   * Operate on a builder.
+   * <p>
+   * This interface can be replaced by {@code java.util.Consumer} if Java 1.8 is the new base.
+   *
+   * @param <B>
+   *          builder type to operate on
+   */
+  public interface Consumer<B> {
+
+    /**
+     * Performs this operation on the given builder.
+     *
+     * @param builder
+     *          the builder to operate on
+     */
+    void accept(B builder);
+
+  }
+
+  /**
+   * Base class for all builders.
+   *
+   * @param <B>
+   *          actual builder type
+   */
+  abstract static class Builder<B> {
+    @SuppressWarnings("unchecked")
+    public B assume(boolean assumption, Consumer<B> consumer) {
+      if (assumption) consumer.accept((B) this);
+      return (B) this;
+    }
+  }
 }

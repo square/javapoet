@@ -148,7 +148,7 @@ public final class AnnotationSpec {
     }
   }
 
-  public static final class Builder {
+  public static final class Builder extends Util.Builder<Builder> {
     private final TypeName type;
     private final Map<String, List<CodeBlock>> members = new LinkedHashMap<>();
 

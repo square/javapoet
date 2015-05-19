@@ -189,7 +189,7 @@ public final class JavaFile {
     return builder;
   }
 
-  public static final class Builder {
+  public static final class Builder extends Util.Builder<Builder> {
     private final String packageName;
     private final TypeSpec typeSpec;
     private CodeBlock.Builder fileComment = CodeBlock.builder();
