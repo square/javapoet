@@ -28,6 +28,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.testing.compile.CompilationRule;
+import com.squareup.javapoet.AnnotationSpec.Builder;
 
 public final class AnnotationSpecTest {
 
@@ -157,8 +158,7 @@ public final class AnnotationSpecTest {
             + "    }\n"
             + ")\n"
             + "class IsAnnotated {\n"
-            + "}\n"
-    );
+            + "}\n");
   }
 
   @Test
@@ -233,5 +233,25 @@ public final class AnnotationSpecTest {
             + ", q = @com.squareup.javapoet.AnnotationSpecTest.AnnotationC(\"bar\")"
             + ", r = {java.lang.Float.class, java.lang.Double.class}"
             + ")");
+  }
+
+  @Test
+  public void testAssume() {
+    AnnotationSpec.Builder builder = AnnotationSpec.builder(ClassName.get("test", "TestAssume"));
+    // Java 8 syntax: builder.assume(true, b -> b.addMember("flagPresent", "1"));
+    // Java 8 syntax: builder.assume(false, b -> b.addMember("flagMissing", "2"));
+    builder.assume(true, new Util.Consumer<AnnotationSpec.Builder>() {
+      @Override
+      public void accept(Builder builder) {
+        builder.addMember("flagPresent", "1");
+      }
+    });
+    builder.assume(false, new Util.Consumer<AnnotationSpec.Builder>() {
+      @Override
+      public void accept(Builder builder) {
+        builder.addMember("flagMissing", "2");
+      }
+    });
+    assertThat(builder.build().toString()).isEqualTo("@test.TestAssume(flagPresent = 1)");
   }
 }
