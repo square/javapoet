@@ -49,7 +49,7 @@ public final class MethodSpec {
   public final TypeName returnType;
   public final List<ParameterSpec> parameters;
   public final boolean varargs;
-  public final List<TypeName> exceptions;
+  public final List<? extends TypeName> exceptions;
   public final CodeBlock code;
   public final CodeBlock defaultValue;
 
@@ -234,7 +234,7 @@ public final class MethodSpec {
     private List<TypeVariableName> typeVariables = new ArrayList<>();
     private TypeName returnType;
     private final List<ParameterSpec> parameters = new ArrayList<>();
-    private final List<TypeName> exceptions = new ArrayList<>();
+    private final List<? extends TypeName> exceptions = new ArrayList<>();
     private final CodeBlock.Builder code = CodeBlock.builder();
     private boolean varargs;
     private CodeBlock defaultValue;
@@ -331,7 +331,7 @@ public final class MethodSpec {
       return this;
     }
 
-    public Builder addExceptions(Collection<TypeName> exceptions) {
+    public Builder addExceptions(Iterable<? extends TypeName> exceptions) {
       checkArgument(exceptions != null, "exceptions == null");
       this.exceptions.addAll(exceptions);
       return this;
