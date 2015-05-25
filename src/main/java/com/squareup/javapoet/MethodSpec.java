@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -251,9 +250,11 @@ public final class MethodSpec {
       return this;
     }
 
-    public Builder addAnnotations(Collection<AnnotationSpec> annotationSpecs) {
+    public Builder addAnnotations(Iterable<AnnotationSpec> annotationSpecs) {
       checkArgument(annotationSpecs != null, "annotationSpecs == null");
-      this.annotations.addAll(annotationSpecs);
+      for (AnnotationSpec annotationSpec : annotationSpecs) {
+        this.annotations.add(annotationSpec);
+      }
       return this;
     }
 
@@ -276,15 +277,19 @@ public final class MethodSpec {
       return this;
     }
 
-    public Builder addModifiers(Collection<Modifier> modifiers) {
+    public Builder addModifiers(Iterable<Modifier> modifiers) {
       checkNotNull(modifiers, "modifiers == null");
-      this.modifiers.addAll(modifiers);
+      for (Modifier modifier : modifiers) {
+        this.modifiers.add(modifier);
+      }
       return this;
     }
 
-    public Builder addTypeVariables(Collection<TypeVariableName> typeVariables) {
+    public Builder addTypeVariables(Iterable<TypeVariableName> typeVariables) {
       checkArgument(typeVariables != null, "typeVariables == null");
-      this.typeVariables.addAll(typeVariables);
+      for (TypeVariableName typeVariable : typeVariables) {
+        this.typeVariables.add(typeVariable);
+      }
       return this;
     }
 
@@ -303,9 +308,11 @@ public final class MethodSpec {
       return returns(TypeName.get(returnType));
     }
 
-    public Builder addParameters(Collection<ParameterSpec> parameterSpecs) {
+    public Builder addParameters(Iterable<ParameterSpec> parameterSpecs) {
       checkArgument(parameterSpecs != null, "parameterSpecs == null");
-      this.parameters.addAll(parameterSpecs);
+      for (ParameterSpec parameterSpec : parameterSpecs) {
+        this.parameters.add(parameterSpec);
+      }
       return this;
     }
 
@@ -331,9 +338,11 @@ public final class MethodSpec {
       return this;
     }
 
-    public Builder addExceptions(Collection<TypeName> exceptions) {
+    public Builder addExceptions(Iterable<? extends TypeName> exceptions) {
       checkArgument(exceptions != null, "exceptions == null");
-      this.exceptions.addAll(exceptions);
+      for (TypeName exception : exceptions) {
+        this.exceptions.add(exception);
+      }
       return this;
     }
 

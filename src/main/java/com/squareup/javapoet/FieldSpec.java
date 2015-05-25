@@ -15,21 +15,19 @@
  */
 package com.squareup.javapoet;
 
-import static com.squareup.javapoet.Util.checkArgument;
-import static com.squareup.javapoet.Util.checkNotNull;
-import static com.squareup.javapoet.Util.checkState;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
+
+import static com.squareup.javapoet.Util.checkArgument;
+import static com.squareup.javapoet.Util.checkNotNull;
+import static com.squareup.javapoet.Util.checkState;
 
 /** A generated field declaration. */
 public final class FieldSpec {
@@ -117,9 +115,11 @@ public final class FieldSpec {
       return this;
     }
 
-    public Builder addAnnotations(Collection<AnnotationSpec> annotationSpecs) {
+    public Builder addAnnotations(Iterable<AnnotationSpec> annotationSpecs) {
       checkArgument(annotationSpecs != null, "annotationSpecs == null");
-      this.annotations.addAll(annotationSpecs);
+      for (AnnotationSpec annotationSpec : annotationSpecs) {
+        this.annotations.add(annotationSpec);
+      }
       return this;
     }
 

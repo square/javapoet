@@ -175,9 +175,6 @@ public final class AnnotationSpec {
     }
   }
 
-  /**
-   * Tuple of name and value.
-   */
   private static class Entry {
     final String name;
     final AnnotationValue value;
@@ -199,33 +196,27 @@ public final class AnnotationSpec {
       this.builder = builder;
     }
 
-    @Override
-    protected Builder defaultAction(Object o, Entry entry) {
+    @Override protected Builder defaultAction(Object o, Entry entry) {
       return builder.addMember(entry.name, "$L", entry.value);
     }
 
-    @Override
-    public Builder visitAnnotation(AnnotationMirror a, Entry entry) {
+    @Override public Builder visitAnnotation(AnnotationMirror a, Entry entry) {
       return builder.addMember(entry.name, "$L", get(a));
     }
 
-    @Override
-    public Builder visitEnumConstant(VariableElement c, Entry entry) {
+    @Override public Builder visitEnumConstant(VariableElement c, Entry entry) {
       return builder.addMember(entry.name, "$T.$L", c.asType(), c.getSimpleName());
     }
 
-    @Override
-    public Builder visitType(TypeMirror t, Entry entry) {
+    @Override public Builder visitType(TypeMirror t, Entry entry) {
       return builder.addMember(entry.name, "$T.class", t);
     }
 
-    @Override
-    public Builder visitArray(List<? extends AnnotationValue> values, Entry entry) {
+    @Override public Builder visitArray(List<? extends AnnotationValue> values, Entry entry) {
       for (AnnotationValue value : values) {
         value.accept(this, new Entry(entry.name, value));
       }
       return builder;
     }
   }
-
 }
