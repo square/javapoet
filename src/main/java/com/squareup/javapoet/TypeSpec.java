@@ -51,6 +51,7 @@ public final class TypeSpec {
   public final List<TypeName> superinterfaces;
   public final Map<String, TypeSpec> enumConstants;
   public final List<FieldSpec> fieldSpecs;
+  public final CodeBlock staticBlock;
   public final List<MethodSpec> methodSpecs;
   public final List<TypeSpec> typeSpecs;
   public final List<Element> originatingElements;
@@ -67,6 +68,7 @@ public final class TypeSpec {
     this.superinterfaces = Util.immutableList(builder.superinterfaces);
     this.enumConstants = Util.immutableMap(builder.enumConstants);
     this.fieldSpecs = Util.immutableList(builder.fieldSpecs);
+    this.staticBlock = builder.staticBlock.build();
     this.methodSpecs = Util.immutableList(builder.methodSpecs);
     this.typeSpecs = Util.immutableList(builder.typeSpecs);
 
@@ -216,6 +218,12 @@ public final class TypeSpec {
         firstMember = false;
       }
 
+      if (!staticBlock.isEmpty()) {
+        if (!firstMember) codeWriter.emit("\n");
+        codeWriter.emit(staticBlock);
+        firstMember = false;
+      }
+
       // Non-static fields.
       for (FieldSpec fieldSpec : fieldSpecs) {
         if (fieldSpec.hasModifier(Modifier.STATIC)) continue;
@@ -324,6 +332,7 @@ public final class TypeSpec {
     private final List<TypeName> superinterfaces = new ArrayList<>();
     private final Map<String, TypeSpec> enumConstants = new LinkedHashMap<>();
     private final List<FieldSpec> fieldSpecs = new ArrayList<>();
+    private final CodeBlock.Builder staticBlock = CodeBlock.builder();
     private final List<MethodSpec> methodSpecs = new ArrayList<>();
     private final List<TypeSpec> typeSpecs = new ArrayList<>();
     private final List<Element> originatingElements = new ArrayList<>();
@@ -454,6 +463,11 @@ public final class TypeSpec {
 
     public Builder addField(Type type, String name, Modifier... modifiers) {
       return addField(TypeName.get(type), name, modifiers);
+    }
+
+    public Builder addStaticBlock(CodeBlock block) {
+      staticBlock.beginControlFlow("static").add(block).endControlFlow();
+      return this;
     }
 
     public Builder addMethods(Iterable<MethodSpec> methodSpecs) {

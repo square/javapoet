@@ -1848,29 +1848,33 @@ public final class TypeSpecTest {
 
   @Test public void staticCodeBlock() {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-            .addBlock(CodeBlock.builder()
-                    .beginControlFlow("static")
-                    .endControlFlow()
+            .addField(String.class, "mFoo", Modifier.PRIVATE)
+            .addField(String.class, "FOO", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+            .addStaticBlock(CodeBlock.builder()
+                    .addStatement("FOO = $S", "FOO")
                     .build())
             .addMethod(MethodSpec.methodBuilder("toString")
                     .addAnnotation(Override.class)
-                    .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                    .addModifiers(Modifier.PUBLIC)
                     .returns(String.class)
-                    .addCode("return $S;\n", "taco")
+                    .addCode("return FOO;\n")
                     .build())
             .build();
-    assertThat(toString(taco)).isEqualTo(""
+      assertThat(toString(taco)).isEqualTo(""
             + "package com.squareup.tacos;\n"
             + "\n"
             + "import java.lang.Override;\n"
             + "import java.lang.String;\n"
             + "\n"
             + "class Taco {\n"
+            + "  private static final String FOO;\n\n"
             + "  static {\n"
+            + "    FOO = \"FOO\";\n"
             + "  }\n\n"
+            + "  private String mFoo;\n\n"
             + "  @Override\n"
-            + "  public final String toString() {\n"
-            + "    return \"taco\";\n"
+            + "  public String toString() {\n"
+            + "    return FOO;\n"
             + "  }\n"
             + "}\n");
   }
