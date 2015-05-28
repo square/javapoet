@@ -16,6 +16,7 @@
 package com.squareup.javapoet;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -97,11 +98,12 @@ final class Util {
 
   public static void requireExactlyOneOf(Set<Modifier> modifiers, Modifier... mutuallyExclusive) {
     int count = 0;
-    for (Modifier check : mutuallyExclusive) {
-      if (check == null && Util.DEFAULT == null) continue; // Skip 'DEFAULT' if it doesn't exist!
-      if (modifiers.contains(check)) count++;
+    for (Modifier modifier : mutuallyExclusive) {
+      if (modifier == null && Util.DEFAULT == null) continue; // Skip 'DEFAULT' if it doesn't exist!
+      if (modifiers.contains(modifier)) count++;
     }
-    checkArgument(count == 1, "%s must contain one of %s", modifiers, mutuallyExclusive);
+    checkArgument(count == 1, "modifiers %s must contain one of %s",
+        modifiers, Arrays.toString(mutuallyExclusive));
   }
 
   public static boolean hasDefaultModifier(Collection<Modifier> modifiers) {

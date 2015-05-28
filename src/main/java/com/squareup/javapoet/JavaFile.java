@@ -15,10 +15,13 @@
  */
 package com.squareup.javapoet;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -28,6 +31,8 @@ import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.tools.JavaFileObject;
+import javax.tools.JavaFileObject.Kind;
+import javax.tools.SimpleJavaFileObject;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
@@ -149,6 +154,25 @@ public final class JavaFile {
     } catch (IOException e) {
       throw new AssertionError();
     }
+  }
+
+  public JavaFileObject toJavaFileObject() {
+    URI uri = URI.create((packageName.isEmpty()
+        ? typeSpec.name
+        : packageName.replace('.', '/') + '/' + typeSpec.name)
+        + Kind.SOURCE.extension);
+    return new SimpleJavaFileObject(uri, Kind.SOURCE) {
+      private final long lastModified = System.currentTimeMillis();
+      @Override public String getCharContent(boolean ignoreEncodingErrors) {
+        return JavaFile.this.toString();
+      }
+      @Override public InputStream openInputStream() throws IOException {
+        return new ByteArrayInputStream(getCharContent(true).getBytes());
+      }
+      @Override public long getLastModified() {
+        return lastModified;
+      }
+    };
   }
 
   public static Builder builder(String packageName, TypeSpec typeSpec) {

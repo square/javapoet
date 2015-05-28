@@ -49,6 +49,7 @@ final class CodeWriter {
   private final List<TypeSpec> typeSpecStack = new ArrayList<>();
   private final Map<ClassName, String> importedTypes;
   private final Set<ClassName> importableTypes = new LinkedHashSet<>();
+  private final Set<String> referencedNames = new LinkedHashSet<>();
   private boolean trailingNewline;
 
   /**
@@ -280,6 +281,7 @@ final class CodeWriter {
       String importedName = importedTypes.get(className);
       if (importedName != null) {
         if (!javadoc) importableTypes.add(className);
+        referencedNames.add(importedName);
         return importedName;
       }
 
@@ -301,6 +303,7 @@ final class CodeWriter {
       return className.simpleName(); // Special case: a class referring to itself!
     }
 
+    referencedNames.add(classNames.get(0));
     return Util.join(".", classNames.subList(prefixLength, classNames.size()));
   }
 
@@ -391,6 +394,7 @@ final class CodeWriter {
     // Find the simple names that can be imported, and the classes that they target.
     Map<String, ClassName> simpleNameToType = new LinkedHashMap<>();
     for (ClassName className : importableTypes) {
+      if (referencedNames.contains(className.simpleName())) continue;
       if (simpleNameToType.containsKey(className.simpleName())) continue;
       simpleNameToType.put(className.simpleName(), className);
     }
