@@ -24,13 +24,19 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
@@ -164,12 +170,27 @@ public final class MethodSpec {
   }
 
   /**
-   * Create a builder which overrides {@code method}. This will copy its visibility modifiers, type
-   * parameters, return type, name, parameters, and throws declarations. An {@link Override}
-   * annotation will be added.
+   * Create a method spec builder which overrides {@code method}.
+   * <p>
+   * Same as {@code overriding(method, (DeclaredType) method.getEnclosingElement().asType())}.
    */
-  public static Builder overriding(ExecutableElement method) {
+  public static MethodSpec.Builder overriding(ExecutableElement method,
+      Elements elements, Types types) {
+    DeclaredType containing = (DeclaredType) method.getEnclosingElement().asType();
+    return overriding(method, containing, elements, types);
+  }
+
+  /**
+   * Create a method spec builder which overrides {@code method} that is viewed as being a member
+   * of the specified {@code containing} class or interface.
+   * <p>
+   * This will copy its visibility modifiers, type parameters, return type, name, parameters, and
+   * throws declarations. An {@link Override} annotation will be added.
+   */
+  public static Builder overriding(ExecutableElement method, DeclaredType containing,
+      Elements elements, Types types) {
     checkNotNull(method, "method == null");
+    checkNotNull(containing, "containing == null");
 
     Set<Modifier> modifiers = method.getModifiers();
     if (modifiers.contains(Modifier.PRIVATE)
@@ -181,26 +202,42 @@ public final class MethodSpec {
     String methodName = method.getSimpleName().toString();
     MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName);
 
-    // TODO copy method annotations.
-    // TODO check to ensure we're not duplicating override annotation.
     methodBuilder.addAnnotation(Override.class);
+    TypeMirror overrideType = elements.getTypeElement(Override.class.getCanonicalName()).asType();
+    for (AnnotationMirror mirror : method.getAnnotationMirrors()) {
+      if (types.isSameType(mirror.getAnnotationType(), overrideType)) {
+        continue;
+      }
+      methodBuilder.addAnnotation(AnnotationSpec.get(mirror));
+    }
 
-    modifiers = new LinkedHashSet<>(modifiers); // Local copy so we can remove.
+    modifiers = new LinkedHashSet<>(modifiers);
     modifiers.remove(Modifier.ABSTRACT);
     methodBuilder.addModifiers(modifiers);
 
     for (TypeParameterElement typeParameterElement : method.getTypeParameters()) {
-      methodBuilder.addTypeVariable(
-          TypeVariableName.get((TypeVariable) typeParameterElement.asType()));
+      TypeVariable var = (TypeVariable) typeParameterElement.asType();
+      methodBuilder.addTypeVariable(TypeVariableName.get(var));
     }
 
-    methodBuilder.returns(TypeName.get(method.getReturnType()));
+    ExecutableType executableType = (ExecutableType) types.asMemberOf(containing, method);
+    methodBuilder.returns(TypeName.get(executableType.getReturnType()));
 
-    for (VariableElement parameter : method.getParameters()) {
-      // TODO copy parameter annotations.
-      methodBuilder.addParameter(TypeName.get(parameter.asType()),
-          parameter.getSimpleName().toString());
+    List<? extends VariableElement> parameters = method.getParameters();
+    List<? extends TypeMirror> parameterTypes = executableType.getParameterTypes();
+    for (int index = 0; index < parameters.size(); index++) {
+      VariableElement parameter = parameters.get(index);
+      TypeName type = TypeName.get(parameterTypes.get(index));
+      String name = parameter.getSimpleName().toString();
+      Modifier[] paramods = new Modifier[parameter.getModifiers().size()];
+      parameter.getModifiers().toArray(paramods);
+      ParameterSpec.Builder psb = ParameterSpec.builder(type, name, paramods);
+      for (AnnotationMirror mirror : parameter.getAnnotationMirrors()) {
+        psb.addAnnotation(AnnotationSpec.get(mirror));
+      }
+      methodBuilder.addParameter(psb.build());
     }
+    methodBuilder.varargs(method.isVarArgs());
 
     for (TypeMirror thrownType : method.getThrownTypes()) {
       methodBuilder.addException(TypeName.get(thrownType));
