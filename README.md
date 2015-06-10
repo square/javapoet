@@ -3,7 +3,7 @@ JavaPoet
 
 `JavaPoet` is a Java API for generating `.java` source files.
 
-Source file generation can useful when doing things such as annotation processing or interacting
+Source file generation can be useful when doing things such as annotation processing or interacting
 with metadata files (e.g., database schemas, protocol formats). By generating code, you eliminate
 the need to write boilerplate while also keeping a single source of truth for the metadata.
 
