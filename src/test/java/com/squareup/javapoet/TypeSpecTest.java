@@ -310,7 +310,9 @@ public final class TypeSpecTest {
   @Test public void enumWithSubclassing() throws Exception {
     TypeSpec roshambo = TypeSpec.enumBuilder("Roshambo")
         .addModifiers(Modifier.PUBLIC)
-        .addEnumConstant("ROCK")
+        .addEnumConstant("ROCK", TypeSpec.anonymousClassBuilder("")
+            .addJavadoc("Avalanche!\n")
+            .build())
         .addEnumConstant("PAPER", TypeSpec.anonymousClassBuilder("$S", "flat")
             .addMethod(MethodSpec.methodBuilder("toString")
                 .addAnnotation(Override.class)
@@ -337,6 +339,9 @@ public final class TypeSpecTest {
         + "import java.lang.String;\n"
         + "\n"
         + "public enum Roshambo {\n"
+        + "  /**\n"
+        + "   * Avalanche!\n"
+        + "   */\n"
         + "  ROCK,\n"
         + "\n"
         + "  PAPER(\"flat\") {\n"
