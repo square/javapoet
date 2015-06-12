@@ -130,6 +130,7 @@ public final class TypeSpec {
 
     try {
       if (enumName != null) {
+        codeWriter.emitJavadoc(javadoc);
         codeWriter.emit("$L", enumName);
         if (!anonymousTypeArguments.formatParts.isEmpty()) {
           codeWriter.emit("(");
@@ -346,7 +347,6 @@ public final class TypeSpec {
     }
 
     public Builder addJavadoc(String format, Object... args) {
-      checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
       javadoc.add(format, args);
       return this;
     }
