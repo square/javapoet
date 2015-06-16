@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
@@ -106,39 +107,71 @@ public final class CodeBlock {
         if (format.charAt(p) != '$') {
           nextP = format.indexOf('$', p + 1);
           if (nextP == -1) nextP = format.length();
+          formatParts.add(format.substring(p, nextP));
         } else {
           checkState(p + 1 < format.length(), "dangling $ in format string %s", format);
-          switch (format.charAt(p + 1)) {
+          /* Rules:
+           * Format must be in the form $[Numeric Index]{N, L, S, T}
+           * OR
+           * in the form ${$, >, <, [, ]}
+           * Numeric index is ONE BASED (for consistency with java formatting)
+           * Numeric indexing must refer to a format argument within the args array
+           * Only progress iteration over the argument iterator if we do not hit an indexed entry
+           */
+          int countOfIndexCharacters = 0;
+          while (isSimpleDigit(format.charAt(p + countOfIndexCharacters + 1))) {
+            countOfIndexCharacters++;
+            checkArgument(format.length() > p + countOfIndexCharacters + 1,
+                "Dangling format characters '%s' in format string '%s'",
+                format.substring(p), format);
+          }
+
+          int argsIndex = -1;
+          if (countOfIndexCharacters != 0) {
+            argsIndex = Integer.parseInt(format.substring(p + 1, p + 1 + countOfIndexCharacters));
+            checkArgument(argsIndex <= args.length,
+                "Argument index %s in '%s' is larger than number of parameters",
+                argsIndex, format);
+            checkArgument(argsIndex > 0,
+                "Argument index %s in '%s' is less than one, the minimum format index",
+                argsIndex, format);
+          }
+          switch (format.charAt(p + countOfIndexCharacters + 1)) {
             case 'N':
-              this.args.add(argToName(i.next()));
+              this.args.add(argToName((argsIndex == -1) ? i.next() : args[argsIndex - 1]));
               break;
             case 'L':
-              this.args.add(argToLiteral(i.next()));
+              this.args.add(argToLiteral((argsIndex == -1) ? i.next() : args[argsIndex - 1]));
               break;
             case 'S':
-              this.args.add(argToString(i.next()));
+              this.args.add(argToString((argsIndex == -1) ? i.next() : args[argsIndex - 1]));
               break;
             case 'T':
-              this.args.add(argToType(i.next()));
+              this.args.add(argToType((argsIndex == -1) ? i.next() : args[argsIndex - 1]));
               break;
             case '$':
             case '>':
             case '<':
             case '[':
             case ']':
+              checkState(argsIndex == -1, "$$, $>, $<, $[ and $] may not have an index");
               break;
             default:
               throw new IllegalArgumentException("invalid format string: " + format);
           }
 
-          nextP = p + 2;
+          nextP = p + countOfIndexCharacters + 2;
+          formatParts.add(String.format("%c%c", format.charAt(p), format.charAt(nextP - 1)));
         }
-
-        formatParts.add(format.substring(p, nextP));
       }
-
-      checkArgument(!i.hasNext(), "unexpected args for %s: %s", format, Arrays.asList(args));
       return this;
+    }
+
+    /**
+     * A version of {@link Character#isDigit(char)} that only accepts '0'-'9'.
+     */
+    private boolean isSimpleDigit(char toCheck) {
+      return toCheck >= '0' && toCheck <= '9';
     }
 
     private String argToName(Object o) {
