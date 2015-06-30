@@ -1,6 +1,23 @@
 Change Log
 ==========
 
+JavaPoet 1.1.0 *(2015-05-25)*
+----------------------------
+
+ * New: Eager validation of argument types like `$T` and `$N`.
+ * New: `MethodSpec.varargs(boolean)` to generate varags methods.
+ * New: `AnnotationSpec.get()` and `MethodSpec.overriding()` to create annotations and methods from
+   the `javax.lang.model` API.
+ * New: `JavaFile.toJavaFileObject()`.
+ * New: Java 8 `DEFAULT` modifier.
+ * New: `toBuilder()` methods to build upon objects already constructed.
+ * New: Generate `@interface` annotation types.
+ * New: `TypeName.box()` and `TypeName.unbox()` convenience APIs.
+ * Fix: `nextControlFlow()` accepts arguments.
+ * Fix: Reject duplicate calls to set the superclass.
+ * Fix: `WildcardTypeName.get(WildcardType)` no longer throws a `NullPointerException`.
+ * Fix: Don't allow double field initialization.
+
 JavaPoet 1.0.0 *(2015-01-28)*
 ----------------------------
 

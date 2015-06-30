@@ -21,11 +21,17 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Callable;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import org.junit.Ignore;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
+import javax.lang.model.type.DeclaredType;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,8 +48,25 @@ import static org.mockito.Mockito.when;
 public final class MethodSpecTest {
   @Rule public final CompilationRule compilation = new CompilationRule();
 
+  private Elements elements;
+  private Types types;
+
+  @Before public void setUp() {
+    elements = compilation.getElements();
+    types = compilation.getTypes();
+  }
+
   private TypeElement getElement(Class<?> clazz) {
-    return compilation.getElements().getTypeElement(clazz.getCanonicalName());
+    return elements.getTypeElement(clazz.getCanonicalName());
+  }
+
+  private ExecutableElement findFirst(Collection<ExecutableElement> elements, String name) {
+    for (ExecutableElement executableElement : elements) {
+      if (executableElement.getSimpleName().toString().equals(name)) {
+        return executableElement;
+      }
+    }
+    throw new IllegalArgumentException(name + " not found in " + elements);
   }
 
   @Test public void nullAnnotationsAddition() {
@@ -86,71 +109,85 @@ public final class MethodSpecTest {
   @interface Nullable {
   }
 
-  @SuppressWarnings("unused") // Used via mirror API.
   abstract static class Everything {
     @Deprecated protected abstract <T extends Runnable & Closeable> Runnable everything(
         @Nullable String thing, List<? extends T> things) throws IOException, SecurityException;
   }
 
-  @SuppressWarnings("unused") // Used via mirror API.
   abstract static class HasAnnotation {
     @Override public abstract String toString();
   }
 
-  @Test public void overrideEverything() {
-    TypeElement classElement = getElement(Everything.class);
-    ExecutableElement methodElement = getOnlyElement(methodsIn(classElement.getEnclosedElements()));
-
-    MethodSpec method = MethodSpec.overriding(methodElement).build();
-    assertThat(method.toString()).isEqualTo(""
-        + "@java.lang.Override\n"
-        + "protected <T extends java.lang.Runnable & java.io.Closeable> "
-        + "java.lang.Runnable everything(java.lang.String arg0, java.util.List<? extends T> arg1) "
-        + "throws java.io.IOException, java.lang.SecurityException {\n"
-        + "}\n");
-    // TODO see TODOs in MethodSpec.override
-    //assertThat(method.toString()).isEqualTo(""
-    //    + "@java.lang.Override\n"
-    //    + "@java.lang.Deprecated\n"
-    //    + "protected <T extends java.lang.Runnable & java.io.Closeable> "
-    //    + "java.lang.Runnable everything("
-    //    + "@com.squareup.javapoet.MethodSpecTest.Nullable java.lang.String arg0, "
-    //    + "java.util.List<? extends T> arg1) "
-    //    + "throws java.io.IOException, java.lang.SecurityException {\n"
-    //    + "}\n");
+  interface ExtendsOthers extends Callable<Integer>, Comparable<Long> {
   }
 
-  @Ignore // TODO see TODOs in MethodSpec.override
-  @Test public void overrideDoesNotCopyOverrideAnnotation() {
+  @Test public void overrideEverything() {
     TypeElement classElement = getElement(Everything.class);
+    DeclaredType classType = (DeclaredType) classElement.asType();
     ExecutableElement methodElement = getOnlyElement(methodsIn(classElement.getEnclosedElements()));
-
-    MethodSpec method = MethodSpec.overriding(methodElement).build();
+    MethodSpec method = MethodSpec.overriding(methodElement, classType, elements, types).build();
     assertThat(method.toString()).isEqualTo(""
         + "@java.lang.Override\n"
-        + "public java.lang.String toString() {"
-        + "}");
+        + "@java.lang.Deprecated\n"
+        + "protected <T extends java.lang.Runnable & java.io.Closeable> "
+        + "java.lang.Runnable everything("
+        + "@com.squareup.javapoet.MethodSpecTest.Nullable java.lang.String arg0, "
+        + "java.util.List<? extends T> arg1) "
+        + "throws java.io.IOException, java.lang.SecurityException {\n"
+        + "}\n");
+  }
+
+  @Test public void overrideDoesNotCopyOverrideAnnotation() {
+    TypeElement classElement = getElement(HasAnnotation.class);
+    DeclaredType classType = (DeclaredType) classElement.asType();
+    ExecutableElement exec = getOnlyElement(methodsIn(classElement.getEnclosedElements()));
+    MethodSpec method = MethodSpec.overriding(exec, classType, elements, types).build();
+    assertThat(method.toString()).isEqualTo(""
+        + "@java.lang.Override\n"
+        + "public java.lang.String toString() {\n"
+        + "}\n");
+  }
+
+  @Test public void overrideExtendsOthersWorksWithActualTypeParameters() {
+    TypeElement classElement = getElement(ExtendsOthers.class);
+    DeclaredType classType = (DeclaredType) classElement.asType();
+    List<ExecutableElement> methods = methodsIn(elements.getAllMembers(classElement));
+    ExecutableElement exec = findFirst(methods, "call");
+    MethodSpec method = MethodSpec.overriding(exec, classType, elements, types).build();
+    assertThat(method.toString()).isEqualTo(""
+        + "@java.lang.Override\n"
+        + "public java.lang.Integer call() throws java.lang.Exception {\n"
+        + "}\n");
+    exec = findFirst(methods, "compareTo");
+    method = MethodSpec.overriding(exec, classType, elements, types).build();
+    assertThat(method.toString()).isEqualTo(""
+        + "@java.lang.Override\n"
+        + "public int compareTo(java.lang.Long arg0) {\n"
+        + "}\n");
   }
 
   @Test public void overrideInvalidModifiers() {
     ExecutableElement method = mock(ExecutableElement.class);
     when(method.getModifiers()).thenReturn(ImmutableSet.of(Modifier.FINAL));
+    Element element = mock(Element.class);
+    when(element.asType()).thenReturn(mock(DeclaredType.class));
+    when(method.getEnclosingElement()).thenReturn(element);
     try {
-      MethodSpec.overriding(method);
+      MethodSpec.overriding(method, elements, types);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("cannot override method with modifiers: [final]");
     }
     when(method.getModifiers()).thenReturn(ImmutableSet.of(Modifier.PRIVATE));
     try {
-      MethodSpec.overriding(method);
+      MethodSpec.overriding(method, elements, types);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("cannot override method with modifiers: [private]");
     }
     when(method.getModifiers()).thenReturn(ImmutableSet.of(Modifier.STATIC));
     try {
-      MethodSpec.overriding(method);
+      MethodSpec.overriding(method, elements, types);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("cannot override method with modifiers: [static]");
