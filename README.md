@@ -3,7 +3,7 @@ JavaPoet
 
 `JavaPoet` is a Java API for generating `.java` source files.
 
-Source file generation can useful when doing things such as annotation processing or interacting
+Source file generation can be useful when doing things such as annotation processing or interacting
 with metadata files (e.g., database schemas, protocol formats). By generating code, you eliminate
 the need to write boilerplate while also keeping a single source of truth for the metadata.
 
@@ -754,12 +754,12 @@ Download [the latest snapshot .jar][dl] or depend via Maven:
 <dependency>
   <groupId>com.google</groupId>
   <artifactId>javapoet</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.2.0-SNAPSHOT</version>
 </dependency>
 ```
 or Gradle:
 ```groovy
-compile 'com.google:javapoet:1.0.0-SNAPSHOT'
+compile 'com.google:javapoet:1.2.0-SNAPSHOT'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
@@ -795,7 +795,7 @@ top-to-bottom in a single pass, a file can be assembled as a tree of declaration
 JavaWriter continues to be available in [GitHub][javawriter] and [Maven Central][javawriter_maven].
 
 
- [dl]: https://oss.sonatype.org/content/repositories/snapshots/com/google/javapoet/javapoet/1.0-SNAPSHOT/
+ [dl]: https://oss.sonatype.org/content/repositories/snapshots/com/google/javapoet/javapoet/1.2.0-SNAPSHOT/
  [square]: http://github.com/square/javawriter
  [snap]: https://oss.sonatype.org/content/repositories/snapshots/
  [javadoc]: https://square.github.io/javapoet/javadoc/javapoet/

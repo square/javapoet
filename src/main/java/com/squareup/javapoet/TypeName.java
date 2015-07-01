@@ -245,7 +245,7 @@ public class TypeName {
 
   /** Converts an array of types to a list of type names. */
   static List<TypeName> list(Type[] types) {
-    List<TypeName> result = new ArrayList<>();
+    List<TypeName> result = new ArrayList<>(types.length);
     for (Type type : types) {
       result.add(get(type));
     }
