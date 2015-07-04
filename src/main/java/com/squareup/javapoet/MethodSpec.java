@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
@@ -35,7 +34,6 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
-import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
 import static com.squareup.javapoet.Util.checkArgument;
@@ -45,6 +43,7 @@ import static com.squareup.javapoet.Util.checkState;
 /** A generated constructor or method declaration. */
 public final class MethodSpec {
   static final String CONSTRUCTOR = "<init>";
+  static final ClassName OVERRIDE = ClassName.get(Override.class);
 
   public final String name;
   public final CodeBlock javadoc;
@@ -170,27 +169,13 @@ public final class MethodSpec {
   }
 
   /**
-   * Create a method spec builder which overrides {@code method}.
-   * <p>
-   * Same as {@code overriding(method, (DeclaredType) method.getEnclosingElement().asType())}.
-   */
-  public static MethodSpec.Builder overriding(ExecutableElement method,
-      Elements elements, Types types) {
-    DeclaredType containing = (DeclaredType) method.getEnclosingElement().asType();
-    return overriding(method, containing, elements, types);
-  }
-
-  /**
-   * Create a method spec builder which overrides {@code method} that is viewed as being a member
-   * of the specified {@code containing} class or interface.
-   * <p>
-   * This will copy its visibility modifiers, type parameters, return type, name, parameters, and
+   * Returns a new method spec builder that overrides {@code method}.
+   *
+   * <p>This will copy its visibility modifiers, type parameters, return type, name, parameters, and
    * throws declarations. An {@link Override} annotation will be added.
    */
-  public static Builder overriding(ExecutableElement method, DeclaredType containing,
-      Elements elements, Types types) {
+  public static Builder overriding(ExecutableElement method) {
     checkNotNull(method, "method == null");
-    checkNotNull(containing, "containing == null");
 
     Set<Modifier> modifiers = method.getModifiers();
     if (modifiers.contains(Modifier.PRIVATE)
@@ -202,13 +187,11 @@ public final class MethodSpec {
     String methodName = method.getSimpleName().toString();
     MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName);
 
-    methodBuilder.addAnnotation(Override.class);
-    TypeMirror overrideType = elements.getTypeElement(Override.class.getCanonicalName()).asType();
+    methodBuilder.addAnnotation(OVERRIDE);
     for (AnnotationMirror mirror : method.getAnnotationMirrors()) {
-      if (types.isSameType(mirror.getAnnotationType(), overrideType)) {
-        continue;
-      }
-      methodBuilder.addAnnotation(AnnotationSpec.get(mirror));
+      AnnotationSpec annotationSpec = AnnotationSpec.get(mirror);
+      if (annotationSpec.type.equals(OVERRIDE)) continue;
+      methodBuilder.addAnnotation(annotationSpec);
     }
 
     modifiers = new LinkedHashSet<>(modifiers);
@@ -220,22 +203,19 @@ public final class MethodSpec {
       methodBuilder.addTypeVariable(TypeVariableName.get(var));
     }
 
-    ExecutableType executableType = (ExecutableType) types.asMemberOf(containing, method);
-    methodBuilder.returns(TypeName.get(executableType.getReturnType()));
+    methodBuilder.returns(TypeName.get(method.getReturnType()));
 
     List<? extends VariableElement> parameters = method.getParameters();
-    List<? extends TypeMirror> parameterTypes = executableType.getParameterTypes();
-    for (int index = 0; index < parameters.size(); index++) {
-      VariableElement parameter = parameters.get(index);
-      TypeName type = TypeName.get(parameterTypes.get(index));
+    for (VariableElement parameter : parameters) {
+      TypeName type = TypeName.get(parameter.asType());
       String name = parameter.getSimpleName().toString();
-      Modifier[] paramods = new Modifier[parameter.getModifiers().size()];
-      parameter.getModifiers().toArray(paramods);
-      ParameterSpec.Builder psb = ParameterSpec.builder(type, name, paramods);
+      Set<Modifier> parameterModifiers = parameter.getModifiers();
+      ParameterSpec.Builder parameterBuilder = ParameterSpec.builder(type, name)
+          .addModifiers(parameterModifiers.toArray(new Modifier[parameterModifiers.size()]));
       for (AnnotationMirror mirror : parameter.getAnnotationMirrors()) {
-        psb.addAnnotation(AnnotationSpec.get(mirror));
+        parameterBuilder.addAnnotation(AnnotationSpec.get(mirror));
       }
-      methodBuilder.addParameter(psb.build());
+      methodBuilder.addParameter(parameterBuilder.build());
     }
     methodBuilder.varargs(method.isVarArgs());
 
@@ -244,6 +224,32 @@ public final class MethodSpec {
     }
 
     return methodBuilder;
+  }
+
+  /**
+   * Returns a new method spec builder that overrides {@code method} as a member of {@code
+   * enclosing}. This will resolve type parameters: for example overriding {@link
+   * Comparable#compareTo} in a type that implements {@code Comparable<Movie>}, the {@code T}
+   * parameter will be resolved to {@code Movie}.
+   *
+   * <p>This will copy its visibility modifiers, type parameters, return type, name, parameters, and
+   * throws declarations. An {@link Override} annotation will be added.
+   */
+  public static Builder overriding(
+      ExecutableElement method, DeclaredType enclosing, Types types) {
+    ExecutableType executableType = (ExecutableType) types.asMemberOf(enclosing, method);
+    List<? extends TypeMirror> resolvedParameterTypes = executableType.getParameterTypes();
+    TypeMirror resolvedReturnType = executableType.getReturnType();
+
+    Builder builder = overriding(method);
+    builder.returns(TypeName.get(resolvedReturnType));
+    for (int i = 0, size = builder.parameters.size(); i < size; i++) {
+      ParameterSpec parameter = builder.parameters.get(i);
+      TypeName type = TypeName.get(resolvedParameterTypes.get(i));
+      builder.parameters.set(i, parameter.toBuilder(type, parameter.name).build());
+    }
+
+    return builder;
   }
 
   public Builder toBuilder() {
