@@ -1,6 +1,16 @@
 Change Log
 ==========
 
+JavaPoet 1.2.0 *(TBA)*
+----------------------------
+
+ * New: Arguments may have positional indexes like `$1T` and `$2N`. Indexes can be used to refer to
+   the same argument multiple times in a single format string.
+ * New: Permit Javadoc on enum constants.
+ * New: Class initializer blocks with `addStaticBlock()`.
+ * Fix: `MethodSpec.overriding()` retains annotations.
+
+
 JavaPoet 1.1.0 *(2015-05-25)*
 ----------------------------
 
