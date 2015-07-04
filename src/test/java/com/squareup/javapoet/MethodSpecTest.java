@@ -28,9 +28,9 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import javax.lang.model.type.DeclaredType;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -120,9 +120,8 @@ public final class MethodSpecTest {
 
   @Test public void overrideEverything() {
     TypeElement classElement = getElement(Everything.class);
-    DeclaredType classType = (DeclaredType) classElement.asType();
     ExecutableElement methodElement = getOnlyElement(methodsIn(classElement.getEnclosedElements()));
-    MethodSpec method = MethodSpec.overriding(methodElement, classType, elements, types).build();
+    MethodSpec method = MethodSpec.overriding(methodElement).build();
     assertThat(method.toString()).isEqualTo(""
         + "@java.lang.Override\n"
         + "@java.lang.Deprecated\n"
@@ -136,9 +135,8 @@ public final class MethodSpecTest {
 
   @Test public void overrideDoesNotCopyOverrideAnnotation() {
     TypeElement classElement = getElement(HasAnnotation.class);
-    DeclaredType classType = (DeclaredType) classElement.asType();
     ExecutableElement exec = getOnlyElement(methodsIn(classElement.getEnclosedElements()));
-    MethodSpec method = MethodSpec.overriding(exec, classType, elements, types).build();
+    MethodSpec method = MethodSpec.overriding(exec).build();
     assertThat(method.toString()).isEqualTo(""
         + "@java.lang.Override\n"
         + "public java.lang.String toString() {\n"
@@ -150,13 +148,13 @@ public final class MethodSpecTest {
     DeclaredType classType = (DeclaredType) classElement.asType();
     List<ExecutableElement> methods = methodsIn(elements.getAllMembers(classElement));
     ExecutableElement exec = findFirst(methods, "call");
-    MethodSpec method = MethodSpec.overriding(exec, classType, elements, types).build();
+    MethodSpec method = MethodSpec.overriding(exec, classType, types).build();
     assertThat(method.toString()).isEqualTo(""
         + "@java.lang.Override\n"
         + "public java.lang.Integer call() throws java.lang.Exception {\n"
         + "}\n");
     exec = findFirst(methods, "compareTo");
-    method = MethodSpec.overriding(exec, classType, elements, types).build();
+    method = MethodSpec.overriding(exec, classType, types).build();
     assertThat(method.toString()).isEqualTo(""
         + "@java.lang.Override\n"
         + "public int compareTo(java.lang.Long arg0) {\n"
@@ -170,21 +168,21 @@ public final class MethodSpecTest {
     when(element.asType()).thenReturn(mock(DeclaredType.class));
     when(method.getEnclosingElement()).thenReturn(element);
     try {
-      MethodSpec.overriding(method, elements, types);
+      MethodSpec.overriding(method);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("cannot override method with modifiers: [final]");
     }
     when(method.getModifiers()).thenReturn(ImmutableSet.of(Modifier.PRIVATE));
     try {
-      MethodSpec.overriding(method, elements, types);
+      MethodSpec.overriding(method);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("cannot override method with modifiers: [private]");
     }
     when(method.getModifiers()).thenReturn(ImmutableSet.of(Modifier.STATIC));
     try {
-      MethodSpec.overriding(method, elements, types);
+      MethodSpec.overriding(method);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("cannot override method with modifiers: [static]");
