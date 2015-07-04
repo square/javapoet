@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-JavaPoet 1.2.0 *(TBA)*
+JavaPoet 1.2.0 *(2015-07-04)*
 ----------------------------
 
  * New: Arguments may have positional indexes like `$1T` and `$2N`. Indexes can be used to refer to
