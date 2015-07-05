@@ -17,6 +17,7 @@ package com.squareup.javapoet;
 
 import java.util.Date;
 import javax.lang.model.element.Modifier;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -113,6 +114,43 @@ public final class JavaFileTest {
         + "  Float beverage;\n"
         + "\n"
         + "  java.lang.Float litres;\n" // Second 'Float' is fully qualified.
+        + "}\n");
+  }
+
+  @Ignore("https://github.com/square/javapoet/issues/298")
+  @Test public void conflictingSimpleNames() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("A")
+            .addType(TypeSpec.classBuilder("B")
+                .addType(TypeSpec.classBuilder("Twin").build())
+                .addType(TypeSpec.classBuilder("C")
+                    .addField(ClassName.get("com.squareup.tacos", "A", "Twin", "D"), "d")
+                    .build())
+                .build())
+            .addType(TypeSpec.classBuilder("Twin")
+                .addType(TypeSpec.classBuilder("D")
+                    .build())
+                .build())
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class A {\n"
+        + "  class B {\n"
+        + "    class Twin {\n"
+        + "    }\n"
+        + "\n"
+        + "    class C {\n"
+        + "      A.Twin.D d;\n"
+        + "    }\n"
+        + "  }\n"
+        + "\n"
+        + "  class Twin {\n"
+        + "    class D {\n"
+        + "    }\n"
+        + "  }\n"
         + "}\n");
   }
 
