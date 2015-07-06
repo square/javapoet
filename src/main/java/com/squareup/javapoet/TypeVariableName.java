@@ -120,6 +120,12 @@ public final class TypeVariableName extends TypeName {
         result.addAll(upperBoundElement.getInterfaces());
         return result;
       }
+    } else if (upperBound.getKind() == TypeKind.TYPEVAR) {
+      TypeParameterElement upperBoundElement =
+          (TypeParameterElement) ((javax.lang.model.type.TypeVariable) upperBound).asElement();
+      List<TypeMirror> result = new ArrayList<>();
+      result.addAll(upperBoundElement.getBounds());
+      return result;
     }
 
     return Collections.singletonList(upperBound);
