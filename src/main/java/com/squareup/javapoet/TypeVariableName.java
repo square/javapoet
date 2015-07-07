@@ -125,9 +125,7 @@ public final class TypeVariableName extends TypeName {
       TypeParameterElement upperBoundElement =
           (TypeParameterElement) ((javax.lang.model.type.TypeVariable) upperBound).asElement();
       if (upperBoundElement.getBounds().size() > 1) {
-        List<TypeMirror> result = new ArrayList<>();
-        result.addAll(upperBoundElement.getBounds());
-        return result;
+        return upperBoundElement.getBounds();
       }
     }
 
