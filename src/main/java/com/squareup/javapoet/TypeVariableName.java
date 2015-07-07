@@ -124,9 +124,11 @@ public final class TypeVariableName extends TypeName {
     } else if (upperBound.getKind() == TypeKind.TYPEVAR) {
       TypeParameterElement upperBoundElement =
           (TypeParameterElement) ((javax.lang.model.type.TypeVariable) upperBound).asElement();
-      List<TypeMirror> result = new ArrayList<>();
-      result.addAll(upperBoundElement.getBounds());
-      return result;
+      if (upperBoundElement.getBounds().size() > 1) {
+        List<TypeMirror> result = new ArrayList<>();
+        result.addAll(upperBoundElement.getBounds());
+        return result;
+      }
     }
 
     return Collections.singletonList(upperBound);
