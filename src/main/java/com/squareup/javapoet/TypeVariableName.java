@@ -88,9 +88,7 @@ public final class TypeVariableName extends TypeName {
   }
 
   /**
-   * Returns a list of type mirrors representing the unpacked bounds of {@code typeVariable}. This
-   * is made gnarly by the need to unpack Java 8's new IntersectionType with reflection. We don't
-   * have that type in Java 7, and {@link TypeVariable}'s array of bounds is sufficient anyway.
+   * Returns a list of type mirrors representing the unpacked bounds of {@code typeVariable}.
    */
   private static List<? extends TypeMirror> typeVariableBounds(
       javax.lang.model.type.TypeVariable typeVariable) {
