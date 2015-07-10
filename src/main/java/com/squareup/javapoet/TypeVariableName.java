@@ -16,18 +16,13 @@
 package com.squareup.javapoet;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import javax.lang.model.element.NestingKind;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 import static com.squareup.javapoet.Util.checkArgument;
