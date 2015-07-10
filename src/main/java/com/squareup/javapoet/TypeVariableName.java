@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.lang.model.element.NestingKind;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -119,6 +120,15 @@ public final class TypeVariableName extends TypeName {
         result.add(upperBoundElement.getSuperclass());
         result.addAll(upperBoundElement.getInterfaces());
         return result;
+      }
+    } else if (upperBound.getKind() == TypeKind.TYPEVAR) {
+      // Workaround for intersection types in Eclipse:
+      // Eclipse returns an equivalent TypeVariable for intersection types
+      // (wrapping the same internal TypeVariableBinding).
+      TypeParameterElement upperBoundElement =
+          (TypeParameterElement) ((javax.lang.model.type.TypeVariable) upperBound).asElement();
+      if (upperBoundElement.equals(typeVariable.asElement())) {
+        return upperBoundElement.getBounds();
       }
     }
 
