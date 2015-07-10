@@ -97,39 +97,11 @@ public final class TypeVariableName extends TypeName {
    * is made gnarly by the need to unpack Java 8's new IntersectionType with reflection. We don't
    * have that type in Java 7, and {@link TypeVariable}'s array of bounds is sufficient anyway.
    */
-  @SuppressWarnings("unchecked") // Gross things in support of Java 7 and Java 8.
   private static List<? extends TypeMirror> typeVariableBounds(
       javax.lang.model.type.TypeVariable typeVariable) {
-    TypeMirror upperBound = typeVariable.getUpperBound();
-
-    // On Java 8, unwrap an intersection type into its component bounds.
-    if ("INTERSECTION".equals(upperBound.getKind().name())) {
-      try {
-        Method method = upperBound.getClass().getMethod("getBounds");
-        return (List<? extends TypeMirror>) method.invoke(upperBound);
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    // On Java 7, intersection types exist but without explicit API. Use a (clumsy) heuristic.
-    if (upperBound.getKind() == TypeKind.DECLARED) {
-      TypeElement upperBoundElement = (TypeElement) ((DeclaredType) upperBound).asElement();
-      if (upperBoundElement.getNestingKind() == NestingKind.ANONYMOUS) {
-        List<TypeMirror> result = new ArrayList<>();
-        result.add(upperBoundElement.getSuperclass());
-        result.addAll(upperBoundElement.getInterfaces());
-        return result;
-      }
-    } else if (upperBound.getKind() == TypeKind.TYPEVAR) {
-      TypeParameterElement upperBoundElement =
-          (TypeParameterElement) ((javax.lang.model.type.TypeVariable) upperBound).asElement();
-      if (upperBoundElement.getBounds().size() > 1) {
-        return upperBoundElement.getBounds();
-      }
-    }
-
-    return Collections.singletonList(upperBound);
+    TypeParameterElement upperBoundElement =
+        (TypeParameterElement) ((javax.lang.model.type.TypeVariable) typeVariable).asElement();
+    return upperBoundElement.getBounds();
   }
 
   /** Returns type variable equivalent to {@code type}. */
