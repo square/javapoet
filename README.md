@@ -592,6 +592,7 @@ TypeSpec comparator = TypeSpec.anonymousClassBuilder("")
         .addModifiers(Modifier.PUBLIC)
         .addParameter(String.class, "a")
         .addParameter(String.class, "b")
+        .returns(int.class)
         .addStatement("return $N.length() - $N.length()", "a", "b")
         .build())
     .build();
@@ -610,7 +611,7 @@ This generates a method that contains a class that contains a method:
 void sortByLength(List<String> strings) {
   Collections.sort(strings, new Comparator<String>() {
     @Override
-    public void compare(String a, String b) {
+    public int compare(String a, String b) {
       return a.length() - b.length();
     }
   });
