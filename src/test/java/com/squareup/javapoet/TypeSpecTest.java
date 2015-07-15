@@ -1043,6 +1043,32 @@ public final class TypeSpecTest {
         + "  }\n"
         + "}\n");
   }
+  
+  @Test public void indexedElseIf() throws Exception {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addMethod(MethodSpec.methodBuilder("choices")
+            .beginControlFlow("if ($1L != null || $1L == $2L)", "taco", "otherTaco")
+            .addStatement("$T.out.println($S)", System.class, "only one taco? NOO!")
+            .nextControlFlow("else if ($1L.$3L && $2L.$3L)", "taco", "otherTaco", "isSupreme()")
+            .addStatement("$T.out.println($S)", System.class, "taco heaven")
+            .endControlFlow()
+            .build())
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.System;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  void choices() {\n"
+        + "    if (taco != null || taco == otherTaco) {\n"
+        + "      System.out.println(\"only one taco? NOO!\");\n"
+        + "    } else if (taco.isSupreme() && otherTaco.isSupreme()) {\n"
+        + "      System.out.println(\"taco heaven\");\n"
+        + "    }\n"
+        + "  }\n"
+        + "}\n");
+  }
 
   @Test public void elseIf() throws Exception {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
@@ -1815,15 +1841,6 @@ public final class TypeSpecTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("expected type but was java.lang.String");
-    }
-  }
-
-  @Test public void tooManyArguments() {
-    try {
-      CodeBlock.builder().add("$$", "foo");
-      fail();
-    } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("unexpected args for $$: [foo]");
     }
   }
 
