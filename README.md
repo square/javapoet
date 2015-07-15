@@ -602,6 +602,7 @@ TypeSpec comparator = TypeSpec.anonymousClassBuilder("")
         .addModifiers(Modifier.PUBLIC)
         .addParameter(String.class, "a")
         .addParameter(String.class, "b")
+        .returns(int.class)
         .addStatement("return $N.length() - $N.length()", "a", "b")
         .build())
     .build();
@@ -620,7 +621,7 @@ This generates a method that contains a class that contains a method:
 void sortByLength(List<String> strings) {
   Collections.sort(strings, new Comparator<String>() {
     @Override
-    public void compare(String a, String b) {
+    public int compare(String a, String b) {
       return a.length() - b.length();
     }
   });
@@ -754,12 +755,12 @@ Download [the latest snapshot .jar][dl] or depend via Maven:
 <dependency>
   <groupId>com.google</groupId>
   <artifactId>javapoet</artifactId>
-  <version>1.2.0-SNAPSHOT</version>
+  <version>1.3.0-SNAPSHOT</version>
 </dependency>
 ```
 or Gradle:
 ```groovy
-compile 'com.google:javapoet:1.2.0-SNAPSHOT'
+compile 'com.google:javapoet:1.3.0-SNAPSHOT'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
