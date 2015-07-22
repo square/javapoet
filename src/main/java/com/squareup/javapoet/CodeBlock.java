@@ -19,14 +19,11 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
 import static com.squareup.javapoet.Util.checkArgument;
-import static com.squareup.javapoet.Util.checkState;
 
 /**
  * A fragment of a .java file, potentially containing declarations, statements, and documentation.
@@ -101,126 +98,53 @@ public final class CodeBlock {
     }
 
     public Builder add(String format, Object... args) {
-      List<Character> paramChars = new ArrayList<>();
-      List<Integer> paramIndexes = new ArrayList<>();
-      boolean autoIndexing = false;
-      int i = 0;
-      for (int p = 0, nextP; p < format.length(); p = nextP) {
+      boolean hasRelative = false;
+      boolean hasIndexed = false;
+      int parameterCount = 0;
+
+      for (int p = 0; p < format.length();) {
         if (format.charAt(p) != '$') {
-          nextP = format.indexOf('$', p + 1);
+          int nextP = format.indexOf('$', p + 1);
           if (nextP == -1) nextP = format.length();
           formatParts.add(format.substring(p, nextP));
-        } else {
-          checkState(p + 1 < format.length(), "dangling $ in format string %s", format);
-          /* Rules:
-           * Format must be in the form $[Numeric Index]{N, L, S, T}
-           * OR
-           * in the form ${$, >, <, [, ]}
-           * Numeric index is ONE BASED (for consistency with java formatting)
-           * Numeric indexing must refer to a format argument within the args array
-           * Only progress iteration over the argument iterator if we do not hit an indexed entry
-           */
-          int countOfIndexCharacters = 0;
-          while (isSimpleDigit(format.charAt(p + countOfIndexCharacters + 1))) {
-            countOfIndexCharacters++;
-            checkArgument(format.length() > p + countOfIndexCharacters + 1,
-                "Dangling format characters '%s' in format string '%s'",
-                format.substring(p), format);
-          }
-          if (!paramChars.isEmpty()) {
-            if (autoIndexing) {
-              char toCheck = format.charAt(p + 1);
-              checkArgument(countOfIndexCharacters == 0,
-                  "cannot mix indexed and positional parameters");
-              checkArgument(isValidParameterChar(toCheck), "invalid format string: %s", format);
-
-              if (!isNonIndexedChar(toCheck)) {
-                paramChars.add(toCheck);
-                paramIndexes.add(i);
-                i++;
-              }
-
-              nextP = p + 2;
-              formatParts.add("$" + toCheck);
-            } else {
-              char toCheck = format.charAt(p + countOfIndexCharacters + 1);
-              if (countOfIndexCharacters == 0) {
-                boolean valid = isValidParameterChar(toCheck);
-                checkArgument(valid, "invalid format string: %s", format);
-                checkArgument(isNonIndexedChar(toCheck),
-                    "cannot mix indexed and positional paramters");
-              } else {
-                checkArgument(!isNonIndexedChar(toCheck),
-                    "$$, $>, $<, $[ and $] may not have an index");
-              }
-              int argsIndex =
-                  Integer.parseInt(format.substring(p + 1, p + 1 + countOfIndexCharacters));
-              checkArgument(argsIndex <= args.length,
-                  "Argument index %s in '%s' is larger than number of parameters",
-                  argsIndex, format);
-              checkArgument(argsIndex > 0,
-                  "Argument index %s in '%s' is less than one, the minimum format index",
-                  argsIndex, format);
-
-              if (!isNonIndexedChar(toCheck)) {
-                paramChars.add(toCheck);
-                paramIndexes.add(argsIndex - 1);
-              }
-
-              nextP = p + countOfIndexCharacters + 2;
-              formatParts.add("$" + toCheck);
-            }
-          } else {
-            char toCheck = format.charAt(p + countOfIndexCharacters + 1);
-            int index = -1;
-            if (countOfIndexCharacters == 0) {
-              boolean valid = isValidParameterChar(toCheck);
-              checkArgument(valid, "invalid format string: %s", format);
-              if (!isNonIndexedChar(toCheck)) {
-                index = i;
-                i++;
-              }
-              autoIndexing = true;
-            } else {
-              checkArgument(isValidParameterChar(toCheck), "invalid format string: %s", format);
-              checkArgument(!isNonIndexedChar(toCheck),
-                  "$$, $>, $<, $[ and $] may not have an index");
-              autoIndexing = false;
-              int argsIndex =
-                  Integer.parseInt(format.substring(p + 1, p + 1 + countOfIndexCharacters));
-              checkArgument(argsIndex <= args.length,
-                  "Argument index %s in '%s' is larger than number of parameters",
-                  argsIndex, format);
-              checkArgument(argsIndex > 0,
-                  "Argument index %s in '%s' is less than one, the minimum format index",
-                  argsIndex, format);
-              index = argsIndex - 1;
-            }
-
-            if (index > -1) {
-              paramChars.add(toCheck);
-              paramIndexes.add(index);
-            }
-
-            nextP = p + countOfIndexCharacters + 2;
-            formatParts.add("$" + toCheck);
-          }
+          p = nextP;
+          continue;
         }
-      }
-      int max = -1;
-      for (int j = 0; j < paramIndexes.size(); j++) {
-        max = Math.max(max, paramIndexes.get(j));
-      }
-      checkArgument(max < args.length,
-          "Not enough parameters were given; expected %s, got %s", max + 1, args.length);
-      checkArgument(max == args.length - 1,
-          "Too many parameters were given; expected %s, got %s", max + 1, args.length);
 
-      Iterator<Character> iterChars = paramChars.iterator();
-      Iterator<Integer> iterIndexes = paramIndexes.iterator();
-      for (; iterChars.hasNext();) {
-        char c = iterChars.next();
-        int index = iterIndexes.next();
+        p++; // '$'.
+
+        // Consume zero or more digits, leaving 'c' as the first non-digit char after the '$'.
+        int indexStart = p;
+        char c;
+        do {
+          checkArgument(p < format.length(), "dangling format characters in '%s'", format);
+          c = format.charAt(p++);
+        } while (c >= '0' && c <= '9');
+        int indexEnd = p - 1;
+
+        // If 'c' doesn't take an argument, we're done.
+        if (c == '$' || c == '>' || c == '<' || c == '[' || c == ']') {
+          checkArgument(indexStart == indexEnd, "$$, $>, $<, $[ and $] may not have an index");
+          formatParts.add("$" + c);
+          continue;
+        }
+
+        // Find either the indexed argument, or the relative argument. (0-based).
+        int index;
+        if (indexStart < indexEnd) {
+          index = Integer.parseInt(format.substring(indexStart, indexEnd)) - 1;
+          hasIndexed = true;
+        } else {
+          index = parameterCount;
+          hasRelative = true;
+        }
+        parameterCount++;
+
+        checkArgument(index >= 0 && index < args.length,
+            "index %d for '%s' not in range (received %s arguments)",
+            index + 1, format.substring(indexStart - 1, indexEnd + 1), args.length);
+        checkArgument(!hasIndexed || !hasRelative, "cannot mix indexed and positional parameters");
+
         switch (c) {
           case 'N':
             this.args.add(argToName(args[index]));
@@ -235,47 +159,16 @@ public final class CodeBlock {
             this.args.add(argToType(args[index]));
             break;
           default:
-            throw new IllegalStateException("format char '" + c + "' was unexpected");
+            throw new IllegalArgumentException(
+                String.format("invalid format string: '%s'", format));
         }
+
+        formatParts.add("$" + c);
       }
+
+      checkArgument(parameterCount >= args.length,
+          "unused arguments: expected %s, received %s", parameterCount, args.length);
       return this;
-    }
-
-    private boolean isValidParameterChar(char toCheck) {
-      switch (toCheck) {
-        case 'N':
-        case 'L':
-        case 'S':
-        case 'T':
-        case '$':
-        case '>':
-        case '<':
-        case '[':
-        case ']':
-          return true;
-        default:
-          return false;
-      }
-    }
-
-    private boolean isNonIndexedChar(char toCheck) {
-      switch (toCheck) {
-        case '$':
-        case '>':
-        case '<':
-        case '[':
-        case ']':
-          return true;
-        default:
-          return false;
-      }
-    }
-
-    /**
-     * A version of {@link Character#isDigit(char)} that only accepts '0'-'9'.
-     */
-    private boolean isSimpleDigit(char toCheck) {
-      return toCheck >= '0' && toCheck <= '9';
     }
 
     private String argToName(Object o) {

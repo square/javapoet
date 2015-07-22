@@ -667,10 +667,10 @@ public final class TypeSpecTest {
     TypeSpec annotation = TypeSpec.annotationBuilder("MyAnnotation")
         .addModifiers(Modifier.PUBLIC)
         .addMethod(MethodSpec.methodBuilder("test")
-                .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-                .defaultValue("$L", 0)
-                .returns(int.class)
-                .build())
+            .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+            .defaultValue("$L", 0)
+            .returns(int.class)
+            .build())
         .build();
 
     assertThat(toString(annotation)).isEqualTo(""
@@ -743,13 +743,13 @@ public final class TypeSpecTest {
         .build();
 
     assertThat(toString(bar)).isEqualTo(""
-        + "package com.squareup.tacos;\n"
-        + "\n"
-        + "interface Tacos {\n"
-        + "  default int test() {\n"
-        + "    return 0;\n"
-        + "  }\n"
-        + "}\n"
+            + "package com.squareup.tacos;\n"
+            + "\n"
+            + "interface Tacos {\n"
+            + "  default int test() {\n"
+            + "    return 0;\n"
+            + "  }\n"
+            + "}\n"
     );
   }
 
@@ -1849,16 +1849,25 @@ public final class TypeSpecTest {
       CodeBlock.builder().add("$S");
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Not enough parameters were given; expected 1, got 0");
+      assertThat(expected).hasMessage("index 1 for '$S' not in range (received 0 arguments)");
     }
   }
 
-  @Test public void unusedArguments() {
+  @Test public void unusedArgumentsRelative() {
     try {
-      CodeBlock.builder().add("", "foo");
+      CodeBlock.builder().add("$L $L", "a", "b", "c");
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Too many parameters were given; expected 0, got 1");
+      assertThat(expected).hasMessage("unused arguments: expected 2, received 3");
+    }
+  }
+
+  @Test public void unusedArgumentsIndexed() {
+    try {
+      CodeBlock.builder().add("$1L $2L", "a", "b", "c");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("unused arguments: expected 2, received 3");
     }
   }
 
