@@ -1848,7 +1848,17 @@ public final class TypeSpecTest {
     try {
       CodeBlock.builder().add("$S");
       fail();
-    } catch (NoSuchElementException expected) {
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Not enough parameters were given; expected 1, got 0");
+    }
+  }
+
+  @Test public void unusedArguments() {
+    try {
+      CodeBlock.builder().add("", "foo");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Too many parameters were given; expected 0, got 1");
     }
   }
 
