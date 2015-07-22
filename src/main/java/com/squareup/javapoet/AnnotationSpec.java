@@ -66,7 +66,7 @@ public final class AnnotationSpec {
       codeWriter.emit("@$T(" + whitespace, type);
       codeWriter.indent(2);
       for (Iterator<Map.Entry<String, List<CodeBlock>>> i
-          = members.entrySet().iterator(); i.hasNext();) {
+          = members.entrySet().iterator(); i.hasNext(); ) {
         Map.Entry<String, List<CodeBlock>> entry = i.next();
         codeWriter.emit("$L = ", entry.getKey());
         emitAnnotationValues(codeWriter, whitespace, memberSeparator, entry.getValue());

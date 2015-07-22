@@ -196,7 +196,7 @@ public final class TypeSpec {
       codeWriter.indent();
       boolean firstMember = true;
       for (Iterator<Map.Entry<String, TypeSpec>> i = enumConstants.entrySet().iterator();
-          i.hasNext();) {
+          i.hasNext(); ) {
         Map.Entry<String, TypeSpec> enumConstant = i.next();
         if (!firstMember) codeWriter.emit("\n");
         enumConstant.getValue()
