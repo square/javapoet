@@ -102,7 +102,7 @@ public final class CodeBlock {
       boolean hasIndexed = false;
       int parameterCount = 0;
 
-      for (int p = 0; p < format.length();) {
+      for (int p = 0; p < format.length(); ) {
         if (format.charAt(p) != '$') {
           int nextP = format.indexOf('$', p + 1);
           if (nextP == -1) nextP = format.length();
