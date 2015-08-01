@@ -280,7 +280,7 @@ final class CodeWriter {
 
       String importedName = importedTypes.get(className);
       if (importedName != null) {
-        if (!javadoc) importableTypes.add(className);
+        if (!javadoc && className.importable) importableTypes.add(className);
         referencedNames.add(importedName);
         return importedName;
       }
@@ -292,7 +292,7 @@ final class CodeWriter {
       }
 
       // Fall back to the fully-qualified name. Mark the type as importable for a future pass.
-      if (!javadoc) importableTypes.add(className);
+      if (!javadoc && className.importable) importableTypes.add(className);
       return className.canonicalName;
     }
 

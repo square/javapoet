@@ -55,6 +55,24 @@ public final class JavaFileTest {
         + "}\n");
   }
 
+  @Test public void unimportableType() throws Exception {
+    ClassName androidR = ClassName.get("android", "R").asUnimportableType();
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addField(FieldSpec.builder(int.class, "topping")
+                .initializer("$T.id.salsa", androidR)
+                .build())
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  int topping = android.R.id.salsa;\n"
+        + "}\n");
+  }
+
   @Test public void conflictingImports() throws Exception {
     String source = JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("Taco")
