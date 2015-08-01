@@ -38,8 +38,9 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   /** From top to bottom. This will be ["java.util", "Map", "Entry"] for {@link Map.Entry}. */
   final List<String> names;
   final String canonicalName;
+  final boolean importable;
 
-  private ClassName(List<String> names) {
+  private ClassName(List<String> names, boolean importable) {
     for (int i = 1; i < names.size(); i++) {
       checkArgument(SourceVersion.isName(names.get(i)), "part '%s' is keyword", names.get(i));
     }
@@ -47,6 +48,17 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     this.canonicalName = names.get(0).isEmpty()
         ? Util.join(".", names.subList(1, names.size()))
         : Util.join(".", names);
+    this.importable = importable;
+  }
+
+  /**
+   * Returns this class name but as a type that will not be imported.
+   *
+   * <p>Note: This does not affect other class names for the same type. For a type to not be
+   * imported, every reference must be unimportable.
+   */
+  public ClassName asUnimportableType() {
+    return new ClassName(names, false);
   }
 
   /** Returns the package name, like {@code "java.util"} for {@code Map.Entry}. */
@@ -60,7 +72,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
    */
   public ClassName enclosingClassName() {
     if (names.size() == 2) return null;
-    return new ClassName(names.subList(0, names.size() - 1));
+    return new ClassName(names.subList(0, names.size() - 1), true);
   }
 
   /**
@@ -72,7 +84,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     List<String> result = new ArrayList<>(names.size() + 1);
     result.addAll(names);
     result.add(name);
-    return new ClassName(result);
+    return new ClassName(result, true);
   }
 
   public List<String> simpleNames() {
@@ -87,7 +99,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   public ClassName peerClass(String name) {
     List<String> result = new ArrayList<>(names);
     result.set(result.size() - 1, name);
-    return new ClassName(result);
+    return new ClassName(result, true);
   }
 
   /** Returns the simple name of this class, like {@code "Entry"} for {@link Map.Entry}. */
@@ -108,7 +120,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
       names.add(clazz.getPackage().getName());
     }
     Collections.reverse(names);
-    return new ClassName(names);
+    return new ClassName(names, true);
   }
 
   /**
@@ -138,7 +150,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     }
 
     checkArgument(names.size() >= 2, "couldn't make a guess for %s", classNameString);
-    return new ClassName(names);
+    return new ClassName(names, true);
   }
 
   /**
@@ -150,7 +162,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     result.add(packageName);
     result.add(simpleName);
     Collections.addAll(result, simpleNames);
-    return new ClassName(result);
+    return new ClassName(result, true);
   }
 
   /** Returns the class name for {@code element}. */
@@ -164,7 +176,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     }
     names.add(getPackage(element).getQualifiedName().toString());
     Collections.reverse(names);
-    return new ClassName(names);
+    return new ClassName(names, true);
   }
 
   private static boolean isClassOrInterface(Element e) {
