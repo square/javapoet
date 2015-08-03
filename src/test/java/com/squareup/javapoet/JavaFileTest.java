@@ -15,6 +15,7 @@
  */
 package com.squareup.javapoet;
 
+import java.util.Collections;
 import java.util.Date;
 import javax.lang.model.element.Modifier;
 import org.junit.Ignore;
@@ -114,6 +115,51 @@ public final class JavaFileTest {
         + "  Float beverage;\n"
         + "\n"
         + "  java.lang.Float litres;\n" // Second 'Float' is fully qualified.
+        + "}\n");
+  }
+
+  @Test public void enumFieldImport() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addField(
+                FieldSpec.builder(Object.class, "modifier")
+                    .initializer("$T", Modifier.PROTECTED)
+                    .build())
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.Object;\n"
+        + "import javax.lang.model.element.Modifier;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  Object modifier = Modifier.PROTECTED;\n"
+        + "}\n");
+  }
+
+  @Test public void enumArgumentImport() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addStaticBlock(
+                CodeBlock.builder()
+                    .addStatement("$T.hasDefaultModifier($T.singletonList($T))", Util.class, Collections.class, Modifier.ABSTRACT)
+                    .build())
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.javapoet.Util;\n"
+        + "import java.util.Collections;\n"
+        + "import javax.lang.model.element.Modifier;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  static {\n"
+        + "    Util.hasDefaultModifier(Collections.singletonList(Modifier.ABSTRACT));\n"
+        + "  }\n"
         + "}\n");
   }
 

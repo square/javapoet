@@ -20,6 +20,8 @@ import org.junit.Test;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
+import javax.lang.model.element.Modifier;
+
 public class CodeBlockTest {
   
   @Test
@@ -174,4 +176,10 @@ public class CodeBlockTest {
     assertThat(block.toString()).isEqualTo("java.lang.System.out.println(\"java.lang.System\")");
   }
   
+  @Test
+  public void formatEnumValue() {
+    CodeBlock block = CodeBlock.builder().add("$T", Modifier.PROTECTED).build();
+    assertThat(block.toString()).isEqualTo("javax.lang.model.element.Modifier.PROTECTED");
+  }
+
 }
