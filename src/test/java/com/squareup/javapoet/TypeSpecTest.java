@@ -441,6 +441,31 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  /** https://github.com/square/javapoet/issues/253 */
+  @Test public void enumWithAnnotatedValues() throws Exception {
+    TypeSpec roshambo = TypeSpec.enumBuilder("Roshambo")
+        .addModifiers(Modifier.PUBLIC)
+        .addEnumConstant("ROCK", TypeSpec.anonymousClassBuilder("")
+            .addAnnotation(Deprecated.class)
+            .build())
+        .addEnumConstant("PAPER")
+        .addEnumConstant("SCISSORS")
+        .build();
+    assertThat(toString(roshambo)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.Deprecated;\n"
+        + "\n"
+        + "public enum Roshambo {\n"
+        + "  @Deprecated\n"
+        + "  ROCK,\n"
+        + "\n"
+        + "  PAPER,\n"
+        + "\n"
+        + "  SCISSORS\n"
+        + "}\n");
+  }
+
   @Test public void methodThrows() throws Exception {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
         .addModifiers(Modifier.ABSTRACT)
