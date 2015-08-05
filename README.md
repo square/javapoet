@@ -796,7 +796,7 @@ top-to-bottom in a single pass, a file can be assembled as a tree of declaration
 JavaWriter continues to be available in [GitHub][javawriter] and [Maven Central][javawriter_maven].
 
 
- [dl]: https://oss.sonatype.org/content/repositories/snapshots/com/google/javapoet/javapoet/1.0-SNAPSHOT/
+ [dl]: https://oss.sonatype.org/content/repositories/snapshots/com/google/javapoet/javapoet/1.3.0-SNAPSHOT/
  [square]: http://github.com/square/javawriter
  [snap]: https://oss.sonatype.org/content/repositories/snapshots/
  [javadoc]: https://square.github.io/javapoet/javadoc/javapoet/
