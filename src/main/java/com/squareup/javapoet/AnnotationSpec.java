@@ -25,6 +25,14 @@ import java.util.Map;
 
 import static com.squareup.javapoet.Util.checkNotNull;
 
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.SimpleAnnotationValueVisitor7;
+
 /** A generated annotation on a declaration. */
 public final class AnnotationSpec {
   public final TypeName type;
@@ -58,7 +66,7 @@ public final class AnnotationSpec {
       codeWriter.emit("@$T(" + whitespace, type);
       codeWriter.indent(2);
       for (Iterator<Map.Entry<String, List<CodeBlock>>> i
-          = members.entrySet().iterator(); i.hasNext();) {
+          = members.entrySet().iterator(); i.hasNext(); ) {
         Map.Entry<String, List<CodeBlock>> entry = i.next();
         codeWriter.emit("$L = ", entry.getKey());
         emitAnnotationValues(codeWriter, whitespace, memberSeparator, entry.getValue());
@@ -90,6 +98,18 @@ public final class AnnotationSpec {
     codeWriter.emit(whitespace + "}");
   }
 
+  public static AnnotationSpec get(AnnotationMirror annotation) {
+    TypeElement element = (TypeElement) annotation.getAnnotationType().asElement();
+    AnnotationSpec.Builder builder = AnnotationSpec.builder(ClassName.get(element));
+    Visitor visitor = new Visitor(builder);
+    for (ExecutableElement executableElement : annotation.getElementValues().keySet()) {
+      String name = executableElement.getSimpleName().toString();
+      AnnotationValue value = annotation.getElementValues().get(executableElement);
+      value.accept(visitor, new Entry(name, value));
+    }
+    return builder.build();
+  }
+
   public static Builder builder(ClassName type) {
     checkNotNull(type, "type == null");
     return new Builder(type);
@@ -101,7 +121,9 @@ public final class AnnotationSpec {
 
   public Builder toBuilder() {
     Builder builder = new Builder(type);
-    builder.members.putAll(members);
+    for (Map.Entry<String, List<CodeBlock>> entry : members.entrySet()) {
+      builder.members.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+    }
     return builder;
   }
 
@@ -150,6 +172,51 @@ public final class AnnotationSpec {
 
     public AnnotationSpec build() {
       return new AnnotationSpec(this);
+    }
+  }
+
+  private static class Entry {
+    final String name;
+    final AnnotationValue value;
+
+    Entry(String name, AnnotationValue value) {
+      this.name = name;
+      this.value = value;
+    }
+  }
+
+  /**
+   * Annotation value visitor adding members to the given builder instance.
+   */
+  private static class Visitor extends SimpleAnnotationValueVisitor7<Builder, Entry> {
+    final Builder builder;
+
+    Visitor(Builder builder) {
+      super(builder);
+      this.builder = builder;
+    }
+
+    @Override protected Builder defaultAction(Object o, Entry entry) {
+      return builder.addMember(entry.name, "$L", entry.value);
+    }
+
+    @Override public Builder visitAnnotation(AnnotationMirror a, Entry entry) {
+      return builder.addMember(entry.name, "$L", get(a));
+    }
+
+    @Override public Builder visitEnumConstant(VariableElement c, Entry entry) {
+      return builder.addMember(entry.name, "$T.$L", c.asType(), c.getSimpleName());
+    }
+
+    @Override public Builder visitType(TypeMirror t, Entry entry) {
+      return builder.addMember(entry.name, "$T.class", t);
+    }
+
+    @Override public Builder visitArray(List<? extends AnnotationValue> values, Entry entry) {
+      for (AnnotationValue value : values) {
+        value.accept(this, new Entry(entry.name, value));
+      }
+      return builder;
     }
   }
 }

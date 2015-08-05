@@ -20,7 +20,6 @@ import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -52,6 +51,7 @@ public final class TypeSpec {
   public final List<TypeName> superinterfaces;
   public final Map<String, TypeSpec> enumConstants;
   public final List<FieldSpec> fieldSpecs;
+  public final CodeBlock staticBlock;
   public final List<MethodSpec> methodSpecs;
   public final List<TypeSpec> typeSpecs;
   public final List<Element> originatingElements;
@@ -68,6 +68,7 @@ public final class TypeSpec {
     this.superinterfaces = Util.immutableList(builder.superinterfaces);
     this.enumConstants = Util.immutableMap(builder.enumConstants);
     this.fieldSpecs = Util.immutableList(builder.fieldSpecs);
+    this.staticBlock = builder.staticBlock.build();
     this.methodSpecs = Util.immutableList(builder.methodSpecs);
     this.typeSpecs = Util.immutableList(builder.typeSpecs);
 
@@ -129,6 +130,8 @@ public final class TypeSpec {
 
     try {
       if (enumName != null) {
+        codeWriter.emitJavadoc(javadoc);
+        codeWriter.emitAnnotations(annotations, false);
         codeWriter.emit("$L", enumName);
         if (!anonymousTypeArguments.formatParts.isEmpty()) {
           codeWriter.emit("(");
@@ -194,7 +197,7 @@ public final class TypeSpec {
       codeWriter.indent();
       boolean firstMember = true;
       for (Iterator<Map.Entry<String, TypeSpec>> i = enumConstants.entrySet().iterator();
-          i.hasNext();) {
+          i.hasNext(); ) {
         Map.Entry<String, TypeSpec> enumConstant = i.next();
         if (!firstMember) codeWriter.emit("\n");
         enumConstant.getValue()
@@ -214,6 +217,12 @@ public final class TypeSpec {
         if (!fieldSpec.hasModifier(Modifier.STATIC)) continue;
         if (!firstMember) codeWriter.emit("\n");
         fieldSpec.emit(codeWriter, kind.implicitFieldModifiers);
+        firstMember = false;
+      }
+
+      if (!staticBlock.isEmpty()) {
+        if (!firstMember) codeWriter.emit("\n");
+        codeWriter.emit(staticBlock);
         firstMember = false;
       }
 
@@ -325,6 +334,7 @@ public final class TypeSpec {
     private final List<TypeName> superinterfaces = new ArrayList<>();
     private final Map<String, TypeSpec> enumConstants = new LinkedHashMap<>();
     private final List<FieldSpec> fieldSpecs = new ArrayList<>();
+    private final CodeBlock.Builder staticBlock = CodeBlock.builder();
     private final List<MethodSpec> methodSpecs = new ArrayList<>();
     private final List<TypeSpec> typeSpecs = new ArrayList<>();
     private final List<Element> originatingElements = new ArrayList<>();
@@ -338,20 +348,19 @@ public final class TypeSpec {
     }
 
     public Builder addJavadoc(String format, Object... args) {
-      checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
       javadoc.add(format, args);
       return this;
     }
 
-    public Builder addAnnotations(Collection<AnnotationSpec> annotationSpecs) {
-      checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
+    public Builder addAnnotations(Iterable<AnnotationSpec> annotationSpecs) {
       checkArgument(annotationSpecs != null, "annotationSpecs == null");
-      this.annotations.addAll(annotationSpecs);
+      for (AnnotationSpec annotationSpec : annotationSpecs) {
+        this.annotations.add(annotationSpec);
+      }
       return this;
     }
 
     public Builder addAnnotation(AnnotationSpec annotationSpec) {
-      checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
       this.annotations.add(annotationSpec);
       return this;
     }
@@ -370,10 +379,12 @@ public final class TypeSpec {
       return this;
     }
 
-    public Builder addTypeVariables(Collection<TypeVariableName> typeVariables) {
+    public Builder addTypeVariables(Iterable<TypeVariableName> typeVariables) {
       checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
       checkArgument(typeVariables != null, "typeVariables == null");
-      this.typeVariables.addAll(typeVariables);
+      for (TypeVariableName typeVariable : typeVariables) {
+        this.typeVariables.add(typeVariable);
+      }
       return this;
     }
 
@@ -395,9 +406,11 @@ public final class TypeSpec {
       return superclass(TypeName.get(superclass));
     }
 
-    public Builder addSuperinterfaces(Collection<TypeName> superinterfaces) {
+    public Builder addSuperinterfaces(Iterable<? extends TypeName> superinterfaces) {
       checkArgument(superinterfaces != null, "superinterfaces == null");
-      this.superinterfaces.addAll(superinterfaces);
+      for (TypeName superinterface : superinterfaces) {
+        this.superinterfaces.add(superinterface);
+      }
       return this;
     }
 
@@ -423,7 +436,7 @@ public final class TypeSpec {
       return this;
     }
 
-    public Builder addFields(Collection<FieldSpec> fieldSpecs) {
+    public Builder addFields(Iterable<FieldSpec> fieldSpecs) {
       checkArgument(fieldSpecs != null, "fieldSpecs == null");
       for (FieldSpec fieldSpec : fieldSpecs) {
         addField(fieldSpec);
@@ -451,7 +464,12 @@ public final class TypeSpec {
       return addField(TypeName.get(type), name, modifiers);
     }
 
-    public Builder addMethods(Collection<MethodSpec> methodSpecs) {
+    public Builder addStaticBlock(CodeBlock block) {
+      staticBlock.beginControlFlow("static").add(block).endControlFlow();
+      return this;
+    }
+
+    public Builder addMethods(Iterable<MethodSpec> methodSpecs) {
       checkArgument(methodSpecs != null, "methodSpecs == null");
       for (MethodSpec methodSpec : methodSpecs) {
         addMethod(methodSpec);
@@ -479,7 +497,7 @@ public final class TypeSpec {
       return this;
     }
 
-    public Builder addTypes(Collection<TypeSpec> typeSpecs) {
+    public Builder addTypes(Iterable<TypeSpec> typeSpecs) {
       checkArgument(typeSpecs != null, "typeSpecs == null");
       for (TypeSpec typeSpec : typeSpecs) {
         addType(typeSpec);

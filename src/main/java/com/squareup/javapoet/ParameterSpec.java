@@ -20,7 +20,6 @@ import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import javax.lang.model.SourceVersion;
@@ -80,6 +79,10 @@ public final class ParameterSpec {
   }
 
   public Builder toBuilder() {
+    return toBuilder(type, name);
+  }
+
+  Builder toBuilder(TypeName type, String name) {
     Builder builder = new Builder(type, name);
     builder.annotations.addAll(annotations);
     builder.modifiers.addAll(modifiers);
@@ -98,9 +101,11 @@ public final class ParameterSpec {
       this.name = name;
     }
 
-    public Builder addAnnotations(Collection<AnnotationSpec> annotationSpecs) {
+    public Builder addAnnotations(Iterable<AnnotationSpec> annotationSpecs) {
       checkArgument(annotationSpecs != null, "annotationSpecs == null");
-      this.annotations.addAll(annotationSpecs);
+      for (AnnotationSpec annotationSpec : annotationSpecs) {
+        this.annotations.add(annotationSpec);
+      }
       return this;
     }
 

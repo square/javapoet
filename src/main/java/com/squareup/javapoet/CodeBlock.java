@@ -19,14 +19,11 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
 import static com.squareup.javapoet.Util.checkArgument;
-import static com.squareup.javapoet.Util.checkState;
 
 /**
  * A fragment of a .java file, potentially containing declarations, statements, and documentation.
@@ -47,7 +44,7 @@ import static com.squareup.javapoet.Util.checkState;
  *       MethodSpec methods}, and {@linkplain TypeSpec types}.
  *   <li>{@code $S} escapes the value as a <em>string</em>, wraps it with double quotes, and emits
  *       that. For example, {@code 6" sandwich} is emitted {@code "6\" sandwich"}.
- *   <li>{@code T} emits a <em>type</em> reference. Types will be imported if possible. Arguments
+ *   <li>{@code $T} emits a <em>type</em> reference. Types will be imported if possible. Arguments
  *       for types may be {@linkplain Class classes}, {@linkplain javax.lang.model.type.TypeMirror
 ,*       type mirrors}, and {@linkplain javax.lang.model.element.Element elements}.
  *   <li>{@code $$} emits a dollar sign.
@@ -101,43 +98,76 @@ public final class CodeBlock {
     }
 
     public Builder add(String format, Object... args) {
-      Iterator<Object> i = Arrays.asList(args).iterator();
-      for (int p = 0, nextP; p < format.length(); p = nextP) {
-        if (format.charAt(p) != '$') {
-          nextP = format.indexOf('$', p + 1);
-          if (nextP == -1) nextP = format.length();
-        } else {
-          checkState(p + 1 < format.length(), "dangling $ in format string %s", format);
-          switch (format.charAt(p + 1)) {
-            case 'N':
-              this.args.add(argToName(i.next()));
-              break;
-            case 'L':
-              this.args.add(argToLiteral(i.next()));
-              break;
-            case 'S':
-              this.args.add(argToString(i.next()));
-              break;
-            case 'T':
-              this.args.add(argToType(i.next()));
-              break;
-            case '$':
-            case '>':
-            case '<':
-            case '[':
-            case ']':
-              break;
-            default:
-              throw new IllegalArgumentException("invalid format string: " + format);
-          }
+      boolean hasRelative = false;
+      boolean hasIndexed = false;
+      int parameterCount = 0;
 
-          nextP = p + 2;
+      for (int p = 0; p < format.length(); ) {
+        if (format.charAt(p) != '$') {
+          int nextP = format.indexOf('$', p + 1);
+          if (nextP == -1) nextP = format.length();
+          formatParts.add(format.substring(p, nextP));
+          p = nextP;
+          continue;
         }
 
-        formatParts.add(format.substring(p, nextP));
+        p++; // '$'.
+
+        // Consume zero or more digits, leaving 'c' as the first non-digit char after the '$'.
+        int indexStart = p;
+        char c;
+        do {
+          checkArgument(p < format.length(), "dangling format characters in '%s'", format);
+          c = format.charAt(p++);
+        } while (c >= '0' && c <= '9');
+        int indexEnd = p - 1;
+
+        // If 'c' doesn't take an argument, we're done.
+        if (c == '$' || c == '>' || c == '<' || c == '[' || c == ']') {
+          checkArgument(indexStart == indexEnd, "$$, $>, $<, $[ and $] may not have an index");
+          formatParts.add("$" + c);
+          continue;
+        }
+
+        // Find either the indexed argument, or the relative argument. (0-based).
+        int index;
+        if (indexStart < indexEnd) {
+          index = Integer.parseInt(format.substring(indexStart, indexEnd)) - 1;
+          hasIndexed = true;
+        } else {
+          index = parameterCount;
+          hasRelative = true;
+        }
+        parameterCount++;
+
+        checkArgument(index >= 0 && index < args.length,
+            "index %d for '%s' not in range (received %s arguments)",
+            index + 1, format.substring(indexStart - 1, indexEnd + 1), args.length);
+        checkArgument(!hasIndexed || !hasRelative, "cannot mix indexed and positional parameters");
+
+        switch (c) {
+          case 'N':
+            this.args.add(argToName(args[index]));
+            break;
+          case 'L':
+            this.args.add(argToLiteral(args[index]));
+            break;
+          case 'S':
+            this.args.add(argToString(args[index]));
+            break;
+          case 'T':
+            this.args.add(argToType(args[index]));
+            break;
+          default:
+            throw new IllegalArgumentException(
+                String.format("invalid format string: '%s'", format));
+        }
+
+        formatParts.add("$" + c);
       }
 
-      checkArgument(!i.hasNext(), "unexpected args for %s: %s", format, Arrays.asList(args));
+      checkArgument(parameterCount >= args.length,
+          "unused arguments: expected %s, received %s", parameterCount, args.length);
       return this;
     }
 

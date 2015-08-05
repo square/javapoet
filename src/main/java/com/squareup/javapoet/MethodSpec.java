@@ -19,19 +19,22 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
+import javax.lang.model.util.Types;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
@@ -40,6 +43,7 @@ import static com.squareup.javapoet.Util.checkState;
 /** A generated constructor or method declaration. */
 public final class MethodSpec {
   static final String CONSTRUCTOR = "<init>";
+  static final ClassName OVERRIDE = ClassName.get(Override.class);
 
   public final String name;
   public final CodeBlock javadoc;
@@ -96,7 +100,7 @@ public final class MethodSpec {
     }
 
     boolean firstParameter = true;
-    for (Iterator<ParameterSpec> i = parameters.iterator(); i.hasNext();) {
+    for (Iterator<ParameterSpec> i = parameters.iterator(); i.hasNext(); ) {
       ParameterSpec parameter = i.next();
       if (!firstParameter) codeWriter.emit(", ");
       parameter.emit(codeWriter, !i.hasNext() && varargs);
@@ -165,9 +169,10 @@ public final class MethodSpec {
   }
 
   /**
-   * Create a builder which overrides {@code method}. This will copy its visibility modifiers, type
-   * parameters, return type, name, parameters, and throws declarations. An {@link Override}
-   * annotation will be added.
+   * Returns a new method spec builder that overrides {@code method}.
+   *
+   * <p>This will copy its visibility modifiers, type parameters, return type, name, parameters, and
+   * throws declarations. An {@link Override} annotation will be added.
    */
   public static Builder overriding(ExecutableElement method) {
     checkNotNull(method, "method == null");
@@ -182,32 +187,69 @@ public final class MethodSpec {
     String methodName = method.getSimpleName().toString();
     MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName);
 
-    // TODO copy method annotations.
-    // TODO check to ensure we're not duplicating override annotation.
-    methodBuilder.addAnnotation(Override.class);
+    methodBuilder.addAnnotation(OVERRIDE);
+    for (AnnotationMirror mirror : method.getAnnotationMirrors()) {
+      AnnotationSpec annotationSpec = AnnotationSpec.get(mirror);
+      if (annotationSpec.type.equals(OVERRIDE)) continue;
+      methodBuilder.addAnnotation(annotationSpec);
+    }
 
-    modifiers = new LinkedHashSet<>(modifiers); // Local copy so we can remove.
+    modifiers = new LinkedHashSet<>(modifiers);
     modifiers.remove(Modifier.ABSTRACT);
     methodBuilder.addModifiers(modifiers);
 
     for (TypeParameterElement typeParameterElement : method.getTypeParameters()) {
-      methodBuilder.addTypeVariable(
-          TypeVariableName.get((TypeVariable) typeParameterElement.asType()));
+      TypeVariable var = (TypeVariable) typeParameterElement.asType();
+      methodBuilder.addTypeVariable(TypeVariableName.get(var));
     }
 
     methodBuilder.returns(TypeName.get(method.getReturnType()));
 
-    for (VariableElement parameter : method.getParameters()) {
-      // TODO copy parameter annotations.
-      methodBuilder.addParameter(TypeName.get(parameter.asType()),
-          parameter.getSimpleName().toString());
+    List<? extends VariableElement> parameters = method.getParameters();
+    for (VariableElement parameter : parameters) {
+      TypeName type = TypeName.get(parameter.asType());
+      String name = parameter.getSimpleName().toString();
+      Set<Modifier> parameterModifiers = parameter.getModifiers();
+      ParameterSpec.Builder parameterBuilder = ParameterSpec.builder(type, name)
+          .addModifiers(parameterModifiers.toArray(new Modifier[parameterModifiers.size()]));
+      for (AnnotationMirror mirror : parameter.getAnnotationMirrors()) {
+        parameterBuilder.addAnnotation(AnnotationSpec.get(mirror));
+      }
+      methodBuilder.addParameter(parameterBuilder.build());
     }
+    methodBuilder.varargs(method.isVarArgs());
 
     for (TypeMirror thrownType : method.getThrownTypes()) {
       methodBuilder.addException(TypeName.get(thrownType));
     }
 
     return methodBuilder;
+  }
+
+  /**
+   * Returns a new method spec builder that overrides {@code method} as a member of {@code
+   * enclosing}. This will resolve type parameters: for example overriding {@link
+   * Comparable#compareTo} in a type that implements {@code Comparable<Movie>}, the {@code T}
+   * parameter will be resolved to {@code Movie}.
+   *
+   * <p>This will copy its visibility modifiers, type parameters, return type, name, parameters, and
+   * throws declarations. An {@link Override} annotation will be added.
+   */
+  public static Builder overriding(
+      ExecutableElement method, DeclaredType enclosing, Types types) {
+    ExecutableType executableType = (ExecutableType) types.asMemberOf(enclosing, method);
+    List<? extends TypeMirror> resolvedParameterTypes = executableType.getParameterTypes();
+    TypeMirror resolvedReturnType = executableType.getReturnType();
+
+    Builder builder = overriding(method);
+    builder.returns(TypeName.get(resolvedReturnType));
+    for (int i = 0, size = builder.parameters.size(); i < size; i++) {
+      ParameterSpec parameter = builder.parameters.get(i);
+      TypeName type = TypeName.get(resolvedParameterTypes.get(i));
+      builder.parameters.set(i, parameter.toBuilder(type, parameter.name).build());
+    }
+
+    return builder;
   }
 
   public Builder toBuilder() {
@@ -251,9 +293,11 @@ public final class MethodSpec {
       return this;
     }
 
-    public Builder addAnnotations(Collection<AnnotationSpec> annotationSpecs) {
+    public Builder addAnnotations(Iterable<AnnotationSpec> annotationSpecs) {
       checkArgument(annotationSpecs != null, "annotationSpecs == null");
-      this.annotations.addAll(annotationSpecs);
+      for (AnnotationSpec annotationSpec : annotationSpecs) {
+        this.annotations.add(annotationSpec);
+      }
       return this;
     }
 
@@ -276,15 +320,19 @@ public final class MethodSpec {
       return this;
     }
 
-    public Builder addModifiers(Collection<Modifier> modifiers) {
+    public Builder addModifiers(Iterable<Modifier> modifiers) {
       checkNotNull(modifiers, "modifiers == null");
-      this.modifiers.addAll(modifiers);
+      for (Modifier modifier : modifiers) {
+        this.modifiers.add(modifier);
+      }
       return this;
     }
 
-    public Builder addTypeVariables(Collection<TypeVariableName> typeVariables) {
+    public Builder addTypeVariables(Iterable<TypeVariableName> typeVariables) {
       checkArgument(typeVariables != null, "typeVariables == null");
-      this.typeVariables.addAll(typeVariables);
+      for (TypeVariableName typeVariable : typeVariables) {
+        this.typeVariables.add(typeVariable);
+      }
       return this;
     }
 
@@ -303,9 +351,11 @@ public final class MethodSpec {
       return returns(TypeName.get(returnType));
     }
 
-    public Builder addParameters(Collection<ParameterSpec> parameterSpecs) {
+    public Builder addParameters(Iterable<ParameterSpec> parameterSpecs) {
       checkArgument(parameterSpecs != null, "parameterSpecs == null");
-      this.parameters.addAll(parameterSpecs);
+      for (ParameterSpec parameterSpec : parameterSpecs) {
+        this.parameters.add(parameterSpec);
+      }
       return this;
     }
 
@@ -323,13 +373,19 @@ public final class MethodSpec {
     }
 
     public Builder varargs() {
-      this.varargs = true;
+      return varargs(true);
+    }
+
+    public Builder varargs(boolean varargs) {
+      this.varargs = varargs;
       return this;
     }
 
-    public Builder addExceptions(Collection<TypeName> exceptions) {
+    public Builder addExceptions(Iterable<? extends TypeName> exceptions) {
       checkArgument(exceptions != null, "exceptions == null");
-      this.exceptions.addAll(exceptions);
+      for (TypeName exception : exceptions) {
+        this.exceptions.add(exception);
+      }
       return this;
     }
 

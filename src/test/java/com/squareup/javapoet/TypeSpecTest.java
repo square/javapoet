@@ -29,7 +29,6 @@ import java.util.EventListener;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Random;
 
 import javax.lang.model.element.Element;
@@ -310,7 +309,9 @@ public final class TypeSpecTest {
   @Test public void enumWithSubclassing() throws Exception {
     TypeSpec roshambo = TypeSpec.enumBuilder("Roshambo")
         .addModifiers(Modifier.PUBLIC)
-        .addEnumConstant("ROCK")
+        .addEnumConstant("ROCK", TypeSpec.anonymousClassBuilder("")
+            .addJavadoc("Avalanche!\n")
+            .build())
         .addEnumConstant("PAPER", TypeSpec.anonymousClassBuilder("$S", "flat")
             .addMethod(MethodSpec.methodBuilder("toString")
                 .addAnnotation(Override.class)
@@ -337,6 +338,9 @@ public final class TypeSpecTest {
         + "import java.lang.String;\n"
         + "\n"
         + "public enum Roshambo {\n"
+        + "  /**\n"
+        + "   * Avalanche!\n"
+        + "   */\n"
         + "  ROCK,\n"
         + "\n"
         + "  PAPER(\"flat\") {\n"
@@ -433,6 +437,31 @@ public final class TypeSpecTest {
         + "      return \"west side\";\n"
         + "    }\n"
         + "  }\n"
+        + "}\n");
+  }
+
+  /** https://github.com/square/javapoet/issues/253 */
+  @Test public void enumWithAnnotatedValues() throws Exception {
+    TypeSpec roshambo = TypeSpec.enumBuilder("Roshambo")
+        .addModifiers(Modifier.PUBLIC)
+        .addEnumConstant("ROCK", TypeSpec.anonymousClassBuilder("")
+            .addAnnotation(Deprecated.class)
+            .build())
+        .addEnumConstant("PAPER")
+        .addEnumConstant("SCISSORS")
+        .build();
+    assertThat(toString(roshambo)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.Deprecated;\n"
+        + "\n"
+        + "public enum Roshambo {\n"
+        + "  @Deprecated\n"
+        + "  ROCK,\n"
+        + "\n"
+        + "  PAPER,\n"
+        + "\n"
+        + "  SCISSORS\n"
         + "}\n");
   }
 
@@ -662,10 +691,10 @@ public final class TypeSpecTest {
     TypeSpec annotation = TypeSpec.annotationBuilder("MyAnnotation")
         .addModifiers(Modifier.PUBLIC)
         .addMethod(MethodSpec.methodBuilder("test")
-                .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-                .defaultValue("$L", 0)
-                .returns(int.class)
-                .build())
+            .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+            .defaultValue("$L", 0)
+            .returns(int.class)
+            .build())
         .build();
 
     assertThat(toString(annotation)).isEqualTo(""
@@ -736,15 +765,15 @@ public final class TypeSpecTest {
             .addCode(CodeBlock.builder().addStatement("return 0").build())
             .build())
         .build();
-    
+
     assertThat(toString(bar)).isEqualTo(""
-        + "package com.squareup.tacos;\n"
-        + "\n"
-        + "interface Tacos {\n"
-        + "  default int test() {\n"
-        + "    return 0;\n"
-        + "  }\n"
-        + "}\n"
+            + "package com.squareup.tacos;\n"
+            + "\n"
+            + "interface Tacos {\n"
+            + "  default int test() {\n"
+            + "    return 0;\n"
+            + "  }\n"
+            + "}\n"
     );
   }
 
@@ -1035,6 +1064,32 @@ public final class TypeSpecTest {
         + "      }\n"
         + "    }\n"
         + "    return size;\n"
+        + "  }\n"
+        + "}\n");
+  }
+  
+  @Test public void indexedElseIf() throws Exception {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addMethod(MethodSpec.methodBuilder("choices")
+            .beginControlFlow("if ($1L != null || $1L == $2L)", "taco", "otherTaco")
+            .addStatement("$T.out.println($S)", System.class, "only one taco? NOO!")
+            .nextControlFlow("else if ($1L.$3L && $2L.$3L)", "taco", "otherTaco", "isSupreme()")
+            .addStatement("$T.out.println($S)", System.class, "taco heaven")
+            .endControlFlow()
+            .build())
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.System;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  void choices() {\n"
+        + "    if (taco != null || taco == otherTaco) {\n"
+        + "      System.out.println(\"only one taco? NOO!\");\n"
+        + "    } else if (taco.isSupreme() && otherTaco.isSupreme()) {\n"
+        + "      System.out.println(\"taco heaven\");\n"
+        + "    }\n"
         + "  }\n"
         + "}\n");
   }
@@ -1813,20 +1868,30 @@ public final class TypeSpecTest {
     }
   }
 
-  @Test public void tooManyArguments() {
-    try {
-      CodeBlock.builder().add("$$", "foo");
-      fail();
-    } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("unexpected args for $$: [foo]");
-    }
-  }
-
   @Test public void tooFewArguments() {
     try {
       CodeBlock.builder().add("$S");
       fail();
-    } catch (NoSuchElementException expected) {
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("index 1 for '$S' not in range (received 0 arguments)");
+    }
+  }
+
+  @Test public void unusedArgumentsRelative() {
+    try {
+      CodeBlock.builder().add("$L $L", "a", "b", "c");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("unused arguments: expected 2, received 3");
+    }
+  }
+
+  @Test public void unusedArgumentsIndexed() {
+    try {
+      CodeBlock.builder().add("$1L $2L", "a", "b", "c");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("unused arguments: expected 2, received 3");
     }
   }
 
@@ -1844,6 +1909,39 @@ public final class TypeSpecTest {
       fail();
     } catch (IllegalArgumentException expected) {
     }
+  }
+
+  @Test public void staticCodeBlock() {
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+            .addField(String.class, "mFoo", Modifier.PRIVATE)
+            .addField(String.class, "FOO", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+            .addStaticBlock(CodeBlock.builder()
+                    .addStatement("FOO = $S", "FOO")
+                    .build())
+            .addMethod(MethodSpec.methodBuilder("toString")
+                    .addAnnotation(Override.class)
+                    .addModifiers(Modifier.PUBLIC)
+                    .returns(String.class)
+                    .addCode("return FOO;\n")
+                    .build())
+            .build();
+      assertThat(toString(taco)).isEqualTo(""
+            + "package com.squareup.tacos;\n"
+            + "\n"
+            + "import java.lang.Override;\n"
+            + "import java.lang.String;\n"
+            + "\n"
+            + "class Taco {\n"
+            + "  private static final String FOO;\n\n"
+            + "  static {\n"
+            + "    FOO = \"FOO\";\n"
+            + "  }\n\n"
+            + "  private String mFoo;\n\n"
+            + "  @Override\n"
+            + "  public String toString() {\n"
+            + "    return FOO;\n"
+            + "  }\n"
+            + "}\n");
   }
 
   private CodeBlock codeBlock(String format, Object... args) {
