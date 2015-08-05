@@ -753,14 +753,14 @@ Download
 Download [the latest snapshot .jar][dl] or depend via Maven:
 ```xml
 <dependency>
-  <groupId>com.google</groupId>
+  <groupId>com.google.javapoet</groupId>
   <artifactId>javapoet</artifactId>
   <version>1.3.0-SNAPSHOT</version>
 </dependency>
 ```
 or Gradle:
 ```groovy
-compile 'com.google:javapoet:1.3.0-SNAPSHOT'
+compile 'com.google.javapoet:javapoet:1.3.0-SNAPSHOT'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
