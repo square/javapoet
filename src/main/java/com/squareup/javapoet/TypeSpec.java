@@ -131,6 +131,7 @@ public final class TypeSpec {
     try {
       if (enumName != null) {
         codeWriter.emitJavadoc(javadoc);
+        codeWriter.emitAnnotations(annotations, false);
         codeWriter.emit("$L", enumName);
         if (!anonymousTypeArguments.formatParts.isEmpty()) {
           codeWriter.emit("(");
@@ -196,7 +197,7 @@ public final class TypeSpec {
       codeWriter.indent();
       boolean firstMember = true;
       for (Iterator<Map.Entry<String, TypeSpec>> i = enumConstants.entrySet().iterator();
-          i.hasNext();) {
+          i.hasNext(); ) {
         Map.Entry<String, TypeSpec> enumConstant = i.next();
         if (!firstMember) codeWriter.emit("\n");
         enumConstant.getValue()
@@ -352,7 +353,6 @@ public final class TypeSpec {
     }
 
     public Builder addAnnotations(Iterable<AnnotationSpec> annotationSpecs) {
-      checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
       checkArgument(annotationSpecs != null, "annotationSpecs == null");
       for (AnnotationSpec annotationSpec : annotationSpecs) {
         this.annotations.add(annotationSpec);
@@ -361,7 +361,6 @@ public final class TypeSpec {
     }
 
     public Builder addAnnotation(AnnotationSpec annotationSpec) {
-      checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
       this.annotations.add(annotationSpec);
       return this;
     }

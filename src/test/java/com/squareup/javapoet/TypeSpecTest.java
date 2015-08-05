@@ -29,7 +29,6 @@ import java.util.EventListener;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Random;
 
 import javax.lang.model.element.Element;
@@ -441,6 +440,31 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  /** https://github.com/square/javapoet/issues/253 */
+  @Test public void enumWithAnnotatedValues() throws Exception {
+    TypeSpec roshambo = TypeSpec.enumBuilder("Roshambo")
+        .addModifiers(Modifier.PUBLIC)
+        .addEnumConstant("ROCK", TypeSpec.anonymousClassBuilder("")
+            .addAnnotation(Deprecated.class)
+            .build())
+        .addEnumConstant("PAPER")
+        .addEnumConstant("SCISSORS")
+        .build();
+    assertThat(toString(roshambo)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.Deprecated;\n"
+        + "\n"
+        + "public enum Roshambo {\n"
+        + "  @Deprecated\n"
+        + "  ROCK,\n"
+        + "\n"
+        + "  PAPER,\n"
+        + "\n"
+        + "  SCISSORS\n"
+        + "}\n");
+  }
+
   @Test public void methodThrows() throws Exception {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
         .addModifiers(Modifier.ABSTRACT)
@@ -667,10 +691,10 @@ public final class TypeSpecTest {
     TypeSpec annotation = TypeSpec.annotationBuilder("MyAnnotation")
         .addModifiers(Modifier.PUBLIC)
         .addMethod(MethodSpec.methodBuilder("test")
-                .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-                .defaultValue("$L", 0)
-                .returns(int.class)
-                .build())
+            .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+            .defaultValue("$L", 0)
+            .returns(int.class)
+            .build())
         .build();
 
     assertThat(toString(annotation)).isEqualTo(""
@@ -743,13 +767,13 @@ public final class TypeSpecTest {
         .build();
 
     assertThat(toString(bar)).isEqualTo(""
-        + "package com.squareup.tacos;\n"
-        + "\n"
-        + "interface Tacos {\n"
-        + "  default int test() {\n"
-        + "    return 0;\n"
-        + "  }\n"
-        + "}\n"
+            + "package com.squareup.tacos;\n"
+            + "\n"
+            + "interface Tacos {\n"
+            + "  default int test() {\n"
+            + "    return 0;\n"
+            + "  }\n"
+            + "}\n"
     );
   }
 
@@ -1848,7 +1872,26 @@ public final class TypeSpecTest {
     try {
       CodeBlock.builder().add("$S");
       fail();
-    } catch (NoSuchElementException expected) {
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("index 1 for '$S' not in range (received 0 arguments)");
+    }
+  }
+
+  @Test public void unusedArgumentsRelative() {
+    try {
+      CodeBlock.builder().add("$L $L", "a", "b", "c");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("unused arguments: expected 2, received 3");
+    }
+  }
+
+  @Test public void unusedArgumentsIndexed() {
+    try {
+      CodeBlock.builder().add("$1L $2L", "a", "b", "c");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("unused arguments: expected 2, received 3");
     }
   }
 

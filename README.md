@@ -753,14 +753,14 @@ Download
 Download [the latest snapshot .jar][dl] or depend via Maven:
 ```xml
 <dependency>
-  <groupId>com.google</groupId>
+  <groupId>com.google.javapoet</groupId>
   <artifactId>javapoet</artifactId>
   <version>1.3.0-SNAPSHOT</version>
 </dependency>
 ```
 or Gradle:
 ```groovy
-compile 'com.google:javapoet:1.3.0-SNAPSHOT'
+compile 'com.google.javapoet:javapoet:1.3.0-SNAPSHOT'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
@@ -796,7 +796,7 @@ top-to-bottom in a single pass, a file can be assembled as a tree of declaration
 JavaWriter continues to be available in [GitHub][javawriter] and [Maven Central][javawriter_maven].
 
 
- [dl]: https://oss.sonatype.org/content/repositories/snapshots/com/google/javapoet/javapoet/1.2.0-SNAPSHOT/
+ [dl]: https://oss.sonatype.org/content/repositories/snapshots/com/google/javapoet/javapoet/1.3.0-SNAPSHOT/
  [square]: http://github.com/square/javawriter
  [snap]: https://oss.sonatype.org/content/repositories/snapshots/
  [javadoc]: https://square.github.io/javapoet/javadoc/javapoet/

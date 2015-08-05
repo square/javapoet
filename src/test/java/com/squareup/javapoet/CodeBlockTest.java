@@ -27,7 +27,7 @@ public class CodeBlockTest {
     try {
       CodeBlock.builder().add("$1>", "taco").build();
       fail();
-    } catch (IllegalStateException exp) {
+    } catch (IllegalArgumentException exp) {
       assertThat(exp).hasMessage("$$, $>, $<, $[ and $] may not have an index");
     }
   }
@@ -37,7 +37,7 @@ public class CodeBlockTest {
     try {
       CodeBlock.builder().add("$1<", "taco").build();
       fail();
-    } catch (IllegalStateException exp) {
+    } catch (IllegalArgumentException exp) {
       assertThat(exp).hasMessage("$$, $>, $<, $[ and $] may not have an index");
     }
   }
@@ -47,7 +47,7 @@ public class CodeBlockTest {
     try {
       CodeBlock.builder().add("$1$", "taco").build();
       fail();
-    } catch (IllegalStateException exp) {
+    } catch (IllegalArgumentException exp) {
       assertThat(exp).hasMessage("$$, $>, $<, $[ and $] may not have an index");
     }
   }
@@ -57,7 +57,7 @@ public class CodeBlockTest {
     try {
       CodeBlock.builder().add("$1[", "taco").build();
       fail();
-    } catch (IllegalStateException exp) {
+    } catch (IllegalArgumentException exp) {
       assertThat(exp).hasMessage("$$, $>, $<, $[ and $] may not have an index");
     }
   }
@@ -67,62 +67,62 @@ public class CodeBlockTest {
     try {
       CodeBlock.builder().add("$1]", "taco").build();
       fail();
-    } catch (IllegalStateException exp) {
+    } catch (IllegalArgumentException exp) {
       assertThat(exp).hasMessage("$$, $>, $<, $[ and $] may not have an index");
     }
   }
   
   @Test
   public void nameFormatCanBeIndexed() {
-    CodeBlock block = CodeBlock.builder().add("$N $1N", "taco").build();
-    assertThat(block.toString()).isEqualTo("taco taco");
+    CodeBlock block = CodeBlock.builder().add("$1N", "taco").build();
+    assertThat(block.toString()).isEqualTo("taco");
   }
   
   @Test
   public void literalFormatCanBeIndexed() {
-    CodeBlock block = CodeBlock.builder().add("$L $1L", "taco").build();
-    assertThat(block.toString()).isEqualTo("taco taco");
+    CodeBlock block = CodeBlock.builder().add("$1L", "taco").build();
+    assertThat(block.toString()).isEqualTo("taco");
   }
   
   @Test
   public void stringFormatCanBeIndexed() {
-    CodeBlock block = CodeBlock.builder().add("$S $1S", "taco").build();
-    assertThat(block.toString()).isEqualTo("\"taco\" \"taco\"");
+    CodeBlock block = CodeBlock.builder().add("$1S", "taco").build();
+    assertThat(block.toString()).isEqualTo("\"taco\"");
   }
   
   @Test
   public void typeFormatCanBeIndexed() {
-    CodeBlock block = CodeBlock.builder().add("$T $1T", String.class).build();
-    assertThat(block.toString()).isEqualTo("java.lang.String java.lang.String");
+    CodeBlock block = CodeBlock.builder().add("$1T", String.class).build();
+    assertThat(block.toString()).isEqualTo("java.lang.String");
   }
   
   @Test
   public void indexTooHigh() {
     try {
-      CodeBlock.builder().add("$T $2T", String.class).build();
+      CodeBlock.builder().add("$2T", String.class).build();
       fail();
     } catch (IllegalArgumentException exp) {
-      assertThat(exp).hasMessage("Argument index 2 in '$T $2T' is larger than number of parameters");
+      assertThat(exp).hasMessage("index 2 for '$2T' not in range (received 1 arguments)");
     }
   }
   
   @Test
   public void indexIsZero() {
     try {
-    CodeBlock.builder().add("$T $0T", String.class).build();
-    fail();
-    } catch(IllegalArgumentException exp) {
-      assertThat(exp).hasMessage("Argument index 0 in '$T $0T' is less than one, the minimum format index");
+      CodeBlock.builder().add("$0T", String.class).build();
+      fail();
+    } catch (IllegalArgumentException exp) {
+      assertThat(exp).hasMessage("index 0 for '$0T' not in range (received 1 arguments)");
     }
   }
   
   @Test
   public void indexIsNegative() {
     try {
-      CodeBlock.builder().add("$T $-1T", String.class).build();
+      CodeBlock.builder().add("$-1T", String.class).build();
       fail();
     } catch (IllegalArgumentException exp) {
-      assertThat(exp).hasMessage("invalid format string: $T $-1T");
+      assertThat(exp).hasMessage("invalid format string: '$-1T'");
     }
   }
   
@@ -132,7 +132,7 @@ public class CodeBlockTest {
       CodeBlock.builder().add("$1", String.class).build();
       fail();
     } catch (IllegalArgumentException exp) {
-      assertThat(exp).hasMessage("Dangling format characters '$1' in format string '$1'");
+      assertThat(exp).hasMessage("dangling format characters in '$1'");
     }
   }
   
@@ -142,7 +142,7 @@ public class CodeBlockTest {
       CodeBlock.builder().add("$1 taco", String.class).build();
       fail();
     } catch (IllegalArgumentException exp) {
-      assertThat(exp).hasMessage("invalid format string: $1 taco");
+      assertThat(exp).hasMessage("invalid format string: '$1 taco'");
     }
   }
   
@@ -151,8 +151,8 @@ public class CodeBlockTest {
     try {
       CodeBlock.builder().add("$", String.class).build();
       fail();
-    } catch (IllegalStateException exp) {
-      assertThat(exp).hasMessage("dangling $ in format string $");
+    } catch (IllegalArgumentException exp) {
+      assertThat(exp).hasMessage("dangling format characters in '$'");
     }
   }
   
@@ -162,31 +162,15 @@ public class CodeBlockTest {
       CodeBlock.builder().add("$ tacoString", String.class).build();
       fail();
     } catch (IllegalArgumentException exp) {
-      assertThat(exp).hasMessage("invalid format string: $ tacoString");
+      assertThat(exp).hasMessage("invalid format string: '$ tacoString'");
     }
   }
   
   @Test
-  public void indexingDoesNotIncreaseNaturalIndex() {
-    CodeBlock block = CodeBlock.builder().add("$L $L $2L $L", 1, 2, 3).build();
-    assertThat(block.toString()).isEqualTo("1 2 2 3");
-  }
-  
-  @Test
-  public void indexingSelectsProperPosition() {
-    CodeBlock block = CodeBlock.builder().add("$L $L $L $3L $2L $1L", 1, 2, 3).build();
-    assertThat(block.toString()).isEqualTo("1 2 3 3 2 1");
-  }
-  
-  @Test
-  public void indexingCanBeInterleved() {
-    CodeBlock block = CodeBlock.builder().add("$L $3L $L $2L $L $1L", 1, 2, 3).build();
-    assertThat(block.toString()).isEqualTo("1 3 2 2 3 1");
-  }
-  
-  @Test
   public void sameIndexCanBeUsedWithDifferentFormats() {
-    CodeBlock block = CodeBlock.builder().add("$1T.out.println($1S)", ClassName.get(System.class)).build();
+    CodeBlock block = CodeBlock.builder()
+        .add("$1T.out.println($1S)", ClassName.get(System.class))
+        .build();
     assertThat(block.toString()).isEqualTo("java.lang.System.out.println(\"java.lang.System\")");
   }
   
