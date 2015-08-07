@@ -17,7 +17,6 @@ package com.squareup.javapoet;
 
 import java.util.Date;
 import javax.lang.model.element.Modifier;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -117,8 +116,7 @@ public final class JavaFileTest {
         + "}\n");
   }
 
-  @Ignore("https://github.com/square/javapoet/issues/298")
-  @Test public void conflictingSimpleNames() throws Exception {
+  @Test public void conflictingParentName() throws Exception {
     String source = JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("A")
             .addType(TypeSpec.classBuilder("B")
@@ -144,6 +142,82 @@ public final class JavaFileTest {
         + "\n"
         + "    class C {\n"
         + "      A.Twin.D d;\n"
+        + "    }\n"
+        + "  }\n"
+        + "\n"
+        + "  class Twin {\n"
+        + "    class D {\n"
+        + "    }\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void conflictingChildName() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("A")
+            .addType(TypeSpec.classBuilder("B")
+                .addType(TypeSpec.classBuilder("C")
+                    .addField(ClassName.get("com.squareup.tacos", "A", "Twin", "D"), "d")
+                    .addType(TypeSpec.classBuilder("Twin").build())
+                    .build())
+                .build())
+            .addType(TypeSpec.classBuilder("Twin")
+                .addType(TypeSpec.classBuilder("D")
+                    .build())
+                .build())
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class A {\n"
+        + "  class B {\n"
+        + "    class C {\n"
+        + "      A.Twin.D d;\n"
+        + "\n"
+        + "      class Twin {\n"
+        + "      }\n"
+        + "    }\n"
+        + "  }\n"
+        + "\n"
+        + "  class Twin {\n"
+        + "    class D {\n"
+        + "    }\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void conflictingNameOutOfScope() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("A")
+            .addType(TypeSpec.classBuilder("B")
+                .addType(TypeSpec.classBuilder("C")
+                    .addField(ClassName.get("com.squareup.tacos", "A", "Twin", "D"), "d")
+                    .addType(TypeSpec.classBuilder("Nested")
+                        .addType(TypeSpec.classBuilder("Twin").build())
+                        .build())
+                    .build())
+                .build())
+            .addType(TypeSpec.classBuilder("Twin")
+                .addType(TypeSpec.classBuilder("D")
+                    .build())
+                .build())
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class A {\n"
+        + "  class B {\n"
+        + "    class C {\n"
+        + "      Twin.D d;\n"
+        + "\n"
+        + "      class Nested {\n"
+        + "        class Twin {\n"
+        + "        }\n"
+        + "      }\n"
         + "    }\n"
         + "  }\n"
         + "\n"

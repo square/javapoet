@@ -296,9 +296,9 @@ final class CodeWriter {
       return className.canonicalName;
     }
 
-    // Look for the longest common prefix, which we can omit.
+    // Look for the longest non-conflicting common prefix, which we can omit.
     List<String> classNames = className.simpleNames();
-    int prefixLength = commonPrefixLength(classNames);
+    int prefixLength = nonConflictingCommonPrefixLength(classNames);
     if (prefixLength == classNames.size()) {
       return className.simpleName(); // Special case: a class referring to itself!
     }
@@ -335,6 +335,43 @@ final class CodeWriter {
       if (!a.equals(b)) return i;
     }
     return size;
+  }
+
+  /**
+   * Returns the common prefix of {@code classNames} and the current nesting scope which doesn't
+   * conflict with a type name in the current scope (any member of a parent type, except for
+   * {@code classNames} itself).
+   */
+  private int nonConflictingCommonPrefixLength(List<String> classNames) {
+    int index = commonPrefixLength(classNames);
+
+    // Class is referring to itself
+    if (index == classNames.size()) return index;
+
+    // Try to find the least-qualified non-conflicting name
+    for (; index > 0; index--) {
+      if (!parentTypeHasMemberType(classNames.get(index), index)) {
+        // No parent type has a member type with a conflicting name
+        return index;
+      }
+    }
+
+    return 0; // Fully-qualified name.
+  }
+
+  /**
+   * Walk down the type stack and return true if any type on the stack
+   * has {@code className} as a member, except the type at {@code index}.
+   */
+  private boolean parentTypeHasMemberType(String className, int index) {
+    for (int i = 0; i < typeSpecStack.size(); i++) {
+      if (index != (i + 1)) {
+        for (TypeSpec nestedTypeSpec : typeSpecStack.get(i).typeSpecs) {
+          if (nestedTypeSpec.name.equals(className)) return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**
