@@ -152,13 +152,86 @@ public final class JavaFileTest {
         + "}\n");
   }
 
+  @Test public void referSameClassUsingSimpleName() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("A")
+            .addType(TypeSpec.classBuilder("B")
+                .addField(ClassName.get("com.squareup.tacos", "A", "B"), "b")
+                .build())
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class A {\n"
+        + "  class B {\n"
+        + "    B b;\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void referEnclosingClassUsingSimpleName() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("A")
+            .addType(TypeSpec.classBuilder("B")
+                .addType(TypeSpec.classBuilder("C")
+                    .addField(ClassName.get("com.squareup.tacos", "A", "B"), "b")
+                    .build())
+                .build())
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class A {\n"
+        + "  class B {\n"
+        + "    class C {\n"
+        + "      B b;\n"
+        + "    }\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void referNestedClassUsingRemainingName() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("A")
+            .addType(TypeSpec.classBuilder("B")
+                .addType(TypeSpec.classBuilder("C")
+                    .addType(TypeSpec.classBuilder("D")
+                        .build())
+                    .build())
+                .addField(ClassName.get("com.squareup.tacos", "A", "B", "C", "D"), "d")
+                .build())
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class A {\n"
+        + "  class B {\n"
+        + "    C.D d;\n"
+        + "\n"
+        + "    class C {\n"
+        + "      class D {\n"
+        + "      }\n"
+        + "    }\n"
+        + "  }\n"
+        + "}\n");
+  }
+
   @Test public void conflictingChildName() throws Exception {
     String source = JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("A")
             .addType(TypeSpec.classBuilder("B")
                 .addType(TypeSpec.classBuilder("C")
                     .addField(ClassName.get("com.squareup.tacos", "A", "Twin", "D"), "d")
-                    .addType(TypeSpec.classBuilder("Twin").build())
+                    .addType(TypeSpec.classBuilder("Twin")
+                        .addType(TypeSpec.classBuilder("D")
+                            .build())
+                        .build())
                     .build())
                 .build())
             .addType(TypeSpec.classBuilder("Twin")
@@ -177,6 +250,8 @@ public final class JavaFileTest {
         + "      A.Twin.D d;\n"
         + "\n"
         + "      class Twin {\n"
+        + "        class D {\n"
+        + "        }\n"
         + "      }\n"
         + "    }\n"
         + "  }\n"
@@ -188,7 +263,48 @@ public final class JavaFileTest {
         + "}\n");
   }
 
-  @Test public void conflictingNameOutOfScope() throws Exception {
+  @Test public void conflictingParentNameOutOfScope() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("A")
+            .addType(TypeSpec.classBuilder("B")
+                .addType(TypeSpec.classBuilder("C")
+                    .addField(ClassName.get("com.squareup.tacos", "A", "B", "C", "Twin", "D"), "d")
+                        .addType(TypeSpec.classBuilder("Twin")
+                            .addType(TypeSpec.classBuilder("D")
+                                .build())
+                            .build())
+                      .build())
+                  .build())
+              .addType(TypeSpec.classBuilder("Twin")
+                  .addType(TypeSpec.classBuilder("D")
+                      .build())
+                  .build())
+              .build())
+          .build()
+          .toString();
+      assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class A {\n"
+        + "  class B {\n"
+        + "    class C {\n"
+        + "      Twin.D d;\n"
+        + "\n"
+        + "      class Twin {\n"
+        + "        class D {\n"
+        + "        }\n"
+        + "      }\n"
+        + "    }\n"
+        + "  }\n"
+        + "\n"
+        + "  class Twin {\n"
+        + "    class D {\n"
+        + "    }\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void conflictingChildNameOutOfScope() throws Exception {
     String source = JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("A")
             .addType(TypeSpec.classBuilder("B")
