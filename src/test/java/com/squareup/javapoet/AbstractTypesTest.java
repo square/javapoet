@@ -96,6 +96,28 @@ public abstract class AbstractTypesTest {
         .containsExactly(number, runnable);
   }
 
+  static class Recursive<T extends Map<List<T>, Set<T[]>>> {}
+
+  @Test
+  public void getTypeVariableTypeMirrorRecursive() {
+    TypeMirror typeMirror = getElement(Recursive.class).asType();
+    ParameterizedTypeName typeName = (ParameterizedTypeName) TypeName.get(typeMirror);
+    String className = Recursive.class.getCanonicalName();
+    assertThat(typeName.toString()).isEqualTo(className + "<T>");
+
+    TypeVariableName typeVariableName = (TypeVariableName) typeName.typeArguments.get(0);
+
+    try {
+      typeVariableName.bounds.set(0, null);
+      fail("Expected UnsupportedOperationException");
+    } catch (UnsupportedOperationException expected) {
+    }
+
+    assertThat(typeVariableName.toString()).isEqualTo("T");
+    assertThat(typeVariableName.bounds.toString())
+        .isEqualTo("[java.util.Map<java.util.List<T>, java.util.Set<T[]>>]");
+  }
+
   @Test public void getPrimitiveTypeMirror() {
     assertThat(TypeName.get(getTypes().getPrimitiveType(TypeKind.BOOLEAN)))
         .isEqualTo(TypeName.BOOLEAN);

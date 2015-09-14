@@ -20,7 +20,11 @@ import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.TypeMirror;
 
 import static com.squareup.javapoet.Util.checkArgument;
@@ -90,16 +94,22 @@ public final class WildcardTypeName extends TypeName {
   }
 
   public static TypeName get(javax.lang.model.type.WildcardType mirror) {
+    return get(mirror, new HashMap<TypeParameterElement, TypeVariableName>());
+  }
+
+  static TypeName get(
+      javax.lang.model.type.WildcardType mirror,
+      Map<TypeParameterElement, TypeVariableName> typeVariables) {
     TypeMirror extendsBound = mirror.getExtendsBound();
     if (extendsBound == null) {
       TypeMirror superBound = mirror.getSuperBound();
       if (superBound == null) {
         return subtypeOf(Object.class);
       } else {
-        return supertypeOf(TypeName.get(superBound));
+        return supertypeOf(TypeName.get(superBound, typeVariables));
       }
     } else {
-      return subtypeOf(TypeName.get(extendsBound));
+      return subtypeOf(TypeName.get(extendsBound, typeVariables));
     }
   }
 
