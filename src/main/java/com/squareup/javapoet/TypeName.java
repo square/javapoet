@@ -22,8 +22,13 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.NoType;
@@ -152,6 +157,11 @@ public class TypeName {
 
   /** Returns a type name equivalent to {@code mirror}. */
   public static TypeName get(TypeMirror mirror) {
+    return get(mirror, new LinkedHashMap<TypeParameterElement, TypeVariableName>());
+  }
+
+  static TypeName get(TypeMirror mirror,
+      final Map<TypeParameterElement, TypeVariableName> typeVariables) {
     return mirror.accept(new SimpleTypeVisitor7<TypeName, Void>() {
       @Override public TypeName visitPrimitive(PrimitiveType t, Void p) {
         switch (t.getKind()) {
@@ -182,21 +192,21 @@ public class TypeName {
 
         List<TypeName> typeArgumentNames = new ArrayList<>();
         for (TypeMirror mirror : t.getTypeArguments()) {
-          typeArgumentNames.add(get(mirror));
+          typeArgumentNames.add(get(mirror, typeVariables));
         }
         return new ParameterizedTypeName(rawType, typeArgumentNames);
       }
 
       @Override public ArrayTypeName visitArray(ArrayType t, Void p) {
-        return ArrayTypeName.get(t);
+        return ArrayTypeName.get(t, typeVariables);
       }
 
       @Override public TypeName visitTypeVariable(javax.lang.model.type.TypeVariable t, Void p) {
-        return TypeVariableName.get(t);
+        return TypeVariableName.get(t, typeVariables);
       }
 
       @Override public TypeName visitWildcard(javax.lang.model.type.WildcardType t, Void p) {
-        return WildcardTypeName.get(t);
+        return WildcardTypeName.get(t, typeVariables);
       }
 
       @Override public TypeName visitNoType(NoType t, Void p) {

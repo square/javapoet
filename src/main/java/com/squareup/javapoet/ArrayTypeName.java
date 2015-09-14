@@ -18,6 +18,11 @@ package com.squareup.javapoet;
 import java.io.IOException;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.ArrayType;
 
 import static com.squareup.javapoet.Util.checkNotNull;
@@ -54,7 +59,12 @@ public final class ArrayTypeName extends TypeName {
 
   /** Returns an array type equivalent to {@code mirror}. */
   public static ArrayTypeName get(ArrayType mirror) {
-    return new ArrayTypeName(get(mirror.getComponentType()));
+    return get(mirror, new LinkedHashMap<TypeParameterElement, TypeVariableName>());
+  }
+
+  static ArrayTypeName get(
+      ArrayType mirror, Map<TypeParameterElement, TypeVariableName> typeVariables) {
+    return new ArrayTypeName(get(mirror.getComponentType(), typeVariables));
   }
 
   /** Returns an array type equivalent to {@code type}. */
