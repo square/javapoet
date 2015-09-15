@@ -18,7 +18,6 @@ package com.squareup.javapoet;
 import java.io.IOException;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
