@@ -101,12 +101,15 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     checkArgument(!void.class.equals(clazz), "'void' type cannot be represented as a ClassName");
     checkArgument(!clazz.isArray(), "array types cannot be represented as a ClassName");
     List<String> names = new ArrayList<>();
-    for (Class<?> c = clazz; c != null; c = c.getEnclosingClass()) {
-      names.add(c.getSimpleName());
+    while (true) {
+      names.add(clazz.getSimpleName());
+      Class<?> enclosing = clazz.getEnclosingClass();
+      if (enclosing == null) break;
+      clazz = enclosing;
     }
-    if (clazz.getPackage() != null) {
-      names.add(clazz.getPackage().getName());
-    }
+    // Avoid unreliable Class.getPackage(). https://github.com/square/javapoet/issues/295
+    int lastDot = clazz.getName().lastIndexOf('.');
+    if (lastDot != -1) names.add(clazz.getName().substring(0, lastDot));
     Collections.reverse(names);
     return new ClassName(names);
   }
