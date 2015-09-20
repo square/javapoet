@@ -60,7 +60,7 @@ import static com.squareup.javapoet.Util.checkNotNull;
  * The above code generates unique names if presented with conflicts. Given user-supplied properties
  * with names {@code ab} and {@code sb} this generates the following:  <pre>   {@code
  *
- *   @Override
+ *   &#64;Override
  *   public String toString() {
  *     StringBuilder sb_ = new StringBuilder();
  *     sb_.append(ab);
