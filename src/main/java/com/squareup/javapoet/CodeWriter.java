@@ -231,12 +231,12 @@ final class CodeWriter {
           break;
 
         case "$[":
-          checkState(statementLine == -1, "statements cannot be re-entrant");
+          checkState(statementLine == -1, "statement enter $[ followed by statement enter $[");
           statementLine = 0;
           break;
 
         case "$]":
-          checkState(statementLine != -1, "statement exit has no matching statement enter");
+          checkState(statementLine != -1, "statement exit $] has no matching statement enter $[");
           if (statementLine > 0) {
             unindent(2); // End a multi-line statement. Decrease the indentation level.
           }
