@@ -1,6 +1,16 @@
 Change Log
 ==========
 
+JavaPoet 1.3.0 *(2015-09-20)*
+----------------------------
+
+ * New: `NameAllocator` API makes it easy to declare non-conflicting names.
+ * New: Support annotations on enum values.
+ * Fix: Avoid infinite recursion in `TypeName.get(TypeMirror)`.
+ * Fix: Use qualified name for conflicting simple names in the same file.
+ * Fix: Better messages for parameter indexing errors.
+
+
 JavaPoet 1.2.0 *(2015-07-04)*
 ----------------------------
 
