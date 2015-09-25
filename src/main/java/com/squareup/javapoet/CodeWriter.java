@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+
 import javax.lang.model.element.Modifier;
 
 import static com.squareup.javapoet.Util.checkArgument;
@@ -272,106 +273,151 @@ final class CodeWriter {
    * names visible due to inheritance.
    */
   String lookupName(ClassName className) {
-    // Different package than current? Just look for an import.
-    if (!className.packageName().equals(packageName)) {
-      if (conflictsWithLocalName(className)) {
-        return className.toString(); // A local name conflicts? Use the fully-qualified name.
+
+    // Create a ClassName from the current stack.
+    ClassName stackContext = null;
+    for (TypeSpec typeSpec : typeSpecStack) {
+      if (typeSpec.name == null) {
+        // Anonymous classes don't have a name and aren't relevant for the context.
+        continue;
+      }
+      if (stackContext == null) {
+        stackContext = ClassName.get(packageName, typeSpec.name);
+      } else {
+        stackContext = stackContext.nestedClass(typeSpec.name);
+      }
+    }
+
+    if (stackContext != null) {
+
+      if (className.equals(stackContext)) {
+        // Class is referring to itself, return it's simple name.
+        return className.simpleName();
       }
 
-      String importedName = importedTypes.get(className);
+      if (isNestedClass(className, stackContext)) {
+        // Class is referring to an enclosing class, return it's simple name.
+        return className.simpleName();
+      }
+
+      if (isNestedClass(stackContext, className)) {
+        // Class is referring to a nested class, return it's qualified name from the nesting.
+        return nestedName(stackContext, className);
+      }
+
+    }
+
+    List<String> classNames = className.simpleNames();
+    if (className.packageName().equals(packageName)) {
+      // Determine the shortest unique reference.
+      ClassName prefix = shortestUniqeReference(className);
+
+      // Determine if the simple name has a name conflict.
+      while (conflictsWithLocalName(prefix)) {
+        prefix = prefix.enclosingClassName();
+      }
+
+      if (prefix.enclosingClassName() != null) {
+        return nestedName(prefix.enclosingClassName(), className);
+      } else {
+        referencedNames.add(classNames.get(0));
+        return Util.join(".", classNames);
+      }
+
+    } else {
+      ClassName prefix = className;
+      while (prefix != null && conflictsWithLocalName(prefix)) {
+        prefix = prefix.enclosingClassName();
+      }
+
+      if (prefix == null) {
+        // All names conflict, return the fully qualified name.
+        return className.canonicalName;
+      }
+
+      String importedName = importedTypes.get(prefix);
       if (importedName != null) {
-        if (!javadoc) importableTypes.add(className);
+        if (!javadoc) importableTypes.add(prefix);
         referencedNames.add(importedName);
-        return importedName;
+
+        if (prefix.enclosingClassName() != null) {
+          return nestedName(prefix.enclosingClassName(), className);
+        } else {
+          return Util.join(".", classNames);
+        }
       }
 
       // If the target class wasn't imported, perhaps its enclosing class was. Try that.
-      ClassName enclosingClassName = className.enclosingClassName();
+      ClassName enclosingClassName = prefix.enclosingClassName();
       if (enclosingClassName != null) {
-        return lookupName(enclosingClassName) + "." + className.simpleName();
+        return lookupName(enclosingClassName) + "." + nestedName(enclosingClassName, className);
       }
 
       // Fall back to the fully-qualified name. Mark the type as importable for a future pass.
-      if (!javadoc) importableTypes.add(className);
+      if (!javadoc) importableTypes.add(prefix);
       return className.canonicalName;
     }
+  }
 
-    // Look for the longest non-conflicting common prefix, which we can omit.
-    List<String> classNames = className.simpleNames();
-    int prefixLength = nonConflictingCommonPrefixLength(classNames);
-    if (prefixLength == classNames.size()) {
-      return className.simpleName(); // Special case: a class referring to itself!
-    }
+  private static boolean isNestedClass(ClassName enclosingClass, ClassName nestedClass) {
+    return nestedClass.canonicalName.startsWith(enclosingClass.canonicalName + ".");
+  }
 
-    referencedNames.add(classNames.get(0));
-    return Util.join(".", classNames.subList(prefixLength, classNames.size()));
+  private static String nestedName(ClassName enclosingClass, ClassName nestedClass) {
+    return nestedClass.canonicalName.substring(enclosingClass.canonicalName.length() + 1);
   }
 
   /**
-   * Returns true if {@code className} conflicts with a visible class name in the current scope and
-   * cannot be referred to by its short name.
+   * Returns true if the simple name of {@code className} conflicts with a visible class name in
+   * the current scope and cannot be referred to by its short name.
    */
   private boolean conflictsWithLocalName(ClassName className) {
-    for (TypeSpec typeSpec : typeSpecStack) {
-      if (Objects.equals(typeSpec.name, className.simpleName())) return true;
+    for (int i = typeSpecStack.size() - 1; i >= 0; i--) {
+      TypeSpec typeSpec = typeSpecStack.get(i);
+      if (Objects.equals(typeSpec.name, className.simpleName())) {
+        ClassName context = ClassName.get(packageName, typeSpecStack.get(0).name);
+        for (int j = 1; j <= i; j++) {
+          context = context.nestedClass(typeSpecStack.get(j).name);
+        }
+        return !context.equals(className);
+      }
       for (TypeSpec visibleChild : typeSpec.typeSpecs) {
-        if (Objects.equals(visibleChild.name, className.simpleName())) return true;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Returns the common prefix of {@code classNames} and the current nesting scope. For example,
-   * suppose the current scope is {@code AbstractMap.SimpleEntry}. This will return 0 for {@code
-   * List}, 1 for {@code AbstractMap}, 1 for {@code AbstractMap.SimpleImmutableEntry}, and 2 for
-   * {@code AbstractMap.SimpleEntry} itself.
-   */
-  private int commonPrefixLength(List<String> classNames) {
-    int size = Math.min(classNames.size(), typeSpecStack.size());
-    for (int i = 0; i < size; i++) {
-      String a = classNames.get(i);
-      String b = typeSpecStack.get(i).name;
-      if (!a.equals(b)) return i;
-    }
-    return size;
-  }
-
-  /**
-   * Returns the common prefix of {@code classNames} and the current nesting scope which doesn't
-   * conflict with a type name in the current scope (any member of a parent type, except for
-   * {@code classNames} itself).
-   */
-  private int nonConflictingCommonPrefixLength(List<String> classNames) {
-    int index = commonPrefixLength(classNames);
-
-    // Class is referring to itself
-    if (index == classNames.size()) return index;
-
-    // Try to find the least-qualified non-conflicting name
-    for (; index > 0; index--) {
-      if (!parentTypeHasMemberType(classNames.get(index), index)) {
-        // No parent type has a member type with a conflicting name
-        return index;
-      }
-    }
-
-    return 0; // Fully-qualified name.
-  }
-
-  /**
-   * Walk down the type stack and return true if any type on the stack
-   * has {@code className} as a member, except the type at {@code index}.
-   */
-  private boolean parentTypeHasMemberType(String className, int index) {
-    for (int i = 0; i < typeSpecStack.size(); i++) {
-      if (index != (i + 1)) {
-        for (TypeSpec nestedTypeSpec : typeSpecStack.get(i).typeSpecs) {
-          if (nestedTypeSpec.name.equals(className)) return true;
+        if (Objects.equals(visibleChild.name, className.simpleName())) {
+          ClassName context = ClassName.get(packageName, typeSpecStack.get(0).name);
+          for (int j = 1; j <= i; j++) {
+            context = context.nestedClass(typeSpecStack.get(j).name);
+          }
+          context = context.nestedClass(visibleChild.name);
+          return !context.equals(className);
         }
       }
     }
     return false;
+  }
+
+  /**
+   * Returns the shortest unique reference of {@code className} in the current nesting scope. This
+   * reference is only useful when {@code className} is a member of one of the parents in the
+   * current nesting scope or another class in the same package. For example suppose the current
+   * scope is {@code AbstractMap.SimpleEntry}. This will return <code>List</code> for {@code List},
+   * <code>AbstractMap</code> for {@code AbstractMap} and
+   * <code>AbstractMap.SimpleImmutableEntry</code> for {@code AbstractMap.SimpleImmutableEntry}.
+   */
+  private ClassName shortestUniqeReference(ClassName className) {
+    List<String> classNames = className.simpleNames();
+    ClassName prefix = ClassName.get(className.packageName(), classNames.get(0));
+    if (typeSpecStack.isEmpty()) return prefix;
+    if (!classNames.get(0).equals(typeSpecStack.get(0).name)) return prefix;
+    int size = Math.min(classNames.size(), typeSpecStack.size());
+    for (int i = 1; i < size; i++) {
+      String a = classNames.get(i);
+      String b = typeSpecStack.get(i).name;
+      prefix = prefix.nestedClass(a);
+      if (!a.equals(b)) {
+         return prefix;
+      }
+    }
+    return prefix;
   }
 
   /**
