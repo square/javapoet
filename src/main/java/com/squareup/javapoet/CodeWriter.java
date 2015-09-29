@@ -27,12 +27,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeMap;
 import javax.lang.model.element.Modifier;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
 import static com.squareup.javapoet.Util.checkState;
+import static com.squareup.javapoet.Util.join;
 
 /**
  * Converts a {@link JavaFile} to a string suitable to both human- and javac-consumption. This
@@ -47,8 +47,8 @@ final class CodeWriter {
   private boolean comment = false;
   private String packageName;
   private final List<TypeSpec> typeSpecStack = new ArrayList<>();
-  private final Map<ClassName, String> importedTypes;
-  private final Set<ClassName> importableTypes = new LinkedHashSet<>();
+  private final Map<String, ClassName> importedTypes;
+  private final Map<String, ClassName> importableTypes = new LinkedHashMap<>();
   private final Set<String> referencedNames = new LinkedHashSet<>();
   private boolean trailingNewline;
 
@@ -64,16 +64,16 @@ final class CodeWriter {
   }
 
   public CodeWriter(Appendable out, String indent) {
-    this(out, indent, Collections.<ClassName, String>emptyMap());
+    this(out, indent, Collections.<String, ClassName>emptyMap());
   }
 
-  public CodeWriter(Appendable out, String indent, Map<ClassName, String> importedTypes) {
+  public CodeWriter(Appendable out, String indent, Map<String, ClassName> importedTypes) {
     this.out = checkNotNull(out, "out == null");
     this.indent = checkNotNull(indent, "indent == null");
     this.importedTypes = checkNotNull(importedTypes, "importedTypes == null");
   }
 
-  public Map<ClassName, String> importedTypes() {
+  public Map<String, ClassName> importedTypes() {
     return importedTypes;
   }
 
@@ -272,106 +272,79 @@ final class CodeWriter {
    * names visible due to inheritance.
    */
   String lookupName(ClassName className) {
-    // Different package than current? Just look for an import.
-    if (!className.packageName().equals(packageName)) {
-      if (conflictsWithLocalName(className)) {
-        return className.toString(); // A local name conflicts? Use the fully-qualified name.
-      }
+    // Find the shortest suffix of className that resolves to className. This uses both local type
+    // names (so `Entry` in `Map` refers to `Map.Entry`). Also uses imports.
+    boolean nameResolved = false;
+    for (ClassName c = className; c != null; c = c.enclosingClassName()) {
+      ClassName resolved = resolve(c.simpleName());
+      nameResolved = resolved != null;
 
-      String importedName = importedTypes.get(className);
-      if (importedName != null) {
-        if (!javadoc) importableTypes.add(className);
-        referencedNames.add(importedName);
-        return importedName;
+      if (Objects.equals(resolved, c)) {
+        int suffixOffset = c.simpleNames().size() - 1;
+        return join(".", className.simpleNames().subList(
+            suffixOffset, className.simpleNames().size()));
       }
-
-      // If the target class wasn't imported, perhaps its enclosing class was. Try that.
-      ClassName enclosingClassName = className.enclosingClassName();
-      if (enclosingClassName != null) {
-        return lookupName(enclosingClassName) + "." + className.simpleName();
-      }
-
-      // Fall back to the fully-qualified name. Mark the type as importable for a future pass.
-      if (!javadoc) importableTypes.add(className);
-      return className.canonicalName;
     }
 
-    // Look for the longest non-conflicting common prefix, which we can omit.
-    List<String> classNames = className.simpleNames();
-    int prefixLength = nonConflictingCommonPrefixLength(classNames);
-    if (prefixLength == classNames.size()) {
-      return className.simpleName(); // Special case: a class referring to itself!
+    // If the class is in the same package, we're done.
+    if (Objects.equals(packageName, className.packageName())) {
+      referencedNames.add(className.topLevelClassName().simpleName());
+      return join(".", className.simpleNames());
     }
 
-    referencedNames.add(classNames.get(0));
-    return Util.join(".", classNames.subList(prefixLength, classNames.size()));
+    // We'll have to use the fully-qualified name. Mark the type as importable for a future pass.
+    if (!javadoc && !nameResolved) {
+      importableType(className);
+    }
+
+    return className.canonicalName;
+  }
+
+  private void importableType(ClassName className) {
+    ClassName topLevelClassName = className.topLevelClassName();
+    String simpleName = topLevelClassName.simpleName();
+    ClassName replaced = importableTypes.put(simpleName, topLevelClassName);
+    if (replaced != null) {
+      importableTypes.put(simpleName, replaced); // On collision, prefer the first inserted.
+    }
   }
 
   /**
-   * Returns true if {@code className} conflicts with a visible class name in the current scope and
-   * cannot be referred to by its short name.
+   * Returns the class referenced by {@code simpleName}, using the current nesting context and
+   * imports.
    */
-  private boolean conflictsWithLocalName(ClassName className) {
-    for (TypeSpec typeSpec : typeSpecStack) {
-      if (Objects.equals(typeSpec.name, className.simpleName())) return true;
+  // TODO(jwilson): also honor superclass members when resolving names.
+  private ClassName resolve(String simpleName) {
+    // Match a child of the current (potentially nested) class.
+    for (int i = typeSpecStack.size() - 1; i >= 0; i--) {
+      TypeSpec typeSpec = typeSpecStack.get(i);
       for (TypeSpec visibleChild : typeSpec.typeSpecs) {
-        if (Objects.equals(visibleChild.name, className.simpleName())) return true;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Returns the common prefix of {@code classNames} and the current nesting scope. For example,
-   * suppose the current scope is {@code AbstractMap.SimpleEntry}. This will return 0 for {@code
-   * List}, 1 for {@code AbstractMap}, 1 for {@code AbstractMap.SimpleImmutableEntry}, and 2 for
-   * {@code AbstractMap.SimpleEntry} itself.
-   */
-  private int commonPrefixLength(List<String> classNames) {
-    int size = Math.min(classNames.size(), typeSpecStack.size());
-    for (int i = 0; i < size; i++) {
-      String a = classNames.get(i);
-      String b = typeSpecStack.get(i).name;
-      if (!a.equals(b)) return i;
-    }
-    return size;
-  }
-
-  /**
-   * Returns the common prefix of {@code classNames} and the current nesting scope which doesn't
-   * conflict with a type name in the current scope (any member of a parent type, except for
-   * {@code classNames} itself).
-   */
-  private int nonConflictingCommonPrefixLength(List<String> classNames) {
-    int index = commonPrefixLength(classNames);
-
-    // Class is referring to itself
-    if (index == classNames.size()) return index;
-
-    // Try to find the least-qualified non-conflicting name
-    for (; index > 0; index--) {
-      if (!parentTypeHasMemberType(classNames.get(index), index)) {
-        // No parent type has a member type with a conflicting name
-        return index;
-      }
-    }
-
-    return 0; // Fully-qualified name.
-  }
-
-  /**
-   * Walk down the type stack and return true if any type on the stack
-   * has {@code className} as a member, except the type at {@code index}.
-   */
-  private boolean parentTypeHasMemberType(String className, int index) {
-    for (int i = 0; i < typeSpecStack.size(); i++) {
-      if (index != (i + 1)) {
-        for (TypeSpec nestedTypeSpec : typeSpecStack.get(i).typeSpecs) {
-          if (nestedTypeSpec.name.equals(className)) return true;
+        if (Objects.equals(visibleChild.name, simpleName)) {
+          return stackClassName(i, simpleName);
         }
       }
     }
-    return false;
+
+    // Match the top-level class.
+    if (typeSpecStack.size() > 0 && Objects.equals(typeSpecStack.get(0).name, simpleName)) {
+      return ClassName.get(packageName, simpleName);
+    }
+
+    // Match an imported type.
+    ClassName importedType = importedTypes.get(simpleName);
+    if (importedType != null) return importedType;
+
+    // No match.
+    return null;
+  }
+
+  /** Returns the class named {@code simpleName} when nested in the class at {@code stackDepth}. */
+  private ClassName stackClassName(int stackDepth, String simpleName) {
+    ClassName className = ClassName.get(packageName, typeSpecStack.get(0).name);
+    for (int i = 1; i <= stackDepth; i++) {
+      className = className.nestedClass(typeSpecStack.get(i).name);
+    }
+    return className.nestedClass(simpleName);
   }
 
   /**
@@ -427,25 +400,10 @@ final class CodeWriter {
    * Returns the types that should have been imported for this code. If there were any simple name
    * collisions, that type's first use is imported.
    */
-  Map<ClassName, String> suggestedImports() {
-    // Find the simple names that can be imported, and the classes that they target.
-    Map<String, ClassName> simpleNameToType = new LinkedHashMap<>();
-    for (ClassName className : importableTypes) {
-      if (referencedNames.contains(className.simpleName())) continue;
-      if (simpleNameToType.containsKey(className.simpleName())) continue;
-      simpleNameToType.put(className.simpleName(), className);
-    }
-
-    // Invert the map.
-    TreeMap<ClassName, String> typeToSimpleName = new TreeMap<>();
-    for (Map.Entry<String, ClassName> entry : simpleNameToType.entrySet()) {
-      typeToSimpleName.put(entry.getValue(), entry.getKey());
-    }
-
-    // TODO(jwilson): omit imports from java.lang, unless their simple names is also present in the
-    //     current class's package. (Yuck.)
-
-    return typeToSimpleName;
+  Map<String, ClassName> suggestedImports() {
+    Map<String, ClassName> result = new LinkedHashMap<>(importableTypes);
+    result.keySet().removeAll(referencedNames);
+    return result;
   }
 
   /** Returns the string literal representing {@code data}, including wrapping quotes. */

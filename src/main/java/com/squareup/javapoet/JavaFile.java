@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
@@ -69,7 +70,7 @@ public final class JavaFile {
     // First pass: emit the entire class, just to collect the types we'll need to import.
     CodeWriter importsCollector = new CodeWriter(NULL_APPENDABLE, indent);
     emit(importsCollector);
-    Map<ClassName, String> suggestedImports = importsCollector.suggestedImports();
+    Map<String, ClassName> suggestedImports = importsCollector.suggestedImports();
 
     // Second pass: write the code, taking advantage of the imports.
     CodeWriter codeWriter = new CodeWriter(out, indent, suggestedImports);
@@ -131,7 +132,7 @@ public final class JavaFile {
     }
 
     int importedTypesCount = 0;
-    for (ClassName className : codeWriter.importedTypes().keySet()) {
+    for (ClassName className : new TreeSet<>(codeWriter.importedTypes().values())) {
       if (skipJavaLangImports && className.packageName().equals("java.lang")) continue;
       codeWriter.emit("import $L;\n", className);
       importedTypesCount++;
