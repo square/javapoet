@@ -64,6 +64,14 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   }
 
   /**
+   * Returns the top class in this nesting group. Equivalent to chained calls to {@link
+   * #enclosingClassName()} until the result's enclosing class is null.
+   */
+  public ClassName topLevelClassName() {
+    return new ClassName(names.subList(0, 2));
+  }
+
+  /**
    * Returns a new {@link ClassName} instance for the specified {@code name} as nested inside this
    * class.
    */

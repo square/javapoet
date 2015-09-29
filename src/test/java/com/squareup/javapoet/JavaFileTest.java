@@ -228,6 +228,27 @@ public final class JavaFileTest {
         + "}\n");
   }
 
+  @Test public void nestedClassAndSuperclassShareName() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .superclass(ClassName.get("com.squareup.wire", "Message"))
+            .addType(TypeSpec.classBuilder("Builder")
+                .superclass(ClassName.get("com.squareup.wire", "Message", "Builder"))
+                .build())
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.wire.Message;\n"
+        + "\n"
+        + "class Taco extends Message {\n"
+        + "  class Builder extends Message.Builder {\n"
+        + "  }\n"
+        + "}\n");
+  }
+
   @Test public void defaultPackage() throws Exception {
     String source = JavaFile.builder("",
         TypeSpec.classBuilder("HelloWorld")
