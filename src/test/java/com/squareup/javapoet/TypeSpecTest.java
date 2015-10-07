@@ -756,6 +756,28 @@ public final class TypeSpecTest {
   }
 
   @Test
+  public void interfaceStaticMethods() throws Exception {
+    assumeTrue(isJava8());
+    TypeSpec bar = TypeSpec.interfaceBuilder("Tacos")
+        .addMethod(MethodSpec.methodBuilder("test")
+            .addModifiers(Modifier.PUBLIC, Modifier.valueOf("STATIC"))
+            .returns(int.class)
+            .addCode(CodeBlock.builder().addStatement("return 0").build())
+            .build())
+        .build();
+
+    assertThat(toString(bar)).isEqualTo(""
+            + "package com.squareup.tacos;\n"
+            + "\n"
+            + "interface Tacos {\n"
+            + "  static int test() {\n"
+            + "    return 0;\n"
+            + "  }\n"
+            + "}\n"
+    );
+  }
+
+  @Test
   public void interfaceDefaultMethods() throws Exception {
     assumeTrue(isJava8());
     TypeSpec bar = TypeSpec.interfaceBuilder("Tacos")
