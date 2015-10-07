@@ -44,7 +44,6 @@ import org.mockito.Mockito;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
 @RunWith(JUnit4.class)
 public final class TypeSpecTest {
@@ -55,10 +54,6 @@ public final class TypeSpecTest {
 
   private TypeElement getElement(Class<?> clazz) {
     return compilation.getElements().getTypeElement(clazz.getCanonicalName());
-  }
-
-  private boolean isJava8() {
-    return Util.DEFAULT != null;
   }
 
   @Test public void basic() throws Exception {
@@ -742,7 +737,6 @@ public final class TypeSpecTest {
 
   @Test
   public void classCannotHaveDefaultMethods() throws Exception {
-    assumeTrue(isJava8());
     try {
       TypeSpec.classBuilder("Tacos")
           .addMethod(MethodSpec.methodBuilder("test")
@@ -757,10 +751,9 @@ public final class TypeSpecTest {
 
   @Test
   public void interfaceStaticMethods() throws Exception {
-    assumeTrue(isJava8());
     TypeSpec bar = TypeSpec.interfaceBuilder("Tacos")
         .addMethod(MethodSpec.methodBuilder("test")
-            .addModifiers(Modifier.PUBLIC, Modifier.valueOf("STATIC"))
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
             .returns(int.class)
             .addCode(CodeBlock.builder().addStatement("return 0").build())
             .build())
@@ -779,7 +772,6 @@ public final class TypeSpecTest {
 
   @Test
   public void interfaceDefaultMethods() throws Exception {
-    assumeTrue(isJava8());
     TypeSpec bar = TypeSpec.interfaceBuilder("Tacos")
         .addMethod(MethodSpec.methodBuilder("test")
             .addModifiers(Modifier.PUBLIC, Modifier.valueOf("DEFAULT"))
