@@ -85,4 +85,17 @@ public final class NameAllocatorTest {
       assertThat(expected).hasMessage("unknown tag: 1");
     }
   }
+
+  @Test public void copyUsage() throws Exception {
+    NameAllocator outterAllocator = new NameAllocator();
+    outterAllocator.newName("foo", 1);
+
+    NameAllocator innerAllocator1 = outterAllocator.copy();
+    assertThat(innerAllocator1.newName("bar", 2)).isEqualTo("bar");
+    assertThat(innerAllocator1.newName("foo", 3)).isEqualTo("foo_");
+
+    NameAllocator innerAllocator2 = outterAllocator.copy();
+    assertThat(innerAllocator2.newName("foo", 2)).isEqualTo("foo_");
+    assertThat(innerAllocator2.newName("bar", 3)).isEqualTo("bar");
+  }
 }
