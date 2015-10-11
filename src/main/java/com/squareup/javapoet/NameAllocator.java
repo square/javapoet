@@ -72,10 +72,24 @@ import static com.squareup.javapoet.Util.checkNotNull;
  * The underscore is appended to {@code sb} to avoid conflicting with the user-supplied {@code sb}
  * property. Underscores are also prefixed for names that start with a digit, and used to replace
  * name-unsafe characters like space or dash.
+ *
+ * <p>When dealing with multiple independent inner scopes, use a {@link #clone()} of the
+ * NameAllocator used for the outer scope to further refine name allocation for a specific inner
+ * scope.
  */
-public final class NameAllocator {
-  private final Set<String> allocatedNames = new LinkedHashSet<>();
-  private final Map<Object, String> tagToName = new LinkedHashMap<>();
+public final class NameAllocator implements Cloneable {
+  private final Set<String> allocatedNames;
+  private final Map<Object, String> tagToName;
+
+  public NameAllocator() {
+    this(new LinkedHashSet<String>(), new LinkedHashMap<Object, String>());
+  }
+
+  private NameAllocator(LinkedHashSet<String> allocatedNames,
+                        LinkedHashMap<Object, String> tagToName) {
+    this.allocatedNames = allocatedNames;
+    this.tagToName = tagToName;
+  }
 
   public String newName(String suggestion, Object tag) {
     checkNotNull(suggestion, "suggestion");
@@ -121,4 +135,19 @@ public final class NameAllocator {
     }
     return result;
   }
+
+  /**
+   * Create a deep copy of this NameAllocator. Useful to create multiple independent refinements
+   * of a NameAllocator to be used in the respective definition of multiples, independently-scoped,
+   * inner code blocks.
+   *
+   * @return A deep copy of this NameAllocator.
+   */
+  @Override
+  public NameAllocator clone() {
+    return new NameAllocator(
+        new LinkedHashSet<>(this.allocatedNames),
+        new LinkedHashMap<>(this.tagToName));
+  }
+
 }
