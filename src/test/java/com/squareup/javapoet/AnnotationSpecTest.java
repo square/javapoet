@@ -42,7 +42,7 @@ public final class AnnotationSpecTest {
     String value();
   }
 
-  enum Breakfast {
+  public enum Breakfast {
     WAFFLES, PANCAKES
   }
 
@@ -244,6 +244,88 @@ public final class AnnotationSpecTest {
             + ", q = @com.squareup.javapoet.AnnotationSpecTest.AnnotationC(\"bar\")"
             + ", r = {java.lang.Float.class, java.lang.Double.class}"
             + ")");
+  }
+
+  @Test public void reflectAnnotation() {
+    HasDefaultsAnnotation annotation = IsAnnotated.class.getAnnotation(HasDefaultsAnnotation.class);
+    AnnotationSpec spec = AnnotationSpec.get(annotation);
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addAnnotation(spec)
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.javapoet.AnnotationSpecTest;\n"
+        + "import java.lang.Double;\n"
+        + "import java.lang.Float;\n"
+        + "import java.lang.Override;\n"
+        + "\n"
+        + "@AnnotationSpecTest.HasDefaultsAnnotation(\n"
+        + "    f = 11.1,\n"
+        + "    l = Override.class,\n"
+        + "    m = {\n"
+        + "        9,\n"
+        + "        8,\n"
+        + "        1\n"
+        + "    },\n"
+        + "    o = AnnotationSpecTest.Breakfast.PANCAKES,\n"
+        + "    p = 1701,\n"
+        + "    q = @AnnotationSpecTest.AnnotationC(\"bar\"),\n"
+        + "    r = {\n"
+        + "        Float.class,\n"
+        + "        Double.class\n"
+        + "    }\n"
+        + ")\n"
+        + "class Taco {\n"
+        + "}\n");
+  }
+
+  @Test public void reflectAnnotationWithDefaults() {
+    HasDefaultsAnnotation annotation = IsAnnotated.class.getAnnotation(HasDefaultsAnnotation.class);
+    AnnotationSpec spec = AnnotationSpec.get(annotation, true);
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addAnnotation(spec)
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.javapoet.AnnotationSpecTest;\n"
+        + "import java.lang.Double;\n"
+        + "import java.lang.Float;\n"
+        + "import java.lang.Override;\n"
+        + "\n"
+        + "@AnnotationSpecTest.HasDefaultsAnnotation(\n"
+        + "    a = 5,\n"
+        + "    b = 6,\n"
+        + "    c = 7,\n"
+        + "    d = 8,\n"
+        + "    e = 9.0f,\n"
+        + "    f = 11.1,\n"
+        + "    g = k,\n"
+        + "    h = true,\n"
+        + "    i = AnnotationSpecTest.Breakfast.WAFFLES,\n"
+        + "    j = @AnnotationSpecTest.AnnotationA,\n"
+        + "    k = \"maple\",\n"
+        + "    l = Override.class,\n"
+        + "    m = {\n"
+        + "        9,\n"
+        + "        8,\n"
+        + "        1\n"
+        + "    },\n"
+        + "    n = {\n"
+        + "        AnnotationSpecTest.Breakfast.WAFFLES,\n"
+        + "        AnnotationSpecTest.Breakfast.PANCAKES\n"
+        + "    },\n"
+        + "    o = AnnotationSpecTest.Breakfast.PANCAKES,\n"
+        + "    p = 1701,\n"
+        + "    q = @AnnotationSpecTest.AnnotationC(\"bar\"),\n"
+        + "    r = {\n"
+        + "        Float.class,\n"
+        + "        Double.class\n"
+        + "    }\n"
+        + ")\n"
+        + "class Taco {\n"
+        + "}\n");
   }
 
   private String toString(TypeSpec typeSpec) {

@@ -17,11 +17,17 @@ package com.squareup.javapoet;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static com.squareup.javapoet.Util.checkNotNull;
 
@@ -98,6 +104,53 @@ public final class AnnotationSpec {
     codeWriter.emit(whitespace + "}");
   }
 
+  public static AnnotationSpec get(Annotation annotation) {
+    return get(annotation, false);
+  }
+
+  public static AnnotationSpec get(Annotation annotation, boolean includeDefaultValues) {
+    Builder builder = builder(annotation.annotationType());
+    try {
+      Method[] methods = annotation.annotationType().getDeclaredMethods();
+      Arrays.sort(methods, new Comparator<Method>() {
+        @Override
+        public int compare(Method m1, Method m2) {
+          return m1.getName().compareTo(m2.getName());
+        }
+      });
+      for (Method method : methods) {
+        Object value = method.invoke(annotation);
+        if (!includeDefaultValues) {
+          if (Objects.deepEquals(value, method.getDefaultValue())) {
+            continue;
+          }
+        }
+        if (value.getClass().isArray()) {
+          for (int i = 0; i < Array.getLength(value); i++) {
+            addAnnotationValue(builder, method.getName(), Array.get(value, i));
+          }
+          continue;
+        }
+        if (value instanceof Annotation) {
+          builder.addMember(method.getName(), "$L", get((Annotation) value));
+          continue;
+        }
+        addAnnotationValue(builder, method.getName(), value);
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("Reflecting " + annotation + " failed!", e);
+    }
+    return builder.build();
+  }
+
+  private static Builder addAnnotationValue(Builder builder, String name, Object value) {
+    if (value instanceof Class<?>) return builder.addMember(name, "$T.class", value);
+    if (value instanceof Enum) return builder.addMember(name, "$T.$L", value.getClass(), value);
+    if (value instanceof String) return builder.addMember(name, "$S", value);
+    if (value instanceof Float) return builder.addMember(name, "$Lf", value);
+    // return literal/toString anyway
+    return builder.addMember(name, "$L", value);
+  }
   public static AnnotationSpec get(AnnotationMirror annotation) {
     TypeElement element = (TypeElement) annotation.getAnnotationType().asElement();
     AnnotationSpec.Builder builder = AnnotationSpec.builder(ClassName.get(element));
