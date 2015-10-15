@@ -36,6 +36,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -82,6 +83,7 @@ public final class TypeSpecTest {
         + "    return \"taco\";\n"
         + "  }\n"
         + "}\n");
+    Assert.assertEquals(472949424, taco.hashCode()); // update expected number if source changes
   }
 
   @Test public void interestingTypes() throws Exception {
@@ -1963,6 +1965,25 @@ public final class TypeSpecTest {
             + "    return FOO;\n"
             + "  }\n"
             + "}\n");
+  }
+
+  @Test public void equalsAndHashCode() {
+    TypeSpec a = TypeSpec.interfaceBuilder("taco").build();
+    TypeSpec b = TypeSpec.interfaceBuilder("taco").build();
+    assertThat(a.equals(b)).isTrue();
+    assertThat(a.hashCode()).isEqualTo(b.hashCode());
+    a = TypeSpec.classBuilder("taco").build();
+    b = TypeSpec.classBuilder("taco").build();
+    assertThat(a.equals(b)).isTrue();
+    assertThat(a.hashCode()).isEqualTo(b.hashCode());
+    a = TypeSpec.enumBuilder("taco").addEnumConstant("SALSA").build();
+    b = TypeSpec.enumBuilder("taco").addEnumConstant("SALSA").build();
+    assertThat(a.equals(b)).isTrue();
+    assertThat(a.hashCode()).isEqualTo(b.hashCode());
+    a = TypeSpec.annotationBuilder("taco").build();
+    b = TypeSpec.annotationBuilder("taco").build();
+    assertThat(a.equals(b)).isTrue();
+    assertThat(a.hashCode()).isEqualTo(b.hashCode());
   }
 
   private CodeBlock codeBlock(String format, Object... args) {

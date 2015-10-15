@@ -183,13 +183,14 @@ public final class AnnotationSpec {
   }
 
   @Override public boolean equals(Object o) {
-    return o instanceof AnnotationSpec
-        && ((AnnotationSpec) o).type.equals(type)
-        && ((AnnotationSpec) o).members.equals(members);
+    if (this == o) return true;
+    if (o == null) return false;
+    if (getClass() != o.getClass()) return false;
+    return toString().equals(o.toString());
   }
 
   @Override public int hashCode() {
-    return type.hashCode() + 37 * members.hashCode();
+    return toString().hashCode();
   }
 
   @Override public String toString() {

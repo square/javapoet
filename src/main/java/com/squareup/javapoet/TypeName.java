@@ -139,6 +139,17 @@ public class TypeName {
     throw new UnsupportedOperationException("cannot unbox " + this);
   }
 
+  @Override public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null) return false;
+    if (getClass() != o.getClass()) return false;
+    return toString().equals(o.toString());
+  }
+
+  @Override public int hashCode() {
+    return toString().hashCode();
+  }
+
   @Override public final String toString() {
     try {
       StringBuilder result = new StringBuilder();

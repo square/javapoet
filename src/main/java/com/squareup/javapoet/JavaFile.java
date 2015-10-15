@@ -147,6 +147,17 @@ public final class JavaFile {
     codeWriter.popPackage();
   }
 
+  @Override public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null) return false;
+    if (getClass() != o.getClass()) return false;
+    return toString().equals(o.toString());
+  }
+
+  @Override public int hashCode() {
+    return toString().hashCode();
+  }
+
   @Override public String toString() {
     try {
       StringBuilder result = new StringBuilder();

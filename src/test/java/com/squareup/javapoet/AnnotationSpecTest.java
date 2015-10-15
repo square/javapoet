@@ -103,6 +103,17 @@ public final class AnnotationSpecTest {
 
   @Rule public final CompilationRule compilation = new CompilationRule();
 
+  @Test public void equalsAndHashCode() {
+    AnnotationSpec a = AnnotationSpec.builder(AnnotationC.class).build();
+    AnnotationSpec b = AnnotationSpec.builder(AnnotationC.class).build();
+    assertThat(a.equals(b)).isTrue();
+    assertThat(a.hashCode()).isEqualTo(b.hashCode());
+    a = AnnotationSpec.builder(AnnotationC.class).addMember("value", "$S", "123").build();
+    b = AnnotationSpec.builder(AnnotationC.class).addMember("value", "$S", "123").build();
+    assertThat(a.equals(b)).isTrue();
+    assertThat(a.hashCode()).isEqualTo(b.hashCode());
+  }
+
   @Test public void defaultAnnotation() {
     String name = IsAnnotated.class.getCanonicalName();
     TypeElement element = compilation.getElements().getTypeElement(name);
