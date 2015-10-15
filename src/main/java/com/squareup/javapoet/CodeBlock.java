@@ -69,6 +69,20 @@ public final class CodeBlock {
     return formatParts.isEmpty();
   }
 
+  @Override public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null)
+      return false;
+    if (getClass() != o.getClass())
+      return false;
+    return hashCode() == o.hashCode();
+  }
+
+  @Override public int hashCode() {
+    return toString().hashCode(); // could be cached lazily, care for threads?
+  }
+
   @Override public String toString() {
     StringWriter out = new StringWriter();
     try {

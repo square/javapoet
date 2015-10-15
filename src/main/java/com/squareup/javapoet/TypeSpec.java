@@ -55,6 +55,7 @@ public final class TypeSpec {
   public final List<MethodSpec> methodSpecs;
   public final List<TypeSpec> typeSpecs;
   public final List<Element> originatingElements;
+  private final int hashCode;
 
   private TypeSpec(Builder builder) {
     this.kind = builder.kind;
@@ -78,6 +79,7 @@ public final class TypeSpec {
       originatingElementsMutable.addAll(typeSpec.originatingElements);
     }
     this.originatingElements = Util.immutableList(originatingElementsMutable);
+    this.hashCode = toString().hashCode(); // always last constructor line!
   }
 
   public boolean hasModifier(Modifier modifier) {
@@ -267,6 +269,20 @@ public final class TypeSpec {
     } finally {
       codeWriter.statementLine = previousStatementLine;
     }
+  }
+
+  @Override public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null)
+      return false;
+    if (getClass() != o.getClass())
+      return false;
+    return hashCode == o.hashCode();
+  }
+
+  @Override public int hashCode() {
+    return hashCode;
   }
 
   @Override public String toString() {

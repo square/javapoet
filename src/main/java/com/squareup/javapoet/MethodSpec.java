@@ -56,6 +56,7 @@ public final class MethodSpec {
   public final List<TypeName> exceptions;
   public final CodeBlock code;
   public final CodeBlock defaultValue;
+  private final int hashCode;
 
   private MethodSpec(Builder builder) {
     CodeBlock code = builder.code.build();
@@ -75,6 +76,7 @@ public final class MethodSpec {
     this.exceptions = Util.immutableList(builder.exceptions);
     this.defaultValue = builder.defaultValue;
     this.code = code;
+    this.hashCode = toString().hashCode();  // always last constructor line!
   }
 
   private boolean lastParameterIsArray(List<ParameterSpec> parameters) {
@@ -147,6 +149,20 @@ public final class MethodSpec {
 
   public boolean isConstructor() {
     return name.equals(CONSTRUCTOR);
+  }
+
+  @Override public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null)
+      return false;
+    if (getClass() != o.getClass())
+      return false;
+    return hashCode == o.hashCode();
+  }
+
+  @Override public int hashCode() {
+    return hashCode;
   }
 
   @Override public String toString() {

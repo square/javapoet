@@ -43,10 +43,12 @@ import javax.lang.model.util.SimpleAnnotationValueVisitor7;
 public final class AnnotationSpec {
   public final TypeName type;
   public final Map<String, List<CodeBlock>> members;
+  private final int hashCode;
 
   private AnnotationSpec(Builder builder) {
     this.type = builder.type;
     this.members = Util.immutableMultimap(builder.members);
+    this.hashCode = toString().hashCode(); // always last constructor line!
   }
 
   void emit(CodeWriter codeWriter, boolean inline) throws IOException {
@@ -183,13 +185,17 @@ public final class AnnotationSpec {
   }
 
   @Override public boolean equals(Object o) {
-    return o instanceof AnnotationSpec
-        && ((AnnotationSpec) o).type.equals(type)
-        && ((AnnotationSpec) o).members.equals(members);
+    if (this == o)
+      return true;
+    if (o == null)
+      return false;
+    if (getClass() != o.getClass())
+      return false;
+    return hashCode == o.hashCode();
   }
 
   @Override public int hashCode() {
-    return type.hashCode() + 37 * members.hashCode();
+    return hashCode;
   }
 
   @Override public String toString() {

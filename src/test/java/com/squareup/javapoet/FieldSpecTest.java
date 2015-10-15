@@ -20,10 +20,21 @@ import org.junit.Test;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
-public class FieldSpecTest {
+import javax.lang.model.element.Modifier;
 
-  @Test
-  public void nullAnnotationsAddition() {
+public class FieldSpecTest {
+  @Test public void equalsAndHashCode() {
+    FieldSpec a = FieldSpec.builder(int.class, "foo").build();
+    FieldSpec b = FieldSpec.builder(int.class, "foo").build();
+    assertThat(a.equals(b)).isTrue();
+    assertThat(a.hashCode()).isEqualTo(b.hashCode());
+    a = FieldSpec.builder(int.class, "FOO", Modifier.PUBLIC, Modifier.STATIC).build();
+    b = FieldSpec.builder(int.class, "FOO", Modifier.PUBLIC, Modifier.STATIC).build();
+    assertThat(a.equals(b)).isTrue();
+    assertThat(a.hashCode()).isEqualTo(b.hashCode());
+  }
+
+  @Test public void nullAnnotationsAddition() {
     try {
       FieldSpec.builder(int.class, "foo").addAnnotations(null);
       fail();
