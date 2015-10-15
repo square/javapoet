@@ -43,7 +43,8 @@ public final class AnnotationSpecTest {
   }
 
   public enum Breakfast {
-    WAFFLES, PANCAKES
+    WAFFLES, PANCAKES;
+    public String toString() { return name() + " with cherries!"; };
   }
 
   @Retention(RetentionPolicy.RUNTIME)
@@ -190,15 +191,15 @@ public final class AnnotationSpecTest {
 
   @Test public void dynamicArrayOfEnumConstants() {
     AnnotationSpec.Builder builder = AnnotationSpec.builder(HasDefaultsAnnotation.class);
-    builder.addMember("n", "$T.$L", Breakfast.class, Breakfast.PANCAKES);
+    builder.addMember("n", "$T.$L", Breakfast.class, Breakfast.PANCAKES.name());
     assertThat(builder.build().toString()).isEqualTo(
         "@com.squareup.javapoet.AnnotationSpecTest.HasDefaultsAnnotation("
             + "n = com.squareup.javapoet.AnnotationSpecTest.Breakfast.PANCAKES"
             + ")");
 
     // builder = AnnotationSpec.builder(HasDefaultsAnnotation.class);
-    builder.addMember("n", "$T.$L", Breakfast.class, Breakfast.WAFFLES);
-    builder.addMember("n", "$T.$L", Breakfast.class, Breakfast.PANCAKES);
+    builder.addMember("n", "$T.$L", Breakfast.class, Breakfast.WAFFLES.name());
+    builder.addMember("n", "$T.$L", Breakfast.class, Breakfast.PANCAKES.name());
     assertThat(builder.build().toString()).isEqualTo(
         "@com.squareup.javapoet.AnnotationSpecTest.HasDefaultsAnnotation("
             + "n = {"
@@ -216,7 +217,7 @@ public final class AnnotationSpecTest {
             + ", com.squareup.javapoet.AnnotationSpecTest.Breakfast.PANCAKES"
             + "})");
 
-    builder.addMember("n", "$T.$L", Breakfast.class, Breakfast.WAFFLES);
+    builder.addMember("n", "$T.$L", Breakfast.class, Breakfast.WAFFLES.name());
     assertThat(builder.build().toString()).isEqualTo(
         "@com.squareup.javapoet.AnnotationSpecTest.HasDefaultsAnnotation("
             + "n = {"

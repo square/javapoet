@@ -145,7 +145,9 @@ public final class AnnotationSpec {
 
   private static Builder addAnnotationValue(Builder builder, String name, Object value) {
     if (value instanceof Class<?>) return builder.addMember(name, "$T.class", value);
-    if (value instanceof Enum) return builder.addMember(name, "$T.$L", value.getClass(), value);
+    if (value instanceof Enum) {
+      return builder.addMember(name, "$T.$L", value.getClass(), ((Enum<?>) value).name());
+    }
     if (value instanceof String) return builder.addMember(name, "$S", value);
     if (value instanceof Float) return builder.addMember(name, "$Lf", value);
     // return literal/toString anyway
