@@ -25,6 +25,12 @@ import static com.google.common.truth.Truth.assertThat;
 
 @RunWith(JUnit4.class)
 public final class JavaFileTest {
+  @Test(expected=IllegalArgumentException.class)
+  public void nonStaticImportedStatic() throws Exception {
+    JavaFile.builder("com.squareup.tacos", TypeSpec.classBuilder("Taco").build())
+      .addStaticImport(MemberRef.get(JavaFileTest.class.getMethod("nonStaticImportedStatic"))).build();
+  }
+
   @Test public void noImports() throws Exception {
     String source = JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("Taco").build())

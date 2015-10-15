@@ -17,10 +17,14 @@ package com.squareup.javapoet;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 
 import static com.squareup.javapoet.Util.checkArgument;
@@ -46,7 +50,12 @@ import static com.squareup.javapoet.Util.checkArgument;
  *       that. For example, {@code 6" sandwich} is emitted {@code "6\" sandwich"}.
  *   <li>{@code $T} emits a <em>type</em> reference. Types will be imported if possible. Arguments
  *       for types may be {@linkplain Class classes}, {@linkplain javax.lang.model.type.TypeMirror
-,*       type mirrors}, and {@linkplain javax.lang.model.element.Element elements}.
+ *       type mirrors} and {@linkplain javax.lang.model.element.Element elements}.
+ *   <li>{@code $R} emits a <em>member reference</em>. Arguments for member references may be
+ *       {@linkplain Enum enum constants}, {@linkplain java.lang.reflect.Field fields},
+ *       {@linkplain java.lang.reflect.Method methods},
+ *       {@linkplain javax.lang.model.element.ExecutableElement executable} and
+ *       {@linkplain javax.lang.model.element.VariableElement variable} elements.
  *   <li>{@code $$} emits a dollar sign.
  *   <li>{@code $&gt;} increases the indentation level.
  *   <li>{@code $&lt;} decreases the indentation level.
@@ -171,6 +180,9 @@ public final class CodeBlock {
           case 'T':
             this.args.add(argToType(args[index]));
             break;
+          case 'R':
+            this.args.add(argToRef(args[index]));
+            break;
           default:
             throw new IllegalArgumentException(
                 String.format("invalid format string: '%s'", format));
@@ -219,6 +231,16 @@ public final class CodeBlock {
       if (o instanceof Element) return TypeName.get(((Element) o).asType());
       if (o instanceof Type) return TypeName.get((Type) o);
       throw new IllegalArgumentException("expected type but was " + o);
+    }
+
+    private MemberRef argToRef(Object o) {
+      if (o instanceof MemberRef) return (MemberRef) o;
+      if (o instanceof Enum) return MemberRef.get((Enum<?>) o);
+      if (o instanceof Field) return MemberRef.get((Field) o);
+      if (o instanceof Method) return MemberRef.get((Method) o);
+      if (o instanceof ExecutableElement) return MemberRef.get((ExecutableElement) o);
+      if (o instanceof VariableElement) return MemberRef.get((VariableElement) o);
+      throw new IllegalArgumentException("expected referable member but was " + o);
     }
 
     /**

@@ -53,6 +53,7 @@ final class CodeWriter {
   private final Map<String, ClassName> importedTypes;
   private final Map<String, ClassName> importableTypes = new LinkedHashMap<>();
   private final Set<String> referencedNames = new LinkedHashSet<>();
+  private final Set<MemberRef> staticImports;
   private boolean trailingNewline;
 
   /**
@@ -63,17 +64,19 @@ final class CodeWriter {
   int statementLine = -1;
 
   CodeWriter(Appendable out) {
-    this(out, "  ");
+    this(out, "  ", Collections.<MemberRef>emptySet());
   }
 
-  public CodeWriter(Appendable out, String indent) {
-    this(out, indent, Collections.<String, ClassName>emptyMap());
+  public CodeWriter(Appendable out, String indent, Set<MemberRef> staticImports) {
+    this(out, indent, Collections.<String, ClassName>emptyMap(), staticImports);
   }
 
-  public CodeWriter(Appendable out, String indent, Map<String, ClassName> importedTypes) {
+  public CodeWriter(Appendable out, String indent, Map<String, ClassName> importedTypes,
+      Set<MemberRef> staticImports) {
     this.out = checkNotNull(out, "out == null");
     this.indent = checkNotNull(indent, "indent == null");
     this.importedTypes = checkNotNull(importedTypes, "importedTypes == null");
+    this.staticImports = checkNotNull(staticImports, "staticImports == null");
   }
 
   public Map<String, ClassName> importedTypes() {
@@ -221,6 +224,11 @@ final class CodeWriter {
           typeName.emit(this);
           break;
 
+        case "$R":
+          MemberRef memberRef = (MemberRef) codeBlock.args.get(a++);
+          memberRef.emit(this);
+          break;
+
         case "$$":
           emitAndIndent("$");
           break;
@@ -306,6 +314,10 @@ final class CodeWriter {
     }
 
     return className.canonicalName;
+  }
+
+  boolean isStaticImported(MemberRef ref) {
+    return staticImports.contains(ref);
   }
 
   private void importableType(ClassName className) {
