@@ -188,4 +188,22 @@ public final class MethodSpecTest {
       assertThat(expected).hasMessage("cannot override method with modifiers: [static]");
     }
   }
+
+  @Test public void equalsAndHashCode() {
+    MethodSpec a = MethodSpec.constructorBuilder().build();
+    MethodSpec b = MethodSpec.constructorBuilder().build();
+    assertThat(a.equals(b)).isTrue();
+    assertThat(a.hashCode()).isEqualTo(b.hashCode());
+    a = MethodSpec.methodBuilder("taco").build();
+    b = MethodSpec.methodBuilder("taco").build();
+    assertThat(a.equals(b)).isTrue();
+    assertThat(a.hashCode()).isEqualTo(b.hashCode());
+    TypeElement classElement = getElement(Everything.class);
+    ExecutableElement methodElement = getOnlyElement(methodsIn(classElement.getEnclosedElements()));
+    a = MethodSpec.overriding(methodElement).build();
+    b = MethodSpec.overriding(methodElement).build();
+    assertThat(a.equals(b)).isTrue();
+    assertThat(a.hashCode()).isEqualTo(b.hashCode());
+  }
+
 }

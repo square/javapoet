@@ -34,12 +34,14 @@ public final class ParameterSpec {
   public final List<AnnotationSpec> annotations;
   public final Set<Modifier> modifiers;
   public final TypeName type;
+  private final int hashCode;
 
   private ParameterSpec(Builder builder) {
     this.name = checkNotNull(builder.name, "name == null");
     this.annotations = Util.immutableList(builder.annotations);
     this.modifiers = Util.immutableSet(builder.modifiers);
     this.type = checkNotNull(builder.type, "type == null");
+    this.hashCode = toString().hashCode(); // always last constructor line!
   }
 
   public boolean hasModifier(Modifier modifier) {
@@ -54,6 +56,20 @@ public final class ParameterSpec {
     } else {
       codeWriter.emit("$T $L", type, name);
     }
+  }
+
+  @Override public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null)
+      return false;
+    if (getClass() != o.getClass())
+      return false;
+    return hashCode == o.hashCode();
+  }
+
+  @Override public int hashCode() {
+    return hashCode;
   }
 
   @Override public String toString() {

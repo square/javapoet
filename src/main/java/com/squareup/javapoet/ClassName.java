@@ -44,7 +44,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
       checkArgument(SourceVersion.isName(names.get(i)), "part '%s' is keyword", names.get(i));
     }
     this.names = Util.immutableList(names);
-    this.canonicalName = names.get(0).isEmpty()
+    this.canonicalName = (names.get(0) == null || names.get(0).isEmpty())
         ? Util.join(".", names.subList(1, names.size()))
         : Util.join(".", names);
   }

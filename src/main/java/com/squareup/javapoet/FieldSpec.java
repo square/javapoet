@@ -37,6 +37,7 @@ public final class FieldSpec {
   public final List<AnnotationSpec> annotations;
   public final Set<Modifier> modifiers;
   public final CodeBlock initializer;
+  private final int hashCode;
 
   private FieldSpec(Builder builder) {
     this.type = checkNotNull(builder.type, "type == null");
@@ -47,6 +48,7 @@ public final class FieldSpec {
     this.initializer = (builder.initializer == null)
         ? CodeBlock.builder().build()
         : builder.initializer;
+    this.hashCode = toString().hashCode(); // always last constructor line!
   }
 
   public boolean hasModifier(Modifier modifier) {
@@ -63,6 +65,20 @@ public final class FieldSpec {
       codeWriter.emit(initializer);
     }
     codeWriter.emit(";\n");
+  }
+
+  @Override public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null)
+      return false;
+    if (getClass() != o.getClass())
+      return false;
+    return hashCode == o.hashCode();
+  }
+
+  @Override public int hashCode() {
+    return hashCode;
   }
 
   @Override public String toString() {
