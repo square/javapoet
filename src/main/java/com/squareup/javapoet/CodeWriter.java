@@ -39,13 +39,16 @@ import static com.squareup.javapoet.Util.join;
  * honors imports, indentation, and deferred variable names.
  */
 final class CodeWriter {
+  /** Sentinel value that indicates that no user-provided package has been set. */
+  private static final String NO_PACKAGE = new String();
+
   private final String indent;
   private final Appendable out;
   private int indentLevel;
 
   private boolean javadoc = false;
   private boolean comment = false;
-  private String packageName;
+  private String packageName = NO_PACKAGE;
   private final List<TypeSpec> typeSpecStack = new ArrayList<>();
   private final Map<String, ClassName> importedTypes;
   private final Map<String, ClassName> importableTypes = new LinkedHashMap<>();
@@ -97,14 +100,14 @@ final class CodeWriter {
   }
 
   public CodeWriter pushPackage(String packageName) {
-    checkState(this.packageName == null, "package already set: %s", this.packageName);
+    checkState(this.packageName == NO_PACKAGE, "package already set: %s", this.packageName);
     this.packageName = checkNotNull(packageName, "packageName == null");
     return this;
   }
 
   public CodeWriter popPackage() {
-    checkState(this.packageName != null, "package already set: %s", this.packageName);
-    this.packageName = null;
+    checkState(this.packageName != NO_PACKAGE, "package already set: %s", this.packageName);
+    this.packageName = NO_PACKAGE;
     return this;
   }
 
@@ -327,7 +330,7 @@ final class CodeWriter {
 
     // Match the top-level class.
     if (typeSpecStack.size() > 0 && Objects.equals(typeSpecStack.get(0).name, simpleName)) {
-      return ClassName.get(getPackageNameNullSafe(), simpleName);
+      return ClassName.get(packageName, simpleName);
     }
 
     // Match an imported type.
@@ -340,15 +343,11 @@ final class CodeWriter {
 
   /** Returns the class named {@code simpleName} when nested in the class at {@code stackDepth}. */
   private ClassName stackClassName(int stackDepth, String simpleName) {
-    ClassName className = ClassName.get(getPackageNameNullSafe(), typeSpecStack.get(0).name);
+    ClassName className = ClassName.get(packageName, typeSpecStack.get(0).name);
     for (int i = 1; i <= stackDepth; i++) {
       className = className.nestedClass(typeSpecStack.get(i).name);
     }
     return className.nestedClass(simpleName);
-  }
-
-  private String getPackageNameNullSafe() {
-    return packageName == null ? "" : packageName;
   }
 
   /**
