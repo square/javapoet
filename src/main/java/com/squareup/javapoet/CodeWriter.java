@@ -327,7 +327,7 @@ final class CodeWriter {
 
     // Match the top-level class.
     if (typeSpecStack.size() > 0 && Objects.equals(typeSpecStack.get(0).name, simpleName)) {
-      return ClassName.get(packageName, simpleName);
+      return ClassName.get(getPackageNameNullSafe(), simpleName);
     }
 
     // Match an imported type.
@@ -340,11 +340,15 @@ final class CodeWriter {
 
   /** Returns the class named {@code simpleName} when nested in the class at {@code stackDepth}. */
   private ClassName stackClassName(int stackDepth, String simpleName) {
-    ClassName className = ClassName.get(packageName, typeSpecStack.get(0).name);
+    ClassName className = ClassName.get(getPackageNameNullSafe(), typeSpecStack.get(0).name);
     for (int i = 1; i <= stackDepth; i++) {
       className = className.nestedClass(typeSpecStack.get(i).name);
     }
     return className.nestedClass(simpleName);
+  }
+
+  private String getPackageNameNullSafe() {
+    return packageName == null ? "" : packageName;
   }
 
   /**

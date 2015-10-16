@@ -20,10 +20,21 @@ import org.junit.Test;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
-public class ParameterSpecTest {
+import javax.lang.model.element.Modifier;
 
-  @Test
-  public void nullAnnotationsAddition() {
+public class ParameterSpecTest {
+  @Test public void equalsAndHashCode() {
+    ParameterSpec a = ParameterSpec.builder(int.class, "foo").build();
+    ParameterSpec b = ParameterSpec.builder(int.class, "foo").build();
+    assertThat(a.equals(b)).isTrue();
+    assertThat(a.hashCode()).isEqualTo(b.hashCode());
+    a = ParameterSpec.builder(int.class, "i").addModifiers(Modifier.STATIC).build();
+    b = ParameterSpec.builder(int.class, "i").addModifiers(Modifier.STATIC).build();
+    assertThat(a.equals(b)).isTrue();
+    assertThat(a.hashCode()).isEqualTo(b.hashCode());
+  }
+
+  @Test public void nullAnnotationsAddition() {
     try {
       ParameterSpec.builder(int.class, "foo").addAnnotations(null);
       fail();

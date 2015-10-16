@@ -21,6 +21,17 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 public final class CodeBlockTest {
+  @Test public void equalsAndHashCode() {
+    CodeBlock a = CodeBlock.builder().build();
+    CodeBlock b = CodeBlock.builder().build();
+    assertThat(a.equals(b)).isTrue();
+    assertThat(a.hashCode()).isEqualTo(b.hashCode());
+    a = CodeBlock.builder().add("$L", "taco").build();
+    b = CodeBlock.builder().add("$L", "taco").build();
+    assertThat(a.equals(b)).isTrue();
+    assertThat(a.hashCode()).isEqualTo(b.hashCode());
+  }
+
   @Test public void indentCannotBeIndexed() {
     try {
       CodeBlock.builder().add("$1>", "taco").build();
