@@ -16,63 +16,97 @@
 package com.squareup.javapoet;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import java.io.Serializable;
+import java.lang.annotation.Documented;
 import java.rmi.server.UID;
 import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
-
-import org.junit.Assert;
 import org.junit.Test;
+import com.squareup.javapoet.AnnotationSpecTest.AnnotationA;
+import com.squareup.javapoet.AnnotationSpecTest.AnnotationB;
 
 public class TypeNameTest {
 
   @Test public void equalsAndHashCodePrimitive() {
-    test(TypeName.BOOLEAN, TypeName.BOOLEAN);
-    test(TypeName.BYTE, TypeName.BYTE);
-    test(TypeName.CHAR, TypeName.CHAR);
-    test(TypeName.DOUBLE, TypeName.DOUBLE);
-    test(TypeName.FLOAT, TypeName.FLOAT);
-    test(TypeName.INT, TypeName.INT);
-    test(TypeName.LONG, TypeName.LONG);
-    test(TypeName.SHORT, TypeName.SHORT);
-    test(TypeName.VOID, TypeName.VOID);
+    assertEqualsHashCodeAndToString(TypeName.BOOLEAN, TypeName.BOOLEAN);
+    assertEqualsHashCodeAndToString(TypeName.BYTE, TypeName.BYTE);
+    assertEqualsHashCodeAndToString(TypeName.CHAR, TypeName.CHAR);
+    assertEqualsHashCodeAndToString(TypeName.DOUBLE, TypeName.DOUBLE);
+    assertEqualsHashCodeAndToString(TypeName.FLOAT, TypeName.FLOAT);
+    assertEqualsHashCodeAndToString(TypeName.INT, TypeName.INT);
+    assertEqualsHashCodeAndToString(TypeName.LONG, TypeName.LONG);
+    assertEqualsHashCodeAndToString(TypeName.SHORT, TypeName.SHORT);
+    assertEqualsHashCodeAndToString(TypeName.VOID, TypeName.VOID);
   }
 
   @Test public void equalsAndHashCodeArrayTypeName() {
-    test(ArrayTypeName.of(Object.class), ArrayTypeName.of(Object.class));
-    test(TypeName.get(Object[].class), ArrayTypeName.of(Object.class));
-    // ? check(ClassName.bestGuess("java.lang.Object[]"), ArrayTypeName.of(Object.class));
+    assertEqualsHashCodeAndToString(ArrayTypeName.of(Object.class),
+        ArrayTypeName.of(Object.class));
+    assertEqualsHashCodeAndToString(TypeName.get(Object[].class),
+        ArrayTypeName.of(Object.class));
   }
 
   @Test public void equalsAndHashCodeClassName() {
-    test(ClassName.get(Object.class), ClassName.get(Object.class));
-    test(TypeName.get(Object.class), ClassName.get(Object.class));
-    test(ClassName.bestGuess("java.lang.Object"), ClassName.get(Object.class));
+    assertEqualsHashCodeAndToString(ClassName.get(Object.class), ClassName.get(Object.class));
+    assertEqualsHashCodeAndToString(TypeName.get(Object.class), ClassName.get(Object.class));
+    assertEqualsHashCodeAndToString(ClassName.bestGuess("java.lang.Object"),
+        ClassName.get(Object.class));
   }
-  
+
   @Test public void equalsAndHashCodeParameterizedTypeName() {
-    test(ParameterizedTypeName.get(Object.class), ParameterizedTypeName.get(Object.class));
-    test(ParameterizedTypeName.get(Set.class, UID.class), ParameterizedTypeName.get(Set.class, UID.class));
+    assertEqualsHashCodeAndToString(ParameterizedTypeName.get(Object.class),
+        ParameterizedTypeName.get(Object.class));
+    assertEqualsHashCodeAndToString(ParameterizedTypeName.get(Set.class, UID.class),
+        ParameterizedTypeName.get(Set.class, UID.class));
+    assertNotEquals(ClassName.get(List.class), ParameterizedTypeName.get(List.class,
+        String.class));
   }
-  
+
   @Test public void equalsAndHashCodeTypeVariableName() {
-    test(TypeVariableName.get(Object.class), TypeVariableName.get(Object.class));
-    TypeVariableName typeVariable1 = TypeVariableName.get("T", Comparator.class, Serializable.class);
-    TypeVariableName typeVariable2 = TypeVariableName.get("T", Comparator.class, Serializable.class);
-    test(typeVariable1, typeVariable2);
+    assertEqualsHashCodeAndToString(TypeVariableName.get(Object.class),
+        TypeVariableName.get(Object.class));
+    TypeVariableName typeVar1 = TypeVariableName.get("T", Comparator.class, Serializable.class);
+    TypeVariableName typeVar2 = TypeVariableName.get("T", Comparator.class, Serializable.class);
+    assertEqualsHashCodeAndToString(typeVar1, typeVar2);
   }
 
   @Test public void equalsAndHashCodeWildcardTypeName() {
-    test(WildcardTypeName.subtypeOf(Object.class), WildcardTypeName.subtypeOf(Object.class));
-    test(WildcardTypeName.subtypeOf(Serializable.class), WildcardTypeName.subtypeOf(Serializable.class));
-    test(WildcardTypeName.supertypeOf(String.class), WildcardTypeName.supertypeOf(String.class));
+    assertEqualsHashCodeAndToString(WildcardTypeName.subtypeOf(Object.class),
+        WildcardTypeName.subtypeOf(Object.class));
+    assertEqualsHashCodeAndToString(WildcardTypeName.subtypeOf(Serializable.class),
+        WildcardTypeName.subtypeOf(Serializable.class));
+    assertEqualsHashCodeAndToString(WildcardTypeName.supertypeOf(String.class),
+        WildcardTypeName.supertypeOf(String.class));
   }
 
-  private void test(TypeName a, TypeName b) {
-    Assert.assertEquals(a.toString(), b.toString());
+  @Test public void equalsAndHashCodeAnnotatedTypeName() {
+    assertEqualsHashCodeAndToString(TypeName.BYTE.annotated(list()),
+        TypeName.BYTE.annotated(list()));
+    assertEqualsHashCodeAndToString(TypeName.INT.annotated(list(Override.class)),
+        TypeName.INT.annotated(list(Override.class)));
+    assertEqualsHashCodeAndToString(
+        ClassName.get(Map.class).annotated(list(AnnotationA.class, AnnotationB.class)),
+        ClassName.get(Map.class).annotated(list(AnnotationA.class, AnnotationB.class)));
+    assertNotEquals(TypeName.CHAR, TypeName.CHAR.annotated(list(Documented.class)));
+  }
+
+  private void assertEqualsHashCodeAndToString(TypeName a, TypeName b) {
+    assertEquals(a.toString(), b.toString());
     assertThat(a.equals(b)).isTrue();
     assertThat(a.hashCode()).isEqualTo(b.hashCode());
+  }
+
+  private AnnotationSpec[] list(Class<?>... types) {
+    AnnotationSpec[] annotations = new AnnotationSpec[types.length];
+    for (int i = 0; i < types.length; i++) {
+      annotations[i] = AnnotationSpec.builder(types[i]).build();
+    }
+    return annotations;
   }
 
 }
