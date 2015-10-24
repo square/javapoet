@@ -18,6 +18,7 @@ package com.squareup.javapoet;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,6 +30,12 @@ public final class ParameterizedTypeName extends TypeName {
   public final List<TypeName> typeArguments;
 
   ParameterizedTypeName(ClassName rawType, List<TypeName> typeArguments) {
+    this(rawType, typeArguments, new ArrayList<AnnotationSpec>());
+  }
+
+  ParameterizedTypeName(ClassName rawType, List<TypeName> typeArguments,
+      List<AnnotationSpec> annotations) {
+    super(annotations);
     this.rawType = checkNotNull(rawType, "rawType == null");
     this.typeArguments = Util.immutableList(typeArguments);
 
@@ -37,6 +44,14 @@ public final class ParameterizedTypeName extends TypeName {
       checkArgument(!typeArgument.isPrimitive() && typeArgument != VOID,
           "invalid type parameter: %s", typeArgument);
     }
+  }
+
+  @Override public ParameterizedTypeName annotated(AnnotationSpec... annotations) {
+    return annotated(Arrays.asList(annotations));
+  }
+
+  @Override public ParameterizedTypeName annotated(List<AnnotationSpec> annotations) {
+    return new ParameterizedTypeName(rawType, typeArguments, annotations);
   }
 
   @Override public boolean equals(Object o) {
@@ -50,6 +65,7 @@ public final class ParameterizedTypeName extends TypeName {
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {
+    emitAnnotations(out);
     rawType.emit(out);
     out.emitAndIndent("<");
     boolean firstParameter = true;

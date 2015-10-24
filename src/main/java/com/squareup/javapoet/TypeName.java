@@ -22,6 +22,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,14 +88,34 @@ public class TypeName {
 
   /** The name of this type if it is a keyword, or null. */
   private final String keyword;
+  public final List<AnnotationSpec> annotations;
 
   private TypeName(String keyword) {
+    this(keyword, new ArrayList<AnnotationSpec>());
+  }
+
+  private TypeName(String keyword, List<AnnotationSpec> annotations) {
     this.keyword = keyword;
+    this.annotations = Util.immutableList(annotations);
   }
 
   // Package-private constructor to prevent third-party subclasses.
-  TypeName() {
-    this(null);
+  TypeName(List<AnnotationSpec> annotations) {
+    this(null, annotations);
+  }
+
+  public TypeName annotated(AnnotationSpec... annotations) {
+    Util.checkNotNull(annotations, "annotations == null");
+    return new TypeName(keyword, Arrays.asList(annotations));
+  }
+
+  public TypeName annotated(List<AnnotationSpec> annotations) {
+    Util.checkNotNull(annotations, "annotations == null");
+    return new TypeName(keyword, annotations);
+  }
+
+  public boolean isAnnotated() {
+    return !annotations.isEmpty();
   }
 
   public boolean isPrimitive() {
@@ -162,7 +183,15 @@ public class TypeName {
 
   CodeWriter emit(CodeWriter out) throws IOException {
     if (keyword == null) throw new AssertionError();
-    return out.emitAndIndent(keyword);
+    return emitAnnotations(out).emitAndIndent(keyword);
+  }
+
+  CodeWriter emitAnnotations(CodeWriter out) throws IOException {
+    for (AnnotationSpec annotation : annotations) {
+      annotation.emit(out, true);
+      out.emit(" ");
+    }
+    return out;
   }
 
   /** Returns a type name equivalent to {@code mirror}. */
