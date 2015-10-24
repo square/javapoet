@@ -22,7 +22,6 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,15 +95,6 @@ public class TypeName {
   // Package-private constructor to prevent third-party subclasses.
   TypeName() {
     this(null);
-  }
-
-  public AnnotatedTypeName annotated(AnnotationSpec... annotations) {
-    return new AnnotatedTypeName(this, Arrays.asList(annotations));
-  }
-
-  public ParameterizedTypeName parameterized(TypeName... parameters) {
-    Util.checkState(this instanceof ClassName, "expected to be a ClassName, but am " + this);
-    return new ParameterizedTypeName((ClassName) this, Arrays.asList(parameters));
   }
 
   public boolean isPrimitive() {
