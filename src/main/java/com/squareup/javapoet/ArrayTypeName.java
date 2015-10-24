@@ -84,6 +84,10 @@ public final class ArrayTypeName extends TypeName {
 
   /** Returns an array type equivalent to {@code type}. */
   public static ArrayTypeName get(GenericArrayType type) {
-    return ArrayTypeName.of(get(type.getGenericComponentType()));
+    return get(type, new LinkedHashMap<Type, TypeVariableName>());
+  }
+
+  static ArrayTypeName get(GenericArrayType type, Map<Type, TypeVariableName> map) {
+    return ArrayTypeName.of(get(type.getGenericComponentType(), map));
   }
 }

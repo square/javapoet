@@ -20,7 +20,9 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
@@ -89,7 +91,12 @@ public final class ParameterizedTypeName extends TypeName {
 
   /** Returns a parameterized type equivalent to {@code type}. */
   public static ParameterizedTypeName get(ParameterizedType type) {
+    return get(type, new LinkedHashMap<Type, TypeVariableName>());
+  }
+
+  /** Returns a parameterized type equivalent to {@code type}. */
+  static ParameterizedTypeName get(ParameterizedType type, Map<Type, TypeVariableName> map) {
     return new ParameterizedTypeName(ClassName.get((Class<?>) type.getRawType()),
-        TypeName.list(type.getActualTypeArguments()));
+        TypeName.list(type.getActualTypeArguments(), map));
   }
 }
