@@ -17,6 +17,7 @@ package com.squareup.javapoet;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,11 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   final String canonicalName;
 
   private ClassName(List<String> names) {
+    this(names, new ArrayList<AnnotationSpec>());
+  }
+
+  private ClassName(List<String> names, List<AnnotationSpec> annotations) {
+    super(annotations);
     for (int i = 1; i < names.size(); i++) {
       checkArgument(SourceVersion.isName(names.get(i)), "part '%s' is keyword", names.get(i));
     }
@@ -47,6 +53,14 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     this.canonicalName = names.get(0).isEmpty()
         ? Util.join(".", names.subList(1, names.size()))
         : Util.join(".", names);
+  }
+
+  @Override public ClassName annotated(AnnotationSpec... annotations) {
+    return annotated(Arrays.asList(annotations));
+  }
+
+  @Override public ClassName annotated(List<AnnotationSpec> annotations) {
+    return new ClassName(names, annotations);
   }
 
   /** Returns the package name, like {@code "java.util"} for {@code Map.Entry}. */
@@ -203,6 +217,6 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {
-    return out.emitAndIndent(out.lookupName(this));
+    return emitAnnotations(out).emitAndIndent(out.lookupName(this));
   }
 }

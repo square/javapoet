@@ -18,6 +18,7 @@ package com.squareup.javapoet;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -33,6 +34,12 @@ public final class WildcardTypeName extends TypeName {
   public final List<TypeName> lowerBounds;
 
   private WildcardTypeName(List<TypeName> upperBounds, List<TypeName> lowerBounds) {
+    this(upperBounds, lowerBounds, new ArrayList<AnnotationSpec>());
+  }
+
+  private WildcardTypeName(List<TypeName> upperBounds, List<TypeName> lowerBounds,
+      List<AnnotationSpec> annotations) {
+    super(annotations);
     this.upperBounds = Util.immutableList(upperBounds);
     this.lowerBounds = Util.immutableList(lowerBounds);
 
@@ -47,6 +54,14 @@ public final class WildcardTypeName extends TypeName {
     }
   }
 
+  @Override public WildcardTypeName annotated(AnnotationSpec... annotations) {
+    return annotated(Arrays.asList(annotations));
+  }
+
+  @Override public WildcardTypeName annotated(List<AnnotationSpec> annotations) {
+    return new WildcardTypeName(upperBounds, lowerBounds, annotations);
+  }
+
   @Override public boolean equals(Object o) {
     return o instanceof WildcardTypeName
         && ((WildcardTypeName) o).upperBounds.equals(upperBounds)
@@ -58,6 +73,7 @@ public final class WildcardTypeName extends TypeName {
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {
+    emitAnnotations(out);
     if (lowerBounds.size() == 1) {
       return out.emit("? super $T", lowerBounds.get(0));
     }

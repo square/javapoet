@@ -35,12 +35,25 @@ public final class TypeVariableName extends TypeName {
   public final List<TypeName> bounds;
 
   private TypeVariableName(String name, List<TypeName> bounds) {
+    this(name, bounds, new ArrayList<AnnotationSpec>());
+  }
+
+  private TypeVariableName(String name, List<TypeName> bounds, List<AnnotationSpec> annotations) {
+    super(annotations);
     this.name = checkNotNull(name, "name == null");
     this.bounds = bounds;
 
     for (TypeName bound : this.bounds) {
       checkArgument(!bound.isPrimitive() && bound != VOID, "invalid bound: %s", bound);
     }
+  }
+
+  @Override public TypeVariableName annotated(AnnotationSpec... annotations) {
+    return annotated(Arrays.asList(annotations));
+  }
+
+  @Override public TypeVariableName annotated(List<AnnotationSpec> annotations) {
+    return new TypeVariableName(name, bounds, annotations);
   }
 
   private static TypeVariableName of(String name, List<TypeName> bounds) {
@@ -61,7 +74,7 @@ public final class TypeVariableName extends TypeName {
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {
-    return out.emitAndIndent(name);
+    return emitAnnotations(out).emitAndIndent(name);
   }
 
   /** Returns type variable named {@code name} without bounds. */

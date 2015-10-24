@@ -18,7 +18,10 @@ package com.squareup.javapoet;
 import java.io.IOException;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.lang.model.element.TypeParameterElement;
@@ -30,7 +33,20 @@ public final class ArrayTypeName extends TypeName {
   public final TypeName componentType;
 
   private ArrayTypeName(TypeName componentType) {
+    this(componentType, new ArrayList<AnnotationSpec>());
+  }
+
+  private ArrayTypeName(TypeName componentType, List<AnnotationSpec> annotations) {
+    super(annotations);
     this.componentType = checkNotNull(componentType, "rawType == null");
+  }
+
+  @Override public ArrayTypeName annotated(AnnotationSpec... annotations) {
+    return annotated(Arrays.asList(annotations));
+  }
+
+  @Override public ArrayTypeName annotated(List<AnnotationSpec> annotations) {
+    return new ArrayTypeName(componentType, annotations);
   }
 
   @Override public boolean equals(Object o) {
@@ -43,7 +59,7 @@ public final class ArrayTypeName extends TypeName {
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {
-    return out.emit("$T[]", componentType);
+    return emitAnnotations(out).emit("$T[]", componentType);
   }
 
   /** Returns an array type whose elements are all instances of {@code componentType}. */
