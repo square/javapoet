@@ -789,7 +789,7 @@ JavaWriter continues to be available in [GitHub][javawriter] and [Maven Central]
 
  [dl]: https://search.maven.org/remote_content?g=com.squareup&a=javapoet&v=LATEST
  [snap]: https://oss.sonatype.org/content/repositories/snapshots/com/squareup/javapoet/
- [javadoc]: https://square.github.io/javapoet/javadoc/javapoet/
+ [javadoc]: https://square.github.io/javapoet/1.x/javapoet/
  [javawriter]: https://github.com/square/javapoet/tree/javawriter_2
  [javawriter_maven]: http://search.maven.org/#artifactdetails%7Ccom.squareup%7Cjavawriter%7C2.5.1%7Cjar
  [formatter]: http://developer.android.com/reference/java/util/Formatter.html
