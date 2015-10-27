@@ -20,6 +20,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -139,6 +140,23 @@ public final class TypeVariableName extends TypeName {
 
   /** Returns type variable equivalent to {@code type}. */
   public static TypeVariableName get(java.lang.reflect.TypeVariable<?> type) {
-    return TypeVariableName.of(type.getName(), TypeName.list(type.getBounds()));
+    return get(type, new LinkedHashMap<Type, TypeVariableName>());
+  }
+
+  /** @see #get(java.lang.reflect.TypeVariable, Map) */
+  static TypeVariableName get(java.lang.reflect.TypeVariable<?> type,
+      Map<Type, TypeVariableName> map) {
+    TypeVariableName result = map.get(type);
+    if (result == null) {
+      List<TypeName> bounds = new ArrayList<>();
+      List<TypeName> visibleBounds = Collections.unmodifiableList(bounds);
+      result = new TypeVariableName(type.getName(), visibleBounds);
+      map.put(type, result);
+      for (Type bound : type.getBounds()) {
+        bounds.add(TypeName.get(bound, map));
+      }
+      bounds.remove(OBJECT);
+    }
+    return result;
   }
 }

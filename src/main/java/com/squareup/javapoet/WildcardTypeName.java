@@ -129,8 +129,12 @@ public final class WildcardTypeName extends TypeName {
   }
 
   public static TypeName get(WildcardType wildcardName) {
+    return get(wildcardName, new LinkedHashMap<Type, TypeVariableName>());
+  }
+
+  static TypeName get(WildcardType wildcardName, Map<Type, TypeVariableName> map) {
     return new WildcardTypeName(
-        list(wildcardName.getUpperBounds()),
-        list(wildcardName.getLowerBounds()));
+        list(wildcardName.getUpperBounds(), map),
+        list(wildcardName.getLowerBounds(), map));
   }
 }
