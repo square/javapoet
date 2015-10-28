@@ -289,6 +289,11 @@ final class CodeWriter {
       }
     }
 
+    // If the name resolved but wasn't a match, we're stuck with the fully qualified name.
+    if (nameResolved) {
+      return className.canonicalName;
+    }
+
     // If the class is in the same package, we're done.
     if (Objects.equals(packageName, className.packageName())) {
       referencedNames.add(className.topLevelClassName().simpleName());
@@ -296,7 +301,7 @@ final class CodeWriter {
     }
 
     // We'll have to use the fully-qualified name. Mark the type as importable for a future pass.
-    if (!javadoc && !nameResolved) {
+    if (!javadoc) {
       importableType(className);
     }
 

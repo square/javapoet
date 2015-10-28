@@ -302,4 +302,23 @@ public final class JavaFileTest {
         + "class Taco {\n"
         + "}\n");
   }
+
+  @Test public void packageClassConflictsWithNestedClass() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addField(ClassName.get("com.squareup.tacos", "A"), "a")
+            .addType(TypeSpec.classBuilder("A").build())
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  com.squareup.tacos.A a;\n"
+        + "\n"
+        + "  class A {\n"
+        + "  }\n"
+        + "}\n");
+  }
 }
