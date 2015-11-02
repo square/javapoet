@@ -1588,10 +1588,8 @@ public final class TypeSpecTest {
   @Test public void multipleAnnotationAddition() {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
         .addAnnotations(Arrays.asList(
-            AnnotationSpec.builder(SuppressWarnings.class)
-                .addMember("value", "$S", "unchecked")
-                .build(),
-            AnnotationSpec.builder(Deprecated.class).build()))
+            AnnotationSpec.get(SuppressWarnings.class, "unchecked"),
+            AnnotationSpec.get(Deprecated.class)))
         .build();
     assertThat(toString(taco)).isEqualTo(""
         + "package com.squareup.tacos;\n"

@@ -40,7 +40,7 @@ public class AnnotatedTypeNameTest {
     TypeName simpleString = TypeName.get(String.class);
     assertFalse(simpleString.isAnnotated());
     assertEquals(simpleString, TypeName.get(String.class));
-    TypeName annotated = simpleString.annotated(AnnotationSpec.builder(NeverNull.class).build());
+    TypeName annotated = simpleString.annotated(AnnotationSpec.get(NeverNull.class));
     assertTrue(annotated.isAnnotated());
     assertEquals(simpleString, annotated.annotated());
     assertFalse(annotated.annotated().isAnnotated());
@@ -48,7 +48,7 @@ public class AnnotatedTypeNameTest {
 
   @Test public void annotatedType() {
     String expected = "@" + NN + " java.lang.String";
-    AnnotationSpec annotation = AnnotationSpec.builder(NeverNull.class).build();
+    AnnotationSpec annotation = AnnotationSpec.get(NeverNull.class);
     TypeName type = TypeName.get(String.class);
     String actual = type.annotated(annotation).toString();
     assertEquals(expected, actual);
@@ -56,7 +56,7 @@ public class AnnotatedTypeNameTest {
 
   @Test public void annotatedParameterizedType() {
     String expected = "@" + NN + " java.util.List<java.lang.String>";
-    AnnotationSpec annotation = AnnotationSpec.builder(NeverNull.class).build();
+    AnnotationSpec annotation = AnnotationSpec.get(NeverNull.class);
     TypeName type = ParameterizedTypeName.get(List.class, String.class);
     String actual = type.annotated(annotation).toString();
     assertEquals(expected, actual);
@@ -64,7 +64,7 @@ public class AnnotatedTypeNameTest {
 
   @Test public void annotatedArgumentOfParameterizedType() {
     String expected = "java.util.List<@" + NN + " java.lang.String>";
-    AnnotationSpec annotation = AnnotationSpec.builder(NeverNull.class).build();
+    AnnotationSpec annotation = AnnotationSpec.get(NeverNull.class);
     TypeName type = TypeName.get(String.class).annotated(annotation);
     ClassName list = ClassName.get(List.class);
     String actual = ParameterizedTypeName.get(list, type).toString();
@@ -73,7 +73,7 @@ public class AnnotatedTypeNameTest {
 
   @Test public void annotatedWildcardTypeNameWithSuper() {
     String expected = "? super @" + NN + " java.lang.String";
-    AnnotationSpec annotation = AnnotationSpec.builder(NeverNull.class).build();
+    AnnotationSpec annotation = AnnotationSpec.get(NeverNull.class);
     TypeName type = TypeName.get(String.class).annotated(annotation);
     String actual = WildcardTypeName.supertypeOf(type).toString();
     assertEquals(expected, actual);
@@ -81,7 +81,7 @@ public class AnnotatedTypeNameTest {
 
   @Test public void annotatedWildcardTypeNameWithExtends() {
     String expected = "? extends @" + NN + " java.lang.String";
-    AnnotationSpec annotation = AnnotationSpec.builder(NeverNull.class).build();
+    AnnotationSpec annotation = AnnotationSpec.get(NeverNull.class);
     TypeName type = TypeName.get(String.class).annotated(annotation);
     String actual = WildcardTypeName.subtypeOf(type).toString();
     assertEquals(expected, actual);

@@ -42,6 +42,11 @@ public final class AnnotationSpecTest {
     String value();
   }
 
+  @Retention(RetentionPolicy.RUNTIME)
+  public @interface AnnotationD {
+    String[] value() default "default";
+  }
+
   public enum Breakfast {
     WAFFLES, PANCAKES;
     public String toString() { return name() + " with cherries!"; };
@@ -104,14 +109,59 @@ public final class AnnotationSpecTest {
   @Rule public final CompilationRule compilation = new CompilationRule();
 
   @Test public void equalsAndHashCode() {
-    AnnotationSpec a = AnnotationSpec.builder(AnnotationC.class).build();
-    AnnotationSpec b = AnnotationSpec.builder(AnnotationC.class).build();
+    AnnotationSpec a = AnnotationSpec.get(AnnotationC.class);
+    AnnotationSpec b = AnnotationSpec.get(AnnotationC.class);
     assertThat(a.equals(b)).isTrue();
     assertThat(a.hashCode()).isEqualTo(b.hashCode());
-    a = AnnotationSpec.builder(AnnotationC.class).addMember("value", "$S", "123").build();
-    b = AnnotationSpec.builder(AnnotationC.class).addMember("value", "$S", "123").build();
+    a = AnnotationSpec.get(AnnotationC.class, "123");
+    b = AnnotationSpec.get(AnnotationC.class, "123");
     assertThat(a.equals(b)).isTrue();
     assertThat(a.hashCode()).isEqualTo(b.hashCode());
+  }
+
+  @Test public void createSimpleAnnotation() {
+    String pack = "com.squareup.javapoet.AnnotationSpecTest";
+    AnnotationSpec d = AnnotationSpec.get(AnnotationD.class);
+    assertThat(d.toString()).isEqualTo("@" + pack + ".AnnotationD");
+    d = AnnotationSpec.get(AnnotationD.class, "abc");
+    assertThat(d.toString()).isEqualTo("@" + pack + ".AnnotationD(\"abc\")");
+    d = AnnotationSpec.get(AnnotationD.class, "a", "b", "c");
+    assertThat(d.toString()).isEqualTo("@" + pack + ".AnnotationD({\"a\", \"b\", \"c\"})");
+  }
+
+  @Test public void createSimpleSuppressWarnings() {
+    AnnotationSpec a = AnnotationSpec.get(SuppressWarnings.class, "javadoc", "null");
+    AnnotationSpec b = AnnotationSpec.builder(SuppressWarnings.class)
+        .addMember("value", "$S", "javadoc")
+        .addMember("value", "$S", "null")
+        .build();
+    AnnotationSpec c = AnnotationSpec.builder(SuppressWarnings.class)
+        .addValue("value", "javadoc")
+        .addValue("value", "null")
+        .build();
+    AnnotationSpec d = AnnotationSpec.builder(SuppressWarnings.class)
+        .addValue("javadoc")
+        .addValue("null")
+        .build();
+    assertThat(a).isEqualTo(b);
+    assertThat(a).isEqualTo(c);
+    assertThat(a).isEqualTo(d);    
+  }
+
+  @Test public void createSimpleAnnotationWithTypeSpec() {
+    AnnotationSpec spec = AnnotationSpec.get(AnnotationC.class, "test");
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addAnnotation(spec)
+        .build();
+
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.javapoet.AnnotationSpecTest;\n"
+        + "\n"
+        + "@AnnotationSpecTest.AnnotationC(\"test\")\n"
+        + "class Taco {\n"
+        + "}\n");
   }
 
   @Test public void defaultAnnotation() {
