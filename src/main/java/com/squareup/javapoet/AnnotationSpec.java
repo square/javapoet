@@ -153,6 +153,7 @@ public final class AnnotationSpec {
     // return literal/toString anyway
     return builder.addMember(name, "$L", value);
   }
+
   public static AnnotationSpec get(AnnotationMirror annotation) {
     TypeElement element = (TypeElement) annotation.getAnnotationType().asElement();
     AnnotationSpec.Builder builder = AnnotationSpec.builder(ClassName.get(element));
@@ -163,6 +164,15 @@ public final class AnnotationSpec {
       value.accept(visitor, new Entry(name, value));
     }
     return builder.build();
+  }
+
+  public static AnnotationSpec createSimpleAnnotation(ClassName type, Object value) {
+    checkNotNull(type, "type == null");
+    return addAnnotationValue(AnnotationSpec.builder(type), "value", value).build();
+  }
+
+  public static AnnotationSpec createSimpleAnnotation(Class<?> type, Object value) {
+    return createSimpleAnnotation(ClassName.get(type), value);
   }
 
   public static Builder builder(ClassName type) {
