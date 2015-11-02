@@ -1,4 +1,4 @@
-JavaPoet
+JavaPoet [![Build Status](https://travis-ci.org/square/javapoet.svg?branch=master)](https://travis-ci.org/square/javapoet)
 ========
 
 `JavaPoet` is a Java API for generating `.java` source files.
