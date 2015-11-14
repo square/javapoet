@@ -249,6 +249,30 @@ public final class JavaFileTest {
         + "}\n");
   }
 
+  /** https://github.com/square/javapoet/issues/366 */
+  @Test public void annotationIsNestedClass() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("TestComponent")
+            .addAnnotation(ClassName.get("dagger", "Component"))
+            .addType(TypeSpec.classBuilder("Builder")
+                .addAnnotation(ClassName.get("dagger", "Component", "Builder"))
+                .build())
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import dagger.Component;\n"
+        + "\n"
+        + "@Component\n"
+        + "class TestComponent {\n"
+        + "  @Component.Builder\n"
+        + "  class Builder {\n"
+        + "  }\n"
+        + "}\n");
+  }
+
   @Test public void defaultPackage() throws Exception {
     String source = JavaFile.builder("",
         TypeSpec.classBuilder("HelloWorld")
