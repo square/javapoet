@@ -1,6 +1,20 @@
 Change Log
 ==========
 
+JavaPoet 1.4.0 *(2015-11-13)*
+----------------------------
+
+ * New: `AnnotationSpec.get(Annotation)`.
+ * New: Type annotations! `TypeName.annotated()` can attach annotations like `@Nullable` directly to
+   types. This works for both top-level types and type parameters as in `List<@Nullable String>`.
+ * New: `equals()` and `hashCode()` on `AnnotationSpec`, `CodeBlock`, `FieldSpec`, `JavaFile`,
+   `MethodSpec`, `ParameterSpec`, `TypeName`, and `TypeSpec`.
+ * New: `NameAllocator.clone()` to refine a NameAllocator for use in an inner scope code block.
+ * Fix: Don't stack overflow when `TypeVariableName` gets a self-referential type.
+ * Fix: Better handling of name collisions on imports. Previously JavaPoet did the wrong thing when
+   a referenced type and a nested types had the same name.
+
+
 JavaPoet 1.3.0 *(2015-09-20)*
 ----------------------------
 
