@@ -295,6 +295,18 @@ public final class JavaFileTest {
         + "}\n");
   }
 
+  @Test public void defaultPackageTypesAreNotImported() throws Exception {
+    String source = JavaFile.builder("hello",
+          TypeSpec.classBuilder("World").addSuperinterface(ClassName.get("", "Test")).build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package hello;\n"
+        + "\n"
+        + "class World implements Test {\n"
+        + "}\n");
+  }
+
   @Test public void topOfFileComment() throws Exception {
     String source = JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("Taco").build())
