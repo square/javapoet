@@ -309,6 +309,9 @@ final class CodeWriter {
   }
 
   private void importableType(ClassName className) {
+    if (className.packageName().isEmpty()) {
+      return;
+    }
     ClassName topLevelClassName = className.topLevelClassName();
     String simpleName = topLevelClassName.simpleName();
     ClassName replaced = importableTypes.put(simpleName, topLevelClassName);
