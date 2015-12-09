@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
@@ -111,7 +112,8 @@ public final class CodeBlock {
     public Builder add(String format, Object... args) {
       boolean hasRelative = false;
       boolean hasIndexed = false;
-      int parameterCount = 0;
+      int relativeParameterCount = 0;
+      int[] indexedParameterCount = new int[args.length];
 
       for (int p = 0; p < format.length(); ) {
         if (format.charAt(p) != '$') {
@@ -145,11 +147,12 @@ public final class CodeBlock {
         if (indexStart < indexEnd) {
           index = Integer.parseInt(format.substring(indexStart, indexEnd)) - 1;
           hasIndexed = true;
+          indexedParameterCount[index]++;          
         } else {
-          index = parameterCount;
+          index = relativeParameterCount;
           hasRelative = true;
+          relativeParameterCount++;
         }
-        parameterCount++;
 
         checkArgument(index >= 0 && index < args.length,
             "index %d for '%s' not in range (received %s arguments)",
@@ -177,8 +180,16 @@ public final class CodeBlock {
         formatParts.add("$" + c);
       }
 
-      checkArgument(parameterCount >= args.length,
-          "unused arguments: expected %s, received %s", parameterCount, args.length);
+      if (hasRelative) {
+        checkArgument(relativeParameterCount >= args.length,
+            "unused arguments: expected %s, received %s", relativeParameterCount, args.length);
+      }
+      if (hasIndexed) {
+        int[] sorted = Arrays.copyOf(indexedParameterCount, indexedParameterCount.length);
+        Arrays.sort(sorted); // index 0 must contain a value greater zero
+        checkArgument(sorted[0] > 0,
+            "unused arguments are marked as zero: %s", Arrays.toString(indexedParameterCount));
+      }
       return this;
     }
 
