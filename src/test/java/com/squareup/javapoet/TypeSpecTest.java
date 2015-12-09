@@ -1914,7 +1914,19 @@ public final class TypeSpecTest {
       CodeBlock.builder().add("$1L $2L", "a", "b", "c");
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("unused arguments: expected 2, received 3");
+      assertThat(expected).hasMessage("unused argument: $3");
+    }
+    try {
+      CodeBlock.builder().add("$1L $1L $1L", "a", "b", "c");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("unused arguments: $2, $3");
+    }
+    try {
+      CodeBlock.builder().add("$3L $1L $3L $1L $3L", "a", "b", "c", "d");
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("unused arguments: $2, $4");
     }
   }
 
