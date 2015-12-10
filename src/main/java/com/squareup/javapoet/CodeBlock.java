@@ -111,7 +111,8 @@ public final class CodeBlock {
     public Builder add(String format, Object... args) {
       boolean hasRelative = false;
       boolean hasIndexed = false;
-      int parameterCount = 0;
+      int relativeParameterCount = 0;
+      int[] indexedParameterCount = new int[args.length];
 
       for (int p = 0; p < format.length(); ) {
         if (format.charAt(p) != '$') {
@@ -145,11 +146,12 @@ public final class CodeBlock {
         if (indexStart < indexEnd) {
           index = Integer.parseInt(format.substring(indexStart, indexEnd)) - 1;
           hasIndexed = true;
+          indexedParameterCount[index % args.length]++; // modulo is needed, checked below anyway
         } else {
-          index = parameterCount;
+          index = relativeParameterCount;
           hasRelative = true;
+          relativeParameterCount++;
         }
-        parameterCount++;
 
         checkArgument(index >= 0 && index < args.length,
             "index %d for '%s' not in range (received %s arguments)",
@@ -177,8 +179,20 @@ public final class CodeBlock {
         formatParts.add("$" + c);
       }
 
-      checkArgument(parameterCount >= args.length,
-          "unused arguments: expected %s, received %s", parameterCount, args.length);
+      if (hasRelative) {
+        checkArgument(relativeParameterCount >= args.length,
+            "unused arguments: expected %s, received %s", relativeParameterCount, args.length);
+      }
+      if (hasIndexed) {
+        List<String> unused = new ArrayList<>();
+        for (int i = 0; i < args.length; i++) {
+          if (indexedParameterCount[i] == 0) {
+            unused.add("$" + (i + 1));
+          }
+        }
+        String s = unused.size() == 1 ? "" : "s";
+        checkArgument(unused.isEmpty(), "unused argument%s: %s", s, Util.join(", ", unused));
+      }
       return this;
     }
 
