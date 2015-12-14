@@ -31,6 +31,13 @@ public final class NameAllocatorTest {
 
   @Test public void nameCollision() throws Exception {
     NameAllocator nameAllocator = new NameAllocator();
+    assertThat(nameAllocator.newName("foo")).isEqualTo("foo");
+    assertThat(nameAllocator.newName("foo")).isEqualTo("foo_");
+    assertThat(nameAllocator.newName("foo")).isEqualTo("foo__");
+  }
+
+  @Test public void nameCollisionWithTag() throws Exception {
+    NameAllocator nameAllocator = new NameAllocator();
     assertThat(nameAllocator.newName("foo", 1)).isEqualTo("foo");
     assertThat(nameAllocator.newName("foo", 2)).isEqualTo("foo_");
     assertThat(nameAllocator.newName("foo", 3)).isEqualTo("foo__");
