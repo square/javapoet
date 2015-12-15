@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import javax.lang.model.SourceVersion;
 
 import static com.squareup.javapoet.Util.checkNotNull;
@@ -91,6 +92,19 @@ public final class NameAllocator implements Cloneable {
     this.tagToName = tagToName;
   }
 
+  /**
+   * Return a new name using {@code suggestion} that will not be a Java identifier or clash with
+   * other names.
+   */
+  public String newName(String suggestion) {
+    return newName(suggestion, UUID.randomUUID().toString());
+  }
+
+  /**
+   * Return a new name using {@code suggestion} that will not be a Java identifier or clash with
+   * other names. The returned value can be queried multiple times by passing {@code tag} to
+   * {@link #get(Object)}.
+   */
   public String newName(String suggestion, Object tag) {
     checkNotNull(suggestion, "suggestion");
     checkNotNull(tag, "tag");
@@ -128,6 +142,7 @@ public final class NameAllocator implements Cloneable {
     return result.toString();
   }
 
+  /** Retrieve a name created with {@link #newName(String, Object)}. */
   public String get(Object tag) {
     String result = tagToName.get(tag);
     if (result == null) {
