@@ -54,10 +54,6 @@ public final class WildcardTypeName extends TypeName {
     }
   }
 
-  @Override public WildcardTypeName annotated(AnnotationSpec... annotations) {
-    return annotated(Arrays.asList(annotations));
-  }
-
   @Override public WildcardTypeName annotated(List<AnnotationSpec> annotations) {
     return new WildcardTypeName(upperBounds, lowerBounds, annotations);
   }

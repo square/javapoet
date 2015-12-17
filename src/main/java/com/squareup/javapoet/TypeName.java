@@ -104,9 +104,8 @@ public class TypeName {
     this(null, annotations);
   }
 
-  public TypeName annotated(AnnotationSpec... annotations) {
-    Util.checkNotNull(annotations, "annotations == null");
-    return new TypeName(keyword, Arrays.asList(annotations));
+  public final TypeName annotated(AnnotationSpec... annotations) {
+    return annotated(Arrays.asList(annotations));
   }
 
   public TypeName annotated(List<AnnotationSpec> annotations) {
