@@ -121,6 +121,14 @@ final class CodeWriter {
     return this;
   }
 
+  TypeSpec peekType(int depth) {
+    checkState(!typeSpecStack.isEmpty(), "expected to be emitting a TypeSpec");
+    checkArgument(depth >= 0, "depth must not be negative, got %d", depth);
+    checkArgument(depth < typeSpecStack.size(), "depth %d exceeds nesting TypeSpec stack: %d",
+        depth, typeSpecStack.size() - 1);
+    return typeSpecStack.get(typeSpecStack.size() - 1 - depth);
+  }
+
   public void emitComment(CodeBlock codeBlock) throws IOException {
     trailingNewline = true; // Force the '//' prefix for the comment.
     comment = true;
@@ -325,7 +333,7 @@ final class CodeWriter {
    * imports.
    */
   // TODO(jwilson): also honor superclass members when resolving names.
-  private ClassName resolve(String simpleName) {
+  ClassName resolve(String simpleName) {
     // Match a child of the current (potentially nested) class.
     for (int i = typeSpecStack.size() - 1; i >= 0; i--) {
       TypeSpec typeSpec = typeSpecStack.get(i);

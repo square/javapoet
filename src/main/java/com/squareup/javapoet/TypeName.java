@@ -75,6 +75,7 @@ public class TypeName {
   public static final TypeName FLOAT = new TypeName("float");
   public static final TypeName DOUBLE = new TypeName("double");
   public static final ClassName OBJECT = ClassName.get("java.lang", "Object");
+  public static final TypeName SELF = new SelfName(new ArrayList<AnnotationSpec>());
 
   private static final ClassName BOXED_VOID = ClassName.get("java.lang", "Void");
   private static final ClassName BOXED_BOOLEAN = ClassName.get("java.lang", "Boolean");
