@@ -49,10 +49,6 @@ public final class TypeVariableName extends TypeName {
     }
   }
 
-  @Override public TypeVariableName annotated(AnnotationSpec... annotations) {
-    return annotated(Arrays.asList(annotations));
-  }
-
   @Override public TypeVariableName annotated(List<AnnotationSpec> annotations) {
     return new TypeVariableName(name, bounds, annotations);
   }

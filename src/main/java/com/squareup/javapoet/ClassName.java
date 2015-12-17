@@ -17,7 +17,6 @@ package com.squareup.javapoet;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -53,10 +52,6 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     this.canonicalName = names.get(0).isEmpty()
         ? Util.join(".", names.subList(1, names.size()))
         : Util.join(".", names);
-  }
-
-  @Override public ClassName annotated(AnnotationSpec... annotations) {
-    return annotated(Arrays.asList(annotations));
   }
 
   @Override public ClassName annotated(List<AnnotationSpec> annotations) {

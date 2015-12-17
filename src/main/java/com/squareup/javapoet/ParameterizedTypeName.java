@@ -48,10 +48,6 @@ public final class ParameterizedTypeName extends TypeName {
     }
   }
 
-  @Override public ParameterizedTypeName annotated(AnnotationSpec... annotations) {
-    return annotated(Arrays.asList(annotations));
-  }
-
   @Override public ParameterizedTypeName annotated(List<AnnotationSpec> annotations) {
     return new ParameterizedTypeName(rawType, typeArguments, annotations);
   }
