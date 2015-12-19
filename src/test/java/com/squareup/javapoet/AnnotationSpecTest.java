@@ -340,6 +340,22 @@ public final class AnnotationSpecTest {
         + "}\n");
   }
 
+  @Test public void simpleAnnotation() {
+    AnnotationSpec spec = AnnotationSpec.createSimpleAnnotation(AnnotationC.class, "test");
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addAnnotation(spec)
+        .build();
+
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.javapoet.AnnotationSpecTest;\n"
+        + "\n"
+        + "@AnnotationSpecTest.AnnotationC(\"test\")\n"
+        + "class Taco {\n"
+        + "}\n");
+  }
+
   private String toString(TypeSpec typeSpec) {
     return JavaFile.builder("com.squareup.tacos", typeSpec).build().toString();
   }
