@@ -212,7 +212,7 @@ public final class JavaFileTest {
         + "class A {\n"
         + "  class B {\n"
         + "    class C {\n"
-        + "      Twin.D d;\n"
+        + "      A.Twin.D d;\n"
         + "\n"
         + "      class Nested {\n"
         + "        class Twin {\n"

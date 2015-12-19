@@ -617,28 +617,25 @@ public final class TypeSpecTest {
   }
 
   @Test public void nestedClasses() throws Exception {
-    ClassName taco = ClassName.get(tacosPackage, "Combo", "Taco");
-    ClassName topping = ClassName.get(tacosPackage, "Combo", "Taco", "Topping");
-    ClassName chips = ClassName.get(tacosPackage, "Combo", "Chips");
-    ClassName sauce = ClassName.get(tacosPackage, "Combo", "Sauce");
     TypeSpec typeSpec = TypeSpec.classBuilder("Combo")
-        .addField(taco, "taco")
-        .addField(chips, "chips")
-        .addType(TypeSpec.classBuilder(taco.simpleName())
+        .addField(new MarkerName(""), "combo")
+        .addField(new MarkerName("Taco"), "taco")
+        .addField(new MarkerName("Chips"), "chips")
+        .addType(TypeSpec.classBuilder("Taco")
             .addModifiers(Modifier.STATIC)
-            .addField(ParameterizedTypeName.get(ClassName.get(List.class), topping), "toppings")
-            .addField(sauce, "sauce")
-            .addType(TypeSpec.enumBuilder(topping.simpleName())
+            .addField(ParameterizedTypeName.get(ClassName.get(List.class), new MarkerName("Topping")), "toppings")
+            .addField(new MarkerName("Sauce"), "sauce")
+            .addType(TypeSpec.enumBuilder("Topping")
                 .addEnumConstant("SHREDDED_CHEESE")
                 .addEnumConstant("LEAN_GROUND_BEEF")
                 .build())
             .build())
-        .addType(TypeSpec.classBuilder(chips.simpleName())
+        .addType(TypeSpec.classBuilder("Chips")
             .addModifiers(Modifier.STATIC)
-            .addField(topping, "topping")
-            .addField(sauce, "dippingSauce")
+            .addField(new MarkerName("Topping"), "topping")
+            .addField(new MarkerName("Sauce"), "dippingSauce")
             .build())
-        .addType(TypeSpec.enumBuilder(sauce.simpleName())
+        .addType(TypeSpec.enumBuilder("Sauce")
             .addEnumConstant("SOUR_CREAM")
             .addEnumConstant("SALSA")
             .addEnumConstant("QUESO")
@@ -653,6 +650,8 @@ public final class TypeSpecTest {
         + "import java.util.List;\n"
         + "\n"
         + "class Combo {\n"
+        + "  Combo combo;\n"
+        + "\n"
         + "  Taco taco;\n"
         + "\n"
         + "  Chips chips;\n"
@@ -670,7 +669,7 @@ public final class TypeSpecTest {
         + "  }\n"
         + "\n"
         + "  static class Chips {\n"
-        + "    Taco.Topping topping;\n"
+        + "    Topping topping;\n"
         + "\n"
         + "    Sauce dippingSauce;\n"
         + "  }\n"
@@ -830,8 +829,6 @@ public final class TypeSpecTest {
     assertThat(toString(top)).isEqualTo(""
         + "package com.squareup.tacos;\n"
         + "\n"
-        + "import com.squareup.donuts.Bottom;\n"
-        + "\n"
         + "class Top {\n"
         + "  Top internalTop;\n"
         + "\n"
@@ -839,7 +836,7 @@ public final class TypeSpecTest {
         + "\n"
         + "  com.squareup.donuts.Top externalTop;\n"
         + "\n"
-        + "  Bottom externalBottom;\n"
+        + "  com.squareup.donuts.Bottom externalBottom;\n"
         + "\n"
         + "  class Middle {\n"
         + "    Top internalTop;\n"
