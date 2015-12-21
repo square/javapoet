@@ -127,7 +127,7 @@ public final class AnnotationSpec {
         }
         if (value.getClass().isArray()) {
           for (int i = 0; i < Array.getLength(value); i++) {
-            addAnnotationValue(builder, method.getName(), Array.get(value, i));
+            builder.addValue(method.getName(), Array.get(value, i));
           }
           continue;
         }
@@ -135,7 +135,7 @@ public final class AnnotationSpec {
           builder.addMember(method.getName(), "$L", get((Annotation) value));
           continue;
         }
-        addAnnotationValue(builder, method.getName(), value);
+        builder.addValue(method.getName(), value);
       }
     } catch (Exception e) {
       throw new RuntimeException("Reflecting " + annotation + " failed!", e);
@@ -143,16 +143,6 @@ public final class AnnotationSpec {
     return builder.build();
   }
 
-  private static Builder addAnnotationValue(Builder builder, String name, Object value) {
-    if (value instanceof Class<?>) return builder.addMember(name, "$T.class", value);
-    if (value instanceof Enum) {
-      return builder.addMember(name, "$T.$L", value.getClass(), ((Enum<?>) value).name());
-    }
-    if (value instanceof String) return builder.addMember(name, "$S", value);
-    if (value instanceof Float) return builder.addMember(name, "$Lf", value);
-    // return literal/toString anyway
-    return builder.addMember(name, "$L", value);
-  }
   public static AnnotationSpec get(AnnotationMirror annotation) {
     TypeElement element = (TypeElement) annotation.getAnnotationType().asElement();
     AnnotationSpec.Builder builder = AnnotationSpec.builder(ClassName.get(element));
@@ -224,6 +214,27 @@ public final class AnnotationSpec {
       }
       values.add(codeBlock);
       return this;
+    }
+
+    /**
+     * Delegates to {@link #addMember(String, String, Object...)}, with parameter {@code format}
+     * depending on the given {@code value} object. Falls back to {@code "$L"} literal format if
+     * the class of the given {@code value} object is not supported.
+     */
+    private Builder addValue(String memberName, Object value) {
+      if (value instanceof Class<?>) {
+        return addMember(memberName, "$T.class", value);
+      }
+      if (value instanceof Enum) {
+        return addMember(memberName, "$T.$L", value.getClass(), ((Enum<?>) value).name());
+      }
+      if (value instanceof String) {
+        return addMember(memberName, "$S", value);
+      }
+      if (value instanceof Float) {
+        return addMember(memberName, "$Lf", value);
+      }
+      return addMember(memberName, "$L", value);
     }
 
     public AnnotationSpec build() {
