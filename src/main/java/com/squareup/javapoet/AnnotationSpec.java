@@ -104,6 +104,18 @@ public final class AnnotationSpec {
     codeWriter.emit(whitespace + "}");
   }
 
+  public static AnnotationSpec get(ClassName type, Object... values) {
+    AnnotationSpec.Builder builder = AnnotationSpec.builder(type);
+    for (Object value : values) {
+      builder.addValue(value);
+    }
+    return builder.build();
+  }
+
+  public static AnnotationSpec get(Class<? extends Annotation> type, Object... values) {
+    return get(ClassName.get(type), values);
+  }
+
   public static AnnotationSpec get(Annotation annotation) {
     return get(annotation, false);
   }
@@ -221,7 +233,7 @@ public final class AnnotationSpec {
      * depending on the given {@code value} object. Falls back to {@code "$L"} literal format if
      * the class of the given {@code value} object is not supported.
      */
-    private Builder addValue(String memberName, Object value) {
+    Builder addValue(String memberName, Object value) {
       if (value instanceof Class<?>) {
         return addMember(memberName, "$T.class", value);
       }
@@ -235,6 +247,15 @@ public final class AnnotationSpec {
         return addMember(memberName, "$Lf", value);
       }
       return addMember(memberName, "$L", value);
+    }
+
+    /**
+     * Conveniently adds an object value to {@code "value"} member to this annotation builder.
+     * @param value object value to add
+     * @see SuppressWarnings#value
+     */
+    public Builder addValue(Object value) {
+      return addValue("value", value);
     }
 
     public AnnotationSpec build() {
