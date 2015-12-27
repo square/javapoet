@@ -341,6 +341,78 @@ MethodSpec byteToHex = MethodSpec.methodBuilder("byteToHex")
     .addStatement("return new String(result)")
     .build();
 ```
+### $R for References (and static imports)
+
+When generating code, you may point to already compiled elements like methods, fields
+and especially the `enum` constant fields. Enter `$R`:
+
+```java
+CodeBlock.builder().add("$R", Thread.State.NEW).build();
+```
+
+That produces the fully-qualified member name:
+
+```java
+java.lang.Thread.State.NEW
+```
+
+A more complex example with ex- and implicit `MemberRef` creations for methods, fields, enum
+constants and static import:
+
+```java
+Method convert = TimeUnit.class.getMethod("convert", long.class, TimeUnit.class);
+
+MethodSpec.Builder method = MethodSpec.methodBuilder("minutesToSeconds")
+  .addModifiers(Modifier.STATIC)
+  .returns(long.class)
+  .addParameter(long.class, "minutes")
+  .addStatement("return $R.$R(minutes, $R)", TimeUnit.SECONDS, convert, TimeUnit.MINUTES);
+
+TypeSpec util = TypeSpec.classBuilder("Util")
+  .addMethod(method)
+  .build();
+
+JavaFile.builder("readme", util).addStaticImport(TimeUnit.SECONDS).build();
+```
+
+That generates the following `.java` file, complete with the necessary `import`s:
+
+```java
+package readme;
+
+import java.util.concurrent.TimeUnit;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+class Util {
+  static long minutesToSeconds(long minutes) {
+    return SECONDS.convert(minutes, TimeUnit.MINUTES);
+  }
+}
+```
+
+`$R` lets you reference **static** members:
+* enum constants, like e.g. `TimeUnit.MINUTES` above
+* static fields, like `String.CASE_INSENSITIVE_ORDER`
+* static methods, like `Class.forName(String)`
+
+References to **instance** members are also supported. Here, it's up to you providing some object
+as a call target. You can use any literal including `"this"`, `"super"`, `TypeName`s and even
+`MemberRef`erences like can be seen with `TimeUnit.SECONDS` in the example above.
+
+The `MemberRef` API allows optional type arguments as parameters. Those can be used to specify
+the generic return type of a method:
+
+```java
+MemberRef emptyList = MemberRef.get(Collections.class.getMethod("emptyList"), String.class);
+CodeBlock.builder().add("$R()", emptyList).build();
+```
+
+Which yields:
+
+```java
+java.util.Collections.<java.lang.String>emptyList()
+```
 
 ### Methods
 

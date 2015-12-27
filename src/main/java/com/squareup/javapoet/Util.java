@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -108,5 +109,21 @@ final class Util {
 
   public static boolean hasDefaultModifier(Collection<Modifier> modifiers) {
     return DEFAULT != null && modifiers.contains(DEFAULT);
+  }
+
+  public static Set<Modifier> getModifiers(int mod) {
+    EnumSet<Modifier> modifiers = EnumSet.noneOf(Modifier.class);
+    if (java.lang.reflect.Modifier.isAbstract(mod)) modifiers.add(Modifier.ABSTRACT);
+    if (java.lang.reflect.Modifier.isFinal(mod)) modifiers.add(Modifier.FINAL);
+    if (java.lang.reflect.Modifier.isNative(mod)) modifiers.add(Modifier.NATIVE);
+    if (java.lang.reflect.Modifier.isPrivate(mod)) modifiers.add(Modifier.PRIVATE);
+    if (java.lang.reflect.Modifier.isProtected(mod)) modifiers.add(Modifier.PROTECTED);
+    if (java.lang.reflect.Modifier.isPublic(mod)) modifiers.add(Modifier.PUBLIC);
+    if (java.lang.reflect.Modifier.isStatic(mod)) modifiers.add(Modifier.STATIC);
+    if (java.lang.reflect.Modifier.isStrict(mod)) modifiers.add(Modifier.STRICTFP);
+    if (java.lang.reflect.Modifier.isSynchronized(mod)) modifiers.add(Modifier.SYNCHRONIZED);
+    if (java.lang.reflect.Modifier.isTransient(mod)) modifiers.add(Modifier.TRANSIENT);
+    if (java.lang.reflect.Modifier.isVolatile(mod)) modifiers.add(Modifier.VOLATILE);
+    return modifiers;
   }
 }
