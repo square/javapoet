@@ -202,15 +202,15 @@ public final class AnnotationSpecTest {
 
   @Test public void dynamicArrayOfEnumConstants() {
     AnnotationSpec.Builder builder = AnnotationSpec.builder(HasDefaultsAnnotation.class);
-    builder.addMember("n", "$T.$L", Breakfast.class, Breakfast.PANCAKES.name());
+    builder.addMember("n", "$R", Breakfast.PANCAKES);
     assertThat(builder.build().toString()).isEqualTo(
         "@com.squareup.javapoet.AnnotationSpecTest.HasDefaultsAnnotation("
             + "n = com.squareup.javapoet.AnnotationSpecTest.Breakfast.PANCAKES"
             + ")");
 
     // builder = AnnotationSpec.builder(HasDefaultsAnnotation.class);
-    builder.addMember("n", "$T.$L", Breakfast.class, Breakfast.WAFFLES.name());
-    builder.addMember("n", "$T.$L", Breakfast.class, Breakfast.PANCAKES.name());
+    builder.addMember("n", "$R", Breakfast.WAFFLES);
+    builder.addMember("n", "$R", Breakfast.PANCAKES);
     assertThat(builder.build().toString()).isEqualTo(
         "@com.squareup.javapoet.AnnotationSpecTest.HasDefaultsAnnotation("
             + "n = {"
@@ -228,7 +228,7 @@ public final class AnnotationSpecTest {
             + ", com.squareup.javapoet.AnnotationSpecTest.Breakfast.PANCAKES"
             + "})");
 
-    builder.addMember("n", "$T.$L", Breakfast.class, Breakfast.WAFFLES.name());
+    builder.addMember("n", "$R", Breakfast.WAFFLES);
     assertThat(builder.build().toString()).isEqualTo(
         "@com.squareup.javapoet.AnnotationSpecTest.HasDefaultsAnnotation("
             + "n = {"
