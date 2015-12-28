@@ -253,6 +253,11 @@ final class CodeWriter {
           typeName.emit(this);
           break;
 
+        case "$R":
+          MemberRef memberRef = (MemberRef) codeBlock.args.get(a++);
+          memberRef.emit(this);
+          break;
+
         case "$$":
           emitAndIndent("$");
           break;
