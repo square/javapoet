@@ -90,18 +90,37 @@ public class MemberRefTest {
 
   @Test public void importStaticNone() throws Exception {
     assertThat(JavaFile.builder("readme", typeSpec("Util"))
+        .autoStaticImports(false)
         .build().toString()).isEqualTo(""
-        + "package readme;\n"
-        + "\n"
-        + "import java.lang.System;\n"
-        + "import java.util.concurrent.TimeUnit;\n"
-        + "\n"
-        + "class Util {\n"
-        + "  public static long minutesToSeconds(long minutes) {\n"
-        + "    System.gc();\n"
-        + "    return TimeUnit.SECONDS.convert(minutes, TimeUnit.MINUTES);\n"
-        + "  }\n"
-        + "}\n");
+            + "package readme;\n"
+            + "\n"
+            + "import java.lang.System;\n"
+            + "import java.util.concurrent.TimeUnit;\n"
+            + "\n"
+            + "class Util {\n"
+            + "  public static long minutesToSeconds(long minutes) {\n"
+            + "    System.gc();\n"
+            + "    return TimeUnit.SECONDS.convert(minutes, TimeUnit.MINUTES);\n"
+            + "  }\n"
+            + "}\n");
+  }
+
+  @Test public void importStaticAll() throws Exception {
+    assertThat(JavaFile.builder("readme", typeSpec("Util"))
+        .autoStaticImports(true)
+        .build().toString()).isEqualTo(""
+            + "package readme;\n"
+            + "\n"
+            + "import static java.lang.System.gc;\n"
+            + "import static java.util.concurrent.TimeUnit.MINUTES;\n"
+            + "import static java.util.concurrent.TimeUnit.SECONDS;\n"
+            + "\n"
+            + "class Util {\n"
+            + "  public static long minutesToSeconds(long minutes) {\n"
+            + "    gc();\n"
+            + "    return SECONDS.convert(minutes, MINUTES);\n"
+            + "  }\n"
+            + "}\n");
   }
 
   TypeSpec typeSpec(String name) {

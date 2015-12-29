@@ -37,7 +37,7 @@ import javax.lang.model.type.TypeMirror;
  *
  * @author Christian Stein
  */
-public final class MemberRef {
+public final class MemberRef implements Comparable<MemberRef> {
   /**
    * Defines all well-known member flavours, like {@code ENUM}, {@code FIELD} and {@code METHOD},
    * that can be refered to.
@@ -144,17 +144,18 @@ public final class MemberRef {
   }
 
   @Override public String toString() {
-    StringBuilder out = new StringBuilder();
-    try {
-      new CodeWriter(out).emit("$R", this);
-      return out.toString();
-    } catch (IOException e) {
-      throw new AssertionError();
-    }
+    return type.canonicalName + "." + name;
+  }
+
+  @Override public int compareTo(MemberRef r) {
+    return toString().compareTo(r.toString());
   }
 
   void emit(CodeWriter codeWriter) throws IOException {
-    if (isStatic) {
+    if (isStatic && !codeWriter.importedMemberRefs.containsValue(this)) {
+      if (!codeWriter.importableMemberRefs.containsKey(name)) {
+        codeWriter.importableMemberRefs.put(name, this);
+      }
       codeWriter.emit("$T.", type);
     }
     if (kind == Kind.METHOD) {

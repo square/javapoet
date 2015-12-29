@@ -56,6 +56,7 @@ public final class JavaFile {
   public final String packageName;
   public final TypeSpec typeSpec;
   public final boolean skipJavaLangImports;
+  public final boolean autoStaticImports;
   private final String indent;
 
   private JavaFile(Builder builder) {
@@ -63,17 +64,26 @@ public final class JavaFile {
     this.packageName = builder.packageName;
     this.typeSpec = builder.typeSpec;
     this.skipJavaLangImports = builder.skipJavaLangImports;
+    this.autoStaticImports = builder.autoStaticImports;
     this.indent = builder.indent;
   }
 
   public void writeTo(Appendable out) throws IOException {
-    // First pass: emit the entire class, just to collect the types we'll need to import.
-    CodeWriter importsCollector = new CodeWriter(NULL_APPENDABLE, indent);
+    // First pass: emit the entire class, just to collect the member refs we'll need to import.
+    Map<String, MemberRef> suggestedStaticImports = Collections.emptyMap();
+    if (autoStaticImports) {
+      CodeWriter importsCollector = new CodeWriter(NULL_APPENDABLE, indent);
+      emit(importsCollector);
+      suggestedStaticImports = importsCollector.importableMemberRefs;
+    }
+
+    // Second pass: emit the entire class, just to collect the types we'll need to import.
+    CodeWriter importsCollector = new CodeWriter(NULL_APPENDABLE, indent, suggestedStaticImports);
     emit(importsCollector);
     Map<String, ClassName> suggestedImports = importsCollector.suggestedImports();
 
-    // Second pass: write the code, taking advantage of the imports.
-    CodeWriter codeWriter = new CodeWriter(out, indent, suggestedImports);
+    // Third pass: write the code, taking advantage of the imports.
+    CodeWriter codeWriter = new CodeWriter(out, indent, suggestedImports, suggestedStaticImports);
     emit(codeWriter);
   }
 
@@ -142,6 +152,15 @@ public final class JavaFile {
       codeWriter.emit("\n");
     }
 
+    for (MemberRef memberRef : new TreeSet<>(codeWriter.importedMemberRefs.values())) {
+      codeWriter.emit("import static $L.$L;\n", memberRef.type.canonicalName, memberRef.name);
+      importedTypesCount++;
+    }
+
+    if (!codeWriter.importedMemberRefs.isEmpty()) {
+      codeWriter.emit("\n");
+    }
+
     typeSpec.emit(codeWriter, null, Collections.<Modifier>emptySet());
 
     codeWriter.popPackage();
@@ -206,6 +225,7 @@ public final class JavaFile {
     private final TypeSpec typeSpec;
     private CodeBlock.Builder fileComment = CodeBlock.builder();
     private boolean skipJavaLangImports;
+    private boolean autoStaticImports = false;
     private String indent = "  ";
 
     private Builder(String packageName, TypeSpec typeSpec) {
@@ -228,6 +248,11 @@ public final class JavaFile {
      */
     public Builder skipJavaLangImports(boolean skipJavaLangImports) {
       this.skipJavaLangImports = skipJavaLangImports;
+      return this;
+    }
+
+    public Builder autoStaticImports(boolean autoStaticImports) {
+      this.autoStaticImports = autoStaticImports;
       return this;
     }
 
