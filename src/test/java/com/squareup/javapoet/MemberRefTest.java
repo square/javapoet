@@ -104,6 +104,68 @@ public class MemberRefTest {
         + "}\n");
   }
 
+  @Test public void importStaticOnce() throws Exception {
+    MemberRef seconds = MemberRef.get(TimeUnit.SECONDS);
+    assertThat(JavaFile.builder("readme", typeSpec("Util"))
+        .addStaticImport(seconds)
+        .build().toString()).isEqualTo(""
+        + "package readme;\n"
+        + "\n"
+        + "import static java.util.concurrent.TimeUnit.SECONDS;\n"
+        + "\n"
+        + "import java.lang.System;\n"
+        + "import java.util.concurrent.TimeUnit;\n"
+        + "\n"
+        + "class Util {\n"
+        + "  public static long minutesToSeconds(long minutes) {\n"
+        + "    System.gc();\n"
+        + "    return SECONDS.convert(minutes, TimeUnit.MINUTES);\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void importStaticTwice() throws Exception {
+    MemberRef seconds = MemberRef.get(TimeUnit.SECONDS);
+    MemberRef minutes = MemberRef.get(TimeUnit.MINUTES);
+    assertThat(JavaFile.builder("readme", typeSpec("Util"))
+        .addStaticImport(seconds, minutes)
+        .build().toString()).isEqualTo(""
+            + "package readme;\n"
+            + "\n"
+            + "import static java.util.concurrent.TimeUnit.MINUTES;\n"
+            + "import static java.util.concurrent.TimeUnit.SECONDS;\n"
+            + "\n"
+            + "import java.lang.System;\n"
+            + "\n"
+            + "class Util {\n"
+            + "  public static long minutesToSeconds(long minutes) {\n"
+            + "    System.gc();\n"
+            + "    return SECONDS.convert(minutes, MINUTES);\n"
+            + "  }\n"
+            + "}\n");
+  }
+
+  @Test public void importStaticTwiceAndGC() throws Exception {
+    MemberRef seconds = MemberRef.get(TimeUnit.SECONDS);
+    MemberRef minutes = MemberRef.get(TimeUnit.MINUTES);
+    MemberRef gc = MemberRef.get(System.class.getMethod("gc"));
+    assertThat(JavaFile.builder("readme", typeSpec("Util"))
+        .addStaticImport(seconds, minutes, gc)
+        .build().toString()).isEqualTo(""
+            + "package readme;\n"
+            + "\n"
+            + "import static java.lang.System.gc;\n"
+            + "import static java.util.concurrent.TimeUnit.MINUTES;\n"
+            + "import static java.util.concurrent.TimeUnit.SECONDS;\n"
+            + "\n"
+            + "class Util {\n"
+            + "  public static long minutesToSeconds(long minutes) {\n"
+            + "    gc();\n"
+            + "    return SECONDS.convert(minutes, MINUTES);\n"
+            + "  }\n"
+            + "}\n");
+  }
+
   TypeSpec typeSpec(String name) {
     try {
       Method convert = TimeUnit.class.getMethod("convert", long.class, TimeUnit.class);
