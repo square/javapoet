@@ -226,7 +226,7 @@ public final class AnnotationSpec {
         return addMember(memberName, "$T.class", value);
       }
       if (value instanceof Enum) {
-        return addMember(memberName, "$T.$L", value.getClass(), ((Enum<?>) value).name());
+        return addMember(memberName, "$R", value);
       }
       if (value instanceof String) {
         return addMember(memberName, "$S", value);
@@ -272,7 +272,7 @@ public final class AnnotationSpec {
     }
 
     @Override public Builder visitEnumConstant(VariableElement c, Entry entry) {
-      return builder.addMember(entry.name, "$T.$L", c.asType(), c.getSimpleName());
+      return builder.addMember(entry.name, "$R", c);
     }
 
     @Override public Builder visitType(TypeMirror t, Entry entry) {

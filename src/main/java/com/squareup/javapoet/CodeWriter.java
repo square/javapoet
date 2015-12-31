@@ -50,6 +50,8 @@ final class CodeWriter {
   private boolean comment = false;
   private String packageName = NO_PACKAGE;
   private final List<TypeSpec> typeSpecStack = new ArrayList<>();
+  final Map<String, MemberRef> importableMemberRefs = new LinkedHashMap<>();
+  final Map<String, MemberRef> importedMemberRefs;
   private final Map<String, ClassName> importedTypes;
   private final Map<String, ClassName> importableTypes = new LinkedHashMap<>();
   private final Set<String> referencedNames = new LinkedHashSet<>();
@@ -67,13 +69,20 @@ final class CodeWriter {
   }
 
   public CodeWriter(Appendable out, String indent) {
-    this(out, indent, Collections.<String, ClassName>emptyMap());
+    this(out, indent, Collections.<String, ClassName>emptyMap(),
+        Collections.<String, MemberRef>emptyMap());
   }
 
-  public CodeWriter(Appendable out, String indent, Map<String, ClassName> importedTypes) {
+  public CodeWriter(Appendable out, String indent, Map<String, MemberRef> importedMemberRefs) {
+    this(out, indent, Collections.<String, ClassName>emptyMap(), importedMemberRefs);
+  }
+
+  public CodeWriter(Appendable out, String indent, Map<String, ClassName> importedTypes,
+      Map<String, MemberRef> importedMemberRefs) {
     this.out = checkNotNull(out, "out == null");
     this.indent = checkNotNull(indent, "indent == null");
     this.importedTypes = checkNotNull(importedTypes, "importedTypes == null");
+    this.importedMemberRefs = checkNotNull(importedMemberRefs, "importedMemberRefs == null");
   }
 
   public Map<String, ClassName> importedTypes() {
@@ -219,6 +228,11 @@ final class CodeWriter {
         case "$T":
           TypeName typeName = (TypeName) codeBlock.args.get(a++);
           typeName.emit(this);
+          break;
+
+        case "$R":
+          MemberRef memberRef = (MemberRef) codeBlock.args.get(a++);
+          memberRef.emit(this);
           break;
 
         case "$$":
