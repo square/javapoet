@@ -66,11 +66,11 @@ final class CodeWriter {
     this(out, "  ");
   }
 
-  public CodeWriter(Appendable out, String indent) {
+  CodeWriter(Appendable out, String indent) {
     this(out, indent, Collections.<String, ClassName>emptyMap());
   }
 
-  public CodeWriter(Appendable out, String indent, Map<String, ClassName> importedTypes) {
+  CodeWriter(Appendable out, String indent, Map<String, ClassName> importedTypes) {
     this.out = checkNotNull(out, "out == null");
     this.indent = checkNotNull(indent, "indent == null");
     this.importedTypes = checkNotNull(importedTypes, "importedTypes == null");

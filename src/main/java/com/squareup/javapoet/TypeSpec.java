@@ -321,7 +321,7 @@ public final class TypeSpec {
     private final Set<Modifier> implicitTypeModifiers;
     private final Set<Modifier> asMemberModifiers;
 
-    private Kind(Set<Modifier> implicitFieldModifiers,
+    Kind(Set<Modifier> implicitFieldModifiers,
         Set<Modifier> implicitMethodModifiers,
         Set<Modifier> implicitTypeModifiers,
         Set<Modifier> asMemberModifiers) {
