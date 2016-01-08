@@ -22,21 +22,30 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.concurrent.Callable;
 import javax.annotation.processing.Filer;
+import javax.annotation.processing.Processor;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 import javax.tools.SimpleJavaFileObject;
-
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
+import javax.tools.JavaCompiler.CompilationTask;
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
+import static com.squareup.javapoet.Util.checkState;
 
 /** A Java file containing a single top level class. */
 public final class JavaFile {
@@ -185,6 +194,61 @@ public final class JavaFile {
         return lastModified;
       }
     };
+  }
+
+  public Class<?> compile() {
+    ClassLoader parent = getClass().getClassLoader();
+    List<String> options = Collections.emptyList();
+    List<Processor> processors = Collections.emptyList();
+    ClassLoader loader = compile(parent, options, processors);
+    try {
+      String name = packageName.isEmpty() ? typeSpec.name : packageName + "." + typeSpec.name;
+      return loader.loadClass(name);
+    } catch (ClassNotFoundException e) {
+      throw new IllegalStateException("loading class failed after successful compilation?!", e);
+    }
+  }
+
+  public <T> T compile(Class<T> clazz, Object... args) {
+    try {
+      Class<? extends T> subClass = compile().asSubclass(clazz);
+      checkState(subClass.getDeclaredConstructors().length == 1, "expected single constructor");
+      Class<?>[] types = subClass.getDeclaredConstructors()[0].getParameterTypes();
+      return (T) subClass.getConstructor(types).newInstance(args);
+    } catch (Throwable t) {
+      throw new IllegalStateException("compiling or instantiating failed", t);
+    }
+  }
+
+  public <T> T compile(Class<T> clazz, Callable<Class<?>[]> typesProvider, Object... args) {
+    try {
+      Class<? extends T> subClass = compile().asSubclass(clazz);
+      return (T) subClass.getConstructor(typesProvider.call()).newInstance(args);
+    } catch (Throwable t) {
+      throw new IllegalStateException("compiling or instantiating failed", t);
+    }
+  }
+
+  public ClassLoader compile(ClassLoader parent, List<String> options, List<Processor> processors) {
+    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+    Util.checkNotNull(compiler, "no system java compiler available - JDK is required!");
+    DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+    StandardJavaFileManager sjfm = compiler.getStandardFileManager(
+        diagnostics,
+        Locale.getDefault(),
+        StandardCharsets.UTF_8);
+    Util.Manager manager = new Util.Manager(sjfm, parent);
+    CompilationTask task = compiler.getTask(
+        null, // a writer for additional output from the compiler; use System.err if null
+        manager,
+        diagnostics,
+        options,
+        null, // names of classes to be processed by annotation processing, null means no classes
+        Collections.singleton(toJavaFileObject()));
+    if (!processors.isEmpty()) task.setProcessors(processors);
+    boolean success = task.call();
+    Util.checkState(success, "compilation failed\n%s", diagnostics.getDiagnostics());
+    return manager.getClassLoader(null);
   }
 
   public static Builder builder(String packageName, TypeSpec typeSpec) {
