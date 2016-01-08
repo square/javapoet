@@ -234,6 +234,9 @@ public final class AnnotationSpec {
       if (value instanceof Float) {
         return addMember(memberName, "$Lf", value);
       }
+      if (value instanceof Character) {
+        return addMember(memberName, "'$L'", value);
+      }
       return addMember(memberName, "$L", value);
     }
 

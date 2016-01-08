@@ -313,7 +313,7 @@ public final class AnnotationSpecTest {
         + "    d = 8,\n"
         + "    e = 9.0f,\n"
         + "    f = 11.1,\n"
-        + "    g = k,\n"
+        + "    g = 'k',\n"
         + "    h = true,\n"
         + "    i = AnnotationSpecTest.Breakfast.WAFFLES,\n"
         + "    j = @AnnotationSpecTest.AnnotationA,\n"
