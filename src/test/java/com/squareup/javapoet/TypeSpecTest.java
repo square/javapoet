@@ -29,12 +29,15 @@ import java.util.EventListener;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Random;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
 
 import org.junit.Assert;
 import org.junit.Rule;
@@ -44,6 +47,7 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.lang.Thread.State.NEW;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
@@ -56,6 +60,19 @@ public final class TypeSpecTest {
 
   private TypeElement getElement(Class<?> clazz) {
     return compilation.getElements().getTypeElement(clazz.getCanonicalName());
+  }
+
+  private ExecutableElement findMethod(Class<?> clazz, String name, Class<?>... parameterTypes) {
+    List<? extends Element> elements = getElement(clazz).getEnclosedElements();
+    for (ExecutableElement method : ElementFilter.methodsIn(elements)) {
+      if (method.getSimpleName().toString().equals(name)) {
+        if (method.getParameters().isEmpty() && parameterTypes.length == 0) {
+          return method;
+        }
+        throw new UnsupportedOperationException("possibly not unique: " + method);
+      }
+    }
+    throw new NoSuchElementException("Method named " + name + " not found in " + clazz);
   }
 
   private boolean isJava8() {
@@ -1977,6 +1994,39 @@ public final class TypeSpecTest {
             + "    return FOO;\n"
             + "  }\n"
             + "}\n");
+  }
+
+  @Test public void refToEnumConstant() {
+    assertThat(codeBlock("$R", NEW).toString()).isEqualTo("java.lang.Thread.State.NEW");
+    MemberRef ref = MemberRef.get(NEW);
+    assertThat(codeBlock("$R", ref).toString()).isEqualTo("java.lang.Thread.State.NEW");
+    ref = MemberRef.get(ElementFilter.fieldsIn(getElement(Thread.State.class)
+        .getEnclosedElements()).get(0));
+    assertThat(codeBlock("$R", ref).toString()).isEqualTo("java.lang.Thread.State.NEW");
+  }
+
+  // non-static and protected for testing MemberRef
+  protected <T> List<T> refReturningGenericList() {
+    return Collections.emptyList();
+  }
+
+  @Test
+  public void refToMember() throws Exception {
+    MemberRef ref = MemberRef.get(Collections.class.getMethod("emptyList"));
+    String expected = "java.util.Collections.emptyList";
+    assertThat(codeBlock("$R", ref).toString()).isEqualTo(expected);
+    ref = MemberRef.get(Collections.class.getMethod("emptyList"), String.class);
+    expected = "java.util.Collections.<java.lang.String>emptyList";
+    assertThat(codeBlock("$R", ref).toString()).isEqualTo(expected);
+    ExecutableElement executableElement = findMethod(Collections.class, "emptyList");
+    ref = MemberRef.get(executableElement, getElement(String.class).asType());
+    assertThat(codeBlock("$R", ref).toString()).isEqualTo(expected);
+    executableElement = findMethod(TypeSpecTest.class, "refReturningGenericList");
+    expected = "this.<java.lang.String>refReturningGenericList";
+    ref = MemberRef.get(executableElement, getElement(String.class).asType());
+    assertThat(codeBlock("this.$R", ref).toString()).isEqualTo(expected);
+    ref = MemberRef.get(TypeSpecTest.class.getField("compilation"));
+    assertThat(codeBlock("this.$R", ref).toString()).isEqualTo("this.compilation");
   }
 
   @Test public void equalsAndHashCode() {
