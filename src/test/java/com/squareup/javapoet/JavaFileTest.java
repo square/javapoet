@@ -16,6 +16,8 @@
 package com.squareup.javapoet;
 
 import java.util.Date;
+import java.util.concurrent.Callable;
+
 import javax.lang.model.element.Modifier;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -356,5 +358,50 @@ public final class JavaFileTest {
         + "  class A {\n"
         + "  }\n"
         + "}\n");
+  }
+
+  @Test public void compile() throws Exception {
+    JavaFile tacoFile = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addModifiers(Modifier.PUBLIC)
+            .addField(ClassName.get("com.squareup.tacos", "Taco", "Inner"), "inner")
+            .addType(TypeSpec.classBuilder("Inner")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .build())
+            .build())
+        .build();
+    Class<?> tacoClass = tacoFile.compile();
+    Object taco = tacoClass.newInstance();
+    assertThat(taco.getClass().getSimpleName()).isEqualTo("Taco");
+    assertThat(taco.getClass().getCanonicalName()).isEqualTo("com.squareup.tacos.Taco");
+    Object a = tacoClass.getDeclaredClasses()[0].newInstance();
+    assertThat(a.getClass().getSimpleName()).isEqualTo("Inner");
+    assertThat(a.getClass().getCanonicalName()).isEqualTo("com.squareup.tacos.Taco.Inner");
+  }
+  
+  @Test public void compileAndCall() throws Exception {
+    JavaFile tacoFile = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addModifiers(Modifier.PUBLIC)
+            .addSuperinterface(ParameterizedTypeName.get(Callable.class, String.class))
+            .addField(String.class, "text", Modifier.FINAL)
+            .addField(Number.class, "number", Modifier.FINAL)
+            .addMethod(MethodSpec.constructorBuilder()
+                .addModifiers(Modifier.PUBLIC)
+                .addParameter(String.class, "text")
+                .addParameter(Number.class, "number")
+                .addStatement("this.text = text")
+                .addStatement("this.number = number")
+                .build())
+            .addMethod(MethodSpec.methodBuilder("call")
+                .addModifiers(Modifier.PUBLIC)
+                .returns(String.class)
+                .addStatement("return text + '-' + number")
+                .build())
+            .build())
+        .build();
+    @SuppressWarnings("unchecked")
+    Callable<String> taco = tacoFile.compile(Callable.class, "NCC", (short) 1701);
+    assertThat(taco.call()).isEqualTo("NCC-1701");
   }
 }
