@@ -419,6 +419,10 @@ final class CodeWriter {
 
   /** Returns the string literal representing {@code data}, including wrapping quotes. */
   String stringLiteral(String value) {
+    return stringLiteral(value, indent);
+  }
+
+  static String stringLiteral(String value, String indent) {
     StringBuilder result = new StringBuilder();
     result.append('"');
     for (int i = 0; i < value.length(); i++) {
