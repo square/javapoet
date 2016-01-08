@@ -15,12 +15,12 @@
  */
 package com.squareup.javapoet;
 
-import com.sun.tools.javac.nio.JavacPathFileManager;
-import com.sun.tools.javac.nio.PathFileManager;
-import com.sun.tools.javac.util.Context;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.FileSystem;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.spi.FileSystemProvider;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -30,20 +30,31 @@ import javax.lang.model.element.Element;
 import javax.tools.FileObject;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
+import javax.tools.SimpleJavaFileObject;
 
 final class TestFiler implements Filer {
+  class Source extends SimpleJavaFileObject {
+    private final Path path;
+    protected Source(Path path) {
+      super(path.toUri(), Kind.SOURCE);
+      this.path = path;
+    }
+    @Override public OutputStream openOutputStream() throws IOException {
+      Path parent = path.getParent();
+      if (!Files.exists(parent)) fileSystemProvider.createDirectory(parent);
+      return fileSystemProvider.newOutputStream(path);
+    }
+  }
+
   private final String separator;
   private final Path fileSystemRoot;
-  private final PathFileManager fileManager;
+  private final FileSystemProvider fileSystemProvider;
   private final Map<Path, Set<Element>> originatingElementsMap;
 
   public TestFiler(FileSystem fileSystem, Path fsRoot) {
     separator = fileSystem.getSeparator();
     fileSystemRoot = fsRoot;
-    fileManager = new JavacPathFileManager(new Context(), false, UTF_8);
-    fileManager.setDefaultFileSystem(fileSystem);
+    fileSystemProvider = fileSystem.provider();
     originatingElementsMap = new LinkedHashMap<>();
   }
 
@@ -56,7 +67,7 @@ final class TestFiler implements Filer {
     String relative = name.toString().replace(".", separator) + ".java"; // Assumes well-formed.
     Path path = fileSystemRoot.resolve(relative);
     originatingElementsMap.put(path, Util.immutableSet(Arrays.asList(originatingElements)));
-    return fileManager.getJavaFileObjects(path).iterator().next();
+    return new Source(path);
   }
 
   @Override public JavaFileObject createClassFile(CharSequence name, Element... originatingElements)
