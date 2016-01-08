@@ -235,7 +235,11 @@ public final class AnnotationSpec {
         return addMember(memberName, "$Lf", value);
       }
       if (value instanceof Character) {
-        return addMember(memberName, "'$L'", value);
+        String literal = CodeWriter.stringLiteral(value.toString(), "");
+        literal = literal.substring(1, literal.length() - 1);
+        if (literal.equals("\\\"")) literal = "\"";
+        if (literal.equals("'")) literal = "\\'";
+        return addMember(memberName, "'$L'", literal);
       }
       return addMember(memberName, "$L", value);
     }
