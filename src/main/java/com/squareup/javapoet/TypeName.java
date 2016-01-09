@@ -163,11 +163,12 @@ public class TypeName {
     if (this == o) return true;
     if (o == null) return false;
     if (getClass() != o.getClass()) return false;
-    return toString().equals(o.toString());
+    return keyword.equals(((TypeName) o).keyword);
   }
 
   @Override public int hashCode() {
-    return toString().hashCode();
+    if (keyword == null) throw new AssertionError();
+    return keyword.hashCode();
   }
 
   @Override public final String toString() {
