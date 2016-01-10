@@ -274,7 +274,7 @@ ClassName list = ClassName.get("java.util", "List");
 ClassName arrayList = ClassName.get("java.util", "ArrayList");
 TypeName listOfHoverboards = ParameterizedTypeName.get(list, hoverboard);
 
-MethodSpec today = MethodSpec.methodBuilder("beyond")
+MethodSpec beyond = MethodSpec.methodBuilder("beyond")
     .returns(listOfHoverboards)
     .addStatement("$T result = new $T<>()", listOfHoverboards, arrayList)
     .addStatement("result.add(new $T())", hoverboard)
@@ -300,6 +300,62 @@ public final class HelloWorld {
     result.add(new Hoverboard());
     result.add(new Hoverboard());
     return result;
+  }
+}
+```
+
+#### Import static
+
+JavaPoet supports `import static`. It does it via explicitly collecting type member names. Let's
+enhance the previous example with some static sugar:
+
+```java
+...
+ClassName namedBoards = ClassName.get("com.mattel", "Hoverboard", "Boards");
+
+MethodSpec beyond = MethodSpec.methodBuilder("beyond")
+    .returns(listOfHoverboards)
+    .addStatement("$T result = new $T<>()", listOfHoverboards, arrayList)
+    .addStatement("result.add($T.createNimbus(2000))", hoverboard)
+    .addStatement("result.add($T.createNimbus(\"2001\"))", hoverboard)
+    .addStatement("result.add($T.createNimbus($T.THUNDERBOLT))", namedBoards)
+    .addStatement("$T.sort(result)", Collections.class)
+    .addStatement("return result.isEmpty() $T.emptyList() : result", Collections.class)
+    .build();
+
+TypeSpec hello = TypeSpec.classBuilder("HelloWorld")
+    .addMethod(beyond)
+    .build();
+
+JavaFile.builder("com.example.helloworld", hello)
+    .addStaticImport(hoverboard, "createNimbus")
+    .addStaticImport(namedBoards, "*")
+    .addStaticImport(Collections.class, "*")
+    .build();
+```
+
+JavaPoet will first add your `import static` block to the file as configured, match and mangle
+all calls accordingly and also import all other types as needed.
+
+```java
+package com.example.helloworld;
+
+import static com.mattel.Hoverboard.Boards.*;
+import static com.mattel.Hoverboard.createNimbus;
+import static java.util.Collections.*;
+
+import com.mattel.Hoverboard;
+import java.util.ArrayList;
+import java.util.List;
+
+class HelloWorld {
+  List<Hoverboard> beyond() {
+    List<Hoverboard> result = new ArrayList<>();
+    result.add(createNimbus(2000));
+    result.add(createNimbus("2001"));
+    result.add(createNimbus(THUNDERBOLT));
+    sort(result);
+    return result.isEmpty() ? emptyList() : result;
   }
 }
 ```

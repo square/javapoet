@@ -290,7 +290,8 @@ final class CodeWriter {
     return this;
   }
 
-  private static String gleanMemberName(String part) {
+  private static String extractMemberName(String part) {
+    checkArgument(Character.isJavaIdentifierStart(part.charAt(0)), "not an identifier: %s", part);
     for (int i = 1; i <= part.length(); i++) {
       if (!SourceVersion.isIdentifier(part.substring(0, i))) {
         return part.substring(0, i - 1);
@@ -301,14 +302,14 @@ final class CodeWriter {
 
   private boolean emitStaticImportMember(String canonical, String part) throws IOException {
     String partWithoutLeadingDot = part.substring(1);
+    if (partWithoutLeadingDot.isEmpty()) return false;
     char first = partWithoutLeadingDot.charAt(0);
-    if (!partWithoutLeadingDot.isEmpty() && Character.isJavaIdentifierStart(first)) {
-      String explicit = canonical + "." + gleanMemberName(partWithoutLeadingDot);
-      String wildcard = canonical + ".*";
-      if (staticImports.contains(explicit) || staticImports.contains(wildcard)) {
-        emitAndIndent(partWithoutLeadingDot);
-        return true;
-      }
+    if (!Character.isJavaIdentifierStart(first)) return false;
+    String explicit = canonical + "." + extractMemberName(partWithoutLeadingDot);
+    String wildcard = canonical + ".*";
+    if (staticImports.contains(explicit) || staticImports.contains(wildcard)) {
+      emitAndIndent(partWithoutLeadingDot);
+      return true;
     }
     return false;
   }

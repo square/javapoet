@@ -15,6 +15,7 @@
  */
 package com.squareup.javapoet;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import javax.lang.model.element.Modifier;
@@ -26,19 +27,73 @@ import static com.google.common.truth.Truth.assertThat;
 
 @RunWith(JUnit4.class)
 public final class JavaFileTest {
+  @Test public void importStaticReadmeExample() {
+    ClassName hoverboard = ClassName.get("com.mattel", "Hoverboard");
+    ClassName namedBoards = ClassName.get("com.mattel", "Hoverboard", "Boards");
+    ClassName list = ClassName.get("java.util", "List");
+    ClassName arrayList = ClassName.get("java.util", "ArrayList");
+    TypeName listOfHoverboards = ParameterizedTypeName.get(list, hoverboard);
+    MethodSpec beyond = MethodSpec.methodBuilder("beyond")
+        .returns(listOfHoverboards)
+        .addStatement("$T result = new $T<>()", listOfHoverboards, arrayList)
+        .addStatement("result.add($T.createNimbus(2000))", hoverboard)
+        .addStatement("result.add($T.createNimbus(\"2001\"))", hoverboard)
+        .addStatement("result.add($T.createNimbus($T.THUNDERBOLT))", hoverboard, namedBoards)
+        .addStatement("$T.sort(result)", Collections.class)
+        .addStatement("return result.isEmpty() $T.emptyList() : result", Collections.class)
+        .build();
+    TypeSpec hello = TypeSpec.classBuilder("HelloWorld")
+        .addMethod(beyond)
+        .build();
+    JavaFile example = JavaFile.builder("com.example.helloworld", hello)
+        .addStaticImport(hoverboard, "createNimbus")
+        .addStaticImport(namedBoards, "*")
+        .addStaticImport(Collections.class, "*")
+        .build();
+    assertThat(example.toString()).isEqualTo(""
+        + "package com.example.helloworld;\n"
+        + "\n"
+        + "import static com.mattel.Hoverboard.Boards.*;\n"
+        + "import static com.mattel.Hoverboard.createNimbus;\n"
+        + "import static java.util.Collections.*;\n"
+        + "\n"
+        + "import com.mattel.Hoverboard;\n"
+        + "import java.util.ArrayList;\n"
+        + "import java.util.List;\n"
+        + "\n"
+        + "class HelloWorld {\n"
+        + "  List<Hoverboard> beyond() {\n"
+        + "    List<Hoverboard> result = new ArrayList<>();\n"
+        + "    result.add(createNimbus(2000));\n"
+        + "    result.add(createNimbus(\"2001\"));\n"
+        + "    result.add(createNimbus(THUNDERBOLT));\n"
+        + "    sort(result);\n"
+        + "    return result.isEmpty() emptyList() : result;\n"
+        + "  }\n"
+        + "}\n");
+  }
   @Test public void importStaticForCrazyFormatsWorks() {
+    MethodSpec method = MethodSpec.methodBuilder("method").build();
     JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("Taco")
             .addStaticBlock(CodeBlock.builder()
+                .addStatement("$T", Runtime.class)
+                .addStatement("$T.a()", Runtime.class)
+                .addStatement("$T.X", Runtime.class)
                 .addStatement("$T$T", Runtime.class, Runtime.class)
+                .addStatement("$T.$T", Runtime.class, Runtime.class)
                 .addStatement("$1T$1T", Runtime.class)
                 .addStatement("$1T$2L$1T", Runtime.class, "?")
                 .addStatement("$1T$2L$2S$1T", Runtime.class, "?")
+                .addStatement("$1T$2L$2S$1T$3N$1T", Runtime.class, "?", method)
+                .addStatement("$T$L", Runtime.class, "?")
+                .addStatement("$T$S", Runtime.class, "?")
+                .addStatement("$T$N", Runtime.class, method)
                 .build())
             .build())
         .addStaticImport(Runtime.class, "*")
         .build()
-        .toString();
+        .toString(); // don't look at the generated code...
   }
 
   @Test public void importStaticMixed() {
