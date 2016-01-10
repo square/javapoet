@@ -1,6 +1,17 @@
 Change Log
 ==========
 
+JavaPoet 1.5.0-SNAPSHOT *(not yet released)*
+----------------------------
+
+ * New: `import static`! See `JavaFile.Builder.addStaticImport()` variants.
+ * New: Overload `NameAllocator.newName(String)` for creating a one-off name without a tag.
+ * Fix: AnnotationSpec escapes character literals properly.
+ * Fix: Don't stack overflow when `TypeVariableName` is part of `ParameterizedTypeName`.
+ * Fix: Reporting not used indexed arguments in like `add("$1S", "a", "b")`.
+ * Fix: Prevent import of types located in the default package, i.e. have no package name.
+
+
 JavaPoet 1.4.0 *(2015-11-13)*
 ----------------------------
 
