@@ -198,15 +198,6 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     return (PackageElement) type;
   }
 
-  @Override public boolean equals(Object o) {
-    return o instanceof ClassName
-        && canonicalName.equals(((ClassName) o).canonicalName);
-  }
-
-  @Override public int hashCode() {
-    return canonicalName.hashCode();
-  }
-
   @Override public int compareTo(ClassName o) {
     return canonicalName.compareTo(o.canonicalName);
   }

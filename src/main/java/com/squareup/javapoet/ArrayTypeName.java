@@ -44,15 +44,6 @@ public final class ArrayTypeName extends TypeName {
     return new ArrayTypeName(componentType, annotations);
   }
 
-  @Override public boolean equals(Object o) {
-    return o instanceof ArrayTypeName
-        && ((ArrayTypeName) o).componentType.equals(componentType);
-  }
-
-  @Override public int hashCode() {
-    return 31 * componentType.hashCode();
-  }
-
   @Override CodeWriter emit(CodeWriter out) throws IOException {
     return emitAnnotations(out).emit("$T[]", componentType);
   }

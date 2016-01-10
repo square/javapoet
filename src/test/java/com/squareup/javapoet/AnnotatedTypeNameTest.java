@@ -17,6 +17,7 @@ package com.squareup.javapoet;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -25,6 +26,7 @@ import org.junit.Test;
 public class AnnotatedTypeNameTest {
 
   private final static String NN = NeverNull.class.getCanonicalName();
+  private final AnnotationSpec NEVER_NULL = AnnotationSpec.builder(NeverNull.class).build();
 
   public @interface NeverNull {}
 
@@ -40,7 +42,7 @@ public class AnnotatedTypeNameTest {
     TypeName simpleString = TypeName.get(String.class);
     assertFalse(simpleString.isAnnotated());
     assertEquals(simpleString, TypeName.get(String.class));
-    TypeName annotated = simpleString.annotated(AnnotationSpec.builder(NeverNull.class).build());
+    TypeName annotated = simpleString.annotated(NEVER_NULL);
     assertTrue(annotated.isAnnotated());
     assertEquals(simpleString, annotated.annotated());
     assertFalse(annotated.annotated().isAnnotated());
@@ -48,24 +50,21 @@ public class AnnotatedTypeNameTest {
 
   @Test public void annotatedType() {
     String expected = "@" + NN + " java.lang.String";
-    AnnotationSpec annotation = AnnotationSpec.builder(NeverNull.class).build();
     TypeName type = TypeName.get(String.class);
-    String actual = type.annotated(annotation).toString();
+    String actual = type.annotated(NEVER_NULL).toString();
     assertEquals(expected, actual);
   }
 
   @Test public void annotatedParameterizedType() {
     String expected = "@" + NN + " java.util.List<java.lang.String>";
-    AnnotationSpec annotation = AnnotationSpec.builder(NeverNull.class).build();
     TypeName type = ParameterizedTypeName.get(List.class, String.class);
-    String actual = type.annotated(annotation).toString();
+    String actual = type.annotated(NEVER_NULL).toString();
     assertEquals(expected, actual);
   }
 
   @Test public void annotatedArgumentOfParameterizedType() {
     String expected = "java.util.List<@" + NN + " java.lang.String>";
-    AnnotationSpec annotation = AnnotationSpec.builder(NeverNull.class).build();
-    TypeName type = TypeName.get(String.class).annotated(annotation);
+    TypeName type = TypeName.get(String.class).annotated(NEVER_NULL);
     ClassName list = ClassName.get(List.class);
     String actual = ParameterizedTypeName.get(list, type).toString();
     assertEquals(expected, actual);
@@ -73,18 +72,34 @@ public class AnnotatedTypeNameTest {
 
   @Test public void annotatedWildcardTypeNameWithSuper() {
     String expected = "? super @" + NN + " java.lang.String";
-    AnnotationSpec annotation = AnnotationSpec.builder(NeverNull.class).build();
-    TypeName type = TypeName.get(String.class).annotated(annotation);
+    TypeName type = TypeName.get(String.class).annotated(NEVER_NULL);
     String actual = WildcardTypeName.supertypeOf(type).toString();
     assertEquals(expected, actual);
   }
 
   @Test public void annotatedWildcardTypeNameWithExtends() {
     String expected = "? extends @" + NN + " java.lang.String";
-    AnnotationSpec annotation = AnnotationSpec.builder(NeverNull.class).build();
-    TypeName type = TypeName.get(String.class).annotated(annotation);
+    TypeName type = TypeName.get(String.class).annotated(NEVER_NULL);
     String actual = WildcardTypeName.subtypeOf(type).toString();
     assertEquals(expected, actual);
   }
 
+  @Test public void annotatedEquivalence() {
+    annotatedEquivalence(TypeName.VOID);
+    annotatedEquivalence(ArrayTypeName.get(Object[].class));
+    annotatedEquivalence(ClassName.get(Object.class));
+    annotatedEquivalence(ParameterizedTypeName.get(List.class, Object.class));
+    annotatedEquivalence(TypeVariableName.get(Object.class));
+    annotatedEquivalence(WildcardTypeName.get(Object.class));
+  }
+
+  private void annotatedEquivalence(TypeName type) {
+    assertFalse(type.isAnnotated());
+    assertEquals(type, type);
+    assertEquals(type.annotated(NEVER_NULL), type.annotated(NEVER_NULL));
+    assertNotEquals(type, type.annotated(NEVER_NULL));
+    assertEquals(type.hashCode(), type.hashCode());
+    assertEquals(type.annotated(NEVER_NULL).hashCode(), type.annotated(NEVER_NULL).hashCode());
+    assertNotEquals(type.hashCode(), type.annotated(NEVER_NULL).hashCode());
+  }
 }
