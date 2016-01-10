@@ -23,10 +23,12 @@ import java.util.Formatter;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
 
 import static com.squareup.javapoet.Util.checkArgument;
@@ -50,6 +52,8 @@ final class CodeWriter {
   private boolean comment = false;
   private String packageName = NO_PACKAGE;
   private final List<TypeSpec> typeSpecStack = new ArrayList<>();
+  private final Set<String> staticImportClassNames;
+  private final Set<String> staticImports;
   private final Map<String, ClassName> importedTypes;
   private final Map<String, ClassName> importableTypes = new LinkedHashMap<>();
   private final Set<String> referencedNames = new LinkedHashSet<>();
@@ -63,17 +67,23 @@ final class CodeWriter {
   int statementLine = -1;
 
   CodeWriter(Appendable out) {
-    this(out, "  ");
+    this(out, "  ", Collections.<String>emptySet());
   }
 
-  CodeWriter(Appendable out, String indent) {
-    this(out, indent, Collections.<String, ClassName>emptyMap());
+  CodeWriter(Appendable out, String indent, Set<String> staticImports) {
+    this(out, indent, Collections.<String, ClassName>emptyMap(), staticImports);
   }
 
-  CodeWriter(Appendable out, String indent, Map<String, ClassName> importedTypes) {
+  CodeWriter(Appendable out, String indent, Map<String, ClassName> importedTypes,
+      Set<String> staticImports) {
     this.out = checkNotNull(out, "out == null");
     this.indent = checkNotNull(indent, "indent == null");
     this.importedTypes = checkNotNull(importedTypes, "importedTypes == null");
+    this.staticImports = checkNotNull(staticImports, "staticImports == null");
+    this.staticImportClassNames = new LinkedHashSet<>();
+    for (String signature : staticImports) {
+      staticImportClassNames.add(signature.substring(0, signature.lastIndexOf('.')));
+    }
   }
 
   public Map<String, ClassName> importedTypes() {
@@ -198,7 +208,10 @@ final class CodeWriter {
 
   public CodeWriter emit(CodeBlock codeBlock) throws IOException {
     int a = 0;
-    for (String part : codeBlock.formatParts) {
+    ClassName deferredTypeName = null; // used by "import static" logic
+    ListIterator<String> partIterator = codeBlock.formatParts.listIterator();
+    while (partIterator.hasNext()) {
+      String part = partIterator.next();
       switch (part) {
         case "$L":
           emitLiteral(codeBlock.args.get(a++));
@@ -218,6 +231,17 @@ final class CodeWriter {
 
         case "$T":
           TypeName typeName = (TypeName) codeBlock.args.get(a++);
+          // defer "typeName.emit(this)" if next format part will be handled by the default case
+          if (typeName instanceof ClassName && partIterator.hasNext()) {
+            if (!codeBlock.formatParts.get(partIterator.nextIndex()).startsWith("$")) {
+              ClassName candidate = (ClassName) typeName;
+              if (staticImportClassNames.contains(candidate.canonicalName)) {
+                checkState(deferredTypeName == null, "pending type for static import?!");
+                deferredTypeName = candidate;
+                break;
+              }
+            }
+          }
           typeName.emit(this);
           break;
 
@@ -247,11 +271,46 @@ final class CodeWriter {
           break;
 
         default:
+          // handle deferred type
+          if (deferredTypeName != null) {
+            if (part.startsWith(".")) {
+              if (emitStaticImportMember(deferredTypeName.canonicalName, part)) {
+                // okay, static import hit and all was emitted, so clean-up and jump to next part
+                deferredTypeName = null;
+                break;
+              }
+            }
+            deferredTypeName.emit(this);
+            deferredTypeName = null;
+          }
           emitAndIndent(part);
           break;
       }
     }
     return this;
+  }
+
+  private static String gleanMemberName(String part) {
+    for (int i = 1; i <= part.length(); i++) {
+      if (!SourceVersion.isIdentifier(part.substring(0, i))) {
+        return part.substring(0, i - 1);
+      }
+    }
+    return part;
+  }
+
+  private boolean emitStaticImportMember(String canonical, String part) throws IOException {
+    String partWithoutLeadingDot = part.substring(1);
+    char first = partWithoutLeadingDot.charAt(0);
+    if (!partWithoutLeadingDot.isEmpty() && Character.isJavaIdentifierStart(first)) {
+      String explicit = canonical + "." + gleanMemberName(partWithoutLeadingDot);
+      String wildcard = canonical + ".*";
+      if (staticImports.contains(explicit) || staticImports.contains(wildcard)) {
+        emitAndIndent(partWithoutLeadingDot);
+        return true;
+      }
+    }
+    return false;
   }
 
   private void emitLiteral(Object o) throws IOException {

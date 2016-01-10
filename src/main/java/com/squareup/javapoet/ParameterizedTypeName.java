@@ -30,6 +30,7 @@ import static com.squareup.javapoet.Util.checkNotNull;
 public final class ParameterizedTypeName extends TypeName {
   public final ClassName rawType;
   public final List<TypeName> typeArguments;
+  private final int hashCode;
 
   ParameterizedTypeName(ClassName rawType, List<TypeName> typeArguments) {
     this(rawType, typeArguments, new ArrayList<AnnotationSpec>());
@@ -40,6 +41,7 @@ public final class ParameterizedTypeName extends TypeName {
     super(annotations);
     this.rawType = checkNotNull(rawType, "rawType == null");
     this.typeArguments = Util.immutableList(typeArguments);
+    this.hashCode = rawType.hashCode() + 31 * typeArguments.hashCode();
 
     checkArgument(!this.typeArguments.isEmpty(), "no type arguments: %s", rawType);
     for (TypeName typeArgument : this.typeArguments) {
@@ -59,7 +61,7 @@ public final class ParameterizedTypeName extends TypeName {
   }
 
   @Override public int hashCode() {
-    return rawType.hashCode() + 31 * typeArguments.hashCode();
+    return hashCode;
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {

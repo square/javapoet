@@ -16,6 +16,7 @@
 package com.squareup.javapoet;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 import javax.lang.model.element.Modifier;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,6 +26,143 @@ import static com.google.common.truth.Truth.assertThat;
 
 @RunWith(JUnit4.class)
 public final class JavaFileTest {
+  @Test public void importStaticForCrazyFormatsWorks() {
+    JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addStaticBlock(CodeBlock.builder()
+                .addStatement("$T$T", Runtime.class, Runtime.class)
+                .addStatement("$1T$1T", Runtime.class)
+                .addStatement("$1T$2L$1T", Runtime.class, "?")
+                .addStatement("$1T$2L$2S$1T", Runtime.class, "?")
+                .build())
+            .build())
+        .addStaticImport(Runtime.class, "*")
+        .build()
+        .toString();
+  }
+
+  @Test public void importStaticMixed() {
+    JavaFile source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addStaticBlock(CodeBlock.builder()
+                .addStatement("assert $1T.valueOf(\"BLOCKED\") == $1T.BLOCKED", Thread.State.class)
+                .addStatement("$T.gc()", System.class)
+                .addStatement("$1T.out.println($1T.nanoTime())", System.class)
+                .build())
+            .addMethod(MethodSpec.constructorBuilder()
+                .addParameter(Thread.State[].class, "states")
+                .varargs(true)
+                .build())
+            .build())
+        .addStaticImport(Thread.State.BLOCKED)
+        .addStaticImport(System.class, "*")
+        .addStaticImport(Thread.State.class, "valueOf")
+        .build();
+    assertThat(source.toString()).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import static java.lang.System.*;\n"
+        + "import static java.lang.Thread.State.BLOCKED;\n"
+        + "import static java.lang.Thread.State.valueOf;\n"
+        + "\n"
+        + "import java.lang.Thread;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  static {\n"
+        + "    assert valueOf(\"BLOCKED\") == BLOCKED;\n"
+        + "    gc();\n"
+        + "    out.println(nanoTime());\n"
+        + "  }\n"
+        + "\n"
+        + "  Taco(Thread.State... states) {\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void importStaticNone() {
+    assertThat(JavaFile.builder("readme", importStaticTypeSpec("Util"))
+        .build().toString()).isEqualTo(""
+        + "package readme;\n"
+        + "\n"
+        + "import java.lang.System;\n"
+        + "import java.util.concurrent.TimeUnit;\n"
+        + "\n"
+        + "class Util {\n"
+        + "  public static long minutesToSeconds(long minutes) {\n"
+        + "    System.gc();\n"
+        + "    return TimeUnit.SECONDS.convert(minutes, TimeUnit.MINUTES);\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void importStaticOnce() {
+    assertThat(JavaFile.builder("readme", importStaticTypeSpec("Util"))
+        .addStaticImport(TimeUnit.SECONDS)
+        .build().toString()).isEqualTo(""
+        + "package readme;\n"
+        + "\n"
+        + "import static java.util.concurrent.TimeUnit.SECONDS;\n"
+        + "\n"
+        + "import java.lang.System;\n"
+        + "import java.util.concurrent.TimeUnit;\n"
+        + "\n"
+        + "class Util {\n"
+        + "  public static long minutesToSeconds(long minutes) {\n"
+        + "    System.gc();\n"
+        + "    return SECONDS.convert(minutes, TimeUnit.MINUTES);\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void importStaticTwice() {
+    assertThat(JavaFile.builder("readme", importStaticTypeSpec("Util"))
+        .addStaticImport(TimeUnit.SECONDS)
+        .addStaticImport(TimeUnit.MINUTES)
+        .build().toString()).isEqualTo(""
+            + "package readme;\n"
+            + "\n"
+            + "import static java.util.concurrent.TimeUnit.MINUTES;\n"
+            + "import static java.util.concurrent.TimeUnit.SECONDS;\n"
+            + "\n"
+            + "import java.lang.System;\n"
+            + "\n"
+            + "class Util {\n"
+            + "  public static long minutesToSeconds(long minutes) {\n"
+            + "    System.gc();\n"
+            + "    return SECONDS.convert(minutes, MINUTES);\n"
+            + "  }\n"
+            + "}\n");
+  }
+
+  @Test public void importStaticUsingWildcards() {
+    assertThat(JavaFile.builder("readme", importStaticTypeSpec("Util"))
+        .addStaticImport(TimeUnit.class, "*")
+        .addStaticImport(System.class, "*")
+        .build().toString()).isEqualTo(""
+            + "package readme;\n"
+            + "\n"
+            + "import static java.lang.System.*;\n"
+            + "import static java.util.concurrent.TimeUnit.*;\n"
+            + "\n"
+            + "class Util {\n"
+            + "  public static long minutesToSeconds(long minutes) {\n"
+            + "    gc();\n"
+            + "    return SECONDS.convert(minutes, MINUTES);\n"
+            + "  }\n"
+            + "}\n");
+  }
+
+  private TypeSpec importStaticTypeSpec(String name) {
+    MethodSpec method = MethodSpec.methodBuilder("minutesToSeconds")
+        .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+        .returns(long.class)
+        .addParameter(long.class, "minutes")
+        .addStatement("$T.gc()", System.class)
+        .addStatement("return $1T.SECONDS.convert(minutes, $1T.MINUTES)", TimeUnit.class)
+        .build();
+    return TypeSpec.classBuilder(name).addMethod(method).build();
+
+  }
   @Test public void noImports() throws Exception {
     String source = JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("Taco").build())

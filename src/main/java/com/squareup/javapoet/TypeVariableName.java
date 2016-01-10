@@ -34,6 +34,7 @@ import static com.squareup.javapoet.Util.checkNotNull;
 public final class TypeVariableName extends TypeName {
   public final String name;
   public final List<TypeName> bounds;
+  private final int hashCode;
 
   private TypeVariableName(String name, List<TypeName> bounds) {
     this(name, bounds, new ArrayList<AnnotationSpec>());
@@ -43,6 +44,7 @@ public final class TypeVariableName extends TypeName {
     super(annotations);
     this.name = checkNotNull(name, "name == null");
     this.bounds = bounds;
+    this.hashCode = name.hashCode() ^ bounds.hashCode();
 
     for (TypeName bound : this.bounds) {
       checkArgument(!bound.isPrimitive() && bound != VOID, "invalid bound: %s", bound);
@@ -67,7 +69,7 @@ public final class TypeVariableName extends TypeName {
   }
 
   @Override public int hashCode() {
-    return name.hashCode() ^ bounds.hashCode();
+    return hashCode;
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {

@@ -32,6 +32,7 @@ import static com.squareup.javapoet.Util.checkArgument;
 public final class WildcardTypeName extends TypeName {
   public final List<TypeName> upperBounds;
   public final List<TypeName> lowerBounds;
+  private final int hashCode;
 
   private WildcardTypeName(List<TypeName> upperBounds, List<TypeName> lowerBounds) {
     this(upperBounds, lowerBounds, new ArrayList<AnnotationSpec>());
@@ -42,6 +43,7 @@ public final class WildcardTypeName extends TypeName {
     super(annotations);
     this.upperBounds = Util.immutableList(upperBounds);
     this.lowerBounds = Util.immutableList(lowerBounds);
+    this.hashCode = upperBounds.hashCode() ^ lowerBounds.hashCode();
 
     checkArgument(this.upperBounds.size() == 1, "unexpected extends bounds: %s", upperBounds);
     for (TypeName upperBound : this.upperBounds) {
@@ -65,7 +67,7 @@ public final class WildcardTypeName extends TypeName {
   }
 
   @Override public int hashCode() {
-    return upperBounds.hashCode() ^ lowerBounds.hashCode();
+    return hashCode;
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {
