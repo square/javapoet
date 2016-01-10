@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-JavaPoet 1.5.0-SNAPSHOT *(not yet released)*
+JavaPoet 1.5.0 *(2016-01-10)*
 ----------------------------
 
  * New: `import static`! See `JavaFile.Builder.addStaticImport()` variants.
