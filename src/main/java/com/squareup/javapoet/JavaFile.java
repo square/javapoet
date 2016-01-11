@@ -238,6 +238,14 @@ public final class JavaFile {
       return addStaticImport(ClassName.get(clazz), names);
     }
 
+    public Builder addStaticImport(MemberRef... refs) {
+      for (MemberRef ref : refs) {
+        checkArgument(ref.isStatic, "only static member references allowed, got %s", ref);
+        addStaticImport(ref.type, ref.name);
+      }
+      return this;
+    }
+
     public Builder addStaticImport(ClassName className, String... names) {
       checkArgument(className != null, "className == null");
       checkArgument(names != null, "names == null");

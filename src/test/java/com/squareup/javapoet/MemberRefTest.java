@@ -104,6 +104,25 @@ public class MemberRefTest {
         + "}\n");
   }
 
+  @Test public void importStaticAll() throws Exception {
+    assertThat(JavaFile.builder("readme", typeSpec("Util"))
+        .addStaticImport(MemberRef.get(TimeUnit.SECONDS), MemberRef.get(TimeUnit.MINUTES))
+        .addStaticImport(MemberRef.get(System.class.getMethod("gc")))
+        .build().toString()).isEqualTo(""
+        + "package readme;\n"
+        + "\n"
+        + "import static java.lang.System.gc;\n"
+        + "import static java.util.concurrent.TimeUnit.MINUTES;\n"
+        + "import static java.util.concurrent.TimeUnit.SECONDS;\n"
+        + "\n"
+        + "class Util {\n"
+        + "  public static long minutesToSeconds(long minutes) {\n"
+        + "    gc();\n"
+        + "    return SECONDS.convert(minutes, MINUTES);\n"
+        + "  }\n"
+        + "}\n");
+  }
+
   TypeSpec typeSpec(String name) {
     try {
       Method convert = TimeUnit.class.getMethod("convert", long.class, TimeUnit.class);
