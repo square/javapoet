@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+JavaPoet 1.5.1 *(2016-01-10)*
+----------------------------
+
+ * Fix: Annotated `TypeName` instances are only equal if their annotations are equal.
+
 JavaPoet 1.5.0 *(2016-01-10)*
 ----------------------------
 
