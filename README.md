@@ -801,12 +801,12 @@ Download [the latest .jar][dl] or depend via Maven:
 <dependency>
   <groupId>com.squareup</groupId>
   <artifactId>javapoet</artifactId>
-  <version>1.5.0</version>
+  <version>1.5.1</version>
 </dependency>
 ```
 or Gradle:
 ```groovy
-compile 'com.squareup:javapoet:1.5.0'
+compile 'com.squareup:javapoet:1.5.1'
 ```
 
 Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
