@@ -159,16 +159,15 @@ public class TypeName {
     throw new UnsupportedOperationException("cannot unbox " + this);
   }
 
-  @Override public boolean equals(Object o) {
+  @Override public final boolean equals(Object o) {
     if (this == o) return true;
     if (o == null) return false;
     if (getClass() != o.getClass()) return false;
-    return keyword.equals(((TypeName) o).keyword);
+    return toString().equals(o.toString());
   }
 
-  @Override public int hashCode() {
-    if (keyword == null) throw new AssertionError();
-    return keyword.hashCode();
+  @Override public final int hashCode() {
+    return toString().hashCode();
   }
 
   @Override public final String toString() {
