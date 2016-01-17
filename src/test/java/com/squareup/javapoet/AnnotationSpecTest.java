@@ -62,7 +62,7 @@ public final class AnnotationSpecTest {
 
     double f() default 10.0;
 
-    char[] g() default {0, 0xCAFE, 'z', '€', '"', '\'', '\t', '\n'};
+    char[] g() default {0, 0xCAFE, 'z', '€', 'ℕ', '"', '\'', '\t', '\n'};
 
     boolean h() default true;
 
@@ -318,6 +318,7 @@ public final class AnnotationSpecTest {
         + "        '쫾',\n"
         + "        'z',\n"
         + "        '€',\n"
+        + "        'ℕ',\n"
         + "        '\"',\n"
         + "        '\\'',\n"
         + "        '\\t',\n"

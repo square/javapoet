@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.Formatter;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -35,6 +34,7 @@ import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
 import static com.squareup.javapoet.Util.checkState;
 import static com.squareup.javapoet.Util.join;
+import static com.squareup.javapoet.Util.stringLiteralWithDoubleQuotes;
 
 /**
  * Converts a {@link JavaFile} to a string suitable to both human- and javac-consumption. This
@@ -225,7 +225,7 @@ final class CodeWriter {
           String string = (String) codeBlock.args.get(a++);
           // Emit null as a literal null: no quotes.
           emitAndIndent(string != null
-              ? stringLiteral(string)
+              ? stringLiteralWithDoubleQuotes(string, indent)
               : "null");
           break;
 
@@ -475,52 +475,5 @@ final class CodeWriter {
     Map<String, ClassName> result = new LinkedHashMap<>(importableTypes);
     result.keySet().removeAll(referencedNames);
     return result;
-  }
-
-  /** Returns the string literal representing {@code data}, including wrapping quotes. */
-  String stringLiteral(String value) {
-    return stringLiteral(value, indent);
-  }
-
-  static String stringLiteral(String value, String indent) {
-    StringBuilder result = new StringBuilder();
-    result.append('"');
-    for (int i = 0; i < value.length(); i++) {
-      char c = value.charAt(i);
-      switch (c) {
-        case '"':
-          result.append("\\\"");
-          break;
-        case '\\':
-          result.append("\\\\");
-          break;
-        case '\b':
-          result.append("\\b");
-          break;
-        case '\t':
-          result.append("\\t");
-          break;
-        case '\n':
-          result.append("\\n");
-          if (i + 1 < value.length()) {
-            result.append("\"\n").append(indent).append(indent).append("+ \"");
-          }
-          break;
-        case '\f':
-          result.append("\\f");
-          break;
-        case '\r':
-          result.append("\\r");
-          break;
-        default:
-          if (Character.isISOControl(c)) {
-            new Formatter(result).format("\\u%04x", (int) c);
-          } else {
-            result.append(c);
-          }
-      }
-    }
-    result.append('"');
-    return result.toString();
   }
 }
