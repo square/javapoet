@@ -245,6 +245,17 @@ final class CodeWriter {
           typeName.emit(this);
           break;
 
+        case "$R":
+          MemberRef memberRef = (MemberRef) codeBlock.args.get(a++);
+          if (memberRef.isStatic) {
+            if (isImportedStatically(memberRef.type.canonicalName, memberRef.name)) {
+              emitAndIndent(memberRef.name);
+              break;
+            }
+          }
+          memberRef.emit(this);
+          break;
+
         case "$$":
           emitAndIndent("$");
           break;
@@ -300,14 +311,18 @@ final class CodeWriter {
     return part;
   }
 
+  private boolean isImportedStatically(String canonicalTypeName, String memberName) {
+    String explicit = canonicalTypeName + "." + memberName;
+    String wildcard = canonicalTypeName + ".*";
+    return staticImports.contains(explicit) || staticImports.contains(wildcard);
+  }
+
   private boolean emitStaticImportMember(String canonical, String part) throws IOException {
     String partWithoutLeadingDot = part.substring(1);
     if (partWithoutLeadingDot.isEmpty()) return false;
     char first = partWithoutLeadingDot.charAt(0);
     if (!Character.isJavaIdentifierStart(first)) return false;
-    String explicit = canonical + "." + extractMemberName(partWithoutLeadingDot);
-    String wildcard = canonical + ".*";
-    if (staticImports.contains(explicit) || staticImports.contains(wildcard)) {
+    if (isImportedStatically(canonical, extractMemberName(partWithoutLeadingDot))) {
       emitAndIndent(partWithoutLeadingDot);
       return true;
     }
