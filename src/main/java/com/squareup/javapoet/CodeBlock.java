@@ -46,7 +46,9 @@ import static com.squareup.javapoet.Util.checkArgument;
  *       that. For example, {@code 6" sandwich} is emitted {@code "6\" sandwich"}.
  *   <li>{@code $T} emits a <em>type</em> reference. Types will be imported if possible. Arguments
  *       for types may be {@linkplain Class classes}, {@linkplain javax.lang.model.type.TypeMirror
-,*       type mirrors}, and {@linkplain javax.lang.model.element.Element elements}.
+ *       type mirrors}, and {@linkplain javax.lang.model.element.Element elements}.
+ *   <li>{@code $X} emits a custom <em>code block</em> provided by an implementation of
+ *       {@link Supplier}.
  *   <li>{@code $$} emits a dollar sign.
  *   <li>{@code $&gt;} increases the indentation level.
  *   <li>{@code $&lt;} decreases the indentation level.
@@ -56,6 +58,11 @@ import static com.squareup.javapoet.Util.checkArgument;
  * </ul>
  */
 public final class CodeBlock {
+  /** Functional interface providing custom code block generation via {@code $X}. */
+  public interface Supplier {
+    CodeBlock get();
+  }
+
   /** A heterogeneous list containing string literals and value placeholders. */
   final List<String> formatParts;
   final List<Object> args;
@@ -171,6 +178,9 @@ public final class CodeBlock {
           case 'T':
             this.args.add(argToType(args[index]));
             break;
+          case 'X':
+            this.args.add(argToSupplier(args[index]));
+            break;
           default:
             throw new IllegalArgumentException(
                 String.format("invalid format string: '%s'", format));
@@ -219,6 +229,11 @@ public final class CodeBlock {
       if (o instanceof Element) return TypeName.get(((Element) o).asType());
       if (o instanceof Type) return TypeName.get((Type) o);
       throw new IllegalArgumentException("expected type but was " + o);
+    }
+
+    private Supplier argToSupplier(Object o) {
+      if (o instanceof Supplier) return (Supplier) o;
+      throw new IllegalArgumentException("expected CodeBlock.Supplier but was " + o);
     }
 
     /**
