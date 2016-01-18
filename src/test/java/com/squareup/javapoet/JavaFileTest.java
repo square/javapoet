@@ -73,29 +73,6 @@ public final class JavaFileTest {
         + "  }\n"
         + "}\n");
   }
-  @Test public void importStaticForCrazyFormatsWorks() {
-    MethodSpec method = MethodSpec.methodBuilder("method").build();
-    JavaFile.builder("com.squareup.tacos",
-        TypeSpec.classBuilder("Taco")
-            .addStaticBlock(CodeBlock.builder()
-                .addStatement("$T", Runtime.class)
-                .addStatement("$T.a()", Runtime.class)
-                .addStatement("$T.X", Runtime.class)
-                .addStatement("$T$T", Runtime.class, Runtime.class)
-                .addStatement("$T.$T", Runtime.class, Runtime.class)
-                .addStatement("$1T$1T", Runtime.class)
-                .addStatement("$1T$2L$1T", Runtime.class, "?")
-                .addStatement("$1T$2L$2S$1T", Runtime.class, "?")
-                .addStatement("$1T$2L$2S$1T$3N$1T", Runtime.class, "?", method)
-                .addStatement("$T$L", Runtime.class, "?")
-                .addStatement("$T$S", Runtime.class, "?")
-                .addStatement("$T$N", Runtime.class, method)
-                .build())
-            .build())
-        .addStaticImport(Runtime.class, "*")
-        .build()
-        .toString(); // don't look at the generated code...
-  }
 
   @Test public void importStaticMixed() {
     JavaFile source = JavaFile.builder("com.squareup.tacos",
