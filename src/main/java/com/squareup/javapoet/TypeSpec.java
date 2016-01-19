@@ -496,7 +496,7 @@ public final class TypeSpec {
     }
 
     public Builder addInitializerBlock(CodeBlock block) {
-      if (!(kind == Kind.CLASS || kind == Kind.ENUM)) {
+      if ((kind != Kind.CLASS && kind != Kind.ENUM)) {
         throw new UnsupportedOperationException(kind + " can't have initializer blocks");
       }
       initializerBlock.add("{\n")

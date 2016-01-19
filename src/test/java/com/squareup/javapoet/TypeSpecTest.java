@@ -36,7 +36,6 @@ import javax.lang.model.type.TypeMirror;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
@@ -51,7 +50,6 @@ public final class TypeSpecTest {
   private static final String donutsPackage = "com.squareup.donuts";
 
   @Rule public final CompilationRule compilation = new CompilationRule();
-  @Rule public final ExpectedException expectedException = ExpectedException.none();
 
   private TypeElement getElement(Class<?> clazz) {
     return compilation.getElements().getTypeElement(clazz.getCanonicalName());
@@ -1951,7 +1949,7 @@ public final class TypeSpecTest {
 
   @Test public void staticCodeBlock() {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-        .addField(String.class, "mFoo", Modifier.PRIVATE)
+        .addField(String.class, "foo", Modifier.PRIVATE)
         .addField(String.class, "FOO", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
         .addStaticBlock(CodeBlock.builder()
             .addStatement("FOO = $S", "FOO")
@@ -1970,11 +1968,14 @@ public final class TypeSpecTest {
         + "import java.lang.String;\n"
         + "\n"
         + "class Taco {\n"
-        + "  private static final String FOO;\n\n"
+        + "  private static final String FOO;\n"
+        + "\n"
         + "  static {\n"
         + "    FOO = \"FOO\";\n"
-        + "  }\n\n"
-        + "  private String mFoo;\n\n"
+        + "  }\n"
+        + "\n"
+        + "  private String foo;\n"
+        + "\n"
         + "  @Override\n"
         + "  public String toString() {\n"
         + "    return FOO;\n"
@@ -1984,7 +1985,7 @@ public final class TypeSpecTest {
 
   @Test public void initializerBlockInRightPlace() {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-        .addField(String.class, "mFoo", Modifier.PRIVATE)
+        .addField(String.class, "foo", Modifier.PRIVATE)
         .addField(String.class, "FOO", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
         .addStaticBlock(CodeBlock.builder()
             .addStatement("FOO = $S", "FOO")
@@ -1997,7 +1998,7 @@ public final class TypeSpecTest {
             .addCode("return FOO;\n")
             .build())
         .addInitializerBlock(CodeBlock.builder()
-            .addStatement("mFoo = $S", "FOO")
+            .addStatement("foo = $S", "FOO")
             .build())
         .build();
     assertThat(toString(taco)).isEqualTo(""
@@ -2007,16 +2008,21 @@ public final class TypeSpecTest {
         + "import java.lang.String;\n"
         + "\n"
         + "class Taco {\n"
-        + "  private static final String FOO;\n\n"
+        + "  private static final String FOO;\n"
+        + "\n"
         + "  static {\n"
         + "    FOO = \"FOO\";\n"
-        + "  }\n\n"
-        + "  private String mFoo;\n\n"
+        + "  }\n"
+        + "\n"
+        + "  private String foo;\n"
+        + "\n"
         + "  {\n"
-        + "    mFoo = \"FOO\";\n"
-        + "  }\n\n"
+        + "    foo = \"FOO\";\n"
+        + "  }\n"
+        + "\n"
         + "  Taco() {\n"
-        + "  }\n\n"
+        + "  }\n"
+        + "\n"
         + "  @Override\n"
         + "  public String toString() {\n"
         + "    return FOO;\n"
@@ -2027,7 +2033,7 @@ public final class TypeSpecTest {
   @Test public void initializersToBuilder() {
     // Tests if toBuilder() contains correct static and instance initializers
     TypeSpec taco = TypeSpec.classBuilder("Taco")
-        .addField(String.class, "mFoo", Modifier.PRIVATE)
+        .addField(String.class, "foo", Modifier.PRIVATE)
         .addField(String.class, "FOO", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
         .addStaticBlock(CodeBlock.builder()
             .addStatement("FOO = $S", "FOO")
@@ -2040,38 +2046,16 @@ public final class TypeSpecTest {
             .addCode("return FOO;\n")
             .build())
         .addInitializerBlock(CodeBlock.builder()
-            .addStatement("mFoo = $S", "FOO")
+            .addStatement("foo = $S", "FOO")
             .build())
         .build();
-    assertThat(toString(taco)).isEqualTo(""
-        + "package com.squareup.tacos;\n"
-        + "\n"
-        + "import java.lang.Override;\n"
-        + "import java.lang.String;\n"
-        + "\n"
-        + "class Taco {\n"
-        + "  private static final String FOO;\n\n"
-        + "  static {\n"
-        + "    FOO = \"FOO\";\n"
-        + "  }\n\n"
-        + "  private String mFoo;\n\n"
-        + "  {\n"
-        + "    mFoo = \"FOO\";\n"
-        + "  }\n\n"
-        + "  Taco() {\n"
-        + "  }\n\n"
-        + "  @Override\n"
-        + "  public String toString() {\n"
-        + "    return FOO;\n"
-        + "  }\n"
-        + "}\n");
-
+    
     TypeSpec recreatedTaco = taco.toBuilder().build();
     assertThat(toString(taco)).isEqualTo(toString(recreatedTaco));
 
     TypeSpec initializersAdded = taco.toBuilder()
         .addInitializerBlock(CodeBlock.builder()
-            .addStatement("mFoo = $S", "instanceFoo")
+            .addStatement("foo = $S", "instanceFoo")
             .build())
         .addStaticBlock(CodeBlock.builder()
             .addStatement("FOO = $S", "staticFoo")
@@ -2085,22 +2069,27 @@ public final class TypeSpecTest {
         + "import java.lang.String;\n"
         + "\n"
         + "class Taco {\n"
-        + "  private static final String FOO;\n\n"
+        + "  private static final String FOO;\n"
+        + "\n"
         + "  static {\n"
         + "    FOO = \"FOO\";\n"
         + "  }\n"
         + "  static {\n"
         + "    FOO = \"staticFoo\";\n"
-        + "  }\n\n"
-        + "  private String mFoo;\n\n"
+        + "  }\n"
+        + "\n"
+        + "  private String foo;\n"
+        + "\n"
         + "  {\n"
-        + "    mFoo = \"FOO\";\n"
+        + "    foo = \"FOO\";\n"
         + "  }\n"
         + "  {\n"
-        + "    mFoo = \"instanceFoo\";\n"
-        + "  }\n\n"
+        + "    foo = \"instanceFoo\";\n"
+        + "  }\n"
+        + "\n"
         + "  Taco() {\n"
-        + "  }\n\n"
+        + "  }\n"
+        + "\n"
         + "  @Override\n"
         + "  public String toString() {\n"
         + "    return FOO;\n"
@@ -2112,9 +2101,11 @@ public final class TypeSpecTest {
   public void initializerBlockUnsupportedExceptionOnInterface() {
     TypeSpec.Builder interfaceBuilder = TypeSpec.interfaceBuilder("Taco");
 
-    expectedException.expect(UnsupportedOperationException.class);
-    expectedException.expectMessage("INTERFACE can't have initializer blocks");
-    interfaceBuilder.addInitializerBlock(CodeBlock.builder().build());
+    try {
+      interfaceBuilder.addInitializerBlock(CodeBlock.builder().build());
+      fail("Exception expected");
+    } catch (UnsupportedOperationException e) {
+    }
   }
 
   @Test
@@ -2122,9 +2113,11 @@ public final class TypeSpecTest {
 
     TypeSpec.Builder annotationBuilder = TypeSpec.annotationBuilder("Taco");
 
-    expectedException.expect(UnsupportedOperationException.class);
-    expectedException.expectMessage("ANNOTATION can't have initializer blocks");
-    annotationBuilder.addInitializerBlock(CodeBlock.builder().build());
+    try {
+      annotationBuilder.addInitializerBlock(CodeBlock.builder().build());
+      fail("Exception expected");
+    } catch (UnsupportedOperationException e) {
+    }
   }
 
   @Test public void equalsAndHashCode() {
