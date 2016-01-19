@@ -52,6 +52,7 @@ public final class TypeSpec {
   public final Map<String, TypeSpec> enumConstants;
   public final List<FieldSpec> fieldSpecs;
   public final CodeBlock staticBlock;
+  public final CodeBlock initializerBlock;
   public final List<MethodSpec> methodSpecs;
   public final List<TypeSpec> typeSpecs;
   public final List<Element> originatingElements;
@@ -69,6 +70,7 @@ public final class TypeSpec {
     this.enumConstants = Util.immutableMap(builder.enumConstants);
     this.fieldSpecs = Util.immutableList(builder.fieldSpecs);
     this.staticBlock = builder.staticBlock.build();
+    this.initializerBlock = builder.initializerBlock.build();
     this.methodSpecs = Util.immutableList(builder.methodSpecs);
     this.typeSpecs = Util.immutableList(builder.typeSpecs);
 
@@ -118,6 +120,8 @@ public final class TypeSpec {
     builder.fieldSpecs.addAll(fieldSpecs);
     builder.methodSpecs.addAll(methodSpecs);
     builder.typeSpecs.addAll(typeSpecs);
+    builder.initializerBlock.add(initializerBlock);
+    builder.staticBlock.add(staticBlock);
     return builder;
   }
 
@@ -234,6 +238,13 @@ public final class TypeSpec {
         firstMember = false;
       }
 
+      // initializer block
+      if (!initializerBlock.isEmpty()) {
+        if (!firstMember) codeWriter.emit("\n");
+        codeWriter.emit(initializerBlock);
+        firstMember = false;
+      }
+
       // Constructors.
       for (MethodSpec methodSpec : methodSpecs) {
         if (!methodSpec.isConstructor()) continue;
@@ -346,6 +357,7 @@ public final class TypeSpec {
     private final Map<String, TypeSpec> enumConstants = new LinkedHashMap<>();
     private final List<FieldSpec> fieldSpecs = new ArrayList<>();
     private final CodeBlock.Builder staticBlock = CodeBlock.builder();
+    private final CodeBlock.Builder initializerBlock = CodeBlock.builder();
     private final List<MethodSpec> methodSpecs = new ArrayList<>();
     private final List<TypeSpec> typeSpecs = new ArrayList<>();
     private final List<Element> originatingElements = new ArrayList<>();
@@ -477,6 +489,18 @@ public final class TypeSpec {
 
     public Builder addStaticBlock(CodeBlock block) {
       staticBlock.beginControlFlow("static").add(block).endControlFlow();
+      return this;
+    }
+
+    public Builder addInitializerBlock(CodeBlock block) {
+      if ((kind != Kind.CLASS && kind != Kind.ENUM)) {
+        throw new UnsupportedOperationException(kind + " can't have initializer blocks");
+      }
+      initializerBlock.add("{\n")
+          .indent()
+          .add(block)
+          .unindent()
+          .add("}\n");
       return this;
     }
 
