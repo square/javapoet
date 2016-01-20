@@ -15,7 +15,6 @@
  */
 package com.squareup.javapoet;
 
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,7 +59,7 @@ public final class TypeVariableName extends TypeName {
     return new TypeVariableName(name, Collections.unmodifiableList(boundsNoObject));
   }
 
-  @Override CodeWriter emit(CodeWriter out) throws IOException {
+  @Override CodeWriter emit(CodeWriter out) {
     return emitAnnotations(out).emitAndIndent(name);
   }
 

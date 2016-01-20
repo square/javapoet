@@ -15,7 +15,6 @@
  */
 package com.squareup.javapoet;
 
-import java.io.IOException;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -171,21 +170,17 @@ public class TypeName {
   }
 
   @Override public final String toString() {
-    try {
-      StringBuilder result = new StringBuilder();
-      emit(new CodeWriter(result));
-      return result.toString();
-    } catch (IOException e) {
-      throw new AssertionError();
-    }
+    StringBuilder result = new StringBuilder();
+    emit(new CodeWriter(result));
+    return result.toString();
   }
 
-  CodeWriter emit(CodeWriter out) throws IOException {
+  CodeWriter emit(CodeWriter out) {
     if (keyword == null) throw new AssertionError();
     return emitAnnotations(out).emitAndIndent(keyword);
   }
 
-  CodeWriter emitAnnotations(CodeWriter out) throws IOException {
+  CodeWriter emitAnnotations(CodeWriter out) {
     for (AnnotationSpec annotation : annotations) {
       annotation.emit(out, true);
       out.emit(" ");

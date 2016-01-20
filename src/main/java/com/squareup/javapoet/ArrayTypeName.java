@@ -15,7 +15,6 @@
  */
 package com.squareup.javapoet;
 
-import java.io.IOException;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -44,7 +43,7 @@ public final class ArrayTypeName extends TypeName {
     return new ArrayTypeName(componentType, annotations);
   }
 
-  @Override CodeWriter emit(CodeWriter out) throws IOException {
+  @Override CodeWriter emit(CodeWriter out) {
     return emitAnnotations(out).emit("$T[]", componentType);
   }
 
