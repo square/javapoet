@@ -71,6 +71,14 @@ public final class JavaFile {
   }
 
   public void writeTo(Appendable out) throws IOException {
+    try {
+      writeToUnchecked(out);
+    } catch (CodeWriter.EmitRuntimeException e) {
+      throw (IOException) e.getCause();
+    }
+  }
+
+  private void writeToUnchecked(Appendable out) {
     // First pass: emit the entire class, just to collect the types we'll need to import.
     CodeWriter importsCollector = new CodeWriter(NULL_APPENDABLE, indent, staticImports);
     emit(importsCollector);
@@ -123,7 +131,7 @@ public final class JavaFile {
     }
   }
 
-  private void emit(CodeWriter codeWriter) throws IOException {
+  private void emit(CodeWriter codeWriter) {
     codeWriter.pushPackage(packageName);
 
     if (!fileComment.isEmpty()) {
@@ -170,13 +178,9 @@ public final class JavaFile {
   }
 
   @Override public String toString() {
-    try {
-      StringBuilder result = new StringBuilder();
-      writeTo(result);
-      return result.toString();
-    } catch (IOException e) {
-      throw new AssertionError();
-    }
+    StringBuilder result = new StringBuilder();
+    writeToUnchecked(result);
+    return result.toString();
   }
 
   public JavaFileObject toJavaFileObject() {

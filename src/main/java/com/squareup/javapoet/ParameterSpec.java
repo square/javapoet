@@ -15,8 +15,6 @@
  */
 package com.squareup.javapoet;
 
-import java.io.IOException;
-import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,7 +44,7 @@ public final class ParameterSpec {
     return modifiers.contains(modifier);
   }
 
-  void emit(CodeWriter codeWriter, boolean varargs) throws IOException {
+  void emit(CodeWriter codeWriter, boolean varargs) {
     codeWriter.emitAnnotations(annotations, true);
     codeWriter.emitModifiers(modifiers);
     if (varargs) {
@@ -68,14 +66,10 @@ public final class ParameterSpec {
   }
 
   @Override public String toString() {
-    StringWriter out = new StringWriter();
-    try {
-      CodeWriter codeWriter = new CodeWriter(out);
-      emit(codeWriter, false);
-      return out.toString();
-    } catch (IOException e) {
-      throw new AssertionError();
-    }
+    StringBuilder out = new StringBuilder();
+    CodeWriter codeWriter = new CodeWriter(out);
+    emit(codeWriter, false);
+    return out.toString();
   }
 
   public static Builder builder(TypeName type, String name, Modifier... modifiers) {

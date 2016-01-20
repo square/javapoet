@@ -15,7 +15,6 @@
  */
 package com.squareup.javapoet;
 
-import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -52,7 +51,7 @@ public final class ParameterizedTypeName extends TypeName {
     return new ParameterizedTypeName(rawType, typeArguments, annotations);
   }
 
-  @Override CodeWriter emit(CodeWriter out) throws IOException {
+  @Override CodeWriter emit(CodeWriter out) {
     emitAnnotations(out);
     rawType.emit(out);
     out.emitAndIndent("<");

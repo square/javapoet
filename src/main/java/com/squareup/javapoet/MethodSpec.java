@@ -15,8 +15,6 @@
  */
 package com.squareup.javapoet;
 
-import java.io.IOException;
-import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -82,8 +80,7 @@ public final class MethodSpec {
         && TypeName.arrayComponent(parameters.get(parameters.size() - 1).type) != null;
   }
 
-  void emit(CodeWriter codeWriter, String enclosingName, Set<Modifier> implicitModifiers)
-      throws IOException {
+  void emit(CodeWriter codeWriter, String enclosingName, Set<Modifier> implicitModifiers) {
     codeWriter.emitJavadoc(javadoc);
     codeWriter.emitAnnotations(annotations, false);
     codeWriter.emitModifiers(modifiers, implicitModifiers);
@@ -161,14 +158,10 @@ public final class MethodSpec {
   }
 
   @Override public String toString() {
-    StringWriter out = new StringWriter();
-    try {
-      CodeWriter codeWriter = new CodeWriter(out);
-      emit(codeWriter, "Constructor", Collections.<Modifier>emptySet());
-      return out.toString();
-    } catch (IOException e) {
-      throw new AssertionError();
-    }
+    StringBuilder out = new StringBuilder();
+    CodeWriter codeWriter = new CodeWriter(out);
+    emit(codeWriter, "Constructor", Collections.<Modifier>emptySet());
+    return out.toString();
   }
 
   public static Builder methodBuilder(String name) {

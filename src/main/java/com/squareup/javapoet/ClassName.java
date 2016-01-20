@@ -15,7 +15,6 @@
  */
 package com.squareup.javapoet;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -202,7 +201,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     return canonicalName.compareTo(o.canonicalName);
   }
 
-  @Override CodeWriter emit(CodeWriter out) throws IOException {
+  @Override CodeWriter emit(CodeWriter out) {
     return emitAnnotations(out).emitAndIndent(out.lookupName(this));
   }
 }

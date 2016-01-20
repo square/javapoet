@@ -41,6 +41,13 @@ import static com.squareup.javapoet.Util.stringLiteralWithDoubleQuotes;
  * honors imports, indentation, and deferred variable names.
  */
 final class CodeWriter {
+  @SuppressWarnings("serial")
+  static final class EmitRuntimeException extends RuntimeException {
+    EmitRuntimeException(IOException cause) {
+      super(cause);
+    }
+  }
+
   /** Sentinel value that indicates that no user-provided package has been set. */
   private static final String NO_PACKAGE = new String();
 
@@ -131,7 +138,7 @@ final class CodeWriter {
     return this;
   }
 
-  public void emitComment(CodeBlock codeBlock) throws IOException {
+  public void emitComment(CodeBlock codeBlock) {
     trailingNewline = true; // Force the '//' prefix for the comment.
     comment = true;
     try {
@@ -142,7 +149,7 @@ final class CodeWriter {
     }
   }
 
-  public void emitJavadoc(CodeBlock javadocCodeBlock) throws IOException {
+  public void emitJavadoc(CodeBlock javadocCodeBlock) {
     if (javadocCodeBlock.isEmpty()) return;
 
     emit("/**\n");
@@ -155,7 +162,7 @@ final class CodeWriter {
     emit(" */\n");
   }
 
-  public void emitAnnotations(List<AnnotationSpec> annotations, boolean inline) throws IOException {
+  public void emitAnnotations(List<AnnotationSpec> annotations, boolean inline) {
     for (AnnotationSpec annotationSpec : annotations) {
       annotationSpec.emit(this, inline);
       emit(inline ? " " : "\n");
@@ -166,8 +173,7 @@ final class CodeWriter {
    * Emits {@code modifiers} in the standard order. Modifiers in {@code implicitModifiers} will not
    * be emitted.
    */
-  public void emitModifiers(Set<Modifier> modifiers, Set<Modifier> implicitModifiers)
-      throws IOException {
+  public void emitModifiers(Set<Modifier> modifiers, Set<Modifier> implicitModifiers) {
     if (modifiers.isEmpty()) return;
     for (Modifier modifier : EnumSet.copyOf(modifiers)) {
       if (implicitModifiers.contains(modifier)) continue;
@@ -176,7 +182,7 @@ final class CodeWriter {
     }
   }
 
-  public void emitModifiers(Set<Modifier> modifiers) throws IOException {
+  public void emitModifiers(Set<Modifier> modifiers) {
     emitModifiers(modifiers, Collections.<Modifier>emptySet());
   }
 
@@ -184,7 +190,7 @@ final class CodeWriter {
    * Emit type variables with their bounds. This should only be used when declaring type variables;
    * everywhere else bounds are omitted.
    */
-  public void emitTypeVariables(List<TypeVariableName> typeVariables) throws IOException {
+  public void emitTypeVariables(List<TypeVariableName> typeVariables) {
     if (typeVariables.isEmpty()) return;
 
     emit("<");
@@ -202,11 +208,11 @@ final class CodeWriter {
     emit(">");
   }
 
-  public CodeWriter emit(String format, Object... args) throws IOException {
+  public CodeWriter emit(String format, Object... args) {
     return emit(CodeBlock.builder().add(format, args).build());
   }
 
-  public CodeWriter emit(CodeBlock codeBlock) throws IOException {
+  public CodeWriter emit(CodeBlock codeBlock) {
     int a = 0;
     ClassName deferredTypeName = null; // used by "import static" logic
     ListIterator<String> partIterator = codeBlock.formatParts.listIterator();
@@ -300,7 +306,7 @@ final class CodeWriter {
     return part;
   }
 
-  private boolean emitStaticImportMember(String canonical, String part) throws IOException {
+  private boolean emitStaticImportMember(String canonical, String part) {
     String partWithoutLeadingDot = part.substring(1);
     if (partWithoutLeadingDot.isEmpty()) return false;
     char first = partWithoutLeadingDot.charAt(0);
@@ -314,7 +320,7 @@ final class CodeWriter {
     return false;
   }
 
-  private void emitLiteral(Object o) throws IOException {
+  private void emitLiteral(Object o) {
     if (o instanceof TypeSpec) {
       TypeSpec typeSpec = (TypeSpec) o;
       typeSpec.emit(this, null, Collections.<Modifier>emptySet());
@@ -423,16 +429,16 @@ final class CodeWriter {
    * {@link #out} does it through here, since we emit indentation lazily in order to avoid
    * unnecessary trailing whitespace.
    */
-  CodeWriter emitAndIndent(String s) throws IOException {
+  CodeWriter emitAndIndent(String s) {
     boolean first = true;
     for (String line : s.split("\n", -1)) {
       // Emit a newline character. Make sure blank lines in Javadoc & comments look good.
       if (!first) {
         if ((javadoc || comment) && trailingNewline) {
           emitIndentation();
-          out.append(javadoc ? " *" : "//");
+          append(javadoc ? " *" : "//");
         }
-        out.append('\n');
+        append("\n");
         trailingNewline = true;
         if (statementLine != -1) {
           if (statementLine == 0) {
@@ -449,21 +455,28 @@ final class CodeWriter {
       if (trailingNewline) {
         emitIndentation();
         if (javadoc) {
-          out.append(" * ");
+          append(" * ");
         } else if (comment) {
-          out.append("// ");
+          append("// ");
         }
       }
-
-      out.append(line);
+      append(line);
       trailingNewline = false;
     }
     return this;
   }
 
-  private void emitIndentation() throws IOException {
+  private void emitIndentation() {
     for (int j = 0; j < indentLevel; j++) {
-      out.append(indent);
+      append(indent);
+    }
+  }
+
+  private void append(CharSequence csq) {
+    try {
+      out.append(csq);
+    } catch (IOException e) {
+      throw new EmitRuntimeException(e);
     }
   }
 
