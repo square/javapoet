@@ -27,6 +27,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
 
@@ -57,7 +58,10 @@ final class CodeWriter {
   private final Map<String, ClassName> importedTypes;
   private final Map<String, ClassName> importableTypes = new LinkedHashMap<>();
   private final Set<String> referencedNames = new LinkedHashSet<>();
+  private final Set<String> referencedStaticImports = new TreeSet<>();
   private boolean trailingNewline;
+  private ClassName deferredClassName = null;
+  private final StringBuilder deferredLine = new StringBuilder();
 
   /**
    * When emitting a statement, this is the line of the statement currently being written. The first
@@ -208,7 +212,6 @@ final class CodeWriter {
 
   public CodeWriter emit(CodeBlock codeBlock) throws IOException {
     int a = 0;
-    ClassName deferredTypeName = null; // used by "import static" logic
     ListIterator<String> partIterator = codeBlock.formatParts.listIterator();
     while (partIterator.hasNext()) {
       String part = partIterator.next();
@@ -234,17 +237,6 @@ final class CodeWriter {
           if (typeName.isAnnotated()) {
             typeName.emitAnnotations(this);
             typeName = typeName.withoutAnnotations();
-          }
-          // defer "typeName.emit(this)" if next format part will be handled by the default case
-          if (typeName instanceof ClassName && partIterator.hasNext()) {
-            if (!codeBlock.formatParts.get(partIterator.nextIndex()).startsWith("$")) {
-              ClassName candidate = (ClassName) typeName;
-              if (staticImportClassNames.contains(candidate.canonicalName)) {
-                checkState(deferredTypeName == null, "pending type for static import?!");
-                deferredTypeName = candidate;
-                break;
-              }
-            }
           }
           typeName.emit(this);
           break;
@@ -275,18 +267,6 @@ final class CodeWriter {
           break;
 
         default:
-          // handle deferred type
-          if (deferredTypeName != null) {
-            if (part.startsWith(".")) {
-              if (emitStaticImportMember(deferredTypeName.canonicalName, part)) {
-                // okay, static import hit and all was emitted, so clean-up and jump to next part
-                deferredTypeName = null;
-                break;
-              }
-            }
-            deferredTypeName.emit(this);
-            deferredTypeName = null;
-          }
           emitAndIndent(part);
           break;
       }
@@ -295,27 +275,15 @@ final class CodeWriter {
   }
 
   private static String extractMemberName(String part) {
-    checkArgument(Character.isJavaIdentifierStart(part.charAt(0)), "not an identifier: %s", part);
+    if (part.isEmpty() || !Character.isJavaIdentifierStart(part.charAt(0))) {
+      return null;
+    }
     for (int i = 1; i <= part.length(); i++) {
       if (!SourceVersion.isIdentifier(part.substring(0, i))) {
         return part.substring(0, i - 1);
       }
     }
     return part;
-  }
-
-  private boolean emitStaticImportMember(String canonical, String part) throws IOException {
-    String partWithoutLeadingDot = part.substring(1);
-    if (partWithoutLeadingDot.isEmpty()) return false;
-    char first = partWithoutLeadingDot.charAt(0);
-    if (!Character.isJavaIdentifierStart(first)) return false;
-    String explicit = canonical + "." + extractMemberName(partWithoutLeadingDot);
-    String wildcard = canonical + ".*";
-    if (staticImports.contains(explicit) || staticImports.contains(wildcard)) {
-      emitAndIndent(partWithoutLeadingDot);
-      return true;
-    }
-    return false;
   }
 
   private void emitLiteral(Object o) throws IOException {
@@ -339,6 +307,18 @@ final class CodeWriter {
    * names visible due to inheritance.
    */
   String lookupName(ClassName className) {
+    return lookupName(className, true);
+  }
+
+  private String lookupName(ClassName className, boolean doStaticImports) {
+    // Is this a start of a static import match? Then defer the class name rendering...
+    if (doStaticImports) {
+      if (staticImportClassNames.contains(className.canonicalName)) {
+        deferredClassName = className;
+        deferredLine.setLength(0);
+        return "";
+      }
+    }
     // Find the shortest suffix of className that resolves to className. This uses both local type
     // names (so `Entry` in `Map` refers to `Map.Entry`). Also uses imports.
     boolean nameResolved = false;
@@ -459,6 +439,39 @@ final class CodeWriter {
         }
       }
 
+      // handle "import static" hits...
+      if (deferredClassName != null) {
+        trailingNewline = false;
+        deferredLine.append(line);
+        String condensed  = deferredLine.toString().replaceAll("\\s", "");
+        if (condensed.isEmpty() || condensed.equals(".")) {
+          continue; // grab more chars from next line or from next method call
+        }
+        String wildcard = deferredClassName.canonicalName + ".*";
+        boolean hit = staticImports.contains(wildcard);
+        if (hit) {
+          referencedStaticImports.add(wildcard);
+        }
+        if (!hit && condensed.startsWith(".")) {
+          String memberName = extractMemberName(condensed.substring(1));
+          if (memberName != null) {
+            String exact = deferredClassName.canonicalName + "." + memberName;
+            hit = staticImports.contains(exact);
+            if (hit) {
+              referencedStaticImports.add(exact);
+            }
+          }
+        }
+        if (hit) {
+          // hit! preserve original whitespaces by _not_ using condensed here
+          line = deferredLine.toString().replaceFirst("[.]", "");
+        } else {
+          // no hit? really lookup name now (normal import might kick in) and append deferred line
+          out.append(lookupName(deferredClassName, false));
+          line = deferredLine.toString();
+        }
+        deferredClassName = null;
+      }
       out.append(line);
       trailingNewline = false;
     }
@@ -479,5 +492,13 @@ final class CodeWriter {
     Map<String, ClassName> result = new LinkedHashMap<>(importableTypes);
     result.keySet().removeAll(referencedNames);
     return result;
+  }
+
+  Set<String> suggestedStaticImports() {
+    return new LinkedHashSet<String>(referencedStaticImports);
+  }
+
+  Set<String> staticImports() {
+    return staticImports;
   }
 }
