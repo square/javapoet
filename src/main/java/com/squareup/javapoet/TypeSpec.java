@@ -302,7 +302,7 @@ public final class TypeSpec {
     }
   }
 
-  private enum Kind {
+  public enum Kind {
     CLASS(
         Collections.<Modifier>emptySet(),
         Collections.<Modifier>emptySet(),
