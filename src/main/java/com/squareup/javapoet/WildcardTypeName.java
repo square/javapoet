@@ -55,7 +55,7 @@ public final class WildcardTypeName extends TypeName {
   }
 
   @Override public WildcardTypeName annotated(List<AnnotationSpec> annotations) {
-    return new WildcardTypeName(upperBounds, lowerBounds, prependAnnotations(annotations));
+    return new WildcardTypeName(upperBounds, lowerBounds, concatAnnotations(annotations));
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {

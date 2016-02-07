@@ -55,7 +55,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   }
 
   @Override public ClassName annotated(List<AnnotationSpec> annotations) {
-    return new ClassName(names, prependAnnotations(annotations));
+    return new ClassName(names, concatAnnotations(annotations));
   }
 
   /** Returns the package name, like {@code "java.util"} for {@code Map.Entry}. */

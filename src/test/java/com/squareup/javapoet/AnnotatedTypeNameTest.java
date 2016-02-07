@@ -55,7 +55,7 @@ public class AnnotatedTypeNameTest {
   }
 
   @Test public void annotatedTwice() {
-    String expected = "@java.lang.Override @" + NN + " java.lang.String";
+    String expected = "@" + NN + " @java.lang.Override java.lang.String";
     TypeName type = TypeName.get(String.class);
     String actual =
         type.annotated(NEVER_NULL)
