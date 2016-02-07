@@ -49,7 +49,7 @@ public final class ParameterizedTypeName extends TypeName {
   }
 
   @Override public ParameterizedTypeName annotated(List<AnnotationSpec> annotations) {
-    return new ParameterizedTypeName(rawType, typeArguments, annotations);
+    return new ParameterizedTypeName(rawType, typeArguments, prependAnnotations(annotations));
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {

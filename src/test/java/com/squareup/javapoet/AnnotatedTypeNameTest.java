@@ -44,14 +44,23 @@ public class AnnotatedTypeNameTest {
     assertEquals(simpleString, TypeName.get(String.class));
     TypeName annotated = simpleString.annotated(NEVER_NULL);
     assertTrue(annotated.isAnnotated());
-    assertEquals(simpleString, annotated.annotated());
-    assertFalse(annotated.annotated().isAnnotated());
+    assertEquals(annotated, annotated.annotated());
   }
 
   @Test public void annotatedType() {
     String expected = "@" + NN + " java.lang.String";
     TypeName type = TypeName.get(String.class);
     String actual = type.annotated(NEVER_NULL).toString();
+    assertEquals(expected, actual);
+  }
+
+  @Test public void annotatedTwice() {
+    String expected = "@java.lang.Override @" + NN + " java.lang.String";
+    TypeName type = TypeName.get(String.class);
+    String actual =
+        type.annotated(NEVER_NULL)
+            .annotated(AnnotationSpec.builder(Override.class).build())
+            .toString();
     assertEquals(expected, actual);
   }
 
