@@ -41,7 +41,7 @@ public final class ArrayTypeName extends TypeName {
   }
 
   @Override public ArrayTypeName annotated(List<AnnotationSpec> annotations) {
-    return new ArrayTypeName(componentType, annotations);
+    return new ArrayTypeName(componentType, prependAnnotations(annotations));
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {
