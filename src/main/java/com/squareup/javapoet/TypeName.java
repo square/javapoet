@@ -110,12 +110,12 @@ public class TypeName {
 
   public TypeName annotated(List<AnnotationSpec> annotations) {
     Util.checkNotNull(annotations, "annotations == null");
-    return new TypeName(keyword, prependAnnotations(annotations));
+    return new TypeName(keyword, concatAnnotations(annotations));
   }
 
-  protected final List<AnnotationSpec> prependAnnotations(List<AnnotationSpec> annotations) {
-    List<AnnotationSpec> allAnnotations = new ArrayList<>(annotations);
-    allAnnotations.addAll(this.annotations);
+  protected final List<AnnotationSpec> concatAnnotations(List<AnnotationSpec> annotations) {
+    List<AnnotationSpec> allAnnotations = new ArrayList<>(this.annotations);
+    allAnnotations.addAll(annotations);
     return allAnnotations;
   }
 
