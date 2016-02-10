@@ -90,12 +90,24 @@ public final class TypeSpec {
     return new Builder(Kind.CLASS, checkNotNull(name, "name == null"), null);
   }
 
+  public static Builder classBuilder(ClassName className) {
+    return classBuilder(checkNotNull(className, "className == null").simpleName());
+  }
+
   public static Builder interfaceBuilder(String name) {
     return new Builder(Kind.INTERFACE, checkNotNull(name, "name == null"), null);
   }
 
+  public static Builder interfaceBuilder(ClassName className) {
+    return interfaceBuilder(checkNotNull(className, "className == null").simpleName());
+  }
+
   public static Builder enumBuilder(String name) {
     return new Builder(Kind.ENUM, checkNotNull(name, "name == null"), null);
+  }
+
+  public static Builder enumBuilder(ClassName className) {
+    return enumBuilder(checkNotNull(className, "className == null").simpleName());
   }
 
   public static Builder anonymousClassBuilder(String typeArgumentsFormat, Object... args) {
@@ -106,6 +118,10 @@ public final class TypeSpec {
 
   public static Builder annotationBuilder(String name) {
     return new Builder(Kind.ANNOTATION, checkNotNull(name, "name == null"), null);
+  }
+
+  public static Builder annotationBuilder(ClassName className) {
+    return annotationBuilder(checkNotNull(className, "className == null").simpleName());
   }
 
   public Builder toBuilder() {

@@ -2071,7 +2071,7 @@ public final class TypeSpecTest {
             .addStatement("foo = $S", "FOO")
             .build())
         .build();
-    
+
     TypeSpec recreatedTaco = taco.toBuilder().build();
     assertThat(toString(taco)).isEqualTo(toString(recreatedTaco));
 
@@ -2159,6 +2159,14 @@ public final class TypeSpecTest {
     b = TypeSpec.annotationBuilder("taco").build();
     assertThat(a.equals(b)).isTrue();
     assertThat(a.hashCode()).isEqualTo(b.hashCode());
+  }
+
+  @Test public void classNameFactories() {
+    ClassName className = ClassName.get("com.example", "Example");
+    assertThat(TypeSpec.classBuilder(className).build().name).isEqualTo("Example");
+    assertThat(TypeSpec.interfaceBuilder(className).build().name).isEqualTo("Example");
+    assertThat(TypeSpec.enumBuilder(className).addEnumConstant("A").build().name).isEqualTo("Example");
+    assertThat(TypeSpec.annotationBuilder(className).build().name).isEqualTo("Example");
   }
 
   private CodeBlock codeBlock(String format, Object... args) {
