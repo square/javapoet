@@ -53,6 +53,10 @@ public final class TypeVariableName extends TypeName {
     return new TypeVariableName(name, bounds, annotations);
   }
 
+  @Override public TypeName withoutAnnotations() {
+    return new TypeVariableName(name, bounds);
+  }
+
   private static TypeVariableName of(String name, List<TypeName> bounds) {
     // Strip java.lang.Object from bounds if it is present.
     List<TypeName> boundsNoObject = new ArrayList<>(bounds);
@@ -61,7 +65,7 @@ public final class TypeVariableName extends TypeName {
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {
-    return emitAnnotations(out).emitAndIndent(name);
+    return out.emitAndIndent(name);
   }
 
   /** Returns type variable named {@code name} without bounds. */

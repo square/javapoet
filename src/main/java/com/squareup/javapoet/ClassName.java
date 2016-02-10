@@ -58,6 +58,10 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     return new ClassName(names, concatAnnotations(annotations));
   }
 
+  @Override public TypeName withoutAnnotations() {
+    return new ClassName(names);
+  }
+
   /** Returns the package name, like {@code "java.util"} for {@code Map.Entry}. */
   public String packageName() {
     return names.get(0);
@@ -203,6 +207,6 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {
-    return emitAnnotations(out).emitAndIndent(out.lookupName(this));
+    return out.emitAndIndent(out.lookupName(this));
   }
 }
