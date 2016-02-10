@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.ArrayType;
 
@@ -44,8 +43,12 @@ public final class ArrayTypeName extends TypeName {
     return new ArrayTypeName(componentType, concatAnnotations(annotations));
   }
 
+  @Override public TypeName withoutAnnotations() {
+    return new ArrayTypeName(componentType);
+  }
+
   @Override CodeWriter emit(CodeWriter out) throws IOException {
-    return emitAnnotations(out).emit("$T[]", componentType);
+    return out.emit("$T[]", componentType);
   }
 
   /** Returns an array type whose elements are all instances of {@code componentType}. */

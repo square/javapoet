@@ -52,13 +52,18 @@ public final class ParameterizedTypeName extends TypeName {
     return new ParameterizedTypeName(rawType, typeArguments, concatAnnotations(annotations));
   }
 
+  @Override public TypeName withoutAnnotations() {
+    return new ParameterizedTypeName(rawType, typeArguments);
+  }
+
   @Override CodeWriter emit(CodeWriter out) throws IOException {
-    emitAnnotations(out);
+    rawType.emitAnnotations(out);
     rawType.emit(out);
     out.emitAndIndent("<");
     boolean firstParameter = true;
     for (TypeName parameter : typeArguments) {
       if (!firstParameter) out.emitAndIndent(", ");
+      parameter.emitAnnotations(out);
       parameter.emit(out);
       firstParameter = false;
     }

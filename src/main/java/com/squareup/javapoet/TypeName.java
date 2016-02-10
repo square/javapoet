@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.ArrayType;
@@ -113,6 +112,10 @@ public class TypeName {
     return new TypeName(keyword, concatAnnotations(annotations));
   }
 
+  public TypeName withoutAnnotations() {
+    return new TypeName(keyword);
+  }
+
   protected final List<AnnotationSpec> concatAnnotations(List<AnnotationSpec> annotations) {
     List<AnnotationSpec> allAnnotations = new ArrayList<>(this.annotations);
     allAnnotations.addAll(annotations);
@@ -179,7 +182,9 @@ public class TypeName {
   @Override public final String toString() {
     try {
       StringBuilder result = new StringBuilder();
-      emit(new CodeWriter(result));
+      CodeWriter codeWriter = new CodeWriter(result);
+      emitAnnotations(codeWriter);
+      emit(codeWriter);
       return result.toString();
     } catch (IOException e) {
       throw new AssertionError();
@@ -188,7 +193,7 @@ public class TypeName {
 
   CodeWriter emit(CodeWriter out) throws IOException {
     if (keyword == null) throw new AssertionError();
-    return emitAnnotations(out).emitAndIndent(keyword);
+    return out.emitAndIndent(keyword);
   }
 
   CodeWriter emitAnnotations(CodeWriter out) throws IOException {

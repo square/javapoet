@@ -207,6 +207,28 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  /**
+   * We had a bug where annotations were preventing us from doing the right thing when resolving
+   * imports. https://github.com/square/javapoet/issues/422
+   */
+  @Test public void annotationsAndJavaLangTypes() throws Exception {
+    ClassName freeRange = ClassName.get("javax.annotation", "FreeRange");
+    TypeSpec taco = TypeSpec.classBuilder("EthicalTaco")
+        .addField(ClassName.get(String.class)
+            .annotated(AnnotationSpec.builder(freeRange).build()), "meat")
+        .build();
+
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.String;\n"
+        + "import javax.annotation.FreeRange;\n"
+        + "\n"
+        + "class EthicalTaco {\n"
+        + "  @FreeRange String meat;\n"
+        + "}\n");
+  }
+
   @Test public void retrofitStyleInterface() throws Exception {
     ClassName observable = ClassName.get(tacosPackage, "Observable");
     ClassName fooBar = ClassName.get(tacosPackage, "FooBar");

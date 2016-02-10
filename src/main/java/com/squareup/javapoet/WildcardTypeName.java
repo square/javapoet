@@ -58,8 +58,11 @@ public final class WildcardTypeName extends TypeName {
     return new WildcardTypeName(upperBounds, lowerBounds, concatAnnotations(annotations));
   }
 
+  @Override public TypeName withoutAnnotations() {
+    return new WildcardTypeName(upperBounds, lowerBounds);
+  }
+
   @Override CodeWriter emit(CodeWriter out) throws IOException {
-    emitAnnotations(out);
     if (lowerBounds.size() == 1) {
       return out.emit("? super $T", lowerBounds.get(0));
     }
