@@ -203,7 +203,7 @@ final class CodeWriter {
   }
 
   public CodeWriter emit(String format, Object... args) throws IOException {
-    return emit(CodeBlock.builder().add(format, args).build());
+    return emit(CodeBlock.of(format, args));
   }
 
   public CodeWriter emit(CodeBlock codeBlock) throws IOException {

@@ -420,7 +420,7 @@ public final class MethodSpec {
     }
 
     public Builder defaultValue(String format, Object... args) {
-      return defaultValue(CodeBlock.builder().add(format, args).build());
+      return defaultValue(CodeBlock.of(format, args));
     }
 
     public Builder defaultValue(CodeBlock codeBlock) {

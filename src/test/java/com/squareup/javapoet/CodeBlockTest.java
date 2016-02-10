@@ -32,6 +32,11 @@ public final class CodeBlockTest {
     assertThat(a.hashCode()).isEqualTo(b.hashCode());
   }
 
+  @Test public void of() {
+    CodeBlock a = CodeBlock.of("$L taco", "delicious");
+    assertThat(a.toString()).isEqualTo("delicious taco");
+  }
+
   @Test public void indentCannotBeIndexed() {
     try {
       CodeBlock.builder().add("$1>", "taco").build();

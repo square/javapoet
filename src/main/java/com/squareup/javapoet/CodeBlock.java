@@ -90,6 +90,10 @@ public final class CodeBlock {
     }
   }
 
+  public static CodeBlock of(String format, Object... args) {
+    return new Builder().add(format, args).build();
+  }
+
   public static Builder builder() {
     return new Builder();
   }
