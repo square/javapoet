@@ -1834,21 +1834,21 @@ public final class TypeSpecTest {
         return "foo";
       }
     };
-    assertThat(codeBlock("$L", value).toString()).isEqualTo("foo");
+    assertThat(CodeBlock.of("$L", value).toString()).isEqualTo("foo");
   }
 
   @Test public void nameFromCharSequence() {
-    assertThat(codeBlock("$N", "text").toString()).isEqualTo("text");
+    assertThat(CodeBlock.of("$N", "text").toString()).isEqualTo("text");
   }
 
   @Test public void nameFromField() {
     FieldSpec field = FieldSpec.builder(String.class, "field").build();
-    assertThat(codeBlock("$N", field).toString()).isEqualTo("field");
+    assertThat(CodeBlock.of("$N", field).toString()).isEqualTo("field");
   }
 
   @Test public void nameFromParameter() {
     ParameterSpec parameter = ParameterSpec.builder(String.class, "parameter").build();
-    assertThat(codeBlock("$N", parameter).toString()).isEqualTo("parameter");
+    assertThat(CodeBlock.of("$N", parameter).toString()).isEqualTo("parameter");
   }
 
   @Test public void nameFromMethod() {
@@ -1856,12 +1856,12 @@ public final class TypeSpecTest {
         .addModifiers(Modifier.ABSTRACT)
         .returns(String.class)
         .build();
-    assertThat(codeBlock("$N", method).toString()).isEqualTo("method");
+    assertThat(CodeBlock.of("$N", method).toString()).isEqualTo("method");
   }
 
   @Test public void nameFromType() {
     TypeSpec type = TypeSpec.classBuilder("Type").build();
-    assertThat(codeBlock("$N", type).toString()).isEqualTo("Type");
+    assertThat(CodeBlock.of("$N", type).toString()).isEqualTo("Type");
   }
 
   @Test public void nameFromUnsupportedType() {
@@ -1879,30 +1879,30 @@ public final class TypeSpecTest {
         return "foo";
       }
     };
-    assertThat(codeBlock("$S", value).toString()).isEqualTo("\"foo\"");
+    assertThat(CodeBlock.of("$S", value).toString()).isEqualTo("\"foo\"");
   }
 
   @Test public void stringFromNull() {
-    assertThat(codeBlock("$S", new Object[] {null}).toString()).isEqualTo("null");
+    assertThat(CodeBlock.of("$S", new Object[] {null}).toString()).isEqualTo("null");
   }
 
   @Test public void typeFromTypeName() {
     TypeName typeName = TypeName.get(String.class);
-    assertThat(codeBlock("$T", typeName).toString()).isEqualTo("java.lang.String");
+    assertThat(CodeBlock.of("$T", typeName).toString()).isEqualTo("java.lang.String");
   }
 
   @Test public void typeFromTypeMirror() {
     TypeMirror mirror = getElement(String.class).asType();
-    assertThat(codeBlock("$T", mirror).toString()).isEqualTo("java.lang.String");
+    assertThat(CodeBlock.of("$T", mirror).toString()).isEqualTo("java.lang.String");
   }
 
   @Test public void typeFromTypeElement() {
     TypeElement element = getElement(String.class);
-    assertThat(codeBlock("$T", element).toString()).isEqualTo("java.lang.String");
+    assertThat(CodeBlock.of("$T", element).toString()).isEqualTo("java.lang.String");
   }
 
   @Test public void typeFromReflectType() {
-    assertThat(codeBlock("$T", String.class).toString()).isEqualTo("java.lang.String");
+    assertThat(CodeBlock.of("$T", String.class).toString()).isEqualTo("java.lang.String");
   }
 
   @Test public void typeFromUnsupportedType() {
@@ -2167,11 +2167,5 @@ public final class TypeSpecTest {
     assertThat(TypeSpec.interfaceBuilder(className).build().name).isEqualTo("Example");
     assertThat(TypeSpec.enumBuilder(className).addEnumConstant("A").build().name).isEqualTo("Example");
     assertThat(TypeSpec.annotationBuilder(className).build().name).isEqualTo("Example");
-  }
-
-  private CodeBlock codeBlock(String format, Object... args) {
-    return CodeBlock.builder()
-        .add(format, args)
-        .build();
   }
 }

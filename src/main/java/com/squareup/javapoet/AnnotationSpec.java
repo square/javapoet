@@ -204,7 +204,7 @@ public final class AnnotationSpec {
     }
 
     public Builder addMember(String name, String format, Object... args) {
-      return addMember(name, CodeBlock.builder().add(format, args).build());
+      return addMember(name, CodeBlock.of(format, args));
     }
 
     public Builder addMember(String name, CodeBlock codeBlock) {

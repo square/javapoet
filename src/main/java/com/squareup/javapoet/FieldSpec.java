@@ -154,7 +154,7 @@ public final class FieldSpec {
     }
 
     public Builder initializer(String format, Object... args) {
-      return initializer(CodeBlock.builder().add(format, args).build());
+      return initializer(CodeBlock.of(format, args));
     }
 
     public Builder initializer(CodeBlock codeBlock) {
