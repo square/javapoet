@@ -21,10 +21,10 @@ import static org.junit.Assert.assertNotEquals;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.rmi.server.UID;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.Test;
 
 public class TypeNameTest {
@@ -70,8 +70,8 @@ public class TypeNameTest {
   @Test public void equalsAndHashCodeParameterizedTypeName() {
     assertEqualsHashCodeAndToString(ParameterizedTypeName.get(Object.class),
         ParameterizedTypeName.get(Object.class));
-    assertEqualsHashCodeAndToString(ParameterizedTypeName.get(Set.class, UID.class),
-        ParameterizedTypeName.get(Set.class, UID.class));
+    assertEqualsHashCodeAndToString(ParameterizedTypeName.get(Set.class, UUID.class),
+        ParameterizedTypeName.get(Set.class, UUID.class));
     assertNotEquals(ClassName.get(List.class), ParameterizedTypeName.get(List.class,
         String.class));
   }
@@ -98,5 +98,4 @@ public class TypeNameTest {
     assertThat(a.equals(b)).isTrue();
     assertThat(a.hashCode()).isEqualTo(b.hashCode());
   }
-
 }
