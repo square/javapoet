@@ -274,7 +274,7 @@ public final class JavaFileTest {
     String source = JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("Taco")
             .addField(Date.class, "madeFreshDate")
-            .addField(java.sql.Date.class, "madeFreshDatabaseDate")
+            .addField(ClassName.get("java.sql", "Date"), "madeFreshDatabaseDate")
             .build())
         .build()
         .toString();
