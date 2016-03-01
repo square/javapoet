@@ -57,8 +57,17 @@ public final class ParameterizedTypeName extends TypeName {
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {
-    rawType.emitAnnotations(out);
-    rawType.emit(out);
+    String lookedupName = out.lookupName(rawType);
+    ClassName enclosingClassName = rawType.enclosingClassName();
+    if (rawType.canonicalName.equals(lookedupName) && enclosingClassName != null) {
+      enclosingClassName.emit(out);
+      out.emit(".");
+      emitAnnotations(out);
+      out.emit(rawType.simpleName());
+    } else {
+      emitAnnotations(out);
+      out.emitAndIndent(lookedupName);
+    }
     out.emitAndIndent("<");
     boolean firstParameter = true;
     for (TypeName parameter : typeArguments) {
@@ -68,6 +77,11 @@ public final class ParameterizedTypeName extends TypeName {
       firstParameter = false;
     }
     return out.emitAndIndent(">");
+  }
+
+  @Override void toString(CodeWriter out) throws IOException {
+    // annotations are handled by emit(out), see #431
+    emit(out);
   }
 
   /** Returns a parameterized type, applying {@code typeArguments} to {@code rawType}. */

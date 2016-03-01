@@ -17,6 +17,7 @@ package com.squareup.javapoet;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.lang.model.element.Modifier;
 import org.junit.Ignore;
@@ -24,6 +25,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
+import com.squareup.javapoet.AnnotatedTypeNameTest.TypeUseAnnotation;
 import static com.google.common.truth.Truth.assertThat;
 
 @RunWith(JUnit4.class)
@@ -486,6 +488,34 @@ public final class JavaFileTest {
         + "  @Component.Builder\n"
         + "  class Builder {\n"
         + "  }\n"
+        + "}\n");
+  }
+
+  // https://github.com/square/javapoet/issues/431
+  @Test public void annotatedNestedTypeInJavaFileWithImports() {
+    AnnotationSpec typeUseAnnotation = AnnotationSpec.builder(TypeUseAnnotation.class).build();
+    TypeName type = ParameterizedTypeName.get(Map.Entry.class, Byte.class, Byte.class) 
+        .annotated(typeUseAnnotation);
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("TestTypeAnnotationsOnQualifiedTypeNames")
+            .addField(type, "entry")
+            .addStaticBlock(CodeBlock.of("$T local;\n", type))
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.javapoet.AnnotatedTypeNameTest;\n"
+        + "import java.lang.Byte;\n"
+        + "import java.util.Map;\n"
+        + "\n"
+        + "class TestTypeAnnotationsOnQualifiedTypeNames {\n"
+        + "  static {\n"
+        + "    @AnnotatedTypeNameTest.TypeUseAnnotation Map.Entry<Byte, Byte> local;\n"
+        + "  }\n"
+        + "\n"
+        + "  @AnnotatedTypeNameTest.TypeUseAnnotation Map.Entry<Byte, Byte> entry;\n"
         + "}\n");
   }
 

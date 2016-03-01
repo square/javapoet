@@ -183,12 +183,16 @@ public class TypeName {
     try {
       StringBuilder result = new StringBuilder();
       CodeWriter codeWriter = new CodeWriter(result);
-      emitAnnotations(codeWriter);
-      emit(codeWriter);
+      toString(codeWriter);
       return result.toString();
     } catch (IOException e) {
       throw new AssertionError();
     }
+  }
+
+  void toString(CodeWriter out) throws IOException {
+    emitAnnotations(out);
+    emit(out);
   }
 
   CodeWriter emit(CodeWriter out) throws IOException {
