@@ -209,4 +209,22 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   @Override CodeWriter emit(CodeWriter out) throws IOException {
     return out.emitAndIndent(out.lookupName(this));
   }
+
+  void toString(CodeWriter out) {
+    try {
+      String lookedupName = out.lookupName(this);
+      ClassName enclosingClassName = enclosingClassName();
+      if (canonicalName.equals(lookedupName) && enclosingClassName != null) {
+        enclosingClassName.emit(out);
+        out.emit(".");
+        emitAnnotations(out);
+        out.emit(simpleName());
+      } else {
+        emitAnnotations(out);
+        out.emitAndIndent(lookedupName);
+      }
+    } catch (IOException e) {
+      throw new AssertionError();
+    }
+  }
 }

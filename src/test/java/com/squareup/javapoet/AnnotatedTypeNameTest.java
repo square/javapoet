@@ -21,14 +21,17 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Map;
+
 import org.junit.Test;
 
 public class AnnotatedTypeNameTest {
+  public @interface NeverNull {}
+  // Java 1.8 required for @Target(ElementType.TYPE_USE)
+  public @interface TypeUseAnnotation {}
 
   private final static String NN = NeverNull.class.getCanonicalName();
   private final AnnotationSpec NEVER_NULL = AnnotationSpec.builder(NeverNull.class).build();
-
-  public @interface NeverNull {}
 
   @Test(expected=NullPointerException.class) public void nullAnnotationArray() {
     TypeName.BOOLEAN.annotated((AnnotationSpec[]) null);
@@ -45,6 +48,26 @@ public class AnnotatedTypeNameTest {
     TypeName annotated = simpleString.annotated(NEVER_NULL);
     assertTrue(annotated.isAnnotated());
     assertEquals(annotated, annotated.annotated());
+  }
+
+  // https://github.com/square/javapoet/issues/431
+  @Test public void annotatedNestedType() {
+    String expected = "java.util.Map.@" + TypeUseAnnotation.class.getCanonicalName() + " Entry";
+    AnnotationSpec typeUseAnnotation = AnnotationSpec.builder(TypeUseAnnotation.class).build();
+    TypeName type = TypeName.get(Map.Entry.class).annotated(typeUseAnnotation);
+    String actual = type.toString();
+    assertEquals(expected, actual);
+  }
+
+  // https://github.com/square/javapoet/issues/431
+  @Test public void annotatedNestedParameterizedType() {
+    String expected = "java.util.Map.@" + TypeUseAnnotation.class.getCanonicalName()
+        + " Entry<java.lang.Byte, java.lang.Byte>";
+    AnnotationSpec typeUseAnnotation = AnnotationSpec.builder(TypeUseAnnotation.class).build();
+    TypeName type = ParameterizedTypeName.get(Map.Entry.class, Byte.class, Byte.class) 
+        .annotated(typeUseAnnotation);
+    String actual = type.toString();
+    assertEquals(expected, actual);
   }
 
   @Test public void annotatedType() {
