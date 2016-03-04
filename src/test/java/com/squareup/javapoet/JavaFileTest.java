@@ -573,4 +573,20 @@ public final class JavaFileTest {
         + "  }\n"
         + "}\n");
   }
+
+  @Test public void skipImportsEntirely() {
+    assertThat(JavaFile.builder("readme", importStaticTypeSpec("Util"))
+        .addStaticImport(TimeUnit.SECONDS)
+        .skipImportsEntirely(true)
+        .build().toString()).isEqualTo(""
+        + "package readme;\n"
+        + "\n"
+        + "class Util {\n"
+        + "  public static long minutesToSeconds(long minutes) {\n"
+        + "    java.lang.System.gc();\n"
+        + "    return java.util.concurrent.TimeUnit.SECONDS.convert(minutes,"
+        + " java.util.concurrent.TimeUnit.MINUTES);\n"
+        + "  }\n"
+        + "}\n");
+  }
 }

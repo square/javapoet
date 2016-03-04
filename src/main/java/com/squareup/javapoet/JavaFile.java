@@ -57,6 +57,7 @@ public final class JavaFile {
   public final CodeBlock fileComment;
   public final String packageName;
   public final TypeSpec typeSpec;
+  public final boolean skipImportsEntirely;
   public final boolean skipJavaLangImports;
   private final Set<String> staticImports;
   private final String indent;
@@ -65,19 +66,25 @@ public final class JavaFile {
     this.fileComment = builder.fileComment.build();
     this.packageName = builder.packageName;
     this.typeSpec = builder.typeSpec;
+    this.skipImportsEntirely = builder.skipImportsEntirely;
     this.skipJavaLangImports = builder.skipJavaLangImports;
     this.staticImports = Util.immutableSet(builder.staticImports);
     this.indent = builder.indent;
   }
 
   public void writeTo(Appendable out) throws IOException {
-    // First pass: emit the entire class, just to collect the types we'll need to import.
-    CodeWriter importsCollector = new CodeWriter(NULL_APPENDABLE, indent, staticImports);
-    emit(importsCollector);
-    Map<String, ClassName> suggestedImports = importsCollector.suggestedImports();
+    Map<String, ClassName> suggestedImports = Collections.emptyMap();
+    Set<String> suggestedStaticImports = Collections.emptySet();
+    if (!skipImportsEntirely) {
+      // First pass: emit the entire class, just to collect the types we'll need to import.
+      CodeWriter importsCollector = new CodeWriter(NULL_APPENDABLE, indent, staticImports);
+      emit(importsCollector);
+      suggestedImports = importsCollector.suggestedImports();
+      suggestedStaticImports = staticImports;
+    }
 
-    // Second pass: write the code, taking advantage of the imports.
-    CodeWriter codeWriter = new CodeWriter(out, indent, suggestedImports, staticImports);
+    // (Potentially) second pass: write the code, taking advantage of the imports (if any).
+    CodeWriter codeWriter = new CodeWriter(out, indent, suggestedImports, suggestedStaticImports);
     emit(codeWriter);
   }
 
@@ -135,22 +142,24 @@ public final class JavaFile {
       codeWriter.emit("\n");
     }
 
-    if (!staticImports.isEmpty()) {
-      for (String signature : staticImports) {
-        codeWriter.emit("import static $L;\n", signature);
+    if (!skipImportsEntirely) {
+      if (!staticImports.isEmpty()) {
+        for (String signature : staticImports) {
+          codeWriter.emit("import static $L;\n", signature);
+        }
+        codeWriter.emit("\n");
       }
-      codeWriter.emit("\n");
-    }
 
-    int importedTypesCount = 0;
-    for (ClassName className : new TreeSet<>(codeWriter.importedTypes().values())) {
-      if (skipJavaLangImports && className.packageName().equals("java.lang")) continue;
-      codeWriter.emit("import $L;\n", className);
-      importedTypesCount++;
-    }
+      int importedTypesCount = 0;
+      for (ClassName className : new TreeSet<>(codeWriter.importedTypes().values())) {
+        if (skipJavaLangImports && className.packageName().equals("java.lang")) continue;
+        codeWriter.emit("import $L;\n", className);
+        importedTypesCount++;
+      }
 
-    if (importedTypesCount > 0) {
-      codeWriter.emit("\n");
+      if (importedTypesCount > 0) {
+        codeWriter.emit("\n");
+      }
     }
 
     typeSpec.emit(codeWriter, null, Collections.<Modifier>emptySet());
@@ -218,6 +227,7 @@ public final class JavaFile {
     private final CodeBlock.Builder fileComment = CodeBlock.builder();
     private final Set<String> staticImports = new TreeSet<>();
     private boolean skipJavaLangImports;
+    private boolean skipImportsEntirely;
     private String indent = "  ";
 
     private Builder(String packageName, TypeSpec typeSpec) {
@@ -246,6 +256,11 @@ public final class JavaFile {
         checkArgument(name != null, "null entry in names array: %s", Arrays.toString(names));
         staticImports.add(className.canonicalName + "." + name);
       }
+      return this;
+    }
+
+    public Builder skipImportsEntirely(boolean skipImportsEntirely) {
+      this.skipImportsEntirely = skipImportsEntirely;
       return this;
     }
 
