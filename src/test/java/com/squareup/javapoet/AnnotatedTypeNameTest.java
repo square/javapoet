@@ -21,6 +21,8 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
+import java.util.Map;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class AnnotatedTypeNameTest {
@@ -110,5 +112,29 @@ public class AnnotatedTypeNameTest {
     assertEquals(type.hashCode(), type.hashCode());
     assertEquals(type.annotated(NEVER_NULL).hashCode(), type.annotated(NEVER_NULL).hashCode());
     assertNotEquals(type.hashCode(), type.annotated(NEVER_NULL).hashCode());
+  }
+
+  // https://github.com/square/javapoet/issues/431
+  // @Target(ElementType.TYPE_USE) requires Java 1.8
+  public @interface TypeUseAnnotation {}
+
+  // https://github.com/square/javapoet/issues/431
+  @Ignore @Test public void annotatedNestedType() {
+    String expected = "java.util.Map.@" + TypeUseAnnotation.class.getCanonicalName() + " Entry";
+    AnnotationSpec typeUseAnnotation = AnnotationSpec.builder(TypeUseAnnotation.class).build();
+    TypeName type = TypeName.get(Map.Entry.class).annotated(typeUseAnnotation);
+    String actual = type.toString();
+    assertEquals(expected, actual);
+  }
+
+  // https://github.com/square/javapoet/issues/431
+  @Ignore @Test public void annotatedNestedParameterizedType() {
+    String expected = "java.util.Map.@" + TypeUseAnnotation.class.getCanonicalName()
+        + " Entry<java.lang.Byte, java.lang.Byte>";
+    AnnotationSpec typeUseAnnotation = AnnotationSpec.builder(TypeUseAnnotation.class).build();
+    TypeName type = ParameterizedTypeName.get(Map.Entry.class, Byte.class, Byte.class)
+        .annotated(typeUseAnnotation);
+    String actual = type.toString();
+    assertEquals(expected, actual);
   }
 }
