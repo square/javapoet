@@ -183,12 +183,16 @@ public class TypeName {
     try {
       StringBuilder result = new StringBuilder();
       CodeWriter codeWriter = new CodeWriter(result);
-      emitAnnotations(codeWriter);
-      emit(codeWriter);
+      toString(codeWriter, annotations);
       return result.toString();
     } catch (IOException e) {
       throw new AssertionError();
     }
+  }
+
+  CodeWriter toString(CodeWriter out, Iterable<AnnotationSpec> annos) throws IOException {
+    emitAnnotations(out, annos);
+    return emit(out);
   }
 
   CodeWriter emit(CodeWriter out) throws IOException {
@@ -197,7 +201,11 @@ public class TypeName {
   }
 
   CodeWriter emitAnnotations(CodeWriter out) throws IOException {
-    for (AnnotationSpec annotation : annotations) {
+    return emitAnnotations(out, annotations);
+  }
+
+  CodeWriter emitAnnotations(CodeWriter out, Iterable<AnnotationSpec> specs) throws IOException {
+    for (AnnotationSpec annotation : specs) {
       annotation.emit(out, true);
       out.emit(" ");
     }

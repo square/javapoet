@@ -209,4 +209,20 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   @Override CodeWriter emit(CodeWriter out) throws IOException {
     return out.emitAndIndent(out.lookupName(this));
   }
+
+  @Override CodeWriter toString(CodeWriter out, Iterable<AnnotationSpec> annos) throws IOException {
+    // trivial case: no enclosing name available
+    ClassName enclosingClassName = enclosingClassName();
+    if (enclosingClassName == null) {
+      return super.toString(out, annos);
+    }
+    // trivial case: import logic mangled the fully qualified class name
+    String lookedupName = out.lookupName(this);
+    if (!lookedupName.equals(canonicalName)) {
+      return super.toString(out, annos);
+    }
+    // "pack.age.name.Outer.Inner...@TA InnerMost"
+    enclosingClassName.emit(out).emit(".");
+    return emitAnnotations(out, annos).emit(simpleName());
+  }
 }

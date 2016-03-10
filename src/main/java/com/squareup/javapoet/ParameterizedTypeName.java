@@ -57,17 +57,20 @@ public final class ParameterizedTypeName extends TypeName {
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {
-    rawType.emitAnnotations(out);
-    rawType.emit(out);
+    rawType.toString(out, annotations); // awkward: use our annotations with the raw type...
     out.emitAndIndent("<");
     boolean firstParameter = true;
     for (TypeName parameter : typeArguments) {
       if (!firstParameter) out.emitAndIndent(", ");
-      parameter.emitAnnotations(out);
-      parameter.emit(out);
+      parameter.toString(out, parameter.annotations);
       firstParameter = false;
     }
     return out.emitAndIndent(">");
+  }
+
+  @Override CodeWriter toString(CodeWriter out, Iterable<AnnotationSpec> annos) throws IOException {
+    // annotations are handled by emit(out), see #431
+    return emit(out);
   }
 
   /** Returns a parameterized type, applying {@code typeArguments} to {@code rawType}. */

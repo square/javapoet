@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class AnnotatedTypeNameTest {
@@ -118,8 +117,7 @@ public class AnnotatedTypeNameTest {
   // @Target(ElementType.TYPE_USE) requires Java 1.8
   public @interface TypeUseAnnotation {}
 
-  // https://github.com/square/javapoet/issues/431
-  @Ignore @Test public void annotatedNestedType() {
+  @Test public void annotatedNestedType() {
     String expected = "java.util.Map.@" + TypeUseAnnotation.class.getCanonicalName() + " Entry";
     AnnotationSpec typeUseAnnotation = AnnotationSpec.builder(TypeUseAnnotation.class).build();
     TypeName type = TypeName.get(Map.Entry.class).annotated(typeUseAnnotation);
@@ -127,8 +125,7 @@ public class AnnotatedTypeNameTest {
     assertEquals(expected, actual);
   }
 
-  // https://github.com/square/javapoet/issues/431
-  @Ignore @Test public void annotatedNestedParameterizedType() {
+  @Test public void annotatedNestedParameterizedType() {
     String expected = "java.util.Map.@" + TypeUseAnnotation.class.getCanonicalName()
         + " Entry<java.lang.Byte, java.lang.Byte>";
     AnnotationSpec typeUseAnnotation = AnnotationSpec.builder(TypeUseAnnotation.class).build();
