@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class AnnotatedTypeNameTest {
@@ -50,14 +49,14 @@ public class AnnotatedTypeNameTest {
   }
 
   @Test public void annotatedType() {
-    String expected = "@" + NN + " java.lang.String";
+    String expected = "java.lang.@" + NN + " String";
     TypeName type = TypeName.get(String.class);
     String actual = type.annotated(NEVER_NULL).toString();
     assertEquals(expected, actual);
   }
 
   @Test public void annotatedTwice() {
-    String expected = "@" + NN + " @java.lang.Override java.lang.String";
+    String expected = "java.lang.@" + NN + " @java.lang.Override String";
     TypeName type = TypeName.get(String.class);
     String actual =
         type.annotated(NEVER_NULL)
@@ -67,14 +66,14 @@ public class AnnotatedTypeNameTest {
   }
 
   @Test public void annotatedParameterizedType() {
-    String expected = "@" + NN + " java.util.List<java.lang.String>";
+    String expected = "java.util.@" + NN + " List<java.lang.String>";
     TypeName type = ParameterizedTypeName.get(List.class, String.class);
     String actual = type.annotated(NEVER_NULL).toString();
     assertEquals(expected, actual);
   }
 
   @Test public void annotatedArgumentOfParameterizedType() {
-    String expected = "java.util.List<@" + NN + " java.lang.String>";
+    String expected = "java.util.List<java.lang.@" + NN + " String>";
     TypeName type = TypeName.get(String.class).annotated(NEVER_NULL);
     ClassName list = ClassName.get(List.class);
     String actual = ParameterizedTypeName.get(list, type).toString();
@@ -118,8 +117,7 @@ public class AnnotatedTypeNameTest {
   // @Target(ElementType.TYPE_USE) requires Java 1.8
   public @interface TypeUseAnnotation {}
 
-  // https://github.com/square/javapoet/issues/431
-  @Ignore @Test public void annotatedNestedType() {
+  @Test public void annotatedNestedType() {
     String expected = "java.util.Map.@" + TypeUseAnnotation.class.getCanonicalName() + " Entry";
     AnnotationSpec typeUseAnnotation = AnnotationSpec.builder(TypeUseAnnotation.class).build();
     TypeName type = TypeName.get(Map.Entry.class).annotated(typeUseAnnotation);
@@ -127,13 +125,23 @@ public class AnnotatedTypeNameTest {
     assertEquals(expected, actual);
   }
 
-  // https://github.com/square/javapoet/issues/431
-  @Ignore @Test public void annotatedNestedParameterizedType() {
+  @Test public void annotatedNestedParameterizedType() {
     String expected = "java.util.Map.@" + TypeUseAnnotation.class.getCanonicalName()
         + " Entry<java.lang.Byte, java.lang.Byte>";
     AnnotationSpec typeUseAnnotation = AnnotationSpec.builder(TypeUseAnnotation.class).build();
     TypeName type = ParameterizedTypeName.get(Map.Entry.class, Byte.class, Byte.class)
         .annotated(typeUseAnnotation);
+    String actual = type.toString();
+    assertEquals(expected, actual);
+  }
+
+  @Test public void annotatedNestedParameterizedTypeExplicite() {
+    String a = TypeUseAnnotation.class.getCanonicalName();
+    String expected = "java.util.Map.@" + a + " Entry<java.lang.@" + a + " Byte, java.lang.Byte>";
+    AnnotationSpec typeUseAnnotation = AnnotationSpec.builder(TypeUseAnnotation.class).build();
+    ClassName raw = (ClassName) ClassName.get(Map.Entry.class).annotated(typeUseAnnotation);
+    TypeName annotatedByte = TypeName.BYTE.box().annotated(typeUseAnnotation); 
+    TypeName type = ParameterizedTypeName.get(raw, annotatedByte, TypeName.BYTE.box());
     String actual = type.toString();
     assertEquals(expected, actual);
   }
