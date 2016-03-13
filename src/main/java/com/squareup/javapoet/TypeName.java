@@ -30,6 +30,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
@@ -244,6 +245,10 @@ public class TypeName {
           typeArgumentNames.add(get(mirror, typeVariables));
         }
         return new ParameterizedTypeName(rawType, typeArgumentNames);
+      }
+
+      @Override public TypeName visitError(ErrorType t, Void p) {
+        return visitDeclared(t, p);
       }
 
       @Override public ArrayTypeName visitArray(ArrayType t, Void p) {
