@@ -21,9 +21,11 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeoutException;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -204,6 +206,20 @@ public final class MethodSpecTest {
     b = MethodSpec.overriding(methodElement).build();
     assertThat(a.equals(b)).isTrue();
     assertThat(a.hashCode()).isEqualTo(b.hashCode());
+  }
+
+  @Test public void duplicateExceptionsIgnored() {
+    ClassName ioException = ClassName.get(IOException.class);
+    ClassName timeoutException = ClassName.get(TimeoutException.class);
+    MethodSpec methodSpec = MethodSpec.methodBuilder("duplicateExceptions")
+      .addException(ioException)
+      .addException(timeoutException)
+      .addException(timeoutException)
+      .addException(ioException)
+      .build();
+    assertThat(methodSpec.exceptions).isEqualTo(Arrays.asList(ioException, timeoutException));
+    assertThat(methodSpec.toBuilder().addException(ioException).build().exceptions)
+      .isEqualTo(Arrays.asList(ioException, timeoutException));
   }
 
 }

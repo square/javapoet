@@ -287,7 +287,7 @@ public final class MethodSpec {
     private List<TypeVariableName> typeVariables = new ArrayList<>();
     private TypeName returnType;
     private final List<ParameterSpec> parameters = new ArrayList<>();
-    private final List<TypeName> exceptions = new ArrayList<>();
+    private final Set<TypeName> exceptions = new LinkedHashSet<>();
     private final CodeBlock.Builder code = CodeBlock.builder();
     private boolean varargs;
     private CodeBlock defaultValue;
