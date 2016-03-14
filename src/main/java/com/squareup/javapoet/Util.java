@@ -73,8 +73,8 @@ final class Util {
     if (!condition) throw new IllegalStateException(String.format(format, args));
   }
 
-  static <T> List<T> immutableList(List<T> list) {
-    return Collections.unmodifiableList(new ArrayList<>(list));
+  static <T> List<T> immutableList(Collection<T> collection) {
+    return Collections.unmodifiableList(new ArrayList<>(collection));
   }
 
   static <T> Set<T> immutableSet(Collection<T> set) {
