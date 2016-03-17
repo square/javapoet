@@ -578,6 +578,29 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  @Test public void typeVariableWithBounds() {
+    AnnotationSpec a = AnnotationSpec.builder(ClassName.get("com.squareup.tacos", "A")).build();
+    TypeVariableName p = TypeVariableName.get("P", Number.class);
+    TypeVariableName q = (TypeVariableName) TypeVariableName.get("Q", Number.class).annotated(a);
+    TypeSpec typeSpec = TypeSpec.classBuilder("Location")
+        .addTypeVariable(p.withBounds(Comparable.class))
+        .addTypeVariable(q.withBounds(Comparable.class))
+        .addField(p, "x")
+        .addField(q, "y")
+        .build();
+    assertThat(toString(typeSpec)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.Comparable;\n"
+        + "import java.lang.Number;\n"
+        + "\n"
+        + "class Location<P extends Number & Comparable, Q extends Number & Comparable> {\n"
+        + "  P x;\n"
+        + "\n"
+        + "  @A Q y;\n"
+        + "}\n");
+  }
+
   @Test public void classImplementsExtends() throws Exception {
     ClassName taco = ClassName.get(tacosPackage, "Taco");
     ClassName food = ClassName.get("com.squareup.tacos", "Food");

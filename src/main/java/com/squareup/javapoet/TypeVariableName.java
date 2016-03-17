@@ -57,6 +57,21 @@ public final class TypeVariableName extends TypeName {
     return new TypeVariableName(name, bounds);
   }
 
+  public TypeVariableName withBounds(Type... bounds) {
+    return withBounds(TypeName.list(bounds));
+  }
+
+  public TypeVariableName withBounds(TypeName... bounds) {
+    return withBounds(Arrays.asList(bounds));
+  }
+
+  public TypeVariableName withBounds(List<TypeName> bounds) {
+    ArrayList<TypeName> newBounds = new ArrayList<>();
+    newBounds.addAll(this.bounds);
+    newBounds.addAll(bounds);
+    return new TypeVariableName(name, newBounds, annotations);
+  }
+
   private static TypeVariableName of(String name, List<TypeName> bounds) {
     // Strip java.lang.Object from bounds if it is present.
     List<TypeName> boundsNoObject = new ArrayList<>(bounds);
