@@ -533,8 +533,9 @@ public final class TypeSpec {
         requireExactlyOneOf(methodSpec.modifiers, Modifier.ABSTRACT, Modifier.STATIC, Util.DEFAULT);
         requireExactlyOneOf(methodSpec.modifiers, Modifier.PUBLIC, Modifier.PRIVATE);
       } else if (kind == Kind.ANNOTATION) {
-        checkState(methodSpec.modifiers.containsAll(kind.implicitMethodModifiers),
-            "%s %s.%s cannot have modifiers", kind, name, methodSpec.name);
+        checkState(methodSpec.modifiers.equals(kind.implicitMethodModifiers),
+            "%s %s.%s requires modifiers %s",
+            kind, name, methodSpec.name, kind.implicitMethodModifiers);
       }
       if (kind != Kind.ANNOTATION) {
         checkState(methodSpec.defaultValue == null, "%s %s.%s cannot have a default value",
