@@ -1,6 +1,23 @@
 Change Log
 ==========
 
+JavaPoet 1.6.0 *(2016-03-19)*
+----------------------------
+
+ * New: Revive `CodeBlock.of()`, a handy factory method for building code blocks.
+ * New: Add `TypeSpec` factory methods that take a `ClassName`.
+ * New: `TypeName.annotated()` adds an annotation to a type.
+ * New: `TypeVariableName.withBounds()` adds bounds to a type variable.
+ * New: `TypeSpec.Builder.addInitializerBlock()` adds an instance initializer.
+ * Fix: Make `TypeSpec.Kind` enum public. This can be used to check if a `TypeSpec` is a class,
+   interface, enum, or annotation.
+ * Fix: Don’t break import resolution on annotated types.
+ * Fix: Forbid unexpected modifiers like `private` on annotation members.
+ * Fix: Deduplicate exceptions in `MethodSpec.Builder`.
+ * Fix: Treat `ErrorType` like a regular `DeclaredType` in `TypeName.get()`. This should make it
+   easier to write annotation processors.
+
+
 JavaPoet 1.5.1 *(2016-01-10)*
 ----------------------------
 
