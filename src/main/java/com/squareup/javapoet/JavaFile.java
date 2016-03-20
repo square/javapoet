@@ -104,14 +104,20 @@ public final class JavaFile {
     writeTo(directory.toPath());
   }
 
-  /** Writes this to {@code filer}. */
-  public void writeTo(Filer filer) throws IOException {
-    String fileName = packageName.isEmpty()
+  private JavaFileObject createFilerSourceFile(Filer filer) throws IOException {
+    String fqName = packageName.isEmpty()
         ? typeSpec.name
         : packageName + "." + typeSpec.name;
     List<Element> originatingElements = typeSpec.originatingElements;
-    JavaFileObject filerSourceFile = filer.createSourceFile(fileName,
-        originatingElements.toArray(new Element[originatingElements.size()]));
+    synchronized (JavaFile.class) {
+      return filer.createSourceFile(fqName,
+              originatingElements.toArray(new Element[originatingElements.size()]));
+    }
+  }
+
+  /** Writes this to {@code filer}. */
+  public void writeTo(Filer filer) throws IOException {
+    JavaFileObject filerSourceFile = createFilerSourceFile(filer);
     try (Writer writer = filerSourceFile.openWriter()) {
       writeTo(writer);
     } catch (Exception e) {
