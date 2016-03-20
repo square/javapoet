@@ -246,6 +246,15 @@ public abstract class AbstractTypesTest {
     }
   }
 
+  @Test public void unboxIfPossible() throws Exception {
+    assertThat(TypeName.INT).isEqualTo(TypeName.INT.unbox());
+    assertThat(TypeName.VOID).isEqualTo(TypeName.VOID.unbox());
+    assertThat(ClassName.get(Integer.class).unbox()).isEqualTo(TypeName.INT.unbox());
+    assertThat(ClassName.get(Void.class).unbox()).isEqualTo(TypeName.VOID.unbox());
+    assertThat(TypeName.OBJECT.unboxIfPossible()).isEqualTo(TypeName.OBJECT);
+    assertThat(ClassName.get(String.class)).isEqualTo(ClassName.get(String.class));
+  }
+
   private static class DeclaredTypeAsErrorType implements ErrorType {
     private final DeclaredType declaredType;
 

@@ -156,6 +156,20 @@ public class TypeName {
    * @throws UnsupportedOperationException if this type isn't eligible for unboxing.
    */
   public TypeName unbox() {
+    TypeName unboxed = unboxIfPossible();
+    if (keyword != null || this != unboxed) {
+      return unboxed;
+    } else {
+      throw new UnsupportedOperationException("cannot unbox " + this);
+    }
+  }
+
+  /**
+   * Returns an unboxed type if this is a boxed primitive type (like {@code int} for {@code
+   * Integer}) or {@code Void}. Returns this type if it is already unboxed. Otherwise returns
+   * this as is.
+   */
+  public TypeName unboxIfPossible() {
     if (keyword != null) return this; // Already unboxed.
     if (this.equals(BOXED_VOID)) return VOID;
     if (this.equals(BOXED_BOOLEAN)) return BOOLEAN;
@@ -166,7 +180,7 @@ public class TypeName {
     if (this.equals(BOXED_CHAR)) return CHAR;
     if (this.equals(BOXED_FLOAT)) return FLOAT;
     if (this.equals(BOXED_DOUBLE)) return DOUBLE;
-    throw new UnsupportedOperationException("cannot unbox " + this);
+    return this;
   }
 
   @Override public final boolean equals(Object o) {
