@@ -33,6 +33,8 @@ import java.util.TreeSet;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
+import javax.tools.FileObject;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 import javax.tools.SimpleJavaFileObject;
@@ -104,20 +106,14 @@ public final class JavaFile {
     writeTo(directory.toPath());
   }
 
-  private JavaFileObject createFilerSourceFile(Filer filer) throws IOException {
+  /** Writes this to {@code filer}. */
+  public void writeTo(Filer filer) throws IOException {
     String fqName = packageName.isEmpty()
         ? typeSpec.name
         : packageName + "." + typeSpec.name;
     List<Element> originatingElements = typeSpec.originatingElements;
-    synchronized (JavaFile.class) {
-      return filer.createSourceFile(fqName,
-              originatingElements.toArray(new Element[originatingElements.size()]));
-    }
-  }
-
-  /** Writes this to {@code filer}. */
-  public void writeTo(Filer filer) throws IOException {
-    JavaFileObject filerSourceFile = createFilerSourceFile(filer);
+    JavaFileObject filerSourceFile = new SynchronizedFiler(filer).createSourceFile(fqName,
+        originatingElements.toArray(new Element[originatingElements.size()]));
     try (Writer writer = filerSourceFile.openWriter()) {
       writeTo(writer);
     } catch (Exception e) {
@@ -275,6 +271,53 @@ public final class JavaFile {
 
     public JavaFile build() {
       return new JavaFile(this);
+    }
+  }
+
+  private static final class SynchronizedFiler implements Filer {
+
+    private final Filer parent;
+
+    private SynchronizedFiler(Filer parent) {
+      this.parent = parent;
+    }
+
+    @Override
+    public JavaFileObject createSourceFile(CharSequence name,
+                                                        Element... originatingElements)
+            throws IOException {
+      synchronized (parent) {
+        return parent.createSourceFile(name, originatingElements);
+      }
+    }
+
+    @Override
+    public JavaFileObject createClassFile(CharSequence name,
+                                                       Element... originatingElements)
+            throws IOException {
+      synchronized (parent) {
+        return parent.createClassFile(name, originatingElements);
+      }
+    }
+
+    @Override
+    public FileObject createResource(JavaFileManager.Location location,
+                                                  CharSequence pkg,
+                                                  CharSequence relativeName,
+                                                  Element... originatingElements)
+            throws IOException {
+      synchronized (parent) {
+        return parent.createResource(location, pkg, relativeName, originatingElements);
+      }
+    }
+
+    @Override
+    public FileObject getResource(JavaFileManager.Location location,
+                                               CharSequence pkg,
+                                               CharSequence relativeName) throws IOException {
+      synchronized (parent) {
+        return parent.getResource(location, pkg, relativeName);
+      }
     }
   }
 }
