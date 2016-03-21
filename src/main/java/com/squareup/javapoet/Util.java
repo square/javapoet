@@ -139,6 +139,11 @@ final class Util {
         result.append("'");
         continue;
       }
+      // trivial case: double quotes must be escaped
+      if (c == '\"') {
+        result.append("\\\"");
+        continue;
+      }
       // default case: just let character literal do its work
       result.append(characterLiteralWithoutSingleQuotes(c));
       // need to append indent after linefeed?

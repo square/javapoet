@@ -61,6 +61,7 @@ public class UtilTest {
     stringLiteral("♦♥♠♣");
     stringLiteral("€\\t@\\t$", "€\t@\t$", " ");
     stringLiteral("abc();\\n\"\n  + \"def();", "abc();\ndef();", " ");
+    stringLiteral("This is \\\"quoted\\\"!", "This is \"quoted\"!", " ");
   }
 
   void stringLiteral(String string) {
