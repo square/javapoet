@@ -33,7 +33,7 @@ public class UtilTest {
     assertEquals("\\r", Util.characterLiteralWithoutSingleQuotes('\r'));
     assertEquals("\"", Util.characterLiteralWithoutSingleQuotes('"'));
     assertEquals("\\'", Util.characterLiteralWithoutSingleQuotes('\''));
-    assertEquals("\\", Util.characterLiteralWithoutSingleQuotes('\\'));
+    assertEquals("\\\\", Util.characterLiteralWithoutSingleQuotes('\\'));
     // octal escapes
     assertEquals("\\u0000", Util.characterLiteralWithoutSingleQuotes('\0'));
     assertEquals("\\u0007", Util.characterLiteralWithoutSingleQuotes('\7'));
@@ -62,6 +62,7 @@ public class UtilTest {
     stringLiteral("€\\t@\\t$", "€\t@\t$", " ");
     stringLiteral("abc();\\n\"\n  + \"def();", "abc();\ndef();", " ");
     stringLiteral("This is \\\"quoted\\\"!", "This is \"quoted\"!", " ");
+    stringLiteral("e^{i\\\\pi}+1=0", "e^{i\\pi}+1=0", " ");
   }
 
   void stringLiteral(String string) {
