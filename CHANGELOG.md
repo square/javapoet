@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+JavaPoet 1.6.1 *(2016-03-21)*
+----------------------------
+
+ * Fix: Double quotes and backslashes in string literals were not properly quoted in 1.6.0. This is
+   now fixed.
+
+
 JavaPoet 1.6.0 *(2016-03-19)*
 ----------------------------
 
