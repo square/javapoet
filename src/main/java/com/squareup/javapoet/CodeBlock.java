@@ -42,6 +42,8 @@ import static com.squareup.javapoet.Util.checkArgument;
  *       for names may be strings (actually any {@linkplain CharSequence character sequence}),
  *       {@linkplain ParameterSpec parameters}, {@linkplain FieldSpec fields}, {@linkplain
  *       MethodSpec methods}, and {@linkplain TypeSpec types}.
+ *   <li>{@code $C} escapes the value as a <em>character</em>, wraps it with single quotes, and
+ *       emits that. Arguments for characters must be {@linkplain Character characters}.
  *   <li>{@code $S} escapes the value as a <em>string</em>, wraps it with double quotes, and emits
  *       that. For example, {@code 6" sandwich} is emitted {@code "6\" sandwich"}.
  *   <li>{@code $T} emits a <em>type</em> reference. Types will be imported if possible. Arguments
@@ -169,6 +171,9 @@ public final class CodeBlock {
           case 'L':
             this.args.add(argToLiteral(args[index]));
             break;
+          case 'C':
+            this.args.add(argToCharacter(args[index]));
+            break;
           case 'S':
             this.args.add(argToString(args[index]));
             break;
@@ -211,6 +216,16 @@ public final class CodeBlock {
 
     private Object argToLiteral(Object o) {
       return o;
+    }
+
+    private Character argToCharacter(Object o) {
+      Character character;
+      try {
+        character = (Character) o;
+      } catch (ClassCastException e) {
+        throw new IllegalArgumentException("expected character but was " + o, e);
+      }
+      return character;
     }
 
     private String argToString(Object o) {
