@@ -90,6 +90,8 @@ public class TypeName {
   private final String keyword;
   public final List<AnnotationSpec> annotations;
 
+  private String cachedString;
+
   private TypeName(String keyword) {
     this(keyword, new ArrayList<AnnotationSpec>());
   }
@@ -200,12 +202,14 @@ public class TypeName {
   }
 
   @Override public final String toString() {
+    if (cachedString != null) return cachedString;
     try {
       StringBuilder result = new StringBuilder();
       CodeWriter codeWriter = new CodeWriter(result);
       emitAnnotations(codeWriter);
       emit(codeWriter);
-      return result.toString();
+      cachedString = result.toString();
+      return cachedString;
     } catch (IOException e) {
       throw new AssertionError();
     }

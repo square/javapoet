@@ -202,6 +202,10 @@ final class CodeWriter {
     emit(">");
   }
 
+  public CodeWriter emit(String s) throws IOException {
+    return emitAndIndent(s);
+  }
+
   public CodeWriter emit(String format, Object... args) throws IOException {
     return emit(CodeBlock.of(format, args));
   }
