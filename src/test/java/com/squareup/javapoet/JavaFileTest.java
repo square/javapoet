@@ -17,6 +17,7 @@ package com.squareup.javapoet;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.lang.model.element.Modifier;
 import org.junit.Ignore;
@@ -573,4 +574,56 @@ public final class JavaFileTest {
         + "  }\n"
         + "}\n");
   }
+
+  // https://github.com/square/javapoet/issues/431
+  @Test public void annotatedFullyQualifiedNameInJavaFile() {
+    String expected = ""
+        + "package test;\n"
+        + "\n"
+        + "class Test {\n"
+        + "  Map justHereToForceQualifiedNamesBelow1;\n"
+        + "\n"
+        + "  Byte justHereToForceQualifiedNamesBelow2;\n"
+        + "\n"
+        + "  java.util.Map.Entry e0;\n"
+        + "\n"
+        + "  java.util.Map.Entry<java.lang.Byte, java.lang.Byte> e1;\n"
+        + "\n"
+        + "  java.util.Map.@T Entry<java.lang.Byte, java.lang.Byte> e2;\n"
+        + "\n"
+        + "  java.util.Map.Entry<java.lang.@T Byte, java.lang.Byte> e3;\n"
+        + "\n"
+        + "  java.util.Map.Entry<java.lang.@T Byte, java.lang.@T Byte> e4;\n"
+        + "\n"
+        + "  java.util.Map.@T Entry<java.lang.@T Byte, java.lang.@T Byte> e5;\n"
+        + "\n"
+        + "  @T\n"
+        + "  java.util.Map.@T Entry<java.lang.@T Byte, java.lang.@T Byte> f1;\n"
+        + "}\n";
+    // assuming: @Target({ElementType.FIELD, ElementType.TYPE_USE}) at @interface test.T
+    AnnotationSpec tag = AnnotationSpec.builder(ClassName.get("test", "T")).build();
+    ClassName entryNoTag = ClassName.get(Map.Entry.class);
+    ClassName entryTagged = (ClassName) ClassName.get(Map.Entry.class).annotated(tag);
+    TypeName byteNoTag = TypeName.BYTE.box();
+    TypeName byteTagged = TypeName.BYTE.box().annotated(tag);
+    TypeName e1 = ParameterizedTypeName.get(Map.Entry.class, Byte.class, Byte.class);
+    TypeName e2 = e1.annotated(tag);
+    TypeName e3 = ParameterizedTypeName.get(entryNoTag, byteTagged, byteNoTag);
+    TypeName e4 = ParameterizedTypeName.get(entryNoTag, byteTagged, byteTagged);
+    TypeName e5 = ParameterizedTypeName.get(entryTagged, byteTagged, byteTagged);
+    FieldSpec f1 = FieldSpec.builder(e5, "f1").addAnnotation(tag).build();
+    JavaFile file = JavaFile.builder("test", TypeSpec.classBuilder("Test")
+        .addField(ClassName.get("test", "Map"), "justHereToForceQualifiedNamesBelow1")
+        .addField(ClassName.get("test", "Byte"), "justHereToForceQualifiedNamesBelow2")
+        .addField(entryNoTag, "e0")
+        .addField(e1, "e1")
+        .addField(e2, "e2")
+        .addField(e3, "e3")
+        .addField(e4, "e4")
+        .addField(e5, "e5")
+        .addField(f1)
+        .build())
+        .build();
+    assertThat(file.toString()).isEqualTo(expected);
+  }  
 }

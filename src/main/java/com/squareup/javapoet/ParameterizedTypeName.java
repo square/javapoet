@@ -49,7 +49,8 @@ public final class ParameterizedTypeName extends TypeName {
   }
 
   @Override public ParameterizedTypeName annotated(List<AnnotationSpec> annotations) {
-    return new ParameterizedTypeName(rawType, typeArguments, concatAnnotations(annotations));
+    ClassName annotatedRawType = rawType.annotated(annotations);
+    return new ParameterizedTypeName(annotatedRawType, typeArguments);
   }
 
   @Override public TypeName withoutAnnotations() {
@@ -57,17 +58,20 @@ public final class ParameterizedTypeName extends TypeName {
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {
-    rawType.emitAnnotations(out);
-    rawType.emit(out);
+    rawType.toString(out);
     out.emitAndIndent("<");
     boolean firstParameter = true;
     for (TypeName parameter : typeArguments) {
       if (!firstParameter) out.emitAndIndent(", ");
-      parameter.emitAnnotations(out);
-      parameter.emit(out);
+      parameter.toString(out);
       firstParameter = false;
     }
     return out.emitAndIndent(">");
+  }
+
+  @Override CodeWriter toString(CodeWriter out) throws IOException {
+    // annotations are handled by emit(out), see #431
+    return emit(out);
   }
 
   /** Returns a parameterized type, applying {@code typeArguments} to {@code rawType}. */
