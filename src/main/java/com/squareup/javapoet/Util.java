@@ -47,6 +47,18 @@ final class Util {
     DEFAULT = def;
   }
 
+  static final Appendable NULL_APPENDABLE = new Appendable() {
+    @Override public Appendable append(CharSequence charSequence) {
+      return this;
+    }
+    @Override public Appendable append(CharSequence charSequence, int start, int end) {
+      return this;
+    }
+    @Override public Appendable append(char c) {
+      return this;
+    }
+  };
+
   static <K, V> Map<K, List<V>> immutableMultimap(Map<K, List<V>> multimap) {
     LinkedHashMap<K, List<V>> result = new LinkedHashMap<>();
     for (Map.Entry<K, List<V>> entry : multimap.entrySet()) {
