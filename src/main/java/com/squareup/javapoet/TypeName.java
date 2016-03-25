@@ -90,6 +90,9 @@ public class TypeName {
   private final String keyword;
   public final List<AnnotationSpec> annotations;
 
+  /** Lazily-initialized toString of this type name. */
+  private String cachedString;
+
   private TypeName(String keyword) {
     this(keyword, new ArrayList<AnnotationSpec>());
   }
@@ -200,15 +203,20 @@ public class TypeName {
   }
 
   @Override public final String toString() {
-    try {
-      StringBuilder result = new StringBuilder();
-      CodeWriter codeWriter = new CodeWriter(result);
-      emitAnnotations(codeWriter);
-      emit(codeWriter);
-      return result.toString();
-    } catch (IOException e) {
-      throw new AssertionError();
+    String result = cachedString;
+    if (result == null) {
+      try {
+        StringBuilder resultBuilder = new StringBuilder();
+        CodeWriter codeWriter = new CodeWriter(resultBuilder);
+        emitAnnotations(codeWriter);
+        emit(codeWriter);
+        result = resultBuilder.toString();
+        cachedString = result;
+      } catch (IOException e) {
+        throw new AssertionError();
+      }
     }
+    return result;
   }
 
   CodeWriter emit(CodeWriter out) throws IOException {
