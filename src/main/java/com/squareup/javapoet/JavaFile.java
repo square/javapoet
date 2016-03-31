@@ -204,6 +204,11 @@ public final class JavaFile {
     return new Builder(packageName, typeSpec);
   }
 
+  public static Builder builder(TypeSpec typeSpec) {
+    checkNotNull(typeSpec, "typeSpec == null");
+    return new Builder(typeSpec);
+  }
+
   public Builder toBuilder() {
     Builder builder = new Builder(packageName, typeSpec);
     builder.fileComment.add(fileComment);
@@ -213,7 +218,7 @@ public final class JavaFile {
   }
 
   public static final class Builder {
-    private final String packageName;
+    private String packageName;
     private final TypeSpec typeSpec;
     private final CodeBlock.Builder fileComment = CodeBlock.builder();
     private final Set<String> staticImports = new TreeSet<>();
@@ -225,8 +230,18 @@ public final class JavaFile {
       this.typeSpec = typeSpec;
     }
 
+    private Builder(TypeSpec typeSpec) {
+      this.packageName = "";
+      this.typeSpec = typeSpec;
+    }
+
     public Builder addFileComment(String format, Object... args) {
       this.fileComment.add(format, args);
+      return this;
+    }
+
+    public Builder addPackageName(String packageName) {
+      this.packageName = packageName;
       return this;
     }
 
