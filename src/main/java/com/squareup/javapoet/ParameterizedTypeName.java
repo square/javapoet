@@ -28,6 +28,8 @@ import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
 
 public final class ParameterizedTypeName extends TypeName {
+  private final TypeName enclosingTypeOrRawType;
+  private final String nestedClassName;
   public final ClassName rawType;
   public final List<TypeName> typeArguments;
 
@@ -37,11 +39,24 @@ public final class ParameterizedTypeName extends TypeName {
 
   ParameterizedTypeName(ClassName rawType, List<TypeName> typeArguments,
       List<AnnotationSpec> annotations) {
+    this(rawType, rawType.enclosingClassName() != null ? rawType.enclosingClassName() : rawType,
+        rawType.enclosingClassName() != null ? rawType.simpleName() : null,
+        typeArguments,
+        annotations);
+  }
+
+  private ParameterizedTypeName(ClassName rawType, TypeName enclosingTypeOrRawType,
+      String nestedClassName, List<TypeName> typeArguments, List<AnnotationSpec> annotations) {
     super(annotations);
     this.rawType = checkNotNull(rawType, "rawType == null");
+    this.enclosingTypeOrRawType =
+        checkNotNull(enclosingTypeOrRawType, "enclosingTypeOrRawType == null");
+    this.nestedClassName = nestedClassName;
     this.typeArguments = Util.immutableList(typeArguments);
 
-    checkArgument(!this.typeArguments.isEmpty(), "no type arguments: %s", rawType);
+    checkArgument(!this.typeArguments.isEmpty()
+        || !(enclosingTypeOrRawType instanceof ParameterizedTypeName),
+        "no type arguments: %s", enclosingTypeOrRawType);
     for (TypeName typeArgument : this.typeArguments) {
       checkArgument(!typeArgument.isPrimitive() && typeArgument != VOID,
           "invalid type parameter: %s", typeArgument);
@@ -49,16 +64,21 @@ public final class ParameterizedTypeName extends TypeName {
   }
 
   @Override public ParameterizedTypeName annotated(List<AnnotationSpec> annotations) {
-    return new ParameterizedTypeName(rawType, typeArguments, concatAnnotations(annotations));
+    return new ParameterizedTypeName(rawType, enclosingTypeOrRawType, nestedClassName,
+        typeArguments, concatAnnotations(annotations));
   }
 
   @Override public TypeName withoutAnnotations() {
-    return new ParameterizedTypeName(rawType, typeArguments);
+    return new ParameterizedTypeName(rawType, enclosingTypeOrRawType, nestedClassName,
+        typeArguments, new ArrayList<AnnotationSpec>());
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {
-    rawType.emitAnnotations(out);
-    rawType.emit(out);
+    enclosingTypeOrRawType.emitAnnotations(out);
+    enclosingTypeOrRawType.emit(out);
+    if (nestedClassName != null) {
+      out.emit("." + nestedClassName);
+    }
     out.emitAndIndent("<");
     boolean firstParameter = true;
     for (TypeName parameter : typeArguments) {
@@ -68,6 +88,26 @@ public final class ParameterizedTypeName extends TypeName {
       firstParameter = false;
     }
     return out.emitAndIndent(">");
+  }
+
+  /**
+   * Returns a new {@link ParameterizedTypeName} instance for the specified {@code name} as nested
+   * inside this class.
+   */
+  public ParameterizedTypeName nestedClass(String name) {
+    checkNotNull(name, "name == null");
+    return new ParameterizedTypeName(rawType.nestedClass(name),
+        this, name, new ArrayList<TypeName>(), new ArrayList<AnnotationSpec>());
+  }
+
+  /**
+   * Returns a new {@link ParameterizedTypeName} instance for the specified {@code name} as nested
+   * inside this class, with the specified {@code typeArguments}.
+   */
+  public ParameterizedTypeName nestedClass(String name, TypeName... typeArguments) {
+    checkNotNull(name, "name == null");
+    return new ParameterizedTypeName(rawType.nestedClass(name),
+        this, name, Arrays.asList(typeArguments), new ArrayList<AnnotationSpec>());
   }
 
   /** Returns a parameterized type, applying {@code typeArguments} to {@code rawType}. */
