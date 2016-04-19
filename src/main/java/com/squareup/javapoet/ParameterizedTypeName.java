@@ -55,7 +55,7 @@ public final class ParameterizedTypeName extends TypeName {
     this.typeArguments = Util.immutableList(typeArguments);
 
     checkArgument(!this.typeArguments.isEmpty()
-        || !(enclosingTypeOrRawType instanceof ParameterizedTypeName),
+        || enclosingTypeOrRawType instanceof ParameterizedTypeName,
         "no type arguments: %s", enclosingTypeOrRawType);
     for (TypeName typeArgument : this.typeArguments) {
       checkArgument(!typeArgument.isPrimitive() && typeArgument != VOID,
