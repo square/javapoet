@@ -15,10 +15,6 @@
  */
 package com.squareup.javapoet;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Comparator;
@@ -28,6 +24,10 @@ import java.util.UUID;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 @RunWith(JUnit4.class)
 public class TypeNameTest {
@@ -142,6 +142,22 @@ public class TypeNameTest {
         WildcardTypeName.subtypeOf(Serializable.class));
     assertEqualsHashCodeAndToString(WildcardTypeName.supertypeOf(String.class),
         WildcardTypeName.supertypeOf(String.class));
+  }
+  
+  @Test public void isPrimitive() throws Exception {
+    assertThat(TypeName.INT.isPrimitive()).isTrue();
+    assertThat(ClassName.get("java.lang", "Integer").isPrimitive()).isFalse();
+    assertThat(ClassName.get("java.lang", "String").isPrimitive()).isFalse();
+    assertThat(TypeName.VOID.isPrimitive()).isFalse();
+    assertThat(ClassName.get("java.lang", "Void").isPrimitive()).isFalse();
+  }
+
+  @Test public void isBoxedPrimitive() throws Exception {
+    assertThat(TypeName.INT.isBoxedPrimitive()).isFalse();
+    assertThat(ClassName.get("java.lang", "Integer").isBoxedPrimitive()).isTrue();
+    assertThat(ClassName.get("java.lang", "String").isBoxedPrimitive()).isFalse();
+    assertThat(TypeName.VOID.isBoxedPrimitive()).isFalse();
+    assertThat(ClassName.get("java.lang", "Void").isBoxedPrimitive()).isFalse();
   }
 
   private void assertEqualsHashCodeAndToString(TypeName a, TypeName b) {
