@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.ArrayType;
@@ -90,9 +91,6 @@ public class TypeName {
   private final String keyword;
   public final List<AnnotationSpec> annotations;
 
-  /** Lazily-initialized toString of this type name. */
-  private String cachedString;
-
   private TypeName(String keyword) {
     this(keyword, new ArrayList<AnnotationSpec>());
   }
@@ -130,27 +128,8 @@ public class TypeName {
     return !annotations.isEmpty();
   }
 
-  /**
-   * Returns true if this is a primitive type like {@code int}. Returns false for all other types
-   * types including boxed primitives and {@code void}.
-   */
   public boolean isPrimitive() {
     return keyword != null && this != VOID;
-  }
-
-  /**
-   * Returns true if this is a boxed primitive type like {@code Integer}. Returns false for all
-   * other types types including unboxed primitives and {@code java.lang.Void}.
-   */
-  public boolean isBoxedPrimitive() {
-    return this.equals(BOXED_BOOLEAN)
-        || this.equals(BOXED_BYTE)
-        || this.equals(BOXED_SHORT)
-        || this.equals(BOXED_INT)
-        || this.equals(BOXED_LONG)
-        || this.equals(BOXED_CHAR)
-        || this.equals(BOXED_FLOAT)
-        || this.equals(BOXED_DOUBLE);
   }
 
   /**
@@ -203,20 +182,15 @@ public class TypeName {
   }
 
   @Override public final String toString() {
-    String result = cachedString;
-    if (result == null) {
-      try {
-        StringBuilder resultBuilder = new StringBuilder();
-        CodeWriter codeWriter = new CodeWriter(resultBuilder);
-        emitAnnotations(codeWriter);
-        emit(codeWriter);
-        result = resultBuilder.toString();
-        cachedString = result;
-      } catch (IOException e) {
-        throw new AssertionError();
-      }
+    try {
+      StringBuilder result = new StringBuilder();
+      CodeWriter codeWriter = new CodeWriter(result);
+      emitAnnotations(codeWriter);
+      emit(codeWriter);
+      return result.toString();
+    } catch (IOException e) {
+      throw new AssertionError();
     }
-    return result;
   }
 
   CodeWriter emit(CodeWriter out) throws IOException {
@@ -265,13 +239,22 @@ public class TypeName {
 
       @Override public TypeName visitDeclared(DeclaredType t, Void p) {
         ClassName rawType = ClassName.get((TypeElement) t.asElement());
-        if (t.getTypeArguments().isEmpty()) return rawType;
+        TypeMirror enclosingType = t.getEnclosingType();
+        TypeName enclosing = (enclosingType.getKind() != TypeKind.NONE) &&
+            !t.asElement().getModifiers().contains(Modifier.STATIC)
+            ? enclosingType.accept(this, null) : null;
+        if (t.getTypeArguments().isEmpty() && (((enclosing == null) ||
+            !(enclosing instanceof ParameterizedTypeName)))) {
+          return rawType;
+        }
 
         List<TypeName> typeArgumentNames = new ArrayList<>();
         for (TypeMirror mirror : t.getTypeArguments()) {
           typeArgumentNames.add(get(mirror, typeVariables));
         }
-        return new ParameterizedTypeName(rawType, typeArgumentNames);
+        return (enclosing instanceof ParameterizedTypeName)
+            ? ((ParameterizedTypeName) enclosing).nestedClass(rawType.simpleName())
+            : new ParameterizedTypeName(rawType, typeArgumentNames);
       }
 
       @Override public TypeName visitError(ErrorType t, Void p) {
