@@ -267,11 +267,11 @@ public class TypeName {
       @Override public TypeName visitDeclared(DeclaredType t, Void p) {
         ClassName rawType = ClassName.get((TypeElement) t.asElement());
         TypeMirror enclosingType = t.getEnclosingType();
-        TypeName enclosing = (enclosingType.getKind() != TypeKind.NONE) &&
-            !t.asElement().getModifiers().contains(Modifier.STATIC)
+        TypeName enclosing = (enclosingType.getKind() != TypeKind.NONE)
+            && !t.asElement().getModifiers().contains(Modifier.STATIC)
             ? enclosingType.accept(this, null) : null;
-        if (t.getTypeArguments().isEmpty() && (((enclosing == null) ||
-            !(enclosing instanceof ParameterizedTypeName)))) {
+        if (t.getTypeArguments().isEmpty() && (((enclosing == null)
+            || !(enclosing instanceof ParameterizedTypeName)))) {
           return rawType;
         }
 
