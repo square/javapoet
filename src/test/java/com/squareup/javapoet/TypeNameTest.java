@@ -15,6 +15,10 @@
  */
 package com.squareup.javapoet;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Comparator;
@@ -22,15 +26,42 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-
+@RunWith(JUnit4.class)
 public class TypeNameTest {
 
   protected <E extends Enum<E>> E generic(E[] values) {
     return values[0];
+  }
+
+  protected static class TestGeneric<T> {
+    class Inner {}
+    
+    class InnerGeneric<T2> {}
+    
+    static class NestedNonGeneric {}
+  }
+  
+  protected static TestGeneric<String>.Inner testGenericStringInner() {
+    return null;
+  }
+  
+  protected static TestGeneric<Integer>.Inner testGenericIntInner() {
+    return null;
+  }
+
+  protected static TestGeneric<String>.InnerGeneric<String> testGenericInnerString() {
+    return null;
+  }
+  
+  protected static TestGeneric<String>.InnerGeneric<Integer> testGenericInnerInteger() {
+    return null;
+  }
+
+  protected static TestGeneric.NestedNonGeneric testNestedNonGeneric() {
+    return null;
   }
 
   @Test public void genericType() throws Exception {
@@ -39,6 +70,26 @@ public class TypeNameTest {
     TypeName.get(recursiveEnum.getGenericReturnType());
     TypeName.get(recursiveEnum.getParameterTypes()[0]);
     TypeName.get(recursiveEnum.getGenericParameterTypes()[0]);
+  }
+
+  @Test public void innerClassInGenericType() throws Exception {
+    Method genericStringInner = getClass().getDeclaredMethod("testGenericStringInner");
+    TypeName.get(genericStringInner.getReturnType());
+    TypeName.get(genericStringInner.getGenericReturnType());
+    assertNotEquals(genericStringInner, getClass().getDeclaredMethod("testGenericIntInner"));
+  }
+
+  @Test public void innerGenericInGenericType() throws Exception {
+    Method genericStringInner = getClass().getDeclaredMethod("testGenericInnerString");
+    TypeName.get(genericStringInner.getReturnType());
+    TypeName.get(genericStringInner.getGenericReturnType());
+    assertNotEquals(genericStringInner, getClass().getDeclaredMethod("testGenericInnerInteger"));
+  }
+
+  @Test public void innerStaticInGenericType() throws Exception {
+    Method staticInGeneric = getClass().getDeclaredMethod("testNestedNonGeneric");
+    TypeName.get(staticInGeneric.getReturnType());
+    TypeName.get(staticInGeneric.getGenericReturnType());
   }
 
   @Test public void equalsAndHashCodePrimitive() {
@@ -91,22 +142,6 @@ public class TypeNameTest {
         WildcardTypeName.subtypeOf(Serializable.class));
     assertEqualsHashCodeAndToString(WildcardTypeName.supertypeOf(String.class),
         WildcardTypeName.supertypeOf(String.class));
-  }
-
-  @Test public void isPrimitive() throws Exception {
-    assertThat(TypeName.INT.isPrimitive()).isTrue();
-    assertThat(ClassName.get("java.lang", "Integer").isPrimitive()).isFalse();
-    assertThat(ClassName.get("java.lang", "String").isPrimitive()).isFalse();
-    assertThat(TypeName.VOID.isPrimitive()).isFalse();
-    assertThat(ClassName.get("java.lang", "Void").isPrimitive()).isFalse();
-  }
-
-  @Test public void isBoxedPrimitive() throws Exception {
-    assertThat(TypeName.INT.isBoxedPrimitive()).isFalse();
-    assertThat(ClassName.get("java.lang", "Integer").isBoxedPrimitive()).isTrue();
-    assertThat(ClassName.get("java.lang", "String").isBoxedPrimitive()).isFalse();
-    assertThat(TypeName.VOID.isBoxedPrimitive()).isFalse();
-    assertThat(ClassName.get("java.lang", "Void").isBoxedPrimitive()).isFalse();
   }
 
   private void assertEqualsHashCodeAndToString(TypeName a, TypeName b) {
