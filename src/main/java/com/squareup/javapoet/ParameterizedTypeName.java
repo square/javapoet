@@ -161,7 +161,7 @@ public final class ParameterizedTypeName extends TypeName {
     do {
       enclosingStack.push(toTest);
       toTest = (toTest.getOwnerType() instanceof ParameterizedType)
-          && ! Modifier.isFinal(((Class<?>) type.getRawType()).getModifiers())
+          && !Modifier.isFinal(((Class<?>) type.getRawType()).getModifiers())
           ? (ParameterizedType) toTest.getOwnerType() : null;
     } while (toTest != null);
 
