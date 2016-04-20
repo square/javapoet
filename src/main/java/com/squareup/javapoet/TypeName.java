@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.ArrayType;
@@ -265,14 +266,24 @@ public class TypeName {
 
       @Override public TypeName visitDeclared(DeclaredType t, Void p) {
         ClassName rawType = ClassName.get((TypeElement) t.asElement());
-        if (t.getTypeArguments().isEmpty()) return rawType;
+        TypeMirror enclosingType = t.getEnclosingType();
+        TypeName enclosing = (enclosingType.getKind() != TypeKind.NONE)
+            && !t.asElement().getModifiers().contains(Modifier.STATIC)
+            ? enclosingType.accept(this, null) : null;
+        if (t.getTypeArguments().isEmpty() && (((enclosing == null)
+            || !(enclosing instanceof ParameterizedTypeName)))) {
+          return rawType;
+        }
 
         List<TypeName> typeArgumentNames = new ArrayList<>();
         for (TypeMirror mirror : t.getTypeArguments()) {
           typeArgumentNames.add(get(mirror, typeVariables));
         }
-        return new ParameterizedTypeName(rawType, typeArgumentNames);
+        return (enclosing instanceof ParameterizedTypeName)
+            ? ((ParameterizedTypeName) enclosing).nestedClass(rawType.simpleName())
+            : new ParameterizedTypeName(rawType, typeArgumentNames);
       }
+
 
       @Override public TypeName visitError(ErrorType t, Void p) {
         return visitDeclared(t, p);

@@ -33,12 +33,65 @@ public class TypeNameTest {
     return values[0];
   }
 
+  protected static class TestGeneric<T> {
+    class Inner {}
+    
+    class InnerGeneric<T2> {}
+    
+    static class NestedNonGeneric {}
+  }
+  
+  protected static TestGeneric<String>.Inner testGenericStringInner() {
+    return null;
+  }
+  
+  protected static TestGeneric<Integer>.Inner testGenericIntInner() {
+    return null;
+  }
+
+  protected static TestGeneric<String>.InnerGeneric<String> testGenericInnerString() {
+    return null;
+  }
+  
+  protected static TestGeneric<String>.InnerGeneric<Integer> testGenericInnerInteger() {
+    return null;
+  }
+
+  protected static TestGeneric.NestedNonGeneric testNestedNonGeneric() {
+    return null;
+  }
+
   @Test public void genericType() throws Exception {
     Method recursiveEnum = getClass().getDeclaredMethod("generic", Enum[].class);
     TypeName.get(recursiveEnum.getReturnType());
     TypeName.get(recursiveEnum.getGenericReturnType());
     TypeName.get(recursiveEnum.getParameterTypes()[0]);
     TypeName.get(recursiveEnum.getGenericParameterTypes()[0]);
+  }
+
+  @Test
+  public void innerClassInGenericType() throws Exception {
+    Method genericStringInner = getClass().getDeclaredMethod("testGenericStringInner");
+    TypeName.get(genericStringInner.getReturnType());
+    TypeName.get(genericStringInner.getGenericReturnType());
+    assertNotEquals(TypeName.get(genericStringInner.getGenericReturnType()),
+        TypeName.get(getClass().getDeclaredMethod("testGenericIntInner").getGenericReturnType()));
+  }
+
+  @Test
+  public void innerGenericInGenericType() throws Exception {
+    Method genericStringInner = getClass().getDeclaredMethod("testGenericInnerString");
+    TypeName.get(genericStringInner.getReturnType());
+    TypeName.get(genericStringInner.getGenericReturnType());
+    assertNotEquals(TypeName.get(genericStringInner.getGenericReturnType()),
+        TypeName.get(getClass().getDeclaredMethod("testGenericInnerInt").getGenericReturnType()));
+  }
+
+  @Test
+  public void innerStaticInGenericType() throws Exception {
+    Method staticInGeneric = getClass().getDeclaredMethod("testNestedNonGeneric");
+    TypeName.get(staticInGeneric.getReturnType());
+    TypeName.get(staticInGeneric.getGenericReturnType());
   }
 
   @Test public void equalsAndHashCodePrimitive() {
@@ -92,7 +145,7 @@ public class TypeNameTest {
     assertEqualsHashCodeAndToString(WildcardTypeName.supertypeOf(String.class),
         WildcardTypeName.supertypeOf(String.class));
   }
-
+  
   @Test public void isPrimitive() throws Exception {
     assertThat(TypeName.INT.isPrimitive()).isTrue();
     assertThat(ClassName.get("java.lang", "Integer").isPrimitive()).isFalse();

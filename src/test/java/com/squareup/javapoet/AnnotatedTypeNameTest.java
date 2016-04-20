@@ -24,7 +24,10 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
+@RunWith(JUnit4.class)
 public class AnnotatedTypeNameTest {
 
   private final static String NN = NeverNull.class.getCanonicalName();
