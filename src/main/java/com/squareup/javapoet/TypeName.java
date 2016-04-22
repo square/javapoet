@@ -281,7 +281,8 @@ public class TypeName {
           typeArgumentNames.add(get(mirror, typeVariables));
         }
         return (enclosing instanceof ParameterizedTypeName)
-            ? ((ParameterizedTypeName) enclosing).nestedClass(rawType.simpleName())
+            ? ((ParameterizedTypeName) enclosing).nestedClass(
+                rawType.simpleName(), typeArgumentNames)
             : new ParameterizedTypeName(rawType, typeArgumentNames);
       }
 
