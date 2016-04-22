@@ -72,8 +72,7 @@ public class TypeNameTest {
     assertThat(genericTypeName.toString()).contains("Enum");
   }
 
-  @Test
-  public void innerClassInGenericType() throws Exception {
+  @Test public void innerClassInGenericType() throws Exception {
     Method genericStringInner = getClass().getDeclaredMethod("testGenericStringInner");
     TypeName.get(genericStringInner.getReturnType());
     TypeName genericTypeName = TypeName.get(genericStringInner.getGenericReturnType());
@@ -84,8 +83,7 @@ public class TypeNameTest {
     assertThat(genericTypeName.toString()).contains("String");
   }
 
-  @Test
-  public void innerGenericInGenericType() throws Exception {
+  @Test public void innerGenericInGenericType() throws Exception {
     Method genericStringInner = getClass().getDeclaredMethod("testGenericInnerLong");
     TypeName.get(genericStringInner.getReturnType());
     TypeName genericTypeName = TypeName.get(genericStringInner.getGenericReturnType());
@@ -97,8 +95,7 @@ public class TypeNameTest {
     assertThat(genericTypeName.toString()).contains("Short");
   }
 
-  @Test
-  public void innerStaticInGenericType() throws Exception {
+  @Test public void innerStaticInGenericType() throws Exception {
     Method staticInGeneric = getClass().getDeclaredMethod("testNestedNonGeneric");
     TypeName.get(staticInGeneric.getReturnType());
     TypeName typeName = TypeName.get(staticInGeneric.getGenericReturnType());
