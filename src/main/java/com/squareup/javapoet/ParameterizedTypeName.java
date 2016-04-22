@@ -42,11 +42,8 @@ public final class ParameterizedTypeName extends TypeName {
     this(rawType, null, typeArguments, annotations);
   }
 
-  private ParameterizedTypeName(
-      ClassName rawType,
-      ParameterizedTypeName enclosingType,
-      List<TypeName> typeArguments,
-      List<AnnotationSpec> annotations) {
+  private ParameterizedTypeName(ClassName rawType, ParameterizedTypeName enclosingType,
+      List<TypeName> typeArguments, List<AnnotationSpec> annotations) {
     super(annotations);
     this.rawType = checkNotNull(rawType, "rawType == null");
     this.enclosingType = enclosingType;
