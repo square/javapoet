@@ -32,7 +32,7 @@ public class TypeNameTest {
   protected <E extends Enum<E>> E generic(E[] values) {
     return values[0];
   }
-  
+
   protected static class TestGeneric<T> {
     class Inner {}
 
@@ -49,11 +49,11 @@ public class TypeNameTest {
     return null;
   }
 
-  protected static TestGeneric<String>.InnerGeneric<String> testGenericInnerString() {
+  protected static TestGeneric<Short>.InnerGeneric<Long> testGenericInnerLong() {
     return null;
   }
 
-  protected static TestGeneric<String>.InnerGeneric<Integer> testGenericInnerInt() {
+  protected static TestGeneric<Short>.InnerGeneric<Integer> testGenericInnerInt() {
     return null;
   }
 
@@ -65,33 +65,46 @@ public class TypeNameTest {
     Method recursiveEnum = getClass().getDeclaredMethod("generic", Enum[].class);
     TypeName.get(recursiveEnum.getReturnType());
     TypeName.get(recursiveEnum.getGenericReturnType());
-    TypeName.get(recursiveEnum.getParameterTypes()[0]);
+    TypeName genericTypeName = TypeName.get(recursiveEnum.getParameterTypes()[0]);
     TypeName.get(recursiveEnum.getGenericParameterTypes()[0]);
+
+    // Make sure the generic argument is present
+    assertThat(genericTypeName.toString()).contains("Enum");
   }
 
   @Test
   public void innerClassInGenericType() throws Exception {
     Method genericStringInner = getClass().getDeclaredMethod("testGenericStringInner");
     TypeName.get(genericStringInner.getReturnType());
-    TypeName.get(genericStringInner.getGenericReturnType());
+    TypeName genericTypeName = TypeName.get(genericStringInner.getGenericReturnType());
     assertNotEquals(TypeName.get(genericStringInner.getGenericReturnType()),
         TypeName.get(getClass().getDeclaredMethod("testGenericIntInner").getGenericReturnType()));
+
+    // Make sure the generic argument is present
+    assertThat(genericTypeName.toString()).contains("String");
   }
 
   @Test
   public void innerGenericInGenericType() throws Exception {
-    Method genericStringInner = getClass().getDeclaredMethod("testGenericInnerString");
+    Method genericStringInner = getClass().getDeclaredMethod("testGenericInnerLong");
     TypeName.get(genericStringInner.getReturnType());
-    TypeName.get(genericStringInner.getGenericReturnType());
+    TypeName genericTypeName = TypeName.get(genericStringInner.getGenericReturnType());
     assertNotEquals(TypeName.get(genericStringInner.getGenericReturnType()),
         TypeName.get(getClass().getDeclaredMethod("testGenericInnerInt").getGenericReturnType()));
+
+    // Make sure the generic argument is present
+    assertThat(genericTypeName.toString()).contains("Long");
+    assertThat(genericTypeName.toString()).contains("Short");
   }
 
   @Test
   public void innerStaticInGenericType() throws Exception {
     Method staticInGeneric = getClass().getDeclaredMethod("testNestedNonGeneric");
     TypeName.get(staticInGeneric.getReturnType());
-    TypeName.get(staticInGeneric.getGenericReturnType());
+    TypeName typeName = TypeName.get(staticInGeneric.getGenericReturnType());
+    
+    // Make sure there are no generic arguments
+    assertThat(typeName.toString()).doesNotContain("<");
   }
 
   @Test public void equalsAndHashCodePrimitive() {
