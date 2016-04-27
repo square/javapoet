@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+JavaPoet 1.7.0 *(2016-04-26)*
+----------------------------
+
+ * New: Support parameterized types that enclose other types, like `Outer<String>.Inner`.
+ * New: `TypeName.isBoxedPrimitive()`.
+
+
 JavaPoet 1.6.1 *(2016-03-21)*
 ----------------------------
 
