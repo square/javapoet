@@ -770,6 +770,25 @@ public final class TypeSpecTest {
     );
   }
 
+  @Test public void annotationWithFields() {
+    FieldSpec field = FieldSpec.builder(int.class, "FOO")
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+            .initializer("$L", 101)
+            .build();
+
+    TypeSpec anno = TypeSpec.annotationBuilder("Anno")
+            .addField(field)
+            .build();
+
+    assertThat(toString(anno)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "@interface Anno {\n"
+        + "  int FOO = 101;\n"
+        + "}\n"
+    );
+  }
+
   @Test
   public void classCannotHaveDefaultValueForMethod() throws Exception {
     try {
