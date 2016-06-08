@@ -214,7 +214,6 @@ public final class TypeSpec {
         codeWriter.emit(" {\n");
       }
 
-      //codeWriter.pushType(this);
       codeWriter.indent();
       boolean firstMember = true;
       for (Iterator<Map.Entry<String, TypeSpec>> i = enumConstants.entrySet().iterator();
@@ -286,7 +285,6 @@ public final class TypeSpec {
       }
 
       codeWriter.unindent();
-      //codeWriter.popType();
 
       codeWriter.emit("}");
       if (enumName == null && anonymousTypeArguments == null) {
