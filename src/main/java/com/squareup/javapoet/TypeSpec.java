@@ -149,6 +149,7 @@ public final class TypeSpec {
     codeWriter.statementLine = -1;
 
     try {
+      codeWriter.pushType(this);
       if (enumName != null) {
         codeWriter.emitJavadoc(javadoc);
         codeWriter.emitAnnotations(annotations, false);
@@ -213,7 +214,6 @@ public final class TypeSpec {
         codeWriter.emit(" {\n");
       }
 
-      codeWriter.pushType(this);
       codeWriter.indent();
       boolean firstMember = true;
       for (Iterator<Map.Entry<String, TypeSpec>> i = enumConstants.entrySet().iterator();
@@ -285,13 +285,13 @@ public final class TypeSpec {
       }
 
       codeWriter.unindent();
-      codeWriter.popType();
 
       codeWriter.emit("}");
       if (enumName == null && anonymousTypeArguments == null) {
         codeWriter.emit("\n"); // If this type isn't also a value, include a trailing newline.
       }
     } finally {
+      codeWriter.popType();
       codeWriter.statementLine = previousStatementLine;
     }
   }
