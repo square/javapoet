@@ -83,7 +83,7 @@ public final class CodeBlock {
   @Override public String toString() {
     StringWriter out = new StringWriter();
     try {
-      new CodeWriter(out).emit(this);
+      CodeWriter.builder(out).build().emit(this);
       return out.toString();
     } catch (IOException e) {
       throw new AssertionError();

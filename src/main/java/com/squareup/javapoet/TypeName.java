@@ -208,7 +208,7 @@ public class TypeName {
     if (result == null) {
       try {
         StringBuilder resultBuilder = new StringBuilder();
-        CodeWriter codeWriter = new CodeWriter(resultBuilder);
+        CodeWriter codeWriter = CodeWriter.builder(resultBuilder).build();
         emitAnnotations(codeWriter);
         emit(codeWriter);
         result = resultBuilder.toString();

@@ -40,7 +40,7 @@ import static com.squareup.javapoet.Util.stringLiteralWithDoubleQuotes;
  * Converts a {@link JavaFile} to a string suitable to both human- and javac-consumption. This
  * honors imports, indentation, and deferred variable names.
  */
-final class CodeWriter {
+public final class CodeWriter {
   /** Sentinel value that indicates that no user-provided package has been set. */
   private static final String NO_PACKAGE = new String();
 
@@ -66,20 +66,11 @@ final class CodeWriter {
    */
   int statementLine = -1;
 
-  CodeWriter(Appendable out) {
-    this(out, "  ", Collections.<String>emptySet());
-  }
-
-  CodeWriter(Appendable out, String indent, Set<String> staticImports) {
-    this(out, indent, Collections.<String, ClassName>emptyMap(), staticImports);
-  }
-
-  CodeWriter(Appendable out, String indent, Map<String, ClassName> importedTypes,
-      Set<String> staticImports) {
-    this.out = checkNotNull(out, "out == null");
-    this.indent = checkNotNull(indent, "indent == null");
-    this.importedTypes = checkNotNull(importedTypes, "importedTypes == null");
-    this.staticImports = checkNotNull(staticImports, "staticImports == null");
+  private CodeWriter(Builder builder) {
+    this.out = builder.out;
+    this.indent = builder.indent;
+    this.importedTypes = builder.importedTypes;
+    this.staticImports = builder.staticImports;
     this.staticImportClassNames = new LinkedHashSet<>();
     for (String signature : staticImports) {
       staticImportClassNames.add(signature.substring(0, signature.lastIndexOf('.')));
@@ -483,5 +474,40 @@ final class CodeWriter {
     Map<String, ClassName> result = new LinkedHashMap<>(importableTypes);
     result.keySet().removeAll(referencedNames);
     return result;
+  }
+
+  public static Builder builder(Appendable out) {
+    checkNotNull(out, "packageName == null");
+    return new Builder(out);
+  }
+
+  public static final class Builder {
+    private final Appendable out;
+    private String indent = "  ";
+    private Map<String, ClassName> importedTypes = Collections.<String, ClassName>emptyMap();
+    private Set<String> staticImports = Collections.<String>emptySet();
+
+    private Builder(Appendable out) {
+      this.out = checkNotNull(out, "out == null");
+    }
+
+    public Builder setImportedTypes(Map<String, ClassName> importedTypes) {
+      this.importedTypes = checkNotNull(importedTypes, "importedTypes == null");
+      return this;
+    }
+
+    public Builder setStaticImports(Set<String> staticImports) {
+      this.staticImports = checkNotNull(staticImports, "staticImports == null");
+      return this;
+    }
+
+    public Builder indent(String indent) {
+      this.indent = checkNotNull(indent, "indent == null");
+      return this;
+    }
+
+    public CodeWriter build() {
+      return new CodeWriter(this);
+    }
   }
 }
