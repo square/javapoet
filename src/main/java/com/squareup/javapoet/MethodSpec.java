@@ -207,6 +207,7 @@ public final class MethodSpec {
 
     modifiers = new LinkedHashSet<>(modifiers);
     modifiers.remove(Modifier.ABSTRACT);
+    modifiers.remove(Util.DEFAULT); // LinkedHashSet permits null as element for Java 7
     methodBuilder.addModifiers(modifiers);
 
     for (TypeParameterElement typeParameterElement : method.getTypeParameters()) {
