@@ -28,6 +28,7 @@ import javax.lang.model.element.Modifier;
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
 import static com.squareup.javapoet.Util.checkState;
+import static com.squareup.javapoet.Util.toCamelCase;
 
 /** A generated field declaration. */
 public final class FieldSpec {
@@ -37,6 +38,8 @@ public final class FieldSpec {
   public final List<AnnotationSpec> annotations;
   public final Set<Modifier> modifiers;
   public final CodeBlock initializer;
+  public final MethodSpec getter;
+  public final MethodSpec setter;
 
   private FieldSpec(Builder builder) {
     this.type = checkNotNull(builder.type, "type == null");
@@ -44,6 +47,14 @@ public final class FieldSpec {
     this.javadoc = builder.javadoc.build();
     this.annotations = Util.immutableList(builder.annotations);
     this.modifiers = Util.immutableSet(builder.modifiers);
+    this.getter = builder.getterEnabled ? MethodSpec.methodBuilder("get" + toCamelCase(name))
+            .addCode("return this." + name + ";\n")
+            .returns(type)
+            .build() : null;
+    this.setter = builder.setterEnabled ? MethodSpec.methodBuilder("set" + toCamelCase(name))
+            .addParameter(type, name)
+            .addCode("this." + name + " = " + name + ";\n")
+            .build() : null;
     this.initializer = (builder.initializer == null)
         ? CodeBlock.builder().build()
         : builder.initializer;
@@ -114,6 +125,9 @@ public final class FieldSpec {
     private final CodeBlock.Builder javadoc = CodeBlock.builder();
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
+
+    private boolean getterEnabled = false;
+    private boolean setterEnabled = false;
     private CodeBlock initializer = null;
 
     private Builder(TypeName type, String name) {
@@ -150,6 +164,16 @@ public final class FieldSpec {
 
     public Builder addModifiers(Modifier... modifiers) {
       Collections.addAll(this.modifiers, modifiers);
+      return this;
+    }
+
+    public Builder addGetter() {
+      getterEnabled = true;
+      return this;
+    }
+
+    public Builder addSetter() {
+      setterEnabled = true;
       return this;
     }
 

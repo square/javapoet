@@ -17,10 +17,22 @@ package com.squareup.javapoet;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.testing.compile.CompilationRule;
+import org.junit.Assert;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
+
+import javax.lang.model.element.Element;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.AbstractSet;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -29,16 +41,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-import org.mockito.Mockito;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
@@ -1714,6 +1716,66 @@ public final class TypeSpecTest {
         + "  static final int ANSWER;\n"
         + "\n"
         + "  private BigDecimal price;\n"
+        + "}\n");
+  }
+
+  @Test public void getterSetterField() {
+    FieldSpec tacoField = FieldSpec.builder(int.class, "taco")
+            .addModifiers(Modifier.PRIVATE)
+            .addSetter()
+            .addGetter()
+            .build();
+    FieldSpec beefField = FieldSpec.builder(BigDecimal.class, "beef")
+            .addModifiers(Modifier.PRIVATE)
+            .addGetter()
+            .addSetter()
+            .build();
+    FieldSpec pancakesField = FieldSpec.builder(ArrayList.class, "pancakes")
+            .addModifiers(Modifier.PRIVATE)
+            .addGetter()
+            .addSetter()
+            .build();
+    TypeSpec typeSpec = TypeSpec.classBuilder("SetterClass")
+            .addField(tacoField)
+            .addField(beefField)
+            .addField(pancakesField)
+            .build();
+    assertThat(toString(typeSpec)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.math.BigDecimal;\n"
+        + "import java.util.ArrayList;\n"
+        + "\n"
+        + "class SetterClass {\n"
+        + "  private int taco;\n"
+        + "\n"
+        + "  private BigDecimal beef;\n"
+        + "\n"
+        + "  private ArrayList pancakes;\n"
+        + "\n"
+        + "  int getTaco() {\n"
+        + "    return this.taco;\n"
+        + "  }\n"
+        + "\n"
+        + "  void setTaco(int taco) {\n"
+        + "    this.taco = taco;\n"
+        + "  }\n"
+        + "\n"
+        + "  BigDecimal getBeef() {\n"
+        + "    return this.beef;\n"
+        + "  }\n"
+        + "\n"
+        + "  void setBeef(BigDecimal beef) {\n"
+        + "    this.beef = beef;\n"
+        + "  }\n"
+        + "\n"
+        + "  ArrayList getPancakes() {\n"
+        + "    return this.pancakes;\n"
+        + "  }\n"
+        + "\n"
+        + "  void setPancakes(ArrayList pancakes) {\n"
+        + "    this.pancakes = pancakes;\n"
+        + "  }\n"
         + "}\n");
   }
 
