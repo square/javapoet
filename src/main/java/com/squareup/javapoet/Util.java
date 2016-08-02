@@ -130,7 +130,7 @@ final class Util {
 
   static String toCamelCase(String s) {
     checkNotNull(s, "s == null");
-    return s.substring(0,1).toUpperCase() + s.substring(1);
+    return s.substring(0, 1).toUpperCase() + s.substring(1);
   }
 
   /** Returns the string literal representing {@code value}, including wrapping double quotes. */

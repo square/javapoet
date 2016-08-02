@@ -490,10 +490,10 @@ public final class TypeSpec {
         checkState(fieldSpec.modifiers.containsAll(check), "%s %s.%s requires modifiers %s",
             kind, name, fieldSpec.name, check);
       }
-      if(fieldSpec.getter != null) {
+      if (fieldSpec.getter != null) {
         methodSpecs.add(fieldSpec.getter);
       }
-      if(fieldSpec.setter != null)
+      if (fieldSpec.setter != null)
         methodSpecs.add(fieldSpec.setter);
       fieldSpecs.add(fieldSpec);
       return this;
