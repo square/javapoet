@@ -84,6 +84,24 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     return new ClassName(names.subList(0, 2));
   }
 
+  public String reflectionName() {
+    // trivial case: no nested names
+    if (names.size() == 2) {
+      String packageName = packageName();
+      if (packageName.isEmpty()) {
+        return names.get(1);
+      }
+      return packageName + "." + names.get(1);
+    }
+    // concat top level class name and nested names
+    StringBuilder builder = new StringBuilder();
+    builder.append(topLevelClassName());
+    for (String name : simpleNames().subList(1, simpleNames().size())) {
+      builder.append('$').append(name);
+    }
+    return builder.toString();
+  }
+
   /**
    * Returns a new {@link ClassName} instance for the specified {@code name} as nested inside this
    * class.
