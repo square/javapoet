@@ -130,10 +130,9 @@ public final class MethodSpecTest {
     MethodSpec method = MethodSpec.overriding(methodElement).build();
     assertThat(method.toString()).isEqualTo(""
         + "@java.lang.Override\n"
-        + "@java.lang.Deprecated\n"
         + "protected <T extends java.lang.Runnable & java.io.Closeable> "
         + "java.lang.Runnable everything("
-        + "@com.squareup.javapoet.MethodSpecTest.Nullable java.lang.String arg0, "
+        + "java.lang.String arg0, "
         + "java.util.List<? extends T> arg1) "
         + "throws java.io.IOException, java.lang.SecurityException {\n"
         + "}\n");
