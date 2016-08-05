@@ -43,7 +43,6 @@ import static com.squareup.javapoet.Util.checkState;
 /** A generated constructor or method declaration. */
 public final class MethodSpec {
   static final String CONSTRUCTOR = "<init>";
-  static final ClassName OVERRIDE = ClassName.get(Override.class);
 
   public final String name;
   public final CodeBlock javadoc;
@@ -184,6 +183,10 @@ public final class MethodSpec {
    *
    * <p>This will copy its visibility modifiers, type parameters, return type, name, parameters, and
    * throws declarations. An {@link Override} annotation will be added.
+   *
+   * <p>Note that previous versions of this method had the undocumented behavior that it would copy
+   * annotations from the method and parameters of the overridden method.  This is no longer the
+   * case -- any annotations must be applied separately.
    */
   public static Builder overriding(ExecutableElement method) {
     checkNotNull(method, "method == null");
@@ -198,12 +201,7 @@ public final class MethodSpec {
     String methodName = method.getSimpleName().toString();
     MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName);
 
-    methodBuilder.addAnnotation(OVERRIDE);
-    for (AnnotationMirror mirror : method.getAnnotationMirrors()) {
-      AnnotationSpec annotationSpec = AnnotationSpec.get(mirror);
-      if (annotationSpec.type.equals(OVERRIDE)) continue;
-      methodBuilder.addAnnotation(annotationSpec);
-    }
+    methodBuilder.addAnnotation(Override.class);
 
     modifiers = new LinkedHashSet<>(modifiers);
     modifiers.remove(Modifier.ABSTRACT);
@@ -224,9 +222,6 @@ public final class MethodSpec {
       Set<Modifier> parameterModifiers = parameter.getModifiers();
       ParameterSpec.Builder parameterBuilder = ParameterSpec.builder(type, name)
           .addModifiers(parameterModifiers.toArray(new Modifier[parameterModifiers.size()]));
-      for (AnnotationMirror mirror : parameter.getAnnotationMirrors()) {
-        parameterBuilder.addAnnotation(AnnotationSpec.get(mirror));
-      }
       methodBuilder.addParameter(parameterBuilder.build());
     }
     methodBuilder.varargs(method.isVarArgs());
@@ -246,6 +241,10 @@ public final class MethodSpec {
    *
    * <p>This will copy its visibility modifiers, type parameters, return type, name, parameters, and
    * throws declarations. An {@link Override} annotation will be added.
+   *
+   *<p>Note that previous versions of this method had the undocumented behavior that it would copy
+   * annotations from the method and parameters of the overridden method.  This is no longer the
+   * case -- any annotations must be applied separately.
    */
   public static Builder overriding(
       ExecutableElement method, DeclaredType enclosing, Types types) {
