@@ -233,6 +233,11 @@ final class CodeWriter {
               : "null");
           break;
 
+        case "$B":
+          // nothing to do, all of the parts was already added
+          // and will be emitted by themselves
+          break;
+
         case "$T":
           TypeName typeName = (TypeName) codeBlock.args.get(a++);
           if (typeName.isAnnotated()) {
