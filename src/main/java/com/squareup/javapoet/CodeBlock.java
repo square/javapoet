@@ -175,10 +175,9 @@ public final class CodeBlock {
           case 'T':
             this.args.add(argToType(args[index]));
             break;
-          case 'B': {
+          case 'B':
             add(argToCodeBlock(args[index]));
             break;
-          }
           default:
             throw new IllegalArgumentException(
                 String.format("invalid format string: '%s'", format));
