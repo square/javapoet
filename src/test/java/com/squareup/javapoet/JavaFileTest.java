@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import javax.lang.model.element.Modifier;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -135,12 +134,11 @@ public final class JavaFileTest {
         + "}\n");
   }
 
-  @Ignore("addStaticImport doesn't support members with $L")
-  @Test public void importStaticDynamic() {
+  @Test public void importStaticDynamic() throws Exception {
     JavaFile source = JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("Taco")
             .addMethod(MethodSpec.methodBuilder("main")
-                .addStatement("$T.$L.println($S)", System.class, "out", "hello")
+                .addStatement("$R.println($S)", System.class.getField("out"), "hello")
                 .build())
             .build())
         .addStaticImport(System.class, "out")
