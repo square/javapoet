@@ -211,7 +211,7 @@ public final class MethodSpec {
     }
 
     methodBuilder.returns(TypeName.get(method.getReturnType()));
-    methodBuilder.addParameters(ParameterSpec.getAll(method));
+    methodBuilder.addParameters(ParameterSpec.getAll(method, false)); // Excludes parameter annotations.
     methodBuilder.varargs(method.isVarArgs());
 
     for (TypeMirror thrownType : method.getThrownTypes()) {

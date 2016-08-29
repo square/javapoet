@@ -82,27 +82,38 @@ public final class ParameterSpec {
     }
   }
 
+  public static Iterable<ParameterSpec> getAll(ExecutableElement element) {
+    return getAll(element, true);
+  }
+
   /**
    * Returns all param specs from the provided element.
    */
-  public static Iterable<ParameterSpec> getAll(ExecutableElement element) {
+  static Iterable<ParameterSpec> getAll(ExecutableElement element, boolean includeAnnotations) {
     List<ParameterSpec> parameters = new ArrayList<ParameterSpec>();
     for (VariableElement variableElement : element.getParameters()) {
-      parameters.add(get(variableElement));
+      parameters.add(get(variableElement, includeAnnotations));
     }
     return immutableList(parameters);
+  }
+
+  public static ParameterSpec get(VariableElement element) {
+    return get(element, true);
   }
 
   /**
    * Returns a param spec from the provided element.
    */
-  public static ParameterSpec get(VariableElement element) {
+  static ParameterSpec get(VariableElement element, boolean includeAnnotations) {
       TypeName type = TypeName.get(element.asType());
       String name = element.getSimpleName().toString();
       Set<Modifier> parameterModifiers = element.getModifiers();
-      return ParameterSpec.builder(type, name)
-        .addModifiers(parameterModifiers.toArray(new Modifier[parameterModifiers.size()]))
-        .build();
+      ParameterSpec.Builder builder = ParameterSpec.builder(type, name)
+        .addModifiers(parameterModifiers.toArray(new Modifier[parameterModifiers.size()]));
+      if (includeAnnotations) {
+        builder.addAnnotations(AnnotationSpec.getAll(element));
+      }
+      return builder.build();
   }
 
   public static Builder builder(TypeName type, String name, Modifier... modifiers) {
