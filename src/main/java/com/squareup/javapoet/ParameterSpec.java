@@ -22,11 +22,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.Modifier;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
+import static com.squareup.javapoet.Util.immutableList;
+
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.VariableElement;
 
 /** A generated parameter declaration. */
 public final class ParameterSpec {
@@ -76,6 +80,29 @@ public final class ParameterSpec {
     } catch (IOException e) {
       throw new AssertionError();
     }
+  }
+
+  /**
+   * Returns all param specs from the provided element.
+   */
+  public static Iterable<ParameterSpec> getAll(ExecutableElement element) {
+    List<ParameterSpec> parameters = new ArrayList<ParameterSpec>();
+    for (VariableElement variableElement : element.getParameters()) {
+      parameters.add(get(variableElement));
+    }
+    return immutableList(parameters);
+  }
+
+  /**
+   * Returns a param spec from the provided element.
+   */
+  public static ParameterSpec get(VariableElement element) {
+      TypeName type = TypeName.get(element.asType());
+      String name = element.getSimpleName().toString();
+      Set<Modifier> parameterModifiers = element.getModifiers();
+      return ParameterSpec.builder(type, name)
+        .addModifiers(parameterModifiers.toArray(new Modifier[parameterModifiers.size()]))
+        .build();
   }
 
   public static Builder builder(TypeName type, String name, Modifier... modifiers) {

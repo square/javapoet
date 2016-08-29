@@ -28,7 +28,6 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeParameterElement;
-import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeMirror;
@@ -212,16 +211,7 @@ public final class MethodSpec {
     }
 
     methodBuilder.returns(TypeName.get(method.getReturnType()));
-
-    List<? extends VariableElement> parameters = method.getParameters();
-    for (VariableElement parameter : parameters) {
-      TypeName type = TypeName.get(parameter.asType());
-      String name = parameter.getSimpleName().toString();
-      Set<Modifier> parameterModifiers = parameter.getModifiers();
-      ParameterSpec.Builder parameterBuilder = ParameterSpec.builder(type, name)
-          .addModifiers(parameterModifiers.toArray(new Modifier[parameterModifiers.size()]));
-      methodBuilder.addParameter(parameterBuilder.build());
-    }
+    methodBuilder.addParameters(ParameterSpec.getAll(method));
     methodBuilder.varargs(method.isVarArgs());
 
     for (TypeMirror thrownType : method.getThrownTypes()) {
