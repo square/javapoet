@@ -31,6 +31,7 @@ import java.util.Objects;
 
 import static com.squareup.javapoet.Util.characterLiteralWithoutSingleQuotes;
 import static com.squareup.javapoet.Util.checkNotNull;
+import static com.squareup.javapoet.Util.immutableList;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -154,6 +155,17 @@ public final class AnnotationSpec {
       value.accept(visitor, name);
     }
     return builder.build();
+  }
+
+  /**
+   * Returns all annotation specs from the provided element.
+   */
+  public static Iterable<AnnotationSpec> getAll(VariableElement element) {
+    List<AnnotationSpec> annotations = new ArrayList<AnnotationSpec>();
+    for (AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
+      annotations.add(get(annotationMirror));
+    }
+    return immutableList(annotations);
   }
 
   public static Builder builder(ClassName type) {
