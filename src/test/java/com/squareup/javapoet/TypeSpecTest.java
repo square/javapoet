@@ -2014,6 +2014,24 @@ public final class TypeSpecTest {
     }
   }
 
+  @Test public void superClassOnlyValidForClasses() {
+    try {
+      TypeSpec.annotationBuilder("A").superclass(ClassName.get(Object.class));
+      fail();
+    } catch (IllegalStateException expected) {
+    }
+    try {
+      TypeSpec.enumBuilder("E").superclass(ClassName.get(Object.class));
+      fail();
+    } catch (IllegalStateException expected) {
+    }
+    try {
+      TypeSpec.interfaceBuilder("I").superclass(ClassName.get(Object.class));
+      fail();
+    } catch (IllegalStateException expected) {
+    }
+  }
+
   @Test public void invalidSuperClass() {
     try {
       TypeSpec.classBuilder("foo")
