@@ -1013,7 +1013,8 @@ public final class TypeSpecTest {
   @Test public void javadoc() {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
         .addJavadoc("A hard or soft tortilla, loosely folded and filled with whatever {@link \n")
-        .addJavadoc("{@link $T random} tex-mex stuff we could find in the pantry.\n", Random.class)
+        .addJavadoc("{@link $T random} tex-mex stuff we could find in the pantry\n", Random.class)
+        .addJavadoc(CodeBlock.of("and some {@link $T} cheese.\n", String.class))
         .addField(FieldSpec.builder(boolean.class, "soft")
             .addJavadoc("True for a soft flour tortilla; false for a crunchy corn tortilla.\n")
             .build())
@@ -1033,7 +1034,8 @@ public final class TypeSpecTest {
         + "\n"
         + "/**\n"
         + " * A hard or soft tortilla, loosely folded and filled with whatever {@link \n"
-        + " * {@link java.util.Random random} tex-mex stuff we could find in the pantry.\n"
+        + " * {@link java.util.Random random} tex-mex stuff we could find in the pantry\n"
+        + " * and some {@link java.lang.String} cheese.\n"
         + " */\n"
         + "class Taco {\n"
         + "  /**\n"

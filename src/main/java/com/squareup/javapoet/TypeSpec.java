@@ -391,6 +391,11 @@ public final class TypeSpec {
       return this;
     }
 
+    public Builder addJavadoc(CodeBlock block) {
+      javadoc.add(block);
+      return this;
+    }
+
     public Builder addAnnotations(Iterable<AnnotationSpec> annotationSpecs) {
       checkArgument(annotationSpecs != null, "annotationSpecs == null");
       for (AnnotationSpec annotationSpec : annotationSpecs) {
