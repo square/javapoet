@@ -111,7 +111,7 @@ public final class JavaFile {
         ? typeSpecs.get(0).name
         : packageName + "." + typeSpecs.get(0).name;
     List<Element> originatingElements = new ArrayList<>();
-    for(TypeSpec typeSpec : typeSpecs){
+    for (TypeSpec typeSpec : typeSpecs) {
         originatingElements.addAll(typeSpec.originatingElements);
     }
     JavaFileObject filerSourceFile = filer.createSourceFile(fileName,
@@ -157,8 +157,8 @@ public final class JavaFile {
       codeWriter.emit("\n");
     }
 
-    for(TypeSpec typeSpec : typeSpecs){
-      typeSpec.emit(codeWriter, null, Collections.<Modifier>emptySet());
+    for (TypeSpec typeSpec : typeSpecs) {
+       typeSpec.emit(codeWriter, null, Collections.<Modifier>emptySet());
     }
 
     codeWriter.popPackage();
@@ -213,7 +213,7 @@ public final class JavaFile {
   public Builder toBuilder() {
     final List<TypeSpec> copyTypeSpecs = Util.immutableList(typeSpecs);
     Builder builder = new Builder(packageName, copyTypeSpecs.remove(0));
-    for(TypeSpec typeSpec : typeSpecs){
+    for (TypeSpec typeSpec : typeSpecs) {
         builder.addType(typeSpec);
     }
     builder.fileComment.add(fileComment);
