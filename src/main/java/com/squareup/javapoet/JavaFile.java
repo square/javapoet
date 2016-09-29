@@ -112,7 +112,7 @@ public final class JavaFile {
         : packageName + "." + typeSpecs.get(0).name;
     List<Element> originatingElements = new ArrayList<>();
     for(TypeSpec typeSpec : typeSpecs){
-		originatingElements.addAll(typeSpec.originatingElements);
+        originatingElements.addAll(typeSpec.originatingElements);
     }
     JavaFileObject filerSourceFile = filer.createSourceFile(fileName,
         originatingElements.toArray(new Element[originatingElements.size()]));
@@ -234,7 +234,7 @@ public final class JavaFile {
       this.packageName = packageName;
       this.typeSpecs.add(typeSpec);
     }
-	
+
     public Builder addType(TypeSpec typeSpec) {
         checkArgument(typeSpec != null, "typeSpec == null");
         this.typeSpecs.add(typeSpec);
