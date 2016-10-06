@@ -55,32 +55,32 @@ import static com.squareup.javapoet.Util.checkArgument;
  *   <li>{@code $]} ends a statement.
  * </ul>
  */
-public final class CodeBlock {
+public class CodeBlock {
   /** A heterogeneous list containing string literals and value placeholders. */
   final List<String> formatParts;
   final List<Object> args;
 
-  private CodeBlock(Builder builder) {
+  protected CodeBlock(Builder builder) {
     this.formatParts = Util.immutableList(builder.formatParts);
     this.args = Util.immutableList(builder.args);
   }
 
-  public boolean isEmpty() {
+  public final boolean isEmpty() {
     return formatParts.isEmpty();
   }
 
-  @Override public boolean equals(Object o) {
+  @Override public final boolean equals(Object o) {
     if (this == o) return true;
     if (o == null) return false;
     if (getClass() != o.getClass()) return false;
     return toString().equals(o.toString());
   }
 
-  @Override public int hashCode() {
+  @Override public final int hashCode() {
     return toString().hashCode();
   }
 
-  @Override public String toString() {
+  @Override public final String toString() {
     StringWriter out = new StringWriter();
     try {
       new CodeWriter(out).emit(this);
