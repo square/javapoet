@@ -187,7 +187,7 @@ public final class AnnotationSpec {
   @Override public String toString() {
     StringWriter out = new StringWriter();
     try {
-      CodeWriter codeWriter = new CodeWriter(out);
+      CodeWriter codeWriter = CodeWriter.builder(out).build();
       codeWriter.emit("$L", this);
       return out.toString();
     } catch (IOException e) {

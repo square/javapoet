@@ -72,12 +72,14 @@ public final class JavaFile {
 
   public void writeTo(Appendable out) throws IOException {
     // First pass: emit the entire class, just to collect the types we'll need to import.
-    CodeWriter importsCollector = new CodeWriter(NULL_APPENDABLE, indent, staticImports);
+    CodeWriter importsCollector = CodeWriter.builder(NULL_APPENDABLE).indent(indent)
+        .setStaticImports(staticImports).build();
     emit(importsCollector);
     Map<String, ClassName> suggestedImports = importsCollector.suggestedImports();
 
     // Second pass: write the code, taking advantage of the imports.
-    CodeWriter codeWriter = new CodeWriter(out, indent, suggestedImports, staticImports);
+    CodeWriter codeWriter = CodeWriter.builder(out).indent(indent)
+        .setImportedTypes(suggestedImports).setStaticImports(staticImports).build();
     emit(codeWriter);
   }
 

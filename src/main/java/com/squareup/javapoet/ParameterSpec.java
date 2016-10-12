@@ -70,7 +70,7 @@ public final class ParameterSpec {
   @Override public String toString() {
     StringWriter out = new StringWriter();
     try {
-      CodeWriter codeWriter = new CodeWriter(out);
+      CodeWriter codeWriter = CodeWriter.builder(out).build();
       emit(codeWriter, false);
       return out.toString();
     } catch (IOException e) {

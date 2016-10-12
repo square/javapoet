@@ -79,7 +79,7 @@ public final class FieldSpec {
   @Override public String toString() {
     StringWriter out = new StringWriter();
     try {
-      CodeWriter codeWriter = new CodeWriter(out);
+      CodeWriter codeWriter = CodeWriter.builder(out).build();
       emit(codeWriter, Collections.<Modifier>emptySet());
       return out.toString();
     } catch (IOException e) {
