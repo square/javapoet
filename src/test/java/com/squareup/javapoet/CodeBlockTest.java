@@ -193,4 +193,13 @@ public final class CodeBlockTest {
       assertThat(expected).hasMessage("statement exit $] has no matching statement enter $[");
     }
   }
+
+  @Test public void extension() {
+    CodeBlock.Supplier x = new CodeBlock.Supplier() {
+      @Override public CodeBlock get() {
+        return CodeBlock.builder().add("$T.$L()", System.class, "gc").build();
+      }};
+    CodeBlock block = CodeBlock.builder().add("$X", x).build();
+    assertThat(block.toString()).isEqualTo("java.lang.System.gc()");
+  }
 }

@@ -253,6 +253,11 @@ final class CodeWriter {
           typeName.emit(this);
           break;
 
+        case "$X":
+          CodeBlock.Supplier supplier = (CodeBlock.Supplier) codeBlock.args.get(a++);
+          emit(supplier.get());
+          break;
+
         case "$$":
           emitAndIndent("$");
           break;
