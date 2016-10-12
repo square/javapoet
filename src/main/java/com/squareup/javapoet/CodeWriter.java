@@ -30,6 +30,7 @@ import java.util.Set;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
 
+import static com.squareup.javapoet.Util.characterLiteralWithoutSingleQuotes;
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
 import static com.squareup.javapoet.Util.checkState;
@@ -223,6 +224,11 @@ final class CodeWriter {
 
         case "$N":
           emitAndIndent((String) codeBlock.args.get(a++));
+          break;
+
+        case "$C":
+          Character character = (Character) codeBlock.args.get(a++);
+          emitAndIndent(String.format("'%s'", characterLiteralWithoutSingleQuotes(character)));
           break;
 
         case "$S":

@@ -91,6 +91,11 @@ public final class CodeBlockTest {
     CodeBlock block = CodeBlock.builder().add("$1L", "taco").build();
     assertThat(block.toString()).isEqualTo("taco");
   }
+
+  @Test public void characterFormatCanBeIndexed() {
+    CodeBlock block = CodeBlock.builder().add("$1C", 't').build();
+    assertThat(block.toString()).isEqualTo("'t'");
+  }
   
   @Test public void stringFormatCanBeIndexed() {
     CodeBlock block = CodeBlock.builder().add("$1S", "taco").build();
