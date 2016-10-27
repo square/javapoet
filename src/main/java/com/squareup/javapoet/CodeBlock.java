@@ -48,8 +48,8 @@ import static com.squareup.javapoet.Util.checkArgument;
  *       for types may be {@linkplain Class classes}, {@linkplain javax.lang.model.type.TypeMirror
 ,*       type mirrors}, and {@linkplain javax.lang.model.element.Element elements}.
  *   <li>{@code $$} emits a dollar sign.
- *   <li>{@code $&gt;} increases the indentation level.
- *   <li>{@code $&lt;} decreases the indentation level.
+ *   <li>{@code $>} increases the indentation level.
+ *   <li>{@code $<} decreases the indentation level.
  *   <li>{@code $[} begins a statement. For multiline statements, every line after the first line
  *       is double-indented.
  *   <li>{@code $]} ends a statement.
