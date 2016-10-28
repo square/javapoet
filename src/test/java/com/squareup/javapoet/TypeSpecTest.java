@@ -1770,6 +1770,16 @@ public final class TypeSpecTest {
     }
   }
 
+  @Test public void nullSingleSuperinterfaceAddition() {
+    try {
+      TypeSpec.classBuilder("Taco").addSuperinterface((TypeName) null);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected.getMessage())
+          .isEqualTo("superinterface == null");
+    }
+  }
+
   @Test public void multipleSuperinterfaceAddition() {
     TypeSpec taco = TypeSpec.classBuilder("Taco")
         .addSuperinterfaces(Arrays.asList(

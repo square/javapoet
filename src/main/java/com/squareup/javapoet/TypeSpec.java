@@ -460,6 +460,7 @@ public final class TypeSpec {
     }
 
     public Builder addSuperinterface(TypeName superinterface) {
+      checkArgument(superinterface != null, "superinterface == null");
       this.superinterfaces.add(superinterface);
       return this;
     }
