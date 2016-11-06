@@ -22,11 +22,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.Modifier;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
+import static com.squareup.javapoet.Util.immutableList;
+
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.VariableElement;
 
 /** A generated parameter declaration. */
 public final class ParameterSpec {
@@ -76,6 +80,40 @@ public final class ParameterSpec {
     } catch (IOException e) {
       throw new AssertionError();
     }
+  }
+
+  public static Iterable<ParameterSpec> getAll(ExecutableElement element) {
+    return getAll(element, true);
+  }
+
+  /**
+   * Returns all param specs from the provided element.
+   */
+  static Iterable<ParameterSpec> getAll(ExecutableElement element, boolean includeAnnotations) {
+    List<ParameterSpec> parameters = new ArrayList<ParameterSpec>();
+    for (VariableElement variableElement : element.getParameters()) {
+      parameters.add(get(variableElement, includeAnnotations));
+    }
+    return immutableList(parameters);
+  }
+
+  public static ParameterSpec get(VariableElement element) {
+    return get(element, true);
+  }
+
+  /**
+   * Returns a param spec from the provided element.
+   */
+  static ParameterSpec get(VariableElement element, boolean includeAnnotations) {
+      TypeName type = TypeName.get(element.asType());
+      String name = element.getSimpleName().toString();
+      Set<Modifier> parameterModifiers = element.getModifiers();
+      ParameterSpec.Builder builder = ParameterSpec.builder(type, name)
+        .addModifiers(parameterModifiers.toArray(new Modifier[parameterModifiers.size()]));
+      if (includeAnnotations) {
+        builder.addAnnotations(AnnotationSpec.getAll(element));
+      }
+      return builder.build();
   }
 
   public static Builder builder(TypeName type, String name, Modifier... modifiers) {
