@@ -398,6 +398,38 @@ MethodSpec byteToHex = MethodSpec.methodBuilder("byteToHex")
     .build();
 ```
 
+### Code block format strings
+Code blocks may specify the values for their placeholders in a few
+ways. Only one style may be used for each addition to a code block.
+
+#### Relative Arguments
+Pass an argument value for each placeholder in the format string to `CodeBlock.add`
+
+In each example, we generate code to say "I ate 3 tacos"
+
+```java
+CodeBlock.builder().add("I ate $L $L", 3, "tacos")
+```
+
+#### Positional Arguments
+Place an integer index after the placeholder in the format string to specify which argument to use.
+
+```java
+CodeBlock.builder().add("I ate $L1 $L0", "tacos", 3)
+```
+
+#### Named Arguments
+Use the syntax `$argumentName:X` where X is the formatc haracter and
+call `CodeBlock.addNamed` with a map containing all argument keys in the
+format string.
+
+```java
+Map<String, Object> map = new HashMap<>();
+map.put("food", "tacos");
+map.put("count", 3);
+CodeBlock.builder().addNamed("I ate $count:L $food:L", map)
+```
+
 ### Methods
 
 All of the above methods have a code body. Use `Modifiers.ABSTRACT` to get a method without any
