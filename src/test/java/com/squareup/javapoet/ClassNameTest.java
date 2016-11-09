@@ -16,13 +16,16 @@
 package com.squareup.javapoet;
 
 import com.google.testing.compile.CompilationRule;
-import java.util.Map;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
+import java.util.Map;
+
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.Elements;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -107,6 +110,12 @@ public final class ClassNameTest {
         .isEqualTo("java.lang.Object");
     assertThat(ClassName.get(OuterClass.InnerClass.class).toString())
         .isEqualTo("com.squareup.javapoet.ClassNameTest.OuterClass.InnerClass");
+    try {
+      assertThat((ClassName.get(new Object() {}.getClass())).toString())
+          .isEqualTo("com.squareup.javapoet.ClassNameTest$1");
+    } catch (IllegalArgumentException e) {
+      fail();
+    }
   }
 
   @Test public void peerClass() {
