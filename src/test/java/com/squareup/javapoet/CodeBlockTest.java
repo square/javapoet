@@ -15,7 +15,7 @@
  */
 package com.squareup.javapoet;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.Test;
 
@@ -105,14 +105,14 @@ public final class CodeBlockTest {
   }
 
   @Test public void simpleNamedArgument() {
-    Map<String, Object> map = new HashMap<>();
+    Map<String, Object> map = new LinkedHashMap<>();
     map.put("text", "taco");
     CodeBlock block = CodeBlock.builder().addNamed("$text:S", map).build();
     assertThat(block.toString()).isEqualTo("\"taco\"");
   }
 
   @Test public void repeatedNamedArgument() {
-    Map<String, Object> map = new HashMap<>();
+    Map<String, Object> map = new LinkedHashMap<>();
     map.put("text", "tacos");
     CodeBlock block = CodeBlock.builder()
         .addNamed("\"I like \" + $text:S + \". Do you like \" + $text:S + \"?\"", map)
@@ -122,7 +122,7 @@ public final class CodeBlockTest {
   }
 
   @Test public void namedAndNoArgFormat() {
-    Map<String, Object> map = new HashMap<>();
+    Map<String, Object> map = new LinkedHashMap<>();
     map.put("text", "tacos");
     CodeBlock block = CodeBlock.builder()
         .addNamed("$>\n$text:L for $$3.50", map).build();
@@ -131,7 +131,7 @@ public final class CodeBlockTest {
 
   @Test public void missingNamedArgument() {
     try {
-      Map<String, Object> map = new HashMap<>();
+      Map<String, Object> map = new LinkedHashMap<>();
       CodeBlock block = CodeBlock.builder().addNamed("$text:S", map).build();
       fail();
     } catch(IllegalArgumentException expected) {
@@ -140,7 +140,7 @@ public final class CodeBlockTest {
   }
 
   @Test public void multipleNamedArguments() {
-    Map<String, Object> map = new HashMap<>();
+    Map<String, Object> map = new LinkedHashMap<>();
     map.put("pipe", System.class);
     map.put("text", "tacos");
 
@@ -153,10 +153,21 @@ public final class CodeBlockTest {
   }
 
   @Test public void namedNewline() {
-    Map<String, Object> map = new HashMap<>();
+    Map<String, Object> map = new LinkedHashMap<>();
     map.put("clazz", Integer.class);
     CodeBlock block = CodeBlock.builder().addNamed("$clazz:T\n", map).build();
     assertThat(block.toString()).isEqualTo("java.lang.Integer\n");
+  }
+
+  @Test public void danglingNamed() {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("clazz", Integer.class);
+    try {
+      CodeBlock.builder().addNamed("$clazz:T$", map).build();
+      fail();
+    } catch(IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("dangling $ at end");
+    }
   }
 
   @Test public void indexTooHigh() {

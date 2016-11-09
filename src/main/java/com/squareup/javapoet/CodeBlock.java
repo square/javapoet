@@ -122,11 +122,11 @@ public final class CodeBlock {
      * Adds code using named arguments.
      *
      * <p> Named arguments specify their name after the '$' followed by : and the corresponding
-     * type character. For example, to refer to the class {@link java.lang.String} with the argument
-     * name 'text' use a format string containing {@code $text:S} and include the key 'text' with
-     * value {@link java.lang.String} in the argument map.
+     * type character. For example, to refer to the type {@link java.lang.Integer} with the argument
+     * name 'clazz' use a format string containing {@code $clazz:T} and include the key 'clazz' with
+     * value {@code java.lang.Integer.class} in the argument map.
      */
-    public Builder addNamed(String format, Map<String, Object> arguments) {
+    public Builder addNamed(String format, Map<String, ?> arguments) {
       int p = 0;
 
       while (p < format.length()) {
@@ -161,13 +161,13 @@ public final class CodeBlock {
       return this;
     }
 
-    /**f
+    /**
      * Add code with positional or relative arguments.
      *
      * <p> Relative arguments map 1-1 with the placeholders in the format string.
      *
      * <p> Positional arguments use an index after the placeholder to identify which argument
-     * index to use. For example, for a literal to reference the 3rd argument: "$L2" (0 based index)
+     * index to use. For example, for a literal to reference the 3rd argument: "$3L" (1 based index)
      *
      * <p> Mixing relative and positional arguments in a call to add is invalid and will result
      * in an error.
@@ -249,8 +249,7 @@ public final class CodeBlock {
       return c == '$' || c == '>' || c == '<' || c == '[' || c == ']';
     }
 
-    private void addArgument(String format, char c, Object arg1) {
-      Object arg = arg1;
+    private void addArgument(String format, char c, Object arg) {
       switch (c) {
         case 'N':
           this.args.add(argToName(arg));

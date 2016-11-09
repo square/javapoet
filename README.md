@@ -166,10 +166,10 @@ public static void main(String[] args) throws Exception {
       .addMethod(whatsMyName("eminem"))
       .addMethod(whatsMyName("marshallMathers"))
       .build();
-      
+
   JavaFile javaFile = JavaFile.builder("com.example.helloworld", helloWorld)
       .build();
-      
+
   javaFile.writeTo(System.out);
 }
 
@@ -210,15 +210,15 @@ MethodSpec today = MethodSpec.methodBuilder("today")
     .returns(Date.class)
     .addStatement("return new $T()", Date.class)
     .build();
-    
+
 TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
     .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
     .addMethod(today)
     .build();
-    
+
 JavaFile javaFile = JavaFile.builder("com.example.helloworld", helloWorld)
     .build();
-    
+
 javaFile.writeTo(System.out);
 ```
 
@@ -387,7 +387,7 @@ MethodSpec hexDigit = MethodSpec.methodBuilder("hexDigit")
     .returns(char.class)
     .addStatement("return (char) (i < 10 ? i + '0' : i - 10 + 'a')")
     .build();
-    
+
 MethodSpec byteToHex = MethodSpec.methodBuilder("byteToHex")
     .addParameter(int.class, "b")
     .returns(String.class)
@@ -412,19 +412,20 @@ CodeBlock.builder().add("I ate $L $L", 3, "tacos")
 ```
 
 #### Positional Arguments
-Place an integer index after the placeholder in the format string to specify which argument to use.
+Place an integer index (1-based) before the placeholder in the format string to specify which
+argument to use.
 
 ```java
-CodeBlock.builder().add("I ate $L1 $L0", "tacos", 3)
+CodeBlock.builder().add("I ate $2L $1L", "tacos", 3)
 ```
 
 #### Named Arguments
-Use the syntax `$argumentName:X` where X is the formatc haracter and
+Use the syntax `$argumentName:X` where X is the format character and
 call `CodeBlock.addNamed` with a map containing all argument keys in the
 format string.
 
 ```java
-Map<String, Object> map = new HashMap<>();
+Map<String, Object> map = new LinkedHashMap<>();
 map.put("food", "tacos");
 map.put("count", 3);
 CodeBlock.builder().addNamed("I ate $count:L $food:L", map)
@@ -439,7 +440,7 @@ body. This is only legal if the enclosing class is either abstract or an interfa
 MethodSpec flux = MethodSpec.methodBuilder("flux")
     .addModifiers(Modifier.ABSTRACT, Modifier.PROTECTED)
     .build();
-    
+
 TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
     .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
     .addMethod(flux)
@@ -472,7 +473,7 @@ MethodSpec flux = MethodSpec.constructorBuilder()
     .addParameter(String.class, "greeting")
     .addStatement("this.$N = $N", "greeting", "greeting")
     .build();
-    
+
 TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
     .addModifiers(Modifier.PUBLIC)
     .addField(String.class, "greeting", Modifier.PRIVATE, Modifier.FINAL)
@@ -529,7 +530,7 @@ Like parameters, fields can be created either with builders or by using convenie
 FieldSpec android = FieldSpec.builder(String.class, "android")
     .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
     .build();
-    
+
 TypeSpec helloWorld = TypeSpec.classBuilder("HelloWorld")
     .addModifiers(Modifier.PUBLIC)
     .addField(android)
