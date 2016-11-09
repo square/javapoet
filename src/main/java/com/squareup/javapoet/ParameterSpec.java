@@ -23,7 +23,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.VariableElement;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
@@ -76,6 +78,23 @@ public final class ParameterSpec {
     } catch (IOException e) {
       throw new AssertionError();
     }
+  }
+
+  public static ParameterSpec get(VariableElement element) {
+    TypeName type = TypeName.get(element.asType());
+    String name = element.getSimpleName().toString();
+    return ParameterSpec.builder(type, name)
+        .addModifiers(element.getModifiers())
+        .addAnnotations(AnnotationSpec.annotationsOf(element))
+        .build();
+  }
+
+  static List<ParameterSpec> parametersOf(ExecutableElement method) {
+    List<ParameterSpec> result = new ArrayList<>();
+    for (VariableElement parameter : method.getParameters()) {
+      result.add(ParameterSpec.get(parameter));
+    }
+    return result;
   }
 
   public static Builder builder(TypeName type, String name, Modifier... modifiers) {
@@ -136,6 +155,14 @@ public final class ParameterSpec {
 
     public Builder addModifiers(Modifier... modifiers) {
       Collections.addAll(this.modifiers, modifiers);
+      return this;
+    }
+
+    public Builder addModifiers(Iterable<Modifier> modifiers) {
+      checkNotNull(modifiers, "modifiers == null");
+      for (Modifier modifier : modifiers) {
+        this.modifiers.add(modifier);
+      }
       return this;
     }
 
