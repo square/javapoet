@@ -422,7 +422,7 @@ CodeBlock.builder().add("I ate $2L $1L", "tacos", 3)
 #### Named Arguments
 Use the syntax `$argumentName:X` where X is the format character and
 call `CodeBlock.addNamed` with a map containing all argument keys in the
-format string.
+format string. Argument names must begin with a lowercase character.
 
 ```java
 Map<String, Object> map = new LinkedHashMap<>();

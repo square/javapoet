@@ -61,6 +61,7 @@ import static com.squareup.javapoet.Util.checkArgument;
 public final class CodeBlock {
   private static final Pattern NAMED_ARGUMENT =
       Pattern.compile("\\$(?<argumentName>[\\w_]+):(?<typeChar>[\\w]).*", Pattern.DOTALL);
+  private static final Pattern LOWERCASE = Pattern.compile("[a-z]+");
 
   /** A heterogeneous list containing string literals and value placeholders. */
   final List<String> formatParts;
@@ -122,12 +123,19 @@ public final class CodeBlock {
      * Adds code using named arguments.
      *
      * <p> Named arguments specify their name after the '$' followed by : and the corresponding
-     * type character. For example, to refer to the type {@link java.lang.Integer} with the argument
+     * type character. Argument names must start with a lowercase character.
+     *
+     * <p> For example, to refer to the type {@link java.lang.Integer} with the argument
      * name 'clazz' use a format string containing {@code $clazz:T} and include the key 'clazz' with
      * value {@code java.lang.Integer.class} in the argument map.
      */
     public Builder addNamed(String format, Map<String, ?> arguments) {
       int p = 0;
+
+      for (String argument : arguments.keySet()) {
+        checkArgument(LOWERCASE.matcher(argument).matches(),
+            "argument '%s' must start with a lowercase character", argument);
+      }
 
       while (p < format.length()) {
         int nextP = format.indexOf("$", p);

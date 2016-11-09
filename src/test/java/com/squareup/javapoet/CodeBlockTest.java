@@ -132,10 +132,21 @@ public final class CodeBlockTest {
   @Test public void missingNamedArgument() {
     try {
       Map<String, Object> map = new LinkedHashMap<>();
-      CodeBlock block = CodeBlock.builder().addNamed("$text:S", map).build();
+      CodeBlock.builder().addNamed("$text:S", map).build();
       fail();
     } catch(IllegalArgumentException expected) {
       assertThat(expected).hasMessage("Missing named argument for $text");
+    }
+  }
+
+  @Test public void lowerCaseNamed() {
+    try {
+      Map<String, Object> map = new LinkedHashMap<>();
+      map.put("Text", "tacos");
+      CodeBlock block = CodeBlock.builder().addNamed("$Text:S", map).build();
+      fail();
+    } catch(IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("argument 'Text' must start with a lowercase character");
     }
   }
 
