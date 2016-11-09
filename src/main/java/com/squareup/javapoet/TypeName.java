@@ -363,6 +363,15 @@ public class TypeName {
     return result;
   }
 
+  /** Converts an array of type mirrors to a list of type names. */
+  static List<TypeName> list(TypeMirror[] types) {
+    List<TypeName> result = new ArrayList<>(types.length);
+    for (TypeMirror type : types) {
+      result.add(get(type));
+    }
+    return result;
+  }
+
   /** Returns the array component of {@code type}, or null if {@code type} is not an array. */
   static TypeName arrayComponent(TypeName type) {
     return type instanceof ArrayTypeName
