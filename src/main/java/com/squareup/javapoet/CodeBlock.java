@@ -20,6 +20,9 @@ import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
@@ -56,6 +59,10 @@ import static com.squareup.javapoet.Util.checkArgument;
  * </ul>
  */
 public final class CodeBlock {
+  private static final Pattern NAMED_ARGUMENT =
+      Pattern.compile("\\$(?<argumentName>[\\w_]+):(?<typeChar>[\\w]).*", Pattern.DOTALL);
+  private static final Pattern LOWERCASE = Pattern.compile("[a-z]+[\\w_]*");
+
   /** A heterogeneous list containing string literals and value placeholders. */
   final List<String> formatParts;
   final List<Object> args;
@@ -112,9 +119,71 @@ public final class CodeBlock {
     private Builder() {
     }
 
+    /**
+     * Adds code using named arguments.
+     *
+     * <p> Named arguments specify their name after the '$' followed by : and the corresponding
+     * type character. Argument names must start with a lowercase character.
+     *
+     * <p> For example, to refer to the type {@link java.lang.Integer} with the argument
+     * name 'clazz' use a format string containing {@code $clazz:T} and include the key 'clazz' with
+     * value {@code java.lang.Integer.class} in the argument map.
+     */
+    public Builder addNamed(String format, Map<String, ?> arguments) {
+      int p = 0;
+
+      for (String argument : arguments.keySet()) {
+        checkArgument(LOWERCASE.matcher(argument).matches(),
+            "argument '%s' must start with a lowercase character", argument);
+      }
+
+      while (p < format.length()) {
+        int nextP = format.indexOf("$", p);
+        if (nextP == -1) {
+          formatParts.add(format.substring(p, format.length()));
+          break;
+        }
+
+        if (p != nextP) {
+          formatParts.add(format.substring(p, nextP));
+          p = nextP;
+        }
+        Matcher matcher = NAMED_ARGUMENT.matcher(format.subSequence(p, format.length()));
+        if (matcher.matches()) {
+          String argumentName = matcher.group("argumentName");
+          checkArgument(arguments.containsKey(argumentName), "Missing named argument for $%s",
+              argumentName);
+          char formatChar = matcher.group("typeChar").charAt(0);
+          addArgument(format, formatChar, arguments.get(argumentName));
+          formatParts.add("$" + formatChar);
+          p += matcher.regionStart() + argumentName.length() + 3;
+        } else {
+          checkArgument(p < format.length() - 1, "dangling $ at end");
+          checkArgument(isNoArgPlaceholder(format.charAt(p + 1)),
+              "unknown format $%s at %s in '%s'", format.charAt(p + 1), p + 1, format);
+          formatParts.add(format.substring(p, p + 2));
+          p += 2;
+        }
+      }
+
+      return this;
+    }
+
+    /**
+     * Add code with positional or relative arguments.
+     *
+     * <p> Relative arguments map 1-1 with the placeholders in the format string.
+     *
+     * <p> Positional arguments use an index after the placeholder to identify which argument
+     * index to use. For example, for a literal to reference the 3rd argument: "$3L" (1 based index)
+     *
+     * <p> Mixing relative and positional arguments in a call to add is invalid and will result
+     * in an error.
+     */
     public Builder add(String format, Object... args) {
       boolean hasRelative = false;
       boolean hasIndexed = false;
+
       int relativeParameterCount = 0;
       int[] indexedParameterCount = new int[args.length];
 
@@ -139,7 +208,7 @@ public final class CodeBlock {
         int indexEnd = p - 1;
 
         // If 'c' doesn't take an argument, we're done.
-        if (c == '$' || c == '>' || c == '<' || c == '[' || c == ']') {
+        if (isNoArgPlaceholder(c)) {
           checkArgument(indexStart == indexEnd, "$$, $>, $<, $[ and $] may not have an index");
           formatParts.add("$" + c);
           continue;
@@ -162,23 +231,7 @@ public final class CodeBlock {
             index + 1, format.substring(indexStart - 1, indexEnd + 1), args.length);
         checkArgument(!hasIndexed || !hasRelative, "cannot mix indexed and positional parameters");
 
-        switch (c) {
-          case 'N':
-            this.args.add(argToName(args[index]));
-            break;
-          case 'L':
-            this.args.add(argToLiteral(args[index]));
-            break;
-          case 'S':
-            this.args.add(argToString(args[index]));
-            break;
-          case 'T':
-            this.args.add(argToType(args[index]));
-            break;
-          default:
-            throw new IllegalArgumentException(
-                String.format("invalid format string: '%s'", format));
-        }
+        addArgument(format, c, args[index]);
 
         formatParts.add("$" + c);
       }
@@ -198,6 +251,30 @@ public final class CodeBlock {
         checkArgument(unused.isEmpty(), "unused argument%s: %s", s, Util.join(", ", unused));
       }
       return this;
+    }
+
+    private boolean isNoArgPlaceholder(char c) {
+      return c == '$' || c == '>' || c == '<' || c == '[' || c == ']';
+    }
+
+    private void addArgument(String format, char c, Object arg) {
+      switch (c) {
+        case 'N':
+          this.args.add(argToName(arg));
+          break;
+        case 'L':
+          this.args.add(argToLiteral(arg));
+          break;
+        case 'S':
+          this.args.add(argToString(arg));
+          break;
+        case 'T':
+          this.args.add(argToType(arg));
+          break;
+        default:
+          throw new IllegalArgumentException(
+              String.format("invalid format string: '%s'", format));
+      }
     }
 
     private String argToName(Object o) {

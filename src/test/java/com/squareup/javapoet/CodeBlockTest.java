@@ -15,6 +15,8 @@
  */
 package com.squareup.javapoet;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -45,7 +47,7 @@ public final class CodeBlockTest {
       assertThat(exp).hasMessage("$$, $>, $<, $[ and $] may not have an index");
     }
   }
-  
+
   @Test public void deindentCannotBeIndexed() {
     try {
       CodeBlock.builder().add("$1<", "taco").build();
@@ -54,7 +56,7 @@ public final class CodeBlockTest {
       assertThat(exp).hasMessage("$$, $>, $<, $[ and $] may not have an index");
     }
   }
-  
+
   @Test public void dollarSignEscapeCannotBeIndexed() {
     try {
       CodeBlock.builder().add("$1$", "taco").build();
@@ -63,7 +65,7 @@ public final class CodeBlockTest {
       assertThat(exp).hasMessage("$$, $>, $<, $[ and $] may not have an index");
     }
   }
- 
+
   @Test public void statementBeginningCannotBeIndexed() {
     try {
       CodeBlock.builder().add("$1[", "taco").build();
@@ -72,7 +74,7 @@ public final class CodeBlockTest {
       assertThat(exp).hasMessage("$$, $>, $<, $[ and $] may not have an index");
     }
   }
-  
+
   @Test public void statementEndingCannotBeIndexed() {
     try {
       CodeBlock.builder().add("$1]", "taco").build();
@@ -81,27 +83,104 @@ public final class CodeBlockTest {
       assertThat(exp).hasMessage("$$, $>, $<, $[ and $] may not have an index");
     }
   }
-  
+
   @Test public void nameFormatCanBeIndexed() {
     CodeBlock block = CodeBlock.builder().add("$1N", "taco").build();
     assertThat(block.toString()).isEqualTo("taco");
   }
-  
+
   @Test public void literalFormatCanBeIndexed() {
     CodeBlock block = CodeBlock.builder().add("$1L", "taco").build();
     assertThat(block.toString()).isEqualTo("taco");
   }
-  
+
   @Test public void stringFormatCanBeIndexed() {
     CodeBlock block = CodeBlock.builder().add("$1S", "taco").build();
     assertThat(block.toString()).isEqualTo("\"taco\"");
   }
-  
+
   @Test public void typeFormatCanBeIndexed() {
     CodeBlock block = CodeBlock.builder().add("$1T", String.class).build();
     assertThat(block.toString()).isEqualTo("java.lang.String");
   }
-  
+
+  @Test public void simpleNamedArgument() {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("text", "taco");
+    CodeBlock block = CodeBlock.builder().addNamed("$text:S", map).build();
+    assertThat(block.toString()).isEqualTo("\"taco\"");
+  }
+
+  @Test public void repeatedNamedArgument() {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("text", "tacos");
+    CodeBlock block = CodeBlock.builder()
+        .addNamed("\"I like \" + $text:S + \". Do you like \" + $text:S + \"?\"", map)
+        .build();
+    assertThat(block.toString()).isEqualTo(
+        "\"I like \" + \"tacos\" + \". Do you like \" + \"tacos\" + \"?\"");
+  }
+
+  @Test public void namedAndNoArgFormat() {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("text", "tacos");
+    CodeBlock block = CodeBlock.builder()
+        .addNamed("$>\n$text:L for $$3.50", map).build();
+    assertThat(block.toString()).isEqualTo("\n  tacos for $3.50");
+  }
+
+  @Test public void missingNamedArgument() {
+    try {
+      Map<String, Object> map = new LinkedHashMap<>();
+      CodeBlock.builder().addNamed("$text:S", map).build();
+      fail();
+    } catch(IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Missing named argument for $text");
+    }
+  }
+
+  @Test public void lowerCaseNamed() {
+    try {
+      Map<String, Object> map = new LinkedHashMap<>();
+      map.put("Text", "tacos");
+      CodeBlock block = CodeBlock.builder().addNamed("$Text:S", map).build();
+      fail();
+    } catch(IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("argument 'Text' must start with a lowercase character");
+    }
+  }
+
+  @Test public void multipleNamedArguments() {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("pipe", System.class);
+    map.put("text", "tacos");
+
+    CodeBlock block = CodeBlock.builder()
+        .addNamed("$pipe:T.out.println(\"Let's eat some $text:L\");", map)
+        .build();
+
+    assertThat(block.toString()).isEqualTo(
+        "java.lang.System.out.println(\"Let's eat some tacos\");");
+  }
+
+  @Test public void namedNewline() {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("clazz", Integer.class);
+    CodeBlock block = CodeBlock.builder().addNamed("$clazz:T\n", map).build();
+    assertThat(block.toString()).isEqualTo("java.lang.Integer\n");
+  }
+
+  @Test public void danglingNamed() {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("clazz", Integer.class);
+    try {
+      CodeBlock.builder().addNamed("$clazz:T$", map).build();
+      fail();
+    } catch(IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("dangling $ at end");
+    }
+  }
+
   @Test public void indexTooHigh() {
     try {
       CodeBlock.builder().add("$2T", String.class).build();
@@ -110,7 +189,7 @@ public final class CodeBlockTest {
       assertThat(expected).hasMessage("index 2 for '$2T' not in range (received 1 arguments)");
     }
   }
-  
+
   @Test public void indexIsZero() {
     try {
       CodeBlock.builder().add("$0T", String.class).build();
@@ -119,7 +198,7 @@ public final class CodeBlockTest {
       assertThat(expected).hasMessage("index 0 for '$0T' not in range (received 1 arguments)");
     }
   }
-  
+
   @Test public void indexIsNegative() {
     try {
       CodeBlock.builder().add("$-1T", String.class).build();
@@ -128,7 +207,7 @@ public final class CodeBlockTest {
       assertThat(expected).hasMessage("invalid format string: '$-1T'");
     }
   }
-  
+
   @Test public void indexWithoutFormatType() {
     try {
       CodeBlock.builder().add("$1", String.class).build();
@@ -137,7 +216,7 @@ public final class CodeBlockTest {
       assertThat(expected).hasMessage("dangling format characters in '$1'");
     }
   }
-  
+
   @Test public void indexWithoutFormatTypeNotAtStringEnd() {
     try {
       CodeBlock.builder().add("$1 taco", String.class).build();
@@ -146,7 +225,7 @@ public final class CodeBlockTest {
       assertThat(expected).hasMessage("invalid format string: '$1 taco'");
     }
   }
-  
+
   @Test public void formatIndicatorAlone() {
     try {
       CodeBlock.builder().add("$", String.class).build();
@@ -155,7 +234,7 @@ public final class CodeBlockTest {
       assertThat(expected).hasMessage("dangling format characters in '$'");
     }
   }
-  
+
   @Test public void formatIndicatorWithoutIndexOrFormatType() {
     try {
       CodeBlock.builder().add("$ tacoString", String.class).build();
@@ -164,7 +243,7 @@ public final class CodeBlockTest {
       assertThat(expected).hasMessage("invalid format string: '$ tacoString'");
     }
   }
-  
+
   @Test public void sameIndexCanBeUsedWithDifferentFormats() {
     CodeBlock block = CodeBlock.builder()
         .add("$1T.out.println($1S)", ClassName.get(System.class))
