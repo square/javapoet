@@ -61,7 +61,7 @@ import static com.squareup.javapoet.Util.checkArgument;
 public final class CodeBlock {
   private static final Pattern NAMED_ARGUMENT =
       Pattern.compile("\\$(?<argumentName>[\\w_]+):(?<typeChar>[\\w]).*", Pattern.DOTALL);
-  private static final Pattern LOWERCASE = Pattern.compile("[a-z]+");
+  private static final Pattern LOWERCASE = Pattern.compile("[a-z]+[\\w_]*");
 
   /** A heterogeneous list containing string literals and value placeholders. */
   final List<String> formatParts;
