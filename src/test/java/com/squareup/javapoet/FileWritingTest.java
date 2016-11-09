@@ -33,6 +33,7 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.fail;
 
 @RunWith(JUnit4.class)
@@ -194,6 +195,25 @@ public final class FileWritingTest {
         + "\tpublic static void main(String[] args) {\n"
         + "\t\tSystem.out.println(\"Hello World!\");\n"
         + "\t}\n"
+        + "}\n");
+  }
+
+  /**
+   * This test confirms that JavaPoet ignores the host charset and always uses UTF-8. The host
+   * charset is customized with {@code -Dfile.encoding=ISO-8859-1}.
+   */
+  @Test public void fileIsUtf8() throws IOException {
+    JavaFile javaFile = JavaFile.builder("foo", TypeSpec.classBuilder("Taco").build())
+        .addFileComment("Pi\u00f1ata\u00a1")
+        .build();
+    javaFile.writeTo(fsRoot);
+
+    Path fooPath = fsRoot.resolve(fs.getPath("foo", "Taco.java"));
+    assertThat(new String(Files.readAllBytes(fooPath), UTF_8)).isEqualTo(""
+        + "// Pi\u00f1ata\u00a1\n"
+        + "package foo;\n"
+        + "\n"
+        + "class Taco {\n"
         + "}\n");
   }
 }
