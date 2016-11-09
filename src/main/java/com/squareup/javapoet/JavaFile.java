@@ -39,6 +39,7 @@ import javax.tools.SimpleJavaFileObject;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /** A Java file containing a single top level class. */
 public final class JavaFile {
@@ -81,7 +82,7 @@ public final class JavaFile {
     emit(codeWriter);
   }
 
-  /** Writes this to {@code directory} the standard directory structure. */
+  /** Writes this to {@code directory} as UTF-8 using the standard directory structure. */
   public void writeTo(Path directory) throws IOException {
     checkArgument(Files.notExists(directory) || Files.isDirectory(directory),
         "path %s exists but is not a directory.", directory);
@@ -94,12 +95,12 @@ public final class JavaFile {
     }
 
     Path outputPath = outputDirectory.resolve(typeSpec.name + ".java");
-    try (Writer writer = new OutputStreamWriter(Files.newOutputStream(outputPath))) {
+    try (Writer writer = new OutputStreamWriter(Files.newOutputStream(outputPath), UTF_8)) {
       writeTo(writer);
     }
   }
 
-  /** Writes this to {@code directory} the standard directory structure. */
+  /** Writes this to {@code directory} as UTF-8 using the standard directory structure. */
   public void writeTo(File directory) throws IOException {
     writeTo(directory.toPath());
   }
@@ -190,7 +191,7 @@ public final class JavaFile {
         return JavaFile.this.toString();
       }
       @Override public InputStream openInputStream() throws IOException {
-        return new ByteArrayInputStream(getCharContent(true).getBytes());
+        return new ByteArrayInputStream(getCharContent(true).getBytes(UTF_8));
       }
       @Override public long getLastModified() {
         return lastModified;

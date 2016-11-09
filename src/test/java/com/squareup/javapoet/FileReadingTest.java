@@ -15,10 +15,9 @@
  */
 package com.squareup.javapoet;
 
+import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.concurrent.Callable;
@@ -36,9 +35,9 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import com.google.common.io.ByteStreams;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @RunWith(JUnit4.class)
 public class FileReadingTest {
@@ -63,7 +62,7 @@ public class FileReadingTest {
   
   @Test public void javaFileObjectCharacterContent() throws IOException {
     TypeSpec type = TypeSpec.classBuilder("Test")
-        .addJavadoc("Testing, 1, 2, 3!")
+        .addJavadoc("Pi\u00f1ata\u00a1")
         .addMethod(MethodSpec.methodBuilder("fooBar").build())
         .build();
     JavaFile javaFile = JavaFile.builder("foo", type).build();
@@ -74,14 +73,14 @@ public class FileReadingTest {
     assertThat(javaFileObject.getCharContent(false)).isEqualTo(javaFile.toString());
   }
   
-  @Test public void javaFileObjectInputStream() throws IOException {
+  @Test public void javaFileObjectInputStreamIsUtf8() throws IOException {
     JavaFile javaFile = JavaFile.builder("foo", TypeSpec.classBuilder("Test").build())
-        .addFileComment("\u00A9 Copyright character gets you everytime")
+        .addFileComment("Pi\u00f1ata\u00a1")
         .build();
     byte[] bytes = ByteStreams.toByteArray(javaFile.toJavaFileObject().openInputStream());
     
-    // Be explicit with the default charset to assert the implicit behavior in the code
-    assertThat(bytes).isEqualTo(javaFile.toString().getBytes(Charset.defaultCharset()));
+    // JavaPoet always uses UTF-8.
+    assertThat(bytes).isEqualTo(javaFile.toString().getBytes(UTF_8));
   }
   
   @Test public void compileJavaFile() throws Exception {
@@ -100,7 +99,7 @@ public class FileReadingTest {
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     DiagnosticCollector<JavaFileObject> diagnosticCollector = new DiagnosticCollector<>();
     StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnosticCollector, 
-        Locale.getDefault(), StandardCharsets.UTF_8);
+        Locale.getDefault(), UTF_8);
     fileManager.setLocation(StandardLocation.CLASS_OUTPUT,
         Collections.singleton(temporaryFolder.newFolder()));
     CompilationTask task = compiler.getTask(null, 
@@ -117,5 +116,4 @@ public class FileReadingTest {
     Callable<?> test = Class.forName("foo.Test", true, loader).asSubclass(Callable.class).newInstance();
     assertThat(Callable.class.getMethod("call").invoke(test)).isEqualTo(value);
   }
-
 }
