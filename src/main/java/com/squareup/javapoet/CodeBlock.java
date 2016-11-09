@@ -175,6 +175,9 @@ public final class CodeBlock {
           case 'T':
             this.args.add(argToType(args[index]));
             break;
+          case 'B':
+            add(argToCodeBlock(args[index]));
+            break;
           default:
             throw new IllegalArgumentException(
                 String.format("invalid format string: '%s'", format));
@@ -198,6 +201,11 @@ public final class CodeBlock {
         checkArgument(unused.isEmpty(), "unused argument%s: %s", s, Util.join(", ", unused));
       }
       return this;
+    }
+
+    private CodeBlock argToCodeBlock(Object o) {
+      if (o instanceof CodeBlock) return (CodeBlock) o;
+      throw new IllegalArgumentException("expected name but was " + o);
     }
 
     private String argToName(Object o) {
@@ -265,6 +273,13 @@ public final class CodeBlock {
     public Builder addStatement(String format, Object... args) {
       add("$[");
       add(format, args);
+      add(";\n$]");
+      return this;
+    }
+
+    public Builder addStatement(CodeBlock codeBlock) {
+      add("$[");
+      add(codeBlock);
       add(";\n$]");
       return this;
     }
