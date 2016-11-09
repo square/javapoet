@@ -19,9 +19,9 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -83,6 +83,14 @@ public final class JavaFile {
 
   /** Writes this to {@code directory} the standard directory structure. */
   public void writeTo(Path directory) throws IOException {
+      writeTo(directory, Charset.defaultCharset());
+  }
+
+  /**
+   * Writes this to {@code directory} the standard directory structure
+   * using {@code charset} (default if null).
+   */
+  public void writeTo(Path directory, Charset charset) throws IOException {
     checkArgument(Files.notExists(directory) || Files.isDirectory(directory),
         "path %s exists but is not a directory.", directory);
     Path outputDirectory = directory;
@@ -94,7 +102,7 @@ public final class JavaFile {
     }
 
     Path outputPath = outputDirectory.resolve(typeSpec.name + ".java");
-    try (Writer writer = new OutputStreamWriter(Files.newOutputStream(outputPath))) {
+    try (Writer writer = Files.newBufferedWriter(outputPath, charset)) {
       writeTo(writer);
     }
   }
@@ -102,6 +110,14 @@ public final class JavaFile {
   /** Writes this to {@code directory} the standard directory structure. */
   public void writeTo(File directory) throws IOException {
     writeTo(directory.toPath());
+  }
+
+  /**
+   * Writes this to {@code directory} the standard directory structure
+   * using {@code charset} (default if null).
+   */
+  public void writeTo(File directory, Charset charset) throws IOException {
+      writeTo(directory.toPath(), charset);
   }
 
   /** Writes this to {@code filer}. */
