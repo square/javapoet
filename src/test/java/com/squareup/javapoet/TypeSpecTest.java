@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.AbstractSet;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -1773,6 +1774,20 @@ public final class TypeSpecTest {
   @Test public void nullSingleSuperinterfaceAddition() {
     try {
       TypeSpec.classBuilder("Taco").addSuperinterface((TypeName) null);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected.getMessage())
+          .isEqualTo("superinterface == null");
+    }
+  }
+
+  @Test public void nullInSuperinterfaceIterableAddition() {
+    List<TypeName> superinterfaces = new ArrayList<>();
+    superinterfaces.add(TypeName.get(List.class));
+    superinterfaces.add(null);
+
+    try {
+      TypeSpec.classBuilder("Taco").addSuperinterfaces(superinterfaces);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected.getMessage())
