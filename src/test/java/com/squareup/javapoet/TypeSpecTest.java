@@ -34,7 +34,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,6 +41,7 @@ import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
@@ -81,7 +81,7 @@ public final class TypeSpecTest {
         + "    return \"taco\";\n"
         + "  }\n"
         + "}\n");
-    Assert.assertEquals(472949424, taco.hashCode()); // update expected number if source changes
+    assertEquals(472949424, taco.hashCode()); // update expected number if source changes
   }
 
   @Test public void interestingTypes() throws Exception {
@@ -201,8 +201,8 @@ public final class TypeSpecTest {
         + "import java.lang.String;\n"
         + "\n"
         + "class Foo {\n"
-        + "  public Foo(long id, @Ping String one, @Ping String two, @Pong(\"pong\") String three, "
-        + "@Ping String four) {\n"
+        + "  public Foo(long id, @Ping String one, @Ping String two, @Pong(\"pong\") String three,\n"
+        + "      @Ping String four) {\n"
         + "    /* code snippets */\n"
         + "  }\n"
         + "}\n");
@@ -282,8 +282,9 @@ public final class TypeSpecTest {
         + "      \"User-Agent: foobar\"\n"
         + "  })\n"
         + "  @POST(\"/foo/bar\")\n"
-        + "  Observable<FooBar> fooBar(@Body Things<Thing> things, @QueryMap(encodeValues = false) "
-        + "Map<String, String> query, @Header(\"Authorization\") String authorization);\n"
+        + "  Observable<FooBar> fooBar(@Body Things<Thing> things,\n"
+        + "      @QueryMap(encodeValues = false) Map<String, String> query,\n"
+        + "      @Header(\"Authorization\") String authorization);\n"
         + "}\n");
   }
 
@@ -2225,10 +2226,8 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
-  @Test
-  public void initializerBlockUnsupportedExceptionOnInterface() {
+  @Test public void initializerBlockUnsupportedExceptionOnInterface() {
     TypeSpec.Builder interfaceBuilder = TypeSpec.interfaceBuilder("Taco");
-
     try {
       interfaceBuilder.addInitializerBlock(CodeBlock.builder().build());
       fail("Exception expected");
@@ -2236,16 +2235,42 @@ public final class TypeSpecTest {
     }
   }
 
-  @Test
-  public void initializerBlockUnsupportedExceptionOnAnnotation() {
-
+  @Test public void initializerBlockUnsupportedExceptionOnAnnotation() {
     TypeSpec.Builder annotationBuilder = TypeSpec.annotationBuilder("Taco");
-
     try {
       annotationBuilder.addInitializerBlock(CodeBlock.builder().build());
       fail("Exception expected");
     } catch (UnsupportedOperationException e) {
     }
+  }
+
+  @Test public void lineWrapping() {
+    MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder("call");
+    methodBuilder.addCode("$[call(");
+    for (int i = 0; i < 32; i++) {
+      methodBuilder.addParameter(String.class, "s" + i);
+      methodBuilder.addCode(i > 0 ? ",$W$S" : "$S", i);
+    }
+    methodBuilder.addCode(");$]\n");
+
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addMethod(methodBuilder.build())
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.String;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  void call(String s0, String s1, String s2, String s3, String s4, String s5, String s6, String s7,\n"
+        + "      String s8, String s9, String s10, String s11, String s12, String s13, String s14, String s15,\n"
+        + "      String s16, String s17, String s18, String s19, String s20, String s21, String s22,\n"
+        + "      String s23, String s24, String s25, String s26, String s27, String s28, String s29,\n"
+        + "      String s30, String s31) {\n"
+        + "    call(\"0\", \"1\", \"2\", \"3\", \"4\", \"5\", \"6\", \"7\", \"8\", \"9\", \"10\", \"11\", \"12\", \"13\", \"14\", \"15\", \"16\",\n"
+        + "        \"17\", \"18\", \"19\", \"20\", \"21\", \"22\", \"23\", \"24\", \"25\", \"26\", \"27\", \"28\", \"29\", \"30\", \"31\");\n"
+        + "  }\n"
+        + "}\n");
   }
 
   @Test public void equalsAndHashCode() {
