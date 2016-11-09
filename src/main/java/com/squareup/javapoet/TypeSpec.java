@@ -454,7 +454,7 @@ public final class TypeSpec {
     public Builder addSuperinterfaces(Iterable<? extends TypeName> superinterfaces) {
       checkArgument(superinterfaces != null, "superinterfaces == null");
       for (TypeName superinterface : superinterfaces) {
-        this.superinterfaces.add(superinterface);
+        addSuperinterface(superinterface);
       }
       return this;
     }
