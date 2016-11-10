@@ -1,22 +1,53 @@
 Change Log
 ==========
 
+JavaPoet 1.8.0 *(2016-11-09)*
+-----------------------------
+
+ * New: Basic support for line wrapping. Use `$W` to insert a Wrappable Whitespace character. It'll
+   emit either a single space or a newline with appropriate indentation.
+ * New: Named arguments in `CodeBlock`. These are intended to make larger code snippets easier to
+   read:
+
+   ```
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("count", 3);
+    map.put("greeting", "Hello, ");
+    map.put("system", System.class);
+
+    String template = ""
+        + "for (int i = 0; i < $count:L; i++) {\n"
+        + "  $system:T.out.println($greeting:S + list.get(i));\n"
+        + "}\n";
+
+    CodeBlock.Builder builder = CodeBlock.builder();
+    builder.addNamed(template, map);
+   ```
+
+ * New: `addJavadoc(CodeBlock)` overloads for TypeSpec, MethodSpec, and FieldSpec.
+ * New: `MethodSpec.addComment()` makes it easy to add a `// single-line comment.`
+ * New: `ClassName.getReflectionName()` returns a string like `java.util.Map$Entry`.
+ * Fix: Always write UTF-8. Previously JavaPoet would use the system default charset which was
+   potentially inconsistent across environments.
+ * Fix: Permit (constant) fields to be defined in annotation types.
+
+
 JavaPoet 1.7.0 *(2016-04-26)*
-----------------------------
+-----------------------------
 
  * New: Support parameterized types that enclose other types, like `Outer<String>.Inner`.
  * New: `TypeName.isBoxedPrimitive()`.
 
 
 JavaPoet 1.6.1 *(2016-03-21)*
-----------------------------
+-----------------------------
 
  * Fix: Double quotes and backslashes in string literals were not properly quoted in 1.6.0. This is
    now fixed.
 
 
 JavaPoet 1.6.0 *(2016-03-19)*
-----------------------------
+-----------------------------
 
  * New: Revive `CodeBlock.of()`, a handy factory method for building code blocks.
  * New: Add `TypeSpec` factory methods that take a `ClassName`.
@@ -33,12 +64,12 @@ JavaPoet 1.6.0 *(2016-03-19)*
 
 
 JavaPoet 1.5.1 *(2016-01-10)*
-----------------------------
+-----------------------------
 
  * Fix: Annotated `TypeName` instances are only equal if their annotations are equal.
 
 JavaPoet 1.5.0 *(2016-01-10)*
-----------------------------
+-----------------------------
 
  * New: `import static`! See `JavaFile.Builder.addStaticImport()` variants.
  * New: Overload `NameAllocator.newName(String)` for creating a one-off name without a tag.
@@ -49,7 +80,7 @@ JavaPoet 1.5.0 *(2016-01-10)*
 
 
 JavaPoet 1.4.0 *(2015-11-13)*
-----------------------------
+-----------------------------
 
  * New: `AnnotationSpec.get(Annotation)`.
  * New: Type annotations! `TypeName.annotated()` can attach annotations like `@Nullable` directly to
@@ -63,7 +94,7 @@ JavaPoet 1.4.0 *(2015-11-13)*
 
 
 JavaPoet 1.3.0 *(2015-09-20)*
-----------------------------
+-----------------------------
 
  * New: `NameAllocator` API makes it easy to declare non-conflicting names.
  * New: Support annotations on enum values.
@@ -73,7 +104,7 @@ JavaPoet 1.3.0 *(2015-09-20)*
 
 
 JavaPoet 1.2.0 *(2015-07-04)*
-----------------------------
+-----------------------------
 
  * New: Arguments may have positional indexes like `$1T` and `$2N`. Indexes can be used to refer to
    the same argument multiple times in a single format string.
@@ -83,7 +114,7 @@ JavaPoet 1.2.0 *(2015-07-04)*
 
 
 JavaPoet 1.1.0 *(2015-05-25)*
-----------------------------
+-----------------------------
 
  * New: Eager validation of argument types like `$T` and `$N`.
  * New: `MethodSpec.varargs(boolean)` to generate varags methods.
@@ -100,7 +131,7 @@ JavaPoet 1.1.0 *(2015-05-25)*
  * Fix: Don't allow double field initialization.
 
 JavaPoet 1.0.0 *(2015-01-28)*
-----------------------------
+-----------------------------
 
  * This update is a complete rewrite. The project name is now `javapoet`. We renamed the it so you
    can simultaneously use the old JavaWriter API and our new builder-based APIs in one project.
@@ -111,7 +142,7 @@ JavaPoet 1.0.0 *(2015-01-28)*
 
 
 JavaWriter 2.5.1 *(2014-12-03)*
-----------------------------
+-------------------------------
 
  * New: `StringLiteral` type which encapsulates the behavior of `stringLiteral`.
  * Fix: Use canonical name when emitting a class import.
@@ -120,7 +151,7 @@ JavaWriter 2.5.1 *(2014-12-03)*
 
 
 JavaWriter 2.5.0 *(2014-04-18)*
-----------------------------
+-------------------------------
 
  * New: Methods in interfaces will always have no body declaration.
  * New: Control flow begin declaration now supports String format arguments.
@@ -129,20 +160,20 @@ JavaWriter 2.5.0 *(2014-04-18)*
 
 
 JavaWriter 2.4.0 *(2014-01-10)*
-----------------------------
+-------------------------------
 
  * New: Properly indent hanging lines in field initializers.
  * New: `emitEnumValue` variant which exposes a boolean of whether the current value is the last.
 
 
 JavaWriter 2.3.1 *(2013-12-16)*
-----------------------------
+-------------------------------
 
  * Fix: Properly handle subpackages of `java.lang` in `compressType`.
 
 
 JavaWriter 2.3.0 *(2013-11-24)*
-----------------------------
+-------------------------------
 
  * New: Configurable indent level via `setIndent`.
  * New: `beginConstructor` method is a semantically clearer alternative for constructors.
@@ -152,31 +183,31 @@ JavaWriter 2.3.0 *(2013-11-24)*
 
 
 JavaWriter 2.2.1 *(2013-10-23)*
-----------------------------
+-------------------------------
 
  * Fix: Do not emit trailing whitespace for empty Javadoc lines.
 
 
 JavaWriter 2.2.0 *(2013-09-25)*
-----------------------------
+-------------------------------
 
  * `setCompressingTypes` controls whether types are emitted as fully-qualified or not.
 
 
 JavaWriter 2.1.2 *(2013-08-23)*
-----------------------------
+-------------------------------
 
  * Attempt to keep annotations on a single line.
 
 
 JavaWriter 2.1.1 *(2013-07-23)*
-----------------------------
+-------------------------------
 
  * Fix: `stringLiteral` now correctly handles escapes and control characters.
 
 
 JavaWriter 2.1.0 *(2013-07-15)*
-----------------------------
+-------------------------------
 
  * New: All methods now take a `Set` of `Modifier`s rather than an `int`. The `int` methods are
    now deprecated for removal in JavaPoet 1.0.
@@ -184,50 +215,50 @@ JavaWriter 2.1.0 *(2013-07-15)*
 
 
 JavaWriter 2.0.1 *(2013-06-17)*
-----------------------------
+-------------------------------
 
  * Correct casing of `emitSingleLineComment`.
 
 
 JavaWriter 2.0.0 *(2013-06-06)*
-----------------------------
+-------------------------------
 
  * Package name is now `com.squareup.javawriter`.
  * Support declaring `throws` clause on methods.
 
 
 JavaWriter 1.0.5 *(2013-05-08)*
-----------------------------
+-------------------------------
 
  * Fix: Fully qualify types whose simple name matches an import.
 
 
 JavaWriter 1.0.4 *(2013-03-15)*
-----------------------------
+-------------------------------
 
  * Fix: Static import emit now properly supports method imports.
 
 
 JavaWriter 1.0.3 *(2013-02-21)*
------------------------------
+-------------------------------
 
  * Add support for emitting static imports.
 
 
 JavaWriter 1.0.2 *(2013-02-11)*
-----------------------------
+-------------------------------
 
  * Add `type` API for helping build generic types.
  * Minor performance improvements.
 
 
 JavaWriter 1.0.1 *(2013-02-03)*
-----------------------------
+-------------------------------
 
  * Expose `compressType` API.
 
 
 JavaWriter 1.0.0 *(2013-02-01)*
-----------------------------
+-------------------------------
 
 Initial release.
