@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.ExecutableElement;
@@ -403,6 +404,11 @@ public final class MethodSpec {
 
     public Builder addCode(String format, Object... args) {
       code.add(format, args);
+      return this;
+    }
+
+    public Builder addNamedCode(String format, Map<String, ?> args) {
+      code.addNamed(format, args);
       return this;
     }
 
