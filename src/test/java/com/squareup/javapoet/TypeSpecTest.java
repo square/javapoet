@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.Callable;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -629,18 +630,41 @@ public final class TypeSpecTest {
     ClassName tacoBellTaco = ClassName.get("com.taco.bell", "Taco");
     ClassName fishTaco = ClassName.get("org.fish.taco", "Taco");
     TypeSpec typeSpec = TypeSpec.classBuilder("Taco")
-            .superclass(fishTaco)
-            .addSuperinterface(ParameterizedTypeName.get(ClassName.get(Comparable.class), javapoetTaco))
-            .addSuperinterface(tacoBellTaco)
-            .build();
+        .superclass(fishTaco)
+        .addSuperinterface(ParameterizedTypeName.get(ClassName.get(Comparable.class), javapoetTaco))
+        .addSuperinterface(tacoBellTaco)
+        .build();
     assertThat(toString(typeSpec)).isEqualTo(""
-            + "package com.squareup.tacos;\n"
-            + "\n"
-            + "import java.lang.Comparable;\n"
-            + "\n"
-            + "class Taco extends org.fish.taco.Taco "
-            + "implements Comparable<Taco>, com.taco.bell.Taco {\n"
-            + "}\n");
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.Comparable;\n"
+        + "\n"
+        + "class Taco extends org.fish.taco.Taco "
+        + "implements Comparable<Taco>, com.taco.bell.Taco {\n"
+        + "}\n");
+  }
+
+  @Test public void classImplementsNestedClass() throws Exception {
+    ClassName outer = ClassName.get(tacosPackage, "Outer");
+    ClassName inner = outer.nestedClass("Inner");
+    ClassName callable = ClassName.get(Callable.class);
+    TypeSpec typeSpec = TypeSpec.classBuilder("Outer")
+        .superclass(ParameterizedTypeName.get(callable,
+            inner))
+        .addType(TypeSpec.classBuilder("Inner")
+            .addModifiers(Modifier.STATIC)
+            .build())
+        .build();
+
+    assertThat(toString(typeSpec)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.util.concurrent.Callable;\n"
+        + "\n"
+        + "class Outer extends Callable<Outer.Inner> {\n"
+        + "  static class Inner {\n"
+        + "  }\n"
+        + "}\n");
   }
 
   @Test public void enumImplements() throws Exception {
@@ -793,13 +817,13 @@ public final class TypeSpecTest {
 
   @Test public void annotationWithFields() {
     FieldSpec field = FieldSpec.builder(int.class, "FOO")
-            .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-            .initializer("$L", 101)
-            .build();
+        .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+        .initializer("$L", 101)
+        .build();
 
     TypeSpec anno = TypeSpec.annotationBuilder("Anno")
-            .addField(field)
-            .build();
+        .addField(field)
+        .build();
 
     assertThat(toString(anno)).isEqualTo(""
         + "package com.squareup.tacos;\n"
