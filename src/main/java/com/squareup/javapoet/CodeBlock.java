@@ -62,7 +62,7 @@ import static com.squareup.javapoet.Util.checkArgument;
  */
 public final class CodeBlock {
   private static final Pattern NAMED_ARGUMENT =
-      Pattern.compile("\\$(?<argumentName>[\\w_]+):(?<typeChar>[\\w]).*", Pattern.DOTALL);
+      Pattern.compile("\\$(?<argumentName>[\\w_]+):(?<typeChar>[\\w]).*");
   private static final Pattern LOWERCASE = Pattern.compile("[a-z]+[\\w_]*");
 
   /** A heterogeneous list containing string literals and value placeholders. */
@@ -151,15 +151,21 @@ public final class CodeBlock {
           formatParts.add(format.substring(p, nextP));
           p = nextP;
         }
-        Matcher matcher = NAMED_ARGUMENT.matcher(format.subSequence(p, format.length()));
-        if (matcher.matches()) {
+
+        Matcher matcher = null;
+        int colon = format.indexOf(':', p);
+        if (colon != -1) {
+          int endIndex = Math.min(colon + 2, format.length());
+          matcher = NAMED_ARGUMENT.matcher(format.substring(p, endIndex));
+        }
+        if (matcher != null && matcher.lookingAt()) {
           String argumentName = matcher.group("argumentName");
           checkArgument(arguments.containsKey(argumentName), "Missing named argument for $%s",
               argumentName);
           char formatChar = matcher.group("typeChar").charAt(0);
           addArgument(format, formatChar, arguments.get(argumentName));
           formatParts.add("$" + formatChar);
-          p += matcher.regionStart() + argumentName.length() + 3;
+          p += matcher.regionEnd();
         } else {
           checkArgument(p < format.length() - 1, "dangling $ at end");
           checkArgument(isNoArgPlaceholder(format.charAt(p + 1)),
