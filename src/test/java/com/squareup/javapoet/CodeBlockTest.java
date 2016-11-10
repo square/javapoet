@@ -44,7 +44,7 @@ public final class CodeBlockTest {
       CodeBlock.builder().add("$1>", "taco").build();
       fail();
     } catch (IllegalArgumentException exp) {
-      assertThat(exp).hasMessage("$$, $>, $<, $[ and $] may not have an index");
+      assertThat(exp).hasMessage("$$, $>, $<, $[, $], and $W may not have an index");
     }
   }
 
@@ -53,7 +53,7 @@ public final class CodeBlockTest {
       CodeBlock.builder().add("$1<", "taco").build();
       fail();
     } catch (IllegalArgumentException exp) {
-      assertThat(exp).hasMessage("$$, $>, $<, $[ and $] may not have an index");
+      assertThat(exp).hasMessage("$$, $>, $<, $[, $], and $W may not have an index");
     }
   }
 
@@ -62,7 +62,7 @@ public final class CodeBlockTest {
       CodeBlock.builder().add("$1$", "taco").build();
       fail();
     } catch (IllegalArgumentException exp) {
-      assertThat(exp).hasMessage("$$, $>, $<, $[ and $] may not have an index");
+      assertThat(exp).hasMessage("$$, $>, $<, $[, $], and $W may not have an index");
     }
   }
 
@@ -71,7 +71,7 @@ public final class CodeBlockTest {
       CodeBlock.builder().add("$1[", "taco").build();
       fail();
     } catch (IllegalArgumentException exp) {
-      assertThat(exp).hasMessage("$$, $>, $<, $[ and $] may not have an index");
+      assertThat(exp).hasMessage("$$, $>, $<, $[, $], and $W may not have an index");
     }
   }
 
@@ -80,7 +80,7 @@ public final class CodeBlockTest {
       CodeBlock.builder().add("$1]", "taco").build();
       fail();
     } catch (IllegalArgumentException exp) {
-      assertThat(exp).hasMessage("$$, $>, $<, $[ and $] may not have an index");
+      assertThat(exp).hasMessage("$$, $>, $<, $[, $], and $W may not have an index");
     }
   }
 

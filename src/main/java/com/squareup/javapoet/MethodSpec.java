@@ -99,7 +99,7 @@ public final class MethodSpec {
     boolean firstParameter = true;
     for (Iterator<ParameterSpec> i = parameters.iterator(); i.hasNext(); ) {
       ParameterSpec parameter = i.next();
-      if (!firstParameter) codeWriter.emit(", ");
+      if (!firstParameter) codeWriter.emit(",").emitWrappingSpace();
       parameter.emit(codeWriter, !i.hasNext() && varargs);
       firstParameter = false;
     }
@@ -112,11 +112,11 @@ public final class MethodSpec {
     }
 
     if (!exceptions.isEmpty()) {
-      codeWriter.emit(" throws");
+      codeWriter.emitWrappingSpace().emit("throws");
       boolean firstException = true;
       for (TypeName exception : exceptions) {
         if (!firstException) codeWriter.emit(",");
-        codeWriter.emit(" $T", exception);
+        codeWriter.emitWrappingSpace().emit("$T", exception);
         firstException = false;
       }
     }

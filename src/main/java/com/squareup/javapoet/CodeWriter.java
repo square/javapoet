@@ -45,7 +45,7 @@ final class CodeWriter {
   private static final String NO_PACKAGE = new String();
 
   private final String indent;
-  private final Appendable out;
+  private final LineWrapper out;
   private int indentLevel;
 
   private boolean javadoc = false;
@@ -76,7 +76,7 @@ final class CodeWriter {
 
   CodeWriter(Appendable out, String indent, Map<String, ClassName> importedTypes,
       Set<String> staticImports) {
-    this.out = checkNotNull(out, "out == null");
+    this.out = new LineWrapper(out, indent, 100);
     this.indent = checkNotNull(indent, "indent == null");
     this.importedTypes = checkNotNull(importedTypes, "importedTypes == null");
     this.staticImports = checkNotNull(staticImports, "staticImports == null");
@@ -278,6 +278,10 @@ final class CodeWriter {
           statementLine = -1;
           break;
 
+        case "$W":
+          out.wrappingSpace(indentLevel + 2);
+          break;
+
         default:
           // handle deferred type
           if (deferredTypeName != null) {
@@ -295,6 +299,11 @@ final class CodeWriter {
           break;
       }
     }
+    return this;
+  }
+
+  public CodeWriter emitWrappingSpace() throws IOException {
+    out.wrappingSpace(indentLevel + 2);
     return this;
   }
 
@@ -440,7 +449,7 @@ final class CodeWriter {
           emitIndentation();
           out.append(javadoc ? " *" : "//");
         }
-        out.append('\n');
+        out.append("\n");
         trailingNewline = true;
         if (statementLine != -1) {
           if (statementLine == 0) {
