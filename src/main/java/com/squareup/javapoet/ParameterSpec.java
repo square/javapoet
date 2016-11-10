@@ -85,7 +85,6 @@ public final class ParameterSpec {
     String name = element.getSimpleName().toString();
     return ParameterSpec.builder(type, name)
         .addModifiers(element.getModifiers())
-        .addAnnotations(AnnotationSpec.annotationsOf(element))
         .build();
   }
 

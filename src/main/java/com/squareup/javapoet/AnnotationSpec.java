@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
-import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -39,7 +38,6 @@ import javax.lang.model.util.SimpleAnnotationValueVisitor7;
 
 import static com.squareup.javapoet.Util.characterLiteralWithoutSingleQuotes;
 import static com.squareup.javapoet.Util.checkNotNull;
-import static com.squareup.javapoet.Util.immutableList;
 
 /** A generated annotation on a declaration. */
 public final class AnnotationSpec {
@@ -155,15 +153,6 @@ public final class AnnotationSpec {
       value.accept(visitor, name);
     }
     return builder.build();
-  }
-
-  /** Returns all annotations on {@code element}. */
-  static List<AnnotationSpec> annotationsOf(Element element) {
-    List<AnnotationSpec> result = new ArrayList<>();
-    for (AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
-      result.add(get(annotationMirror));
-    }
-    return immutableList(result);
   }
 
   public static Builder builder(ClassName type) {
