@@ -320,7 +320,7 @@ MethodSpec beyond = MethodSpec.methodBuilder("beyond")
     .addStatement("result.add($T.createNimbus(\"2001\"))", hoverboard)
     .addStatement("result.add($T.createNimbus($T.THUNDERBOLT))", hoverboard, namedBoards)
     .addStatement("$T.sort(result)", Collections.class)
-    .addStatement("return result.isEmpty() $T.emptyList() : result", Collections.class)
+    .addStatement("return result.isEmpty() ? $T.emptyList() : result", Collections.class)
     .build();
 
 TypeSpec hello = TypeSpec.classBuilder("HelloWorld")
