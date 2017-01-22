@@ -228,7 +228,9 @@ public final class CodeBlock {
         if (indexStart < indexEnd) {
           index = Integer.parseInt(format.substring(indexStart, indexEnd)) - 1;
           hasIndexed = true;
-          indexedParameterCount[index % args.length]++; // modulo is needed, checked below anyway
+          if (args.length > 0) {
+            indexedParameterCount[index % args.length]++; // modulo is needed, checked below anyway
+          }
         } else {
           index = relativeParameterCount;
           hasRelative = true;

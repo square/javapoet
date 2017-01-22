@@ -226,6 +226,15 @@ public final class CodeBlockTest {
     }
   }
 
+  @Test public void indexButNoArguments() {
+    try {
+      CodeBlock.builder().add("$1T").build();
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("index 1 for '$1T' not in range (received 0 arguments)");
+    }
+  }
+
   @Test public void formatIndicatorAlone() {
     try {
       CodeBlock.builder().add("$", String.class).build();
