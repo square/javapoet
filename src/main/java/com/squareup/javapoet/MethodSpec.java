@@ -281,6 +281,7 @@ public final class MethodSpec {
     private CodeBlock defaultValue;
 
     private Builder(String name) {
+      checkNotNull(name, "name == null");
       checkArgument(name.equals(CONSTRUCTOR) || SourceVersion.isName(name),
           "not a valid name: %s", name);
       this.name = name;
@@ -320,6 +321,7 @@ public final class MethodSpec {
     }
 
     public Builder addModifiers(Modifier... modifiers) {
+      checkNotNull(modifiers, "modifiers == null");
       Collections.addAll(this.modifiers, modifiers);
       return this;
     }

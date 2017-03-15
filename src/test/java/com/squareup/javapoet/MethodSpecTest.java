@@ -238,4 +238,22 @@ public final class MethodSpecTest {
       .isEqualTo(Arrays.asList(ioException, timeoutException));
   }
 
+  @Test public void nullIsNotAValidMethodName() {
+    try {
+      MethodSpec.methodBuilder(null);
+      fail("NullPointerException expected");
+    } catch (NullPointerException e) {
+      assertThat(e.getMessage()).isEqualTo("name == null");
+    }
+  }
+
+  @Test public void addModifiersVarargsShouldNotBeNull() {
+    try {
+      MethodSpec.methodBuilder("taco")
+              .addModifiers((Modifier[]) null);
+      fail("NullPointerException expected");
+    } catch (NullPointerException e) {
+      assertThat(e.getMessage()).isEqualTo("modifiers == null");
+    }
+  }
 }
