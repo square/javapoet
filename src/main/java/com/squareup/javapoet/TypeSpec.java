@@ -419,7 +419,10 @@ public final class TypeSpec {
 
     public Builder addModifiers(Modifier... modifiers) {
       checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
-      Collections.addAll(this.modifiers, modifiers);
+      for (Modifier modifier : modifiers) {
+        checkArgument(modifier != null, "modifiers contain null");
+        this.modifiers.add(modifier);
+      }
       return this;
     }
 
