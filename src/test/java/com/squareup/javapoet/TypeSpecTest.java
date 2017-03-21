@@ -1836,6 +1836,16 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  @Test public void nullModifiersAddition() {
+    try {
+      TypeSpec.classBuilder("Taco").addModifiers((Modifier) null);
+      fail();
+    } catch(IllegalArgumentException expected) {
+      assertThat(expected.getMessage())
+          .isEqualTo("modifiers contain null");
+    }
+  }
+
   @Test public void nullTypeVariablesAddition() {
     try {
       TypeSpec.classBuilder("Taco").addTypeVariables(null);
