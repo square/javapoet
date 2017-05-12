@@ -127,7 +127,7 @@ public final class TypeSpecTest {
     ParameterSpec thungParameter = ParameterSpec.builder(thungOfSuperFoo, "thung")
         .addModifiers(Modifier.FINAL)
         .build();
-    TypeSpec aSimpleThung = TypeSpec.anonymousClassBuilder("$N", thungParameter)
+    TypeSpec aSimpleThung = TypeSpec.anonymousClassBuilder(CodeBlock.of("$N", thungParameter))
         .superclass(simpleThungOfBar)
         .addMethod(MethodSpec.methodBuilder("doSomething")
             .addAnnotation(Override.class)
