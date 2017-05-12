@@ -625,25 +625,6 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
-  @Test public void classImplementsExtendsSameName() throws Exception {
-    ClassName javapoetTaco = ClassName.get(tacosPackage, "Taco");
-    ClassName tacoBellTaco = ClassName.get("com.taco.bell", "Taco");
-    ClassName fishTaco = ClassName.get("org.fish.taco", "Taco");
-    TypeSpec typeSpec = TypeSpec.classBuilder("Taco")
-        .superclass(fishTaco)
-        .addSuperinterface(ParameterizedTypeName.get(ClassName.get(Comparable.class), javapoetTaco))
-        .addSuperinterface(tacoBellTaco)
-        .build();
-    assertThat(toString(typeSpec)).isEqualTo(""
-        + "package com.squareup.tacos;\n"
-        + "\n"
-        + "import java.lang.Comparable;\n"
-        + "\n"
-        + "class Taco extends org.fish.taco.Taco "
-        + "implements Comparable<Taco>, com.taco.bell.Taco {\n"
-        + "}\n");
-  }
-
   @Test public void classImplementsNestedClass() throws Exception {
     ClassName outer = ClassName.get(tacosPackage, "Outer");
     ClassName inner = outer.nestedClass("Inner");
