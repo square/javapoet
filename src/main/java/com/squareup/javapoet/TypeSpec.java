@@ -82,6 +82,30 @@ public final class TypeSpec {
     this.originatingElements = Util.immutableList(originatingElementsMutable);
   }
 
+  /**
+   * Creates a dummy type spec for type-resolution only (in CodeWriter)
+   * while emitting the type declaration but before entering the type body.
+   */
+  private TypeSpec(TypeSpec type) {
+    assert type.anonymousTypeArguments == null;
+    this.kind = type.kind;
+    this.name = type.name;
+    this.anonymousTypeArguments = null;
+    this.javadoc = type.javadoc;
+    this.annotations = Collections.emptyList();
+    this.modifiers = Collections.emptySet();
+    this.typeVariables = Collections.emptyList();
+    this.superclass = null;
+    this.superinterfaces = Collections.emptyList();
+    this.enumConstants = Collections.emptyMap();
+    this.fieldSpecs = Collections.emptyList();
+    this.staticBlock = type.staticBlock;
+    this.initializerBlock = type.initializerBlock;
+    this.methodSpecs = Collections.emptyList();
+    this.typeSpecs = Collections.emptyList();
+    this.originatingElements = Collections.emptyList();
+  }
+
   public boolean hasModifier(Modifier modifier) {
     return modifiers.contains(modifier);
   }
@@ -172,6 +196,9 @@ public final class TypeSpec {
         codeWriter.emit(anonymousTypeArguments);
         codeWriter.emit(") {\n");
       } else {
+        // Push an empty type (specifically without nested types) for type-resolution.
+        codeWriter.pushType(new TypeSpec(this));
+
         codeWriter.emitJavadoc(javadoc);
         codeWriter.emitAnnotations(annotations, false);
         codeWriter.emitModifiers(modifiers, Util.union(implicitModifiers, kind.asMemberModifiers));
@@ -213,6 +240,8 @@ public final class TypeSpec {
             firstType = false;
           }
         }
+
+        codeWriter.popType();
 
         codeWriter.emit(" {\n");
       }
