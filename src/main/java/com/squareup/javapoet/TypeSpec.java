@@ -111,9 +111,13 @@ public final class TypeSpec {
   }
 
   public static Builder anonymousClassBuilder(String typeArgumentsFormat, Object... args) {
-    return new Builder(Kind.CLASS, null, CodeBlock.builder()
+    return anonymousClassBuilder(CodeBlock.builder()
         .add(typeArgumentsFormat, args)
         .build());
+  }
+
+  public static Builder anonymousClassBuilder(CodeBlock typeArguments) {
+    return new Builder(Kind.CLASS, null, typeArguments);
   }
 
   public static Builder annotationBuilder(String name) {
