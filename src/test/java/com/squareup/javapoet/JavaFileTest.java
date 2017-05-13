@@ -589,6 +589,53 @@ public final class JavaFileTest {
         + "}\n");
   }
 
+  @Test public void noPackage() throws Exception {
+	    String source = JavaFile.builder(
+	        TypeSpec.classBuilder("HelloWorld")
+	            .addMethod(MethodSpec.methodBuilder("main")
+	                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+	                .addParameter(String[].class, "args")
+	                .addCode("$T.out.println($S);\n", System.class, "Hello World!")
+	                .build())
+	            .build())
+	        .build()
+	        .toString();
+	    assertThat(source).isEqualTo(""
+	        + "import java.lang.String;\n"
+	        + "import java.lang.System;\n"
+	        + "\n"
+	        + "class HelloWorld {\n"
+	        + "  public static void main(String[] args) {\n"
+	        + "    System.out.println(\"Hello World!\");\n"
+	        + "  }\n"
+	        + "}\n");
+	  }
+
+  @Test public void addPackage() throws Exception {
+	    String source = JavaFile.builder(
+	        TypeSpec.classBuilder("HelloWorld")
+	            .addMethod(MethodSpec.methodBuilder("main")
+	                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+	                .addParameter(String[].class, "args")
+	                .addCode("$T.out.println($S);\n", System.class, "Hello World!")
+	                .build())
+	            .build())
+	            .addPackageName("com.example.helloworld")	
+	        .build()
+	        .toString();
+	    assertThat(source).isEqualTo(""
+            + "package com.example.helloworld;\n"
+            + "\n"	    		
+	        + "import java.lang.String;\n"
+	        + "import java.lang.System;\n"
+	        + "\n"
+	        + "class HelloWorld {\n"
+	        + "  public static void main(String[] args) {\n"
+	        + "    System.out.println(\"Hello World!\");\n"
+	        + "  }\n"
+	        + "}\n");
+	  }
+
   @Test public void defaultPackageTypesAreNotImported() throws Exception {
     String source = JavaFile.builder("hello",
           TypeSpec.classBuilder("World").addSuperinterface(ClassName.get("", "Test")).build())
