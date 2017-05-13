@@ -49,9 +49,9 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
       checkArgument(SourceVersion.isName(names.get(i)), "part '%s' is keyword", names.get(i));
     }
     this.names = Util.immutableList(names);
-    this.canonicalName = names.get(0).isEmpty()
+    this.canonicalName = (names.get(0).isEmpty()
         ? Util.join(".", names.subList(1, names.size()))
-        : Util.join(".", names);
+        : Util.join(".", names)).replace(".$", "$");
   }
 
   @Override public ClassName annotated(List<AnnotationSpec> annotations) {
@@ -141,7 +141,16 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     checkArgument(!clazz.isArray(), "array types cannot be represented as a ClassName");
     List<String> names = new ArrayList<>();
     while (true) {
-      names.add(clazz.getSimpleName());
+      if (clazz.isAnonymousClass()) {
+        int lastDot = clazz.getName().lastIndexOf('.');
+        if (lastDot != -1) {
+          String anonClassName = clazz.getName().substring(lastDot + 1);
+          int lastDollar = anonClassName.lastIndexOf('$');
+          names.add(anonClassName.substring(lastDollar));
+        }
+      } else {
+        names.add(clazz.getSimpleName());
+      }
       Class<?> enclosing = clazz.getEnclosingClass();
       if (enclosing == null) break;
       clazz = enclosing;

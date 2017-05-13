@@ -107,6 +107,8 @@ public final class ClassNameTest {
         .isEqualTo("java.lang.Object");
     assertThat(ClassName.get(OuterClass.InnerClass.class).toString())
         .isEqualTo("com.squareup.javapoet.ClassNameTest.OuterClass.InnerClass");
+    assertThat((ClassName.get(new Object() {}.getClass())).toString())
+        .isEqualTo("com.squareup.javapoet.ClassNameTest$1");
   }
 
   @Test public void peerClass() {
