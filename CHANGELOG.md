@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+JavaPoet 1.9.0 *(2017-05-13)*
+-----------------------------
+
+ * Fix: Don't emit incorrect code when the declared type's signature references another type with
+   the same simple name.
+ * Fix: Support anonymous inner classes in `ClassName.get()`.
+ * New: `MethodSpec.Builder.addNamedCode()` and `TypeSpec.anonymousClassBuilder(CodeBlock)`.
+
+
 JavaPoet 1.8.0 *(2016-11-09)*
 -----------------------------
 
