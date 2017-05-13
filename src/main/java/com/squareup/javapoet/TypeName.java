@@ -36,6 +36,7 @@ import javax.lang.model.type.NoType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor7;
 
 /**
@@ -190,6 +191,10 @@ public class TypeName {
     if (this.equals(BOXED_FLOAT)) return FLOAT;
     if (this.equals(BOXED_DOUBLE)) return DOUBLE;
     throw new UnsupportedOperationException("cannot unbox " + this);
+  }
+
+  public final TypeMirror toTypeMirror(Elements elements) {
+    return elements.getTypeElement(toString()).asType();
   }
 
   @Override public final boolean equals(Object o) {

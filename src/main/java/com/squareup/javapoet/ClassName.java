@@ -37,7 +37,8 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
 
   /** From top to bottom. This will be ["java.util", "Map", "Entry"] for {@link Map.Entry}. */
   final List<String> names;
-  final String canonicalName;
+  /** @see Class#getCanonicalName() */
+  public final String canonicalName;
 
   private ClassName(List<String> names) {
     this(names, new ArrayList<AnnotationSpec>());
@@ -49,7 +50,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
       checkArgument(SourceVersion.isName(names.get(i)), "part '%s' is keyword", names.get(i));
     }
     this.names = Util.immutableList(names);
-    this.canonicalName = names.get(0).isEmpty()
+    this.canonicalName = packageName().isEmpty()
         ? Util.join(".", names.subList(1, names.size()))
         : Util.join(".", names);
   }

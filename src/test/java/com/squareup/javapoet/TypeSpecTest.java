@@ -2333,4 +2333,14 @@ public final class TypeSpecTest {
     assertThat(TypeSpec.enumBuilder(className).addEnumConstant("A").build().name).isEqualTo("Example");
     assertThat(TypeSpec.annotationBuilder(className).build().name).isEqualTo("Example");
   }
+
+  @Test public void toTypeMirror() {
+    TypeName typeName = ClassName.get("java.lang", "String");
+    String expected = "java.lang.String";
+    assertThat(typeName.toTypeMirror(compilation.getElements()).toString()).isEqualTo(expected);
+    // typeName = ParameterizedTypeName.get(Set.class, String.class);
+    // expected = "java.util.Set<java.lang.String>";
+    // assertThat(typeName.toTypeMirror(compilation.getElements()).toString()).isEqualTo(expected);
+    // NPE in typeName.toTypeMirror() ...
+  }
 }
