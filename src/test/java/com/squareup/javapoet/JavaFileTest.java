@@ -465,6 +465,84 @@ public final class JavaFileTest {
         + "}\n");
   }
 
+  @Test public void classAndSuperclassShareName() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .superclass(ClassName.get("com.taco.bell", "Taco"))
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco extends com.taco.bell.Taco {\n"
+        + "}\n");
+  }
+
+  @Test public void conflictingAnnotation() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addAnnotation(ClassName.get("com.taco.bell", "Taco"))
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "@com.taco.bell.Taco\n"
+        + "class Taco {\n"
+        + "}\n");
+  }
+
+  @Test public void conflictingAnnotationReferencedClass() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addAnnotation(AnnotationSpec.builder(ClassName.get("com.squareup.tacos", "MyAnno"))
+                .addMember("value", "$T.class", ClassName.get("com.taco.bell", "Taco"))
+                .build())
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "@MyAnno(com.taco.bell.Taco.class)\n"
+        + "class Taco {\n"
+        + "}\n");
+  }
+
+  @Test public void conflictingTypeVariableBound() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addTypeVariable(
+                TypeVariableName.get("T", ClassName.get("com.taco.bell", "Taco")))
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco<T extends com.taco.bell.Taco> {\n"
+        + "}\n");
+  }
+
+  @Test public void superclassReferencesSelf() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .superclass(ParameterizedTypeName.get(
+                ClassName.get(Comparable.class), ClassName.get("com.squareup.tacos", "Taco")))
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.Comparable;\n"
+        + "\n"
+        + "class Taco extends Comparable<Taco> {\n"
+        + "}\n");
+  }
+
   /** https://github.com/square/javapoet/issues/366 */
   @Test public void annotationIsNestedClass() throws Exception {
     String source = JavaFile.builder("com.squareup.tacos",
@@ -571,6 +649,22 @@ public final class JavaFileTest {
         + "\n"
         + "  class A {\n"
         + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void packageClassConflictsWithSuperlass() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .superclass(ClassName.get("com.taco.bell", "A"))
+            .addField(ClassName.get("com.squareup.tacos", "A"), "a")
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco extends com.taco.bell.A {\n"
+        + "  A a;\n"
         + "}\n");
   }
 }
