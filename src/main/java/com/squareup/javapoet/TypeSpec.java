@@ -612,6 +612,14 @@ public final class TypeSpec {
       return this;
     }
 
+    public List<FieldSpec> fields() {
+      return Collections.unmodifiableList(fieldSpecs);
+    }
+
+    public List<MethodSpec> methods() {
+      return Collections.unmodifiableList(methodSpecs);
+    }
+
     public TypeSpec build() {
       checkArgument(kind != Kind.ENUM || !enumConstants.isEmpty(),
           "at least one enum constant is required for %s", name);
