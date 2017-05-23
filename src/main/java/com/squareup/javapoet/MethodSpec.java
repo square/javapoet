@@ -466,6 +466,16 @@ public final class MethodSpec {
       return this;
     }
 
+    public Builder beginScope() {
+      code.beginScope();
+      return this;
+    }
+
+    public Builder endScope() {
+      code.endScope();
+      return this;
+    }
+
     public Builder addStatement(String format, Object... args) {
       code.addStatement(format, args);
       return this;

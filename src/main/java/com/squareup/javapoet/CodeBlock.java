@@ -350,6 +350,18 @@ public final class CodeBlock {
       return this;
     }
 
+    public Builder beginScope() {
+      add("{\n");
+      indent();
+      return this;
+    }
+
+    public Builder endScope() {
+      unindent();
+      add("}\n");
+      return this;
+    }
+
     public Builder addStatement(String format, Object... args) {
       add("$[");
       add(format, args);
