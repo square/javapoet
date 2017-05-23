@@ -96,10 +96,18 @@ public final class ClassNameTest {
     assertThat(baz).isEqualTo(ClassName.get("com.example", "Foo", "Bar", "Baz"));
   }
 
+  static class $Outer {
+    static class $Inner {}
+  }
+
   @Test public void classNameFromTypeElement() {
     Elements elements = compilationRule.getElements();
-    TypeElement element = elements.getTypeElement(Object.class.getCanonicalName());
-    assertThat(ClassName.get(element).toString()).isEqualTo("java.lang.Object");
+    TypeElement object = elements.getTypeElement(Object.class.getCanonicalName());
+    assertThat(ClassName.get(object).toString()).isEqualTo("java.lang.Object");
+    TypeElement outer = elements.getTypeElement($Outer.class.getCanonicalName());
+    assertThat(ClassName.get(outer).toString()).isEqualTo("com.squareup.javapoet.ClassNameTest.$Outer");
+    TypeElement inner = elements.getTypeElement($Outer.$Inner.class.getCanonicalName());
+    assertThat(ClassName.get(inner).toString()).isEqualTo("com.squareup.javapoet.ClassNameTest.$Outer.$Inner");
   }
 
   @Test public void classNameFromClass() {
@@ -109,6 +117,12 @@ public final class ClassNameTest {
         .isEqualTo("com.squareup.javapoet.ClassNameTest.OuterClass.InnerClass");
     assertThat((ClassName.get(new Object() {}.getClass())).toString())
         .isEqualTo("com.squareup.javapoet.ClassNameTest$1");
+    assertThat((ClassName.get(new Object() { Object inner = new Object() {}; }.inner.getClass())).toString())
+        .isEqualTo("com.squareup.javapoet.ClassNameTest$2$1");
+    assertThat((ClassName.get($Outer.class)).toString())
+        .isEqualTo("com.squareup.javapoet.ClassNameTest.$Outer");
+    assertThat((ClassName.get($Outer.$Inner.class)).toString())
+        .isEqualTo("com.squareup.javapoet.ClassNameTest.$Outer.$Inner");
   }
 
   @Test public void peerClass() {
