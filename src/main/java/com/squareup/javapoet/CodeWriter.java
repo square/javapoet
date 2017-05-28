@@ -131,6 +131,11 @@ final class CodeWriter {
     return this;
   }
 
+  TypeSpec peekType() {
+    checkState(!typeSpecStack.isEmpty(), "expected to be emitting a TypeSpec");
+    return typeSpecStack.get(typeSpecStack.size() - 1);
+  }
+
   public void emitComment(CodeBlock codeBlock) throws IOException {
     trailingNewline = true; // Force the '//' prefix for the comment.
     comment = true;
@@ -397,18 +402,31 @@ final class CodeWriter {
     }
   }
 
+  ClassName resolve(String simpleName, TypeSpec typeSpec, int i) {
+    if (Objects.equals(typeSpec.name, simpleName)) {
+      return stackClassName(i, simpleName);
+    }
+    for (TypeSpec nested : typeSpec.typeSpecs) {
+      if (Objects.equals(nested.name, simpleName)) {
+        return stackClassName(i, simpleName);
+      }
+      return resolve(simpleName, nested, i);
+    }
+    return null;
+  }
+
   /**
    * Returns the class referenced by {@code simpleName}, using the current nesting context and
    * imports.
    */
-  // TODO(jwilson): also honor superclass members when resolving names.
-  private ClassName resolve(String simpleName) {
+  ClassName resolve(String simpleName) {
     // Match a child of the current (potentially nested) class.
     for (int i = typeSpecStack.size() - 1; i >= 0; i--) {
       TypeSpec typeSpec = typeSpecStack.get(i);
       for (TypeSpec visibleChild : typeSpec.typeSpecs) {
-        if (Objects.equals(visibleChild.name, simpleName)) {
-          return stackClassName(i, simpleName);
+        ClassName resolved = resolve(simpleName, visibleChild, i);
+        if (resolved != null) {
+          return resolved;
         }
       }
     }
