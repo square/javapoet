@@ -37,24 +37,13 @@ import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 import javax.tools.SimpleJavaFileObject;
 
+import static com.squareup.javapoet.Util.NULL_APPENDABLE;
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /** A Java file containing a single top level class. */
 public final class JavaFile {
-  private static final Appendable NULL_APPENDABLE = new Appendable() {
-    @Override public Appendable append(CharSequence charSequence) {
-      return this;
-    }
-    @Override public Appendable append(CharSequence charSequence, int start, int end) {
-      return this;
-    }
-    @Override public Appendable append(char c) {
-      return this;
-    }
-  };
-
   public final CodeBlock fileComment;
   public final String packageName;
   public final TypeSpec typeSpec;
