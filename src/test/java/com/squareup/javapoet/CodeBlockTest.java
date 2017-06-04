@@ -281,4 +281,15 @@ public final class CodeBlockTest {
       assertThat(expected).hasMessage("statement exit $] has no matching statement enter $[");
     }
   }
+
+  @Test public void selfNameFailsWithoutTypeSpecContext() {
+    CodeBlock codeBlock = CodeBlock.builder().add("$T", TypeName.SELF).build();
+    try {
+      // We can't report this error until rendering type because code blocks might be composed.
+      codeBlock.toString();
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected).hasMessage("expected to be emitting a TypeSpec");
+    }    
+  }
 }

@@ -692,19 +692,25 @@ public final class TypeSpecTest {
     TypeSpec typeSpec = TypeSpec.classBuilder("Combo")
         .addField(taco, "taco")
         .addField(chips, "chips")
+        .addField(TypeName.SELF, "combo")
         .addType(TypeSpec.classBuilder(taco.simpleName())
             .addModifiers(Modifier.STATIC)
             .addField(ParameterizedTypeName.get(ClassName.get(List.class), topping), "toppings")
             .addField(sauce, "sauce")
+            .addField(TypeName.SELF, "taco")
             .addType(TypeSpec.enumBuilder(topping.simpleName())
                 .addEnumConstant("SHREDDED_CHEESE")
                 .addEnumConstant("LEAN_GROUND_BEEF")
+                .addField(new SelfName(2), "C")
+                .addField(new SelfName(1), "T")
+                .addField(new SelfName(0), "Q")
                 .build())
             .build())
         .addType(TypeSpec.classBuilder(chips.simpleName())
             .addModifiers(Modifier.STATIC)
             .addField(topping, "topping")
             .addField(sauce, "dippingSauce")
+            .addField(TypeName.SELF, "chips")
             .build())
         .addType(TypeSpec.enumBuilder(sauce.simpleName())
             .addEnumConstant("SOUR_CREAM")
@@ -725,15 +731,25 @@ public final class TypeSpecTest {
         + "\n"
         + "  Chips chips;\n"
         + "\n"
+        + "  Combo combo;\n"
+        + "\n"
         + "  static class Taco {\n"
         + "    List<Topping> toppings;\n"
         + "\n"
         + "    Sauce sauce;\n"
         + "\n"
+        + "    Taco taco;\n"
+        + "\n"
         + "    enum Topping {\n"
         + "      SHREDDED_CHEESE,\n"
         + "\n"
-        + "      LEAN_GROUND_BEEF\n"
+        + "      LEAN_GROUND_BEEF;\n"
+        + "\n"
+        + "      Combo C;\n"
+        + "\n"
+        + "      Taco T;\n"
+        + "\n"
+        + "      Topping Q;\n"
         + "    }\n"
         + "  }\n"
         + "\n"
@@ -741,6 +757,8 @@ public final class TypeSpecTest {
         + "    Taco.Topping topping;\n"
         + "\n"
         + "    Sauce dippingSauce;\n"
+        + "\n"
+        + "    Chips chips;\n"
         + "  }\n"
         + "\n"
         + "  enum Sauce {\n"
@@ -2089,6 +2107,44 @@ public final class TypeSpecTest {
       fail();
     } catch (IllegalArgumentException expected) {
     }
+  }
+
+  @Test public void selfName() {
+    AnnotationSpec anno = AnnotationSpec.builder(ClassName.get("anno", "Tation")).build();
+    AnnotationSpec none = AnnotationSpec.builder(ClassName.get("anno", "NonNull")).build();
+    TypeName selfWithAnno1 = TypeName.SELF.annotated(Arrays.asList(anno));
+    TypeName selfWithAnno2 = TypeName.SELF.annotated(Arrays.asList(anno, none));
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addField(TypeName.SELF, "mFoo", Modifier.PRIVATE)
+        .addField(selfWithAnno1, "FOO", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+        .addStaticBlock(CodeBlock.builder()
+            .addStatement("FOO = new $T()", TypeName.SELF)
+            .build())
+        .addMethod(MethodSpec.methodBuilder("toSelf")
+            .addAnnotation(Override.class)
+            .addModifiers(Modifier.PUBLIC)
+            .returns(selfWithAnno2)
+            .addCode("return FOO;\n")
+            .build())
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import anno.NonNull;\n"
+        + "import anno.Tation;\n"
+        + "import java.lang.Override;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  private static final @Tation Taco FOO;\n\n"
+        + "  static {\n"
+        + "    FOO = new Taco();\n"
+        + "  }\n\n"
+        + "  private Taco mFoo;\n\n"
+        + "  @Override\n"
+        + "  public @Tation @NonNull Taco toSelf() {\n"
+        + "    return FOO;\n"
+        + "  }\n"
+        + "}\n");
   }
 
   @Test public void staticCodeBlock() {
