@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import javax.lang.model.element.Modifier;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -48,7 +47,9 @@ public final class JavaFileTest {
         .build();
     JavaFile example = JavaFile.builder("com.example.helloworld", hello)
         .addStaticImport(hoverboard, "createNimbus")
+        .addStaticImport(Math.class, "*")
         .addStaticImport(namedBoards, "*")
+        .addStaticImport(Thread.class, "currentThread")
         .addStaticImport(Collections.class, "*")
         .build();
     assertThat(example.toString()).isEqualTo(""
@@ -72,29 +73,6 @@ public final class JavaFileTest {
         + "    return result.isEmpty() ? emptyList() : result;\n"
         + "  }\n"
         + "}\n");
-  }
-  @Test public void importStaticForCrazyFormatsWorks() {
-    MethodSpec method = MethodSpec.methodBuilder("method").build();
-    JavaFile.builder("com.squareup.tacos",
-        TypeSpec.classBuilder("Taco")
-            .addStaticBlock(CodeBlock.builder()
-                .addStatement("$T", Runtime.class)
-                .addStatement("$T.a()", Runtime.class)
-                .addStatement("$T.X", Runtime.class)
-                .addStatement("$T$T", Runtime.class, Runtime.class)
-                .addStatement("$T.$T", Runtime.class, Runtime.class)
-                .addStatement("$1T$1T", Runtime.class)
-                .addStatement("$1T$2L$1T", Runtime.class, "?")
-                .addStatement("$1T$2L$2S$1T", Runtime.class, "?")
-                .addStatement("$1T$2L$2S$1T$3N$1T", Runtime.class, "?", method)
-                .addStatement("$T$L", Runtime.class, "?")
-                .addStatement("$T$S", Runtime.class, "?")
-                .addStatement("$T$N", Runtime.class, method)
-                .build())
-            .build())
-        .addStaticImport(Runtime.class, "*")
-        .build()
-        .toString(); // don't look at the generated code...
   }
 
   @Test public void importStaticMixed() {
@@ -135,7 +113,6 @@ public final class JavaFileTest {
         + "}\n");
   }
 
-  @Ignore("addStaticImport doesn't support members with $L")
   @Test public void importStaticDynamic() {
     JavaFile source = JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("Taco")
