@@ -357,6 +357,10 @@ public final class CodeBlock {
       return this;
     }
 
+    public Builder addStatement(CodeBlock codeBlock) {
+      return addStatement("$L", codeBlock);
+    }
+
     public Builder add(CodeBlock codeBlock) {
       formatParts.addAll(codeBlock.formatParts);
       args.addAll(codeBlock.args);

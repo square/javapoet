@@ -471,6 +471,11 @@ public final class MethodSpec {
       return this;
     }
 
+    public Builder addStatement(CodeBlock codeBlock) {
+      code.addStatement(codeBlock);
+      return this;
+    }
+
     public MethodSpec build() {
       return new MethodSpec(this);
     }
