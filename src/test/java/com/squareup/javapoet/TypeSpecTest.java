@@ -1453,6 +1453,12 @@ public final class TypeSpecTest {
     assertThat(codeBlock.toString()).isEqualTo("java.lang.String s = \"taco\".substring(0, 3);\n");
   }
 
+  @Test public void codeBlockAddStatementOfCodeBlockToString() throws Exception {
+    CodeBlock contents = CodeBlock.of("$T $N = $S.substring(0, 3)", String.class, "s", "taco");
+    CodeBlock statement = CodeBlock.builder().addStatement(contents).build();
+    assertThat(statement.toString()).isEqualTo("java.lang.String s = \"taco\".substring(0, 3);\n");
+  }
+
   @Test public void fieldToString() throws Exception {
     FieldSpec field = FieldSpec.builder(String.class, "s", Modifier.FINAL)
         .initializer("$S.substring(0, 3)", "taco")
