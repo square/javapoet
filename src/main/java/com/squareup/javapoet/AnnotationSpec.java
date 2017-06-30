@@ -16,7 +16,6 @@
 package com.squareup.javapoet;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
@@ -184,7 +183,7 @@ public final class AnnotationSpec {
   }
 
   @Override public String toString() {
-    StringWriter out = new StringWriter();
+    StringBuilder out = new StringBuilder();
     try {
       CodeWriter codeWriter = new CodeWriter(out);
       codeWriter.emit("$L", this);
