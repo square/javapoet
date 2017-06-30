@@ -16,7 +16,6 @@
 package com.squareup.javapoet;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -90,7 +89,7 @@ public final class CodeBlock {
   }
 
   @Override public String toString() {
-    StringWriter out = new StringWriter();
+    StringBuilder out = new StringBuilder();
     try {
       new CodeWriter(out).emit(this);
       return out.toString();
