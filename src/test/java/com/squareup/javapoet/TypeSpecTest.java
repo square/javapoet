@@ -597,7 +597,7 @@ public final class TypeSpecTest {
         + "import java.lang.Comparable;\n"
         + "import java.lang.Number;\n"
         + "\n"
-        + "class Location<P extends Number & Comparable, Q extends Number & Comparable> {\n"
+        + "class Location<P extends Number & Comparable, @A Q extends Number & Comparable> {\n"
         + "  P x;\n"
         + "\n"
         + "  @A Q y;\n"
