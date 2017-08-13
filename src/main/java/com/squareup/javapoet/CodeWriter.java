@@ -191,6 +191,7 @@ final class CodeWriter {
     boolean firstTypeVariable = true;
     for (TypeVariableName typeVariable : typeVariables) {
       if (!firstTypeVariable) emit(", ");
+      emitAnnotations(typeVariable.annotations, true);
       emit("$L", typeVariable.name);
       boolean firstBound = true;
       for (TypeName bound : typeVariable.bounds) {
