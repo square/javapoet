@@ -105,7 +105,7 @@ public final class JavaFile {
     writeTo(directory.toPath());
   }
 
-  /** Writes this to {@code filer}. */
+  /** Writes this to {@code filer} as UTF-8. */
   public void writeTo(Filer filer) throws IOException {
     String fileName = packageName.isEmpty()
         ? typeSpec.name
@@ -113,7 +113,7 @@ public final class JavaFile {
     List<Element> originatingElements = typeSpec.originatingElements;
     JavaFileObject filerSourceFile = filer.createSourceFile(fileName,
         originatingElements.toArray(new Element[originatingElements.size()]));
-    try (Writer writer = filerSourceFile.openWriter()) {
+    try (Writer writer = new OutputStreamWriter(filerSourceFile.openOutputStream(), UTF_8)) {
       writeTo(writer);
     } catch (Exception e) {
       try {
