@@ -357,8 +357,7 @@ public class IsAnnotated {
             + "}\n");
 }
 
-@Test
-public void annotationDInline() {
+  @Test public void annotationDInline() {
     AnnotationSpec.Builder builder = AnnotationSpec.builder(AnnotationD.class);
     builder.inlineMembers(true);
     builder.addMember("key", "$S", "KEY");
@@ -374,7 +373,7 @@ public void annotationDInline() {
     assertThat(builder.build().toString()).isEqualTo(
             "@com.squareup.javapoet.AnnotationSpecTest.AnnotationD(key = \"KEY\", isBlue = true, breakfast = com.squareup.javapoet.AnnotationSpecTest.Breakfast.PANCAKES)");
 
-}
+  }
 
 private String toString(TypeSpec typeSpec) {
     return JavaFile.builder("com.squareup.tacos", typeSpec).build().toString();

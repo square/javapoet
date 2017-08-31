@@ -615,21 +615,21 @@ public final class JavaFileTest {
         + "}\n");
   }
 
-    @Test
-    public void licenseTest() throws Exception {
-        String source = JavaFile.builder("com.squareup.tacos",
-                TypeSpec.classBuilder("Taco").build())
-                .addLicense("(C) JavaPoet License $1L", "2015-01-13")
-                .build()
-                .toString();
-        assertThat(source).isEqualTo("/*\n"
-                + " * (C) JavaPoet License 2015-01-13\n"
-                + " */\n\n"
-                + "package com.squareup.tacos;\n"
-                + "\n"
-                + "class Taco {\n"
-                + "}\n");
-    }
+
+ @Test public void licenseTest() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+            TypeSpec.classBuilder("Taco").build())
+            .addLicense("(C) JavaPoet License $1L", "2015-01-13")
+            .build()
+            .toString();
+    assertThat(source).isEqualTo("/*\n"
+            + " * (C) JavaPoet License 2015-01-13\n"
+            + " */\n\n"
+            + "package com.squareup.tacos;\n"
+            + "\n"
+            + "class Taco {\n"
+            + "}\n");
+  }
 
   @Test public void emptyLinesInTopOfFileComment() throws Exception {
     String source = JavaFile.builder("com.squareup.tacos",
