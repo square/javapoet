@@ -206,7 +206,9 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     checkNotNull(element, "element == null");
     List<String> names = new ArrayList<>();
     for (Element e = element; isClassOrInterface(e); e = e.getEnclosingElement()) {
-      checkArgument(element.getNestingKind() == TOP_LEVEL || element.getNestingKind() == MEMBER,
+      TypeElement typeElement = (TypeElement) e;
+      checkArgument(
+          typeElement.getNestingKind() == TOP_LEVEL || typeElement.getNestingKind() == MEMBER,
           "unexpected type testing");
       names.add(e.getSimpleName().toString());
     }
