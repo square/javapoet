@@ -58,7 +58,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     return new ClassName(names, concatAnnotations(annotations));
   }
 
-  @Override public TypeName withoutAnnotations() {
+  @Override public ClassName withoutAnnotations() {
     return new ClassName(names);
   }
 
@@ -231,6 +231,6 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {
-    return out.emitAndIndent(out.lookupName(this));
+    return out.emitAndIndent(out.lookupName(this.withoutAnnotations()));
   }
 }
