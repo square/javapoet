@@ -231,6 +231,6 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {
-    return out.emitAndIndent(out.lookupName(this.withoutAnnotations()));
+    return out.emitAndIndent(out.lookupName(this));
   }
 }
