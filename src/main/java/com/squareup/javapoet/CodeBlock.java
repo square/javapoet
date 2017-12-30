@@ -120,6 +120,10 @@ public final class CodeBlock {
     private Builder() {
     }
 
+    public boolean isEmpty() {
+      return formatParts.isEmpty();
+    }
+
     /**
      * Adds code using named arguments.
      *
