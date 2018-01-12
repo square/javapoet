@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collector;
+import java.util.stream.StreamSupport;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeMirror;
 
@@ -100,6 +102,46 @@ public final class CodeBlock {
 
   public static CodeBlock of(String format, Object... args) {
     return new Builder().add(format, args).build();
+  }
+
+  /**
+   * Joins {@code codeBlocks} into a single {@link CodeBlock}, each separated by {@code separator}.
+   * For example, joining {@code String s}, {@code Object o} and {@code int i} using {@code ", "}
+   * would produce {@code String s, Object o, int i}.
+   */
+  public static CodeBlock join(Iterable<CodeBlock> codeBlocks, String separator) {
+    return StreamSupport.stream(codeBlocks.spliterator(), false).collect(joining(separator));
+  }
+
+  /**
+   * A {@link Collector} implementation that joins {@link CodeBlock} instances together into one
+   * separated by {@code separator}. For example, joining {@code String s}, {@code Object o} and
+   * {@code int i} using {@code ", "} would produce {@code String s, Object o, int i}.
+   */
+  public static Collector<CodeBlock, ?, CodeBlock> joining(String separator) {
+    return Collector.of(
+        () -> new CodeBlockJoiner(separator, builder()),
+        CodeBlockJoiner::add,
+        CodeBlockJoiner::merge,
+        CodeBlockJoiner::join);
+  }
+
+  /**
+   * A {@link Collector} implementation that joins {@link CodeBlock} instances together into one
+   * separated by {@code separator}. For example, joining {@code String s}, {@code Object o} and
+   * {@code int i} using {@code ", "} would produce {@code String s, Object o, int i}.
+   */
+  public static Collector<CodeBlock, ?, CodeBlock> joining(
+      String separator, String prefix, String suffix) {
+    Builder builder = builder().add("$N", prefix);
+    return Collector.of(
+        () -> new CodeBlockJoiner(separator, builder),
+        CodeBlockJoiner::add,
+        CodeBlockJoiner::merge,
+        joiner -> {
+            builder.add(CodeBlock.of("$N", suffix));
+            return joiner.join();
+        });
   }
 
   public static Builder builder() {
@@ -378,6 +420,39 @@ public final class CodeBlock {
 
     public CodeBlock build() {
       return new CodeBlock(this);
+    }
+  }
+
+  private static final class CodeBlockJoiner {
+    private final String delimiter;
+    private final Builder builder;
+    private boolean first = true;
+
+    CodeBlockJoiner(String delimiter, Builder builder) {
+      this.delimiter = delimiter;
+      this.builder = builder;
+    }
+
+    CodeBlockJoiner add(CodeBlock codeBlock) {
+      if (!first) {
+        builder.add(delimiter);
+      }
+      first = false;
+
+      builder.add(codeBlock);
+      return this;
+    }
+
+    CodeBlockJoiner merge(CodeBlockJoiner other) {
+      CodeBlock otherBlock = other.builder.build();
+      if (!otherBlock.isEmpty()) {
+        add(otherBlock);
+      }
+      return this;
+    }
+
+    CodeBlock join() {
+      return builder.build();
     }
   }
 }
