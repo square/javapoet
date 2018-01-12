@@ -2294,6 +2294,28 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  @Test public void lineWrappingWithZeroWidth() {
+    MethodSpec method = MethodSpec.methodBuilder("call")
+        .addCode("$[iAmSickOfWaitingInLine($B")
+        .addCode("it, has, been, far, too, long, of, a, wait, and, i, would, like, to, eat, ")
+        .addCode("this, is, a, run, on, sentence")
+        .addCode(");$]\n")
+        .build();
+
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
+        .addMethod(method)
+        .build();
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  void call() {\n"
+        + "    iAmSickOfWaitingInLine(\n"
+        + "        it, has, been, far, too, long, of, a, wait, and, i, would, like, to, eat, this, is, a, run, on, sentence);\n"
+        + "  }\n"
+        + "}\n");
+  }
+
   @Test public void equalsAndHashCode() {
     TypeSpec a = TypeSpec.interfaceBuilder("taco").build();
     TypeSpec b = TypeSpec.interfaceBuilder("taco").build();
