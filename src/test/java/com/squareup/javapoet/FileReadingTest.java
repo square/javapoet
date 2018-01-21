@@ -113,7 +113,8 @@ public class FileReadingTest {
     assertThat(diagnosticCollector.getDiagnostics()).isEmpty();
 
     ClassLoader loader = fileManager.getClassLoader(StandardLocation.CLASS_OUTPUT);
-    Callable<?> test = Class.forName("foo.Test", true, loader).asSubclass(Callable.class).newInstance();
+    Callable<?> test = Class.forName("foo.Test", true, loader).asSubclass(Callable.class).
+            getDeclaredConstructor().newInstance();
     assertThat(Callable.class.getMethod("call").invoke(test)).isEqualTo(value);
   }
 }
