@@ -1979,7 +1979,7 @@ public final class TypeSpecTest {
       CodeBlock.builder().add("$N", String.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("expected name but was " + String.class);
+      assertThat(expected).hasMessageThat().isEqualTo("expected name but was " + String.class);
     }
   }
 
@@ -2020,7 +2020,7 @@ public final class TypeSpecTest {
       CodeBlock.builder().add("$T", "java.lang.String");
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("expected type but was java.lang.String");
+      assertThat(expected).hasMessageThat().isEqualTo("expected type but was java.lang.String");
     }
   }
 
@@ -2029,7 +2029,7 @@ public final class TypeSpecTest {
       CodeBlock.builder().add("$S");
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("index 1 for '$S' not in range (received 0 arguments)");
+      assertThat(expected).hasMessageThat().isEqualTo("index 1 for '$S' not in range (received 0 arguments)");
     }
   }
 
@@ -2038,7 +2038,7 @@ public final class TypeSpecTest {
       CodeBlock.builder().add("$L $L", "a", "b", "c");
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("unused arguments: expected 2, received 3");
+      assertThat(expected).hasMessageThat().isEqualTo("unused arguments: expected 2, received 3");
     }
   }
 
@@ -2047,19 +2047,19 @@ public final class TypeSpecTest {
       CodeBlock.builder().add("$1L $2L", "a", "b", "c");
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("unused argument: $3");
+      assertThat(expected).hasMessageThat().isEqualTo("unused argument: $3");
     }
     try {
       CodeBlock.builder().add("$1L $1L $1L", "a", "b", "c");
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("unused arguments: $2, $3");
+      assertThat(expected).hasMessageThat().isEqualTo("unused arguments: $2, $3");
     }
     try {
       CodeBlock.builder().add("$3L $1L $3L $1L $3L", "a", "b", "c", "d");
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("unused arguments: $2, $4");
+      assertThat(expected).hasMessageThat().isEqualTo("unused arguments: $2, $4");
     }
   }
 

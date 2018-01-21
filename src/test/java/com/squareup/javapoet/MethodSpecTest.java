@@ -74,7 +74,7 @@ public final class MethodSpecTest {
       MethodSpec.methodBuilder("doSomething").addAnnotations(null);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("annotationSpecs == null");
+      assertThat(expected).hasMessageThat().isEqualTo("annotationSpecs == null");
     }
   }
 
@@ -83,7 +83,7 @@ public final class MethodSpecTest {
       MethodSpec.methodBuilder("doSomething").addTypeVariables(null);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("typeVariables == null");
+      assertThat(expected).hasMessageThat().isEqualTo("typeVariables == null");
     }
   }
 
@@ -92,7 +92,7 @@ public final class MethodSpecTest {
       MethodSpec.methodBuilder("doSomething").addParameters(null);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("parameterSpecs == null");
+      assertThat(expected).hasMessageThat().isEqualTo("parameterSpecs == null");
     }
   }
 
@@ -101,7 +101,7 @@ public final class MethodSpecTest {
       MethodSpec.methodBuilder("doSomething").addExceptions(null);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("exceptions == null");
+      assertThat(expected).hasMessageThat().isEqualTo("exceptions == null");
     }
   }
 
@@ -118,7 +118,7 @@ public final class MethodSpecTest {
     @Override public abstract String toString();
   }
 
-  interface ExtendsOthers extends Callable<Integer>, Comparable<Long> {
+  interface ExtendsOthers extends Callable<Integer>, Comparable<ExtendsOthers> {
   }
   
   interface ExtendsIterableWithDefaultMethods extends Iterable<Object> {
@@ -175,7 +175,7 @@ public final class MethodSpecTest {
     method = MethodSpec.overriding(exec, classType, types).build();
     assertThat(method.toString()).isEqualTo(""
         + "@java.lang.Override\n"
-        + "public int compareTo(java.lang.Long arg0) {\n"
+        + "public int compareTo(" + ExtendsOthers.class.getCanonicalName() + " arg0) {\n"
         + "}\n");
   }
 
@@ -189,21 +189,21 @@ public final class MethodSpecTest {
       MethodSpec.overriding(method);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("cannot override method with modifiers: [final]");
+      assertThat(expected).hasMessageThat().isEqualTo("cannot override method with modifiers: [final]");
     }
     when(method.getModifiers()).thenReturn(ImmutableSet.of(Modifier.PRIVATE));
     try {
       MethodSpec.overriding(method);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("cannot override method with modifiers: [private]");
+      assertThat(expected).hasMessageThat().isEqualTo("cannot override method with modifiers: [private]");
     }
     when(method.getModifiers()).thenReturn(ImmutableSet.of(Modifier.STATIC));
     try {
       MethodSpec.overriding(method);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("cannot override method with modifiers: [static]");
+      assertThat(expected).hasMessageThat().isEqualTo("cannot override method with modifiers: [static]");
     }
   }
 
