@@ -47,7 +47,7 @@ public final class LineWrapperTest {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.append("abcde");
-    lineWrapper.wrappingZeroWidth(2);
+    lineWrapper.zeroWidthSpace(2);
     lineWrapper.append("fghij");
     lineWrapper.close();
     assertThat(out.toString()).isEqualTo("abcdefghij");
@@ -57,7 +57,7 @@ public final class LineWrapperTest {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.append("abcde");
-    lineWrapper.wrappingZeroWidth(2);
+    lineWrapper.zeroWidthSpace(2);
     lineWrapper.append("fghijk");
     lineWrapper.close();
     assertThat(out.toString()).isEqualTo("abcde\n    fghijk");
@@ -104,7 +104,7 @@ public final class LineWrapperTest {
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.append("abcde");
     lineWrapper.append("fghij");
-    lineWrapper.wrappingZeroWidth(2);
+    lineWrapper.zeroWidthSpace(2);
     lineWrapper.append("k");
     lineWrapper.append("lmnop");
     lineWrapper.close();
@@ -132,7 +132,7 @@ public final class LineWrapperTest {
   @Test public void overlyLongLinesWithLeadingZeroWidth() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
-    lineWrapper.wrappingZeroWidth(2);
+    lineWrapper.zeroWidthSpace(2);
     lineWrapper.append("abcdefghijkl");
     lineWrapper.close();
     // DO NOT SUBMIT: what should the functionality here be? if we don't want a newline, we can check:
@@ -167,7 +167,7 @@ public final class LineWrapperTest {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.append("abcde");
-    lineWrapper.wrappingZeroWidth(2);
+    lineWrapper.zeroWidthSpace(2);
     lineWrapper.append("fghij\nklmn");
     lineWrapper.append("opqrstuvwxyz");
     lineWrapper.close();
@@ -178,7 +178,7 @@ public final class LineWrapperTest {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.append("abcde");
-    lineWrapper.wrappingZeroWidth(2);
+    lineWrapper.zeroWidthSpace(2);
     lineWrapper.append("fghijk\nlmn");
     lineWrapper.append("opqrstuvwxy");
     lineWrapper.close();

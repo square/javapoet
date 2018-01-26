@@ -283,8 +283,8 @@ final class CodeWriter {
           out.wrappingSpace(indentLevel + 2);
           break;
 
-        case "$B":
-          out.wrappingZeroWidth(indentLevel + 2);
+        case "$Z":
+          out.zeroWidthSpace(indentLevel + 2);
           break;
 
         default:

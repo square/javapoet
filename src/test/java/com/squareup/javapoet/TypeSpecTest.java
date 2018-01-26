@@ -2294,9 +2294,9 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
-  @Test public void lineWrappingWithZeroWidth() {
+  @Test public void lineWrappingWithZeroWidthSpace() {
     MethodSpec method = MethodSpec.methodBuilder("call")
-        .addCode("$[iAmSickOfWaitingInLine($B")
+        .addCode("$[iAmSickOfWaitingInLine($Z")
         .addCode("it, has, been, far, too, long, of, a, wait, and, i, would, like, to, eat, ")
         .addCode("this, is, a, run, on, sentence")
         .addCode(");$]\n")

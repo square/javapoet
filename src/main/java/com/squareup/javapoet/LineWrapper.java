@@ -90,7 +90,7 @@ final class LineWrapper {
   }
 
   /** Emit a newline character if the line will exceed it's limit, otherwise do nothing. */
-  void wrappingZeroWidth(int indentLevel) throws IOException {
+  void zeroWidthSpace(int indentLevel) throws IOException {
     if (closed) throw new IllegalStateException("closed");
 
     // DO NOT SUBMIT: multiple zero-width chars in a row - should that cause a flush?

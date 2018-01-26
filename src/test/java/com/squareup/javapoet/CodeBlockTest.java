@@ -46,7 +46,7 @@ public final class CodeBlockTest {
     } catch (IllegalArgumentException exp) {
       assertThat(exp)
           .hasMessageThat()
-          .isEqualTo("$$, $>, $<, $[, $], $W, and $B may not have an index");
+          .isEqualTo("$$, $>, $<, $[, $], $W, and $Z may not have an index");
     }
   }
 
@@ -57,7 +57,7 @@ public final class CodeBlockTest {
     } catch (IllegalArgumentException exp) {
       assertThat(exp)
           .hasMessageThat()
-          .isEqualTo("$$, $>, $<, $[, $], $W, and $B may not have an index");
+          .isEqualTo("$$, $>, $<, $[, $], $W, and $Z may not have an index");
     }
   }
 
@@ -68,7 +68,7 @@ public final class CodeBlockTest {
     } catch (IllegalArgumentException exp) {
       assertThat(exp)
           .hasMessageThat()
-          .isEqualTo("$$, $>, $<, $[, $], $W, and $B may not have an index");
+          .isEqualTo("$$, $>, $<, $[, $], $W, and $Z may not have an index");
     }
   }
 
@@ -79,7 +79,7 @@ public final class CodeBlockTest {
     } catch (IllegalArgumentException exp) {
       assertThat(exp)
           .hasMessageThat()
-          .isEqualTo("$$, $>, $<, $[, $], $W, and $B may not have an index");
+          .isEqualTo("$$, $>, $<, $[, $], $W, and $Z may not have an index");
     }
   }
 
@@ -90,7 +90,7 @@ public final class CodeBlockTest {
     } catch (IllegalArgumentException exp) {
       assertThat(exp)
           .hasMessageThat()
-          .isEqualTo("$$, $>, $<, $[, $], $W, and $B may not have an index");
+          .isEqualTo("$$, $>, $<, $[, $], $W, and $Z may not have an index");
     }
   }
 
