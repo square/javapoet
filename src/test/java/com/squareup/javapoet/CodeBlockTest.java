@@ -15,7 +15,9 @@
  */
 package com.squareup.javapoet;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 
@@ -290,5 +292,43 @@ public final class CodeBlockTest {
     } catch (IllegalStateException expected) {
       assertThat(expected).hasMessageThat().isEqualTo("statement exit $] has no matching statement enter $[");
     }
+  }
+
+  @Test public void join() {
+    List<CodeBlock> codeBlocks = new ArrayList<>();
+    codeBlocks.add(CodeBlock.of("$S", "hello"));
+    codeBlocks.add(CodeBlock.of("$T", ClassName.get("world", "World")));
+    codeBlocks.add(CodeBlock.of("need tacos"));
+
+    CodeBlock joined = CodeBlock.join(codeBlocks, " || ");
+    assertThat(joined.toString()).isEqualTo("\"hello\" || world.World || need tacos");
+  }
+
+  @Test public void joining() {
+    List<CodeBlock> codeBlocks = new ArrayList<>();
+    codeBlocks.add(CodeBlock.of("$S", "hello"));
+    codeBlocks.add(CodeBlock.of("$T", ClassName.get("world", "World")));
+    codeBlocks.add(CodeBlock.of("need tacos"));
+
+    CodeBlock joined = codeBlocks.stream().collect(CodeBlock.joining(" || "));
+    assertThat(joined.toString()).isEqualTo("\"hello\" || world.World || need tacos");
+  }
+
+  @Test public void joiningSingle() {
+    List<CodeBlock> codeBlocks = new ArrayList<>();
+    codeBlocks.add(CodeBlock.of("$S", "hello"));
+
+    CodeBlock joined = codeBlocks.stream().collect(CodeBlock.joining(" || "));
+    assertThat(joined.toString()).isEqualTo("\"hello\"");
+  }
+
+  @Test public void joiningWithPrefixAndSuffix() {
+    List<CodeBlock> codeBlocks = new ArrayList<>();
+    codeBlocks.add(CodeBlock.of("$S", "hello"));
+    codeBlocks.add(CodeBlock.of("$T", ClassName.get("world", "World")));
+    codeBlocks.add(CodeBlock.of("need tacos"));
+
+    CodeBlock joined = codeBlocks.stream().collect(CodeBlock.joining(" || ", "start {", "} end"));
+    assertThat(joined.toString()).isEqualTo("start {\"hello\" || world.World || need tacos} end");
   }
 }

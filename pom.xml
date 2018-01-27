@@ -20,7 +20,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <java.version>1.7</java.version>
+    <java.version>1.8</java.version>
     <junit.version>4.12</junit.version>
     <truth.version>0.39</truth.version>
     <compile-testing.version>0.15</compile-testing.version>
