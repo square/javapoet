@@ -11,7 +11,7 @@
 
   <groupId>com.squareup</groupId>
   <artifactId>javapoet</artifactId>
-  <version>1.10.0</version>
+  <version>1.11.0-SNAPSHOT</version>
 
   <name>JavaPoet</name>
   <description>Use beautiful Java code to generate beautiful Java code.</description>
