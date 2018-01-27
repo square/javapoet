@@ -1,12 +1,15 @@
 language: java
 
-jdk:
-  - oraclejdk8
-
-addons:
-  apt:
-    packages:
-      - oracle-java8-installer # Updates JDK 8 to the latest available.
+matrix:
+  include:
+    - env: JDK='OracleJDK 8'
+      jdk: oraclejdk8
+    - env: JDK='OracleJDK 9'
+      jdk: oraclejdk9
+    - env: JDK='OracleJDK 10'
+      install: . ./.buildscript/install-jdk.sh -F 10 -L BCL
+    - env: JDK='OpenJDK 10'
+      install: . ./.buildscript/install-jdk.sh -F 10 -L GPL
 
 after_success:
   - .buildscript/deploy_snapshot.sh
