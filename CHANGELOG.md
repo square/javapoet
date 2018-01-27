@@ -1,6 +1,18 @@
 Change Log
 ==========
 
+JavaPoet 1.10.0 *(2018-01-27)*
+-----------------------------
+
+ * New: `$Z` as an optional newline (zero-width space) if a line may exceed 100 chars.
+ * New: `CodeBlock.join()` and `CodeBlock.joining()` let you join codeblocks by delimiters.
+ * New: Add `CodeBlock.Builder.isEmpty()`.
+ * New: `addStatement(CodeBlock)` overloads for `CodeBlock` and `MethodSpec`.
+ * Fix: Include annotations when emitting type variables.
+ * Fix: Use the right imports for annotated type parameters.
+ * Fix: Don't incorrectly escape classnames that start with `$`.
+
+
 JavaPoet 1.9.0 *(2017-05-13)*
 -----------------------------
 
