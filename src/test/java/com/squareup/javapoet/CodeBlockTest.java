@@ -22,6 +22,8 @@ import java.util.Map;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public final class CodeBlockTest {
@@ -39,6 +41,12 @@ public final class CodeBlockTest {
   @Test public void of() {
     CodeBlock a = CodeBlock.of("$L taco", "delicious");
     assertThat(a.toString()).isEqualTo("delicious taco");
+  }
+
+  @Test public void isEmpty() {
+    assertTrue(CodeBlock.builder().isEmpty());
+    assertTrue(CodeBlock.builder().add("").isEmpty());
+    assertFalse(CodeBlock.builder().add(" ").isEmpty());
   }
 
   @Test public void indentCannotBeIndexed() {
