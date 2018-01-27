@@ -283,6 +283,10 @@ final class CodeWriter {
           out.wrappingSpace(indentLevel + 2);
           break;
 
+        case "$Z":
+          out.zeroWidthSpace(indentLevel + 2);
+          break;
+
         default:
           // handle deferred type
           if (deferredTypeName != null) {

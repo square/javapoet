@@ -35,8 +35,15 @@ final class LineWrapper {
   /** The number of characters since the most recent newline. Includes both out and the buffer. */
   private int column = 0;
 
-  /** -1 if we have no buffering; otherwise the number of spaces to write after wrapping. */
+  /**
+   * -1 if we have no buffering; otherwise the number of {@code indent}s to write after wrapping.
+   */
   private int indentLevel = -1;
+
+  /** {@code null} if we have no buffering; otherwise the type to pass to the next call to {@link
+   * #flush(FlushType)}.
+   */
+  private FlushType nextFlush;
 
   LineWrapper(Appendable out, String indent, int columnLimit) {
     checkNotNull(out, "out == null");
@@ -49,7 +56,7 @@ final class LineWrapper {
   void append(String s) throws IOException {
     if (closed) throw new IllegalStateException("closed");
 
-    if (indentLevel != -1) {
+    if (nextFlush != null) {
       int nextNewline = s.indexOf('\n');
 
       // If s doesn't cause the current line to cross the limit, buffer it and return. We'll decide
@@ -62,7 +69,7 @@ final class LineWrapper {
 
       // Wrap if appending s would overflow the current line.
       boolean wrap = nextNewline == -1 || column + nextNewline > columnLimit;
-      flush(wrap);
+      flush(wrap ? FlushType.WRAP : nextFlush);
     }
 
     out.append(s);
@@ -76,31 +83,56 @@ final class LineWrapper {
   void wrappingSpace(int indentLevel) throws IOException {
     if (closed) throw new IllegalStateException("closed");
 
-    if (this.indentLevel != -1) flush(false);
-    this.column++;
+    if (this.nextFlush != null) flush(nextFlush);
+    column++; // increment the column even though the space is deferred to next call to flush()
+    this.nextFlush = FlushType.SPACE;
+    this.indentLevel = indentLevel;
+  }
+
+  /** Emit a newline character if the line will exceed it's limit, otherwise do nothing. */
+  void zeroWidthSpace(int indentLevel) throws IOException {
+    if (closed) throw new IllegalStateException("closed");
+
+    // DO NOT SUBMIT: multiple zero-width chars in a row - should that cause a flush?
+    // What about if the nextFlush is a SPACE?
+    if (this.nextFlush != null) flush(nextFlush);
+    this.nextFlush = FlushType.EMPTY;
     this.indentLevel = indentLevel;
   }
 
   /** Flush any outstanding text and forbid future writes to this line wrapper. */
   void close() throws IOException {
-    if (indentLevel != -1) flush(false);
+    if (nextFlush != null) flush(nextFlush);
     closed = true;
   }
 
   /** Write the space followed by any buffered text that follows it. */
-  private void flush(boolean wrap) throws IOException {
-    if (wrap) {
-      out.append('\n');
-      for (int i = 0; i < indentLevel; i++) {
-        out.append(indent);
-      }
-      column = indentLevel * indent.length();
-      column += buffer.length();
-    } else {
-      out.append(' ');
+  private void flush(FlushType flushType) throws IOException {
+    switch (flushType) {
+      case WRAP:
+        out.append('\n');
+        for (int i = 0; i < indentLevel; i++) {
+          out.append(indent);
+        }
+        column = indentLevel * indent.length();
+        column += buffer.length();
+        break;
+      case SPACE:
+        out.append(' ');
+        break;
+      case EMPTY:
+        break;
+      default:
+        throw new IllegalArgumentException("Unknown FlushType: " + flushType);
     }
+
     out.append(buffer);
     buffer.delete(0, buffer.length());
     indentLevel = -1;
+    nextFlush = null;
+  }
+
+  private enum FlushType {
+    WRAP, SPACE, EMPTY;
   }
 }

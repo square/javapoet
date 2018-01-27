@@ -52,6 +52,7 @@ import static com.squareup.javapoet.Util.checkArgument;
  *   <li>{@code $$} emits a dollar sign.
  *   <li>{@code $W} emits a space or a newline, depending on its position on the line. This prefers
  *       to wrap lines before 100 columns.
+ *   <li>{@code $Z} acts as a zero-width space. This prefers to wrap lines before 100 columns.
  *   <li>{@code $>} increases the indentation level.
  *   <li>{@code $<} decreases the indentation level.
  *   <li>{@code $[} begins a statement. For multiline statements, every line after the first line
@@ -217,7 +218,8 @@ public final class CodeBlock {
 
         // If 'c' doesn't take an argument, we're done.
         if (isNoArgPlaceholder(c)) {
-          checkArgument(indexStart == indexEnd, "$$, $>, $<, $[, $], and $W may not have an index");
+          checkArgument(
+              indexStart == indexEnd, "$$, $>, $<, $[, $], $W, and $Z may not have an index");
           formatParts.add("$" + c);
           continue;
         }
@@ -264,7 +266,7 @@ public final class CodeBlock {
     }
 
     private boolean isNoArgPlaceholder(char c) {
-      return c == '$' || c == '>' || c == '<' || c == '[' || c == ']' || c == 'W';
+      return c == '$' || c == '>' || c == '<' || c == '[' || c == ']' || c == 'W' || c == 'Z';
     }
 
     private void addArgument(String format, char c, Object arg) {

@@ -43,6 +43,26 @@ public final class LineWrapperTest {
     assertThat(out.toString()).isEqualTo("abcde fghi");
   }
 
+  @Test public void zeroWidthNoWrap() throws Exception {
+    StringBuffer out = new StringBuffer();
+    LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
+    lineWrapper.append("abcde");
+    lineWrapper.zeroWidthSpace(2);
+    lineWrapper.append("fghij");
+    lineWrapper.close();
+    assertThat(out.toString()).isEqualTo("abcdefghij");
+  }
+
+  @Test public void nospaceWrapMax() throws Exception {
+    StringBuffer out = new StringBuffer();
+    LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
+    lineWrapper.append("abcde");
+    lineWrapper.zeroWidthSpace(2);
+    lineWrapper.append("fghijk");
+    lineWrapper.close();
+    assertThat(out.toString()).isEqualTo("abcde\n    fghijk");
+  }
+
   @Test public void multipleWrite() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
@@ -79,6 +99,18 @@ public final class LineWrapperTest {
     assertThat(out.toString()).isEqualTo("abcdefghij\n    klmnop");
   }
 
+  @Test public void fencepostZeroWidth() throws Exception {
+    StringBuffer out = new StringBuffer();
+    LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
+    lineWrapper.append("abcde");
+    lineWrapper.append("fghij");
+    lineWrapper.zeroWidthSpace(2);
+    lineWrapper.append("k");
+    lineWrapper.append("lmnop");
+    lineWrapper.close();
+    assertThat(out.toString()).isEqualTo("abcdefghij\n    klmnop");
+  }
+
   @Test public void overlyLongLinesWithoutLeadingSpace() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
@@ -94,6 +126,19 @@ public final class LineWrapperTest {
     lineWrapper.append("abcdefghijkl");
     lineWrapper.close();
     assertThat(out.toString()).isEqualTo("\n    abcdefghijkl");
+  }
+
+  @org.junit.Ignore
+  @Test public void overlyLongLinesWithLeadingZeroWidth() throws Exception {
+    StringBuffer out = new StringBuffer();
+    LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
+    lineWrapper.zeroWidthSpace(2);
+    lineWrapper.append("abcdefghijkl");
+    lineWrapper.close();
+    // DO NOT SUBMIT: what should the functionality here be? if we don't want a newline, we can check:
+    // if (column == 0) return;
+    // before the check+call to flush()
+    assertThat(out.toString()).isEqualTo("abcdefghijkl");
   }
 
   @Test public void noWrapEmbeddedNewlines() throws Exception {
@@ -116,6 +161,28 @@ public final class LineWrapperTest {
     lineWrapper.append("opqrstuvwxy");
     lineWrapper.close();
     assertThat(out.toString()).isEqualTo("abcde\n    fghij\nklmnopqrstuvwxy");
+  }
+
+  @Test public void noWrapEmbeddedNewlines_ZeroWidth() throws Exception {
+    StringBuffer out = new StringBuffer();
+    LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
+    lineWrapper.append("abcde");
+    lineWrapper.zeroWidthSpace(2);
+    lineWrapper.append("fghij\nklmn");
+    lineWrapper.append("opqrstuvwxyz");
+    lineWrapper.close();
+    assertThat(out.toString()).isEqualTo("abcdefghij\nklmnopqrstuvwxyz");
+  }
+
+  @Test public void wrapEmbeddedNewlines_ZeroWidth() throws Exception {
+    StringBuffer out = new StringBuffer();
+    LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
+    lineWrapper.append("abcde");
+    lineWrapper.zeroWidthSpace(2);
+    lineWrapper.append("fghijk\nlmn");
+    lineWrapper.append("opqrstuvwxy");
+    lineWrapper.close();
+    assertThat(out.toString()).isEqualTo("abcde\n    fghijk\nlmnopqrstuvwxy");
   }
 
   @Test public void noWrapMultipleNewlines() throws Exception {
