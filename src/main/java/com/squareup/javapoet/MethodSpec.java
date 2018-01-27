@@ -91,9 +91,9 @@ public final class MethodSpec {
     }
 
     if (isConstructor()) {
-      codeWriter.emit("$L(", enclosingName);
+      codeWriter.emit("$L($Z", enclosingName);
     } else {
-      codeWriter.emit("$T $L(", returnType, name);
+      codeWriter.emit("$T $L($Z", returnType, name);
     }
 
     boolean firstParameter = true;

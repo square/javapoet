@@ -120,7 +120,7 @@ public final class MethodSpecTest {
 
   interface ExtendsOthers extends Callable<Integer>, Comparable<ExtendsOthers> {
   }
-  
+
   interface ExtendsIterableWithDefaultMethods extends Iterable<Object> {
   }
 
@@ -131,9 +131,9 @@ public final class MethodSpecTest {
     assertThat(method.toString()).isEqualTo(""
         + "@java.lang.Override\n"
         + "protected <T extends java.lang.Runnable & java.io.Closeable> java.lang.Runnable "
-        + "everything(java.lang.String arg0,\n"
-        + "    java.util.List<? extends T> arg1) throws java.io.IOException, "
-        + "java.lang.SecurityException {\n"
+        + "everything(\n"
+        + "    java.lang.String arg0, java.util.List<? extends T> arg1) throws java.io.IOException,\n"
+        + "    java.lang.SecurityException {\n"
         + "}\n");
   }
 
