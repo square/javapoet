@@ -17,6 +17,7 @@ package com.squareup.javapoet;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.lang.model.element.Modifier;
 import org.junit.Ignore;
@@ -287,6 +288,27 @@ public final class JavaFileTest {
         + "  Date madeFreshDate;\n"
         + "\n"
         + "  java.sql.Date madeFreshDatabaseDate;\n"
+        + "}\n");
+  }
+
+  @Test public void annotatedTypeParam() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addField(ParameterizedTypeName.get(ClassName.get(List.class),
+                ClassName.get("com.squareup.meat", "Chorizo")
+                    .annotated(AnnotationSpec.builder(ClassName.get("com.squareup.tacos", "Spicy"))
+                        .build())), "chorizo")
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.meat.Chorizo;\n"
+        + "import java.util.List;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  List<@Spicy Chorizo> chorizo;\n"
         + "}\n");
   }
 
