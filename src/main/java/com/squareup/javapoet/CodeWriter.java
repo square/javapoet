@@ -364,7 +364,7 @@ final class CodeWriter {
       ClassName resolved = resolve(c.simpleName());
       nameResolved = resolved != null;
 
-      if (Objects.equals(resolved, c)) {
+      if (resolved != null && Objects.equals(resolved.canonicalName, c.canonicalName)) {
         int suffixOffset = c.simpleNames().size() - 1;
         return join(".", className.simpleNames().subList(
             suffixOffset, className.simpleNames().size()));
