@@ -42,15 +42,18 @@ import static com.squareup.javapoet.Util.checkNotNull;
 public final class AnnotationSpec {
   public final TypeName type;
   public final Map<String, List<CodeBlock>> members;
+  private boolean inlineMembers = false;
+
 
   private AnnotationSpec(Builder builder) {
     this.type = builder.type;
     this.members = Util.immutableMultimap(builder.members);
+    this.inlineMembers = builder.inlineMembers;
   }
 
   void emit(CodeWriter codeWriter, boolean inline) throws IOException {
-    String whitespace = inline ? "" : "\n";
-    String memberSeparator = inline ? ", " : ",\n";
+    String whitespace = inlineMembers ? "" : "\n";
+    String memberSeparator = inlineMembers ? ", " : ",\n";
     if (members.isEmpty()) {
       // @Singleton
       codeWriter.emit("@$T", type);
@@ -196,9 +199,15 @@ public final class AnnotationSpec {
   public static final class Builder {
     private final TypeName type;
     private final Map<String, List<CodeBlock>> members = new LinkedHashMap<>();
+    private boolean inlineMembers = false;
 
     private Builder(TypeName type) {
       this.type = type;
+    }
+
+    public Builder inlineMembers(boolean inline) {
+        this.inlineMembers = inline;
+        return this;
     }
 
     public Builder addMember(String name, String format, Object... args) {

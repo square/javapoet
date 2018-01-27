@@ -48,6 +48,7 @@ final class CodeWriter {
   private final LineWrapper out;
   private int indentLevel;
 
+  private boolean license = false;
   private boolean javadoc = false;
   private boolean comment = false;
   private String packageName = NO_PACKAGE;
@@ -153,6 +154,22 @@ final class CodeWriter {
       javadoc = false;
     }
     emit(" */\n");
+  }
+
+  public void emitLicense(CodeBlock licenseCodeBlock) throws IOException {
+    if (licenseCodeBlock.isEmpty()) {
+      return;
+    }
+
+    emit("/*\n");
+    trailingNewline = true;
+    license = true;
+    try {
+      emit(licenseCodeBlock);
+    } finally {
+      license = false;
+    }
+    emit("\n */\n\n");
   }
 
   public void emitAnnotations(List<AnnotationSpec> annotations, boolean inline) throws IOException {
@@ -450,9 +467,9 @@ final class CodeWriter {
     for (String line : s.split("\n", -1)) {
       // Emit a newline character. Make sure blank lines in Javadoc & comments look good.
       if (!first) {
-        if ((javadoc || comment) && trailingNewline) {
+        if ((javadoc || comment || license) && trailingNewline) {
           emitIndentation();
-          out.append(javadoc ? " *" : "//");
+          out.append(javadoc || license ? " *" : "//");
         }
         out.append("\n");
         trailingNewline = true;
@@ -470,7 +487,7 @@ final class CodeWriter {
       // Emit indentation and comment prefix if necessary.
       if (trailingNewline) {
         emitIndentation();
-        if (javadoc) {
+        if (javadoc || license) {
           out.append(" * ");
         } else if (comment) {
           out.append("// ");
