@@ -40,8 +40,8 @@ final class LineWrapper {
    */
   private int indentLevel = -1;
 
-  /** {@code null} if we have no buffering; otherwise the type to pass to the next call to {@link
-   * #flush(FlushType)}.
+  /**
+   * Null if we have no buffering; otherwise the type to pass to the next call to {@link #flush}.
    */
   private FlushType nextFlush;
 
@@ -84,7 +84,7 @@ final class LineWrapper {
     if (closed) throw new IllegalStateException("closed");
 
     if (this.nextFlush != null) flush(nextFlush);
-    column++; // increment the column even though the space is deferred to next call to flush()
+    column++; // Increment the column even though the space is deferred to next call to flush().
     this.nextFlush = FlushType.SPACE;
     this.indentLevel = indentLevel;
   }
@@ -93,8 +93,6 @@ final class LineWrapper {
   void zeroWidthSpace(int indentLevel) throws IOException {
     if (closed) throw new IllegalStateException("closed");
 
-    // DO NOT SUBMIT: multiple zero-width chars in a row - should that cause a flush?
-    // What about if the nextFlush is a SPACE?
     if (this.nextFlush != null) flush(nextFlush);
     this.nextFlush = FlushType.EMPTY;
     this.indentLevel = indentLevel;
