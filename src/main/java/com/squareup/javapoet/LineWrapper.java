@@ -93,6 +93,7 @@ final class LineWrapper {
   void zeroWidthSpace(int indentLevel) throws IOException {
     if (closed) throw new IllegalStateException("closed");
 
+    if (column == 0) return;
     if (this.nextFlush != null) flush(nextFlush);
     this.nextFlush = FlushType.EMPTY;
     this.indentLevel = indentLevel;

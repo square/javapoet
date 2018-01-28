@@ -128,16 +128,12 @@ public final class LineWrapperTest {
     assertThat(out.toString()).isEqualTo("\n    abcdefghijkl");
   }
 
-  @org.junit.Ignore
   @Test public void overlyLongLinesWithLeadingZeroWidth() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.zeroWidthSpace(2);
     lineWrapper.append("abcdefghijkl");
     lineWrapper.close();
-    // DO NOT SUBMIT: what should the functionality here be? if we don't want a newline, we can check:
-    // if (column == 0) return;
-    // before the check+call to flush()
     assertThat(out.toString()).isEqualTo("abcdefghijkl");
   }
 
