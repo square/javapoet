@@ -116,7 +116,7 @@ final class CodeWriter {
   }
 
   public CodeWriter popPackage() {
-    checkState(this.packageName != NO_PACKAGE, "package already set: %s", this.packageName);
+    checkState(this.packageName != NO_PACKAGE, "package not set");
     this.packageName = NO_PACKAGE;
     return this;
   }
