@@ -634,6 +634,7 @@ TypeSpec helloWorld = TypeSpec.enumBuilder("Roshambo")
             .addAnnotation(Override.class)
             .addModifiers(Modifier.PUBLIC)
             .addStatement("return $S", "avalanche!")
+            .returns(String.class)
             .build())
         .build())
     .addEnumConstant("SCISSORS", TypeSpec.anonymousClassBuilder("$S", "peace")
@@ -654,7 +655,7 @@ Which generates this:
 public enum Roshambo {
   ROCK("fist") {
     @Override
-    public void toString() {
+    public String toString() {
       return "avalanche!";
     }
   },
