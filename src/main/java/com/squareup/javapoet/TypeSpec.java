@@ -359,7 +359,7 @@ public final class TypeSpec {
         Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)),
         Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.ABSTRACT)),
         Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC)),
-        Util.immutableSet(Arrays.asList(Modifier.STATIC))),
+        Util.immutableSet(Collections.singletonList(Modifier.STATIC))),
 
     ENUM(
         Collections.emptySet(),
@@ -371,7 +371,7 @@ public final class TypeSpec {
         Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)),
         Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.ABSTRACT)),
         Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC)),
-        Util.immutableSet(Arrays.asList(Modifier.STATIC)));
+        Util.immutableSet(Collections.singletonList(Modifier.STATIC)));
 
     private final Set<Modifier> implicitFieldModifiers;
     private final Set<Modifier> implicitMethodModifiers;
