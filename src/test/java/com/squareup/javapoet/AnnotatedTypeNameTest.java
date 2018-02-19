@@ -15,6 +15,7 @@
  */
 package com.squareup.javapoet;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -22,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import org.junit.Ignore;
@@ -178,5 +180,39 @@ public class AnnotatedTypeNameTest {
         .annotated(typeUseAnnotation));
     String actual = type.toString();
     assertEquals(expected, actual);
+  }
+
+  // https://github.com/square/javapoet/issues/614
+  @Ignore @Test public void annotatedArrayTypeVarargsParameter() {
+    AnnotationSpec typeUseAnnotation = AnnotationSpec.builder(TypeUseAnnotation.class).build();
+    TypeName type = ArrayTypeName.of(ArrayTypeName.of(ClassName.get(Object.class))
+        .annotated(typeUseAnnotation));
+    MethodSpec varargsMethod = MethodSpec.methodBuilder("m")
+        .addParameter(
+            ParameterSpec.builder(type, "p")
+                .build())
+        .varargs()
+        .build();
+    assertThat(varargsMethod.toString()).isEqualTo(""
+        + "void m(\n"
+        + "    java.lang.Object @" + TypeUseAnnotation.class.getCanonicalName() + " []... p) {\n"
+        + "}\n");
+  }
+
+  // https://github.com/square/javapoet/issues/614
+  @Ignore @Test public void annotatedArrayTypeInVarargsParameter() {
+    AnnotationSpec typeUseAnnotation = AnnotationSpec.builder(TypeUseAnnotation.class).build();
+    TypeName type = ArrayTypeName.of(ArrayTypeName.of(ClassName.get(Object.class))
+        .annotated(typeUseAnnotation));
+    MethodSpec varargsMethod = MethodSpec.methodBuilder("m")
+        .addParameter(
+            ParameterSpec.builder(type, "p")
+                .build())
+        .varargs()
+        .build();
+    assertThat(varargsMethod.toString()).isEqualTo(""
+        + "void m(\n"
+        + "    java.lang.Object[] @" + TypeUseAnnotation.class.getCanonicalName() + " ... p) {\n"
+        + "}\n");
   }
 }
