@@ -36,17 +36,6 @@ final class Util {
   private Util() {
   }
 
-  /** Modifier.DEFAULT doesn't exist until Java 8, but we want to run on earlier releases. */
-  static final Modifier DEFAULT;
-  static {
-    Modifier def = null;
-    try {
-      def = Modifier.valueOf("DEFAULT");
-    } catch (IllegalArgumentException ignored) {
-    }
-    DEFAULT = def;
-  }
-
   static <K, V> Map<K, List<V>> immutableMultimap(Map<K, List<V>> multimap) {
     LinkedHashMap<K, List<V>> result = new LinkedHashMap<>();
     for (Map.Entry<K, List<V>> entry : multimap.entrySet()) {
@@ -101,15 +90,10 @@ final class Util {
   static void requireExactlyOneOf(Set<Modifier> modifiers, Modifier... mutuallyExclusive) {
     int count = 0;
     for (Modifier modifier : mutuallyExclusive) {
-      if (modifier == null && Util.DEFAULT == null) continue; // Skip 'DEFAULT' if it doesn't exist!
       if (modifiers.contains(modifier)) count++;
     }
     checkArgument(count == 1, "modifiers %s must contain one of %s",
         modifiers, Arrays.toString(mutuallyExclusive));
-  }
-
-  static boolean hasDefaultModifier(Collection<Modifier> modifiers) {
-    return DEFAULT != null && modifiers.contains(DEFAULT);
   }
 
   static String characterLiteralWithoutSingleQuotes(char c) {

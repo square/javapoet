@@ -34,7 +34,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.SimpleAnnotationValueVisitor7;
+import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 
 import static com.squareup.javapoet.Util.characterLiteralWithoutSingleQuotes;
 import static com.squareup.javapoet.Util.checkArgument;
@@ -254,7 +254,7 @@ public final class AnnotationSpec {
   /**
    * Annotation value visitor adding members to the given builder instance.
    */
-  private static class Visitor extends SimpleAnnotationValueVisitor7<Builder, String> {
+  private static class Visitor extends SimpleAnnotationValueVisitor8<Builder, String> {
     final Builder builder;
 
     Visitor(Builder builder) {

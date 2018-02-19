@@ -20,6 +20,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
 import java.util.List;
 import java.util.Map;
 import org.junit.Ignore;
@@ -115,7 +117,7 @@ public class AnnotatedTypeNameTest {
   }
 
   // https://github.com/square/javapoet/issues/431
-  // @Target(ElementType.TYPE_USE) requires Java 1.8
+  @Target(ElementType.TYPE_USE)
   public @interface TypeUseAnnotation {}
 
   // https://github.com/square/javapoet/issues/431

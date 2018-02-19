@@ -34,7 +34,6 @@ import javax.lang.model.element.Modifier;
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
 import static com.squareup.javapoet.Util.checkState;
-import static com.squareup.javapoet.Util.hasDefaultModifier;
 import static com.squareup.javapoet.Util.requireExactlyOneOf;
 
 /** A generated class, interface, or enum declaration. */
@@ -571,7 +570,8 @@ public final class TypeSpec {
 
     public Builder addMethod(MethodSpec methodSpec) {
       if (kind == Kind.INTERFACE) {
-        requireExactlyOneOf(methodSpec.modifiers, Modifier.ABSTRACT, Modifier.STATIC, Util.DEFAULT);
+        requireExactlyOneOf(methodSpec.modifiers, Modifier.ABSTRACT, Modifier.STATIC,
+            Modifier.DEFAULT);
         requireExactlyOneOf(methodSpec.modifiers, Modifier.PUBLIC, Modifier.PRIVATE);
       } else if (kind == Kind.ANNOTATION) {
         checkState(methodSpec.modifiers.equals(kind.implicitMethodModifiers),
@@ -583,7 +583,7 @@ public final class TypeSpec {
             kind, name, methodSpec.name);
       }
       if (kind != Kind.INTERFACE) {
-        checkState(!hasDefaultModifier(methodSpec.modifiers), "%s %s.%s cannot be default",
+        checkState(!methodSpec.hasModifier(Modifier.DEFAULT), "%s %s.%s cannot be default",
             kind, name, methodSpec.name);
       }
       methodSpecs.add(methodSpec);

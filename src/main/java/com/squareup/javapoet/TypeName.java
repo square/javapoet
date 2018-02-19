@@ -36,7 +36,7 @@ import javax.lang.model.type.NoType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.SimpleTypeVisitor7;
+import javax.lang.model.util.SimpleTypeVisitor8;
 
 /**
  * Any type in Java's type system, plus {@code void}. This class is an identifier for primitive
@@ -240,7 +240,7 @@ public class TypeName {
 
   static TypeName get(TypeMirror mirror,
       final Map<TypeParameterElement, TypeVariableName> typeVariables) {
-    return mirror.accept(new SimpleTypeVisitor7<TypeName, Void>() {
+    return mirror.accept(new SimpleTypeVisitor8<TypeName, Void>() {
       @Override public TypeName visitPrimitive(PrimitiveType t, Void p) {
         switch (t.getKind()) {
           case BOOLEAN:
