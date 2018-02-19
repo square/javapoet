@@ -70,16 +70,6 @@ final class Util {
     return Collections.unmodifiableSet(new LinkedHashSet<>(set));
   }
 
-  static String join(String separator, List<String> parts) {
-    if (parts.isEmpty()) return "";
-    StringBuilder result = new StringBuilder();
-    result.append(parts.get(0));
-    for (int i = 1; i < parts.size(); i++) {
-      result.append(separator).append(parts.get(i));
-    }
-    return result.toString();
-  }
-
   static <T> Set<T> union(Set<T> a, Set<T> b) {
     Set<T> result = new LinkedHashSet<>();
     result.addAll(a);

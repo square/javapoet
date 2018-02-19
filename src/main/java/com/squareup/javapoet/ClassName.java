@@ -50,8 +50,8 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     }
     this.names = Util.immutableList(names);
     this.canonicalName = (names.get(0).isEmpty()
-        ? Util.join(".", names.subList(1, names.size()))
-        : Util.join(".", names));
+        ? String.join(".", names.subList(1, names.size()))
+        : String.join(".", names));
   }
 
   @Override public ClassName annotated(List<AnnotationSpec> annotations) {

@@ -113,12 +113,7 @@ public final class AnnotationSpec {
     Builder builder = builder(annotation.annotationType());
     try {
       Method[] methods = annotation.annotationType().getDeclaredMethods();
-      Arrays.sort(methods, new Comparator<Method>() {
-        @Override
-        public int compare(Method m1, Method m2) {
-          return m1.getName().compareTo(m2.getName());
-        }
-      });
+      Arrays.sort(methods, Comparator.comparing(Method::getName));
       for (Method method : methods) {
         Object value = method.invoke(annotation);
         if (!includeDefaultValues) {
@@ -210,11 +205,7 @@ public final class AnnotationSpec {
     public Builder addMember(String name, CodeBlock codeBlock) {
       checkNotNull(name, "name == null");
       checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
-      List<CodeBlock> values = members.get(name);
-      if (values == null) {
-        values = new ArrayList<>();
-        members.put(name, values);
-      }
+      List<CodeBlock> values = members.computeIfAbsent(name, k -> new ArrayList<>());
       values.add(codeBlock);
       return this;
     }
