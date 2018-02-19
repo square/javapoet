@@ -161,7 +161,7 @@ public final class MethodSpec {
     StringBuilder out = new StringBuilder();
     try {
       CodeWriter codeWriter = new CodeWriter(out);
-      emit(codeWriter, "Constructor", Collections.<Modifier>emptySet());
+      emit(codeWriter, "Constructor", Collections.emptySet());
       return out.toString();
     } catch (IOException e) {
       throw new AssertionError();

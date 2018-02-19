@@ -40,7 +40,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   final String canonicalName;
 
   private ClassName(List<String> names) {
-    this(names, new ArrayList<AnnotationSpec>());
+    this(names, new ArrayList<>());
   }
 
   private ClassName(List<String> names, List<AnnotationSpec> annotations) {

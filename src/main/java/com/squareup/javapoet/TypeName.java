@@ -95,7 +95,7 @@ public class TypeName {
   private String cachedString;
 
   private TypeName(String keyword) {
-    this(keyword, new ArrayList<AnnotationSpec>());
+    this(keyword, new ArrayList<>());
   }
 
   private TypeName(String keyword, List<AnnotationSpec> annotations) {
@@ -235,7 +235,7 @@ public class TypeName {
 
   /** Returns a type name equivalent to {@code mirror}. */
   public static TypeName get(TypeMirror mirror) {
-    return get(mirror, new LinkedHashMap<TypeParameterElement, TypeVariableName>());
+    return get(mirror, new LinkedHashMap<>());
   }
 
   static TypeName get(TypeMirror mirror,
@@ -315,7 +315,7 @@ public class TypeName {
 
   /** Returns a type name equivalent to {@code type}. */
   public static TypeName get(Type type) {
-    return get(type, new LinkedHashMap<Type, TypeVariableName>());
+    return get(type, new LinkedHashMap<>());
   }
 
   static TypeName get(Type type, Map<Type, TypeVariableName> map) {
@@ -352,7 +352,7 @@ public class TypeName {
 
   /** Converts an array of types to a list of type names. */
   static List<TypeName> list(Type[] types) {
-    return list(types, new LinkedHashMap<Type, TypeVariableName>());
+    return list(types, new LinkedHashMap<>());
   }
 
   static List<TypeName> list(Type[] types, Map<Type, TypeVariableName> map) {

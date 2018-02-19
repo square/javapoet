@@ -36,7 +36,7 @@ public final class TypeVariableName extends TypeName {
   public final List<TypeName> bounds;
 
   private TypeVariableName(String name, List<TypeName> bounds) {
-    this(name, bounds, new ArrayList<AnnotationSpec>());
+    this(name, bounds, new ArrayList<>());
   }
 
   private TypeVariableName(String name, List<TypeName> bounds, List<AnnotationSpec> annotations) {
@@ -85,7 +85,7 @@ public final class TypeVariableName extends TypeName {
 
   /** Returns type variable named {@code name} without bounds. */
   public static TypeVariableName get(String name) {
-    return TypeVariableName.of(name, Collections.<TypeName>emptyList());
+    return TypeVariableName.of(name, Collections.emptyList());
   }
 
   /** Returns type variable named {@code name} with {@code bounds}. */
@@ -145,7 +145,7 @@ public final class TypeVariableName extends TypeName {
 
   /** Returns type variable equivalent to {@code type}. */
   public static TypeVariableName get(java.lang.reflect.TypeVariable<?> type) {
-    return get(type, new LinkedHashMap<Type, TypeVariableName>());
+    return get(type, new LinkedHashMap<>());
   }
 
   /** @see #get(java.lang.reflect.TypeVariable, Map) */

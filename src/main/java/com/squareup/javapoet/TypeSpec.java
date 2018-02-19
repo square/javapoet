@@ -214,7 +214,7 @@ public final class TypeSpec {
           implementsTypes = Collections.emptyList();
         } else {
           extendsTypes = superclass.equals(ClassName.OBJECT)
-              ? Collections.<TypeName>emptyList()
+              ? Collections.emptyList()
               : Collections.singletonList(superclass);
           implementsTypes = superinterfaces;
         }
@@ -251,8 +251,7 @@ public final class TypeSpec {
           i.hasNext(); ) {
         Map.Entry<String, TypeSpec> enumConstant = i.next();
         if (!firstMember) codeWriter.emit("\n");
-        enumConstant.getValue()
-            .emit(codeWriter, enumConstant.getKey(), Collections.<Modifier>emptySet());
+        enumConstant.getValue().emit(codeWriter, enumConstant.getKey(), Collections.emptySet());
         firstMember = false;
         if (i.hasNext()) {
           codeWriter.emit(",\n");
@@ -342,7 +341,7 @@ public final class TypeSpec {
     StringBuilder out = new StringBuilder();
     try {
       CodeWriter codeWriter = new CodeWriter(out);
-      emit(codeWriter, null, Collections.<Modifier>emptySet());
+      emit(codeWriter, null, Collections.emptySet());
       return out.toString();
     } catch (IOException e) {
       throw new AssertionError();
@@ -351,10 +350,10 @@ public final class TypeSpec {
 
   public enum Kind {
     CLASS(
-        Collections.<Modifier>emptySet(),
-        Collections.<Modifier>emptySet(),
-        Collections.<Modifier>emptySet(),
-        Collections.<Modifier>emptySet()),
+        Collections.emptySet(),
+        Collections.emptySet(),
+        Collections.emptySet(),
+        Collections.emptySet()),
 
     INTERFACE(
         Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)),
@@ -363,9 +362,9 @@ public final class TypeSpec {
         Util.immutableSet(Arrays.asList(Modifier.STATIC))),
 
     ENUM(
-        Collections.<Modifier>emptySet(),
-        Collections.<Modifier>emptySet(),
-        Collections.<Modifier>emptySet(),
+        Collections.emptySet(),
+        Collections.emptySet(),
+        Collections.emptySet(),
         Collections.singleton(Modifier.STATIC)),
 
     ANNOTATION(

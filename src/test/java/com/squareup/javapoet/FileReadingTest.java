@@ -105,8 +105,8 @@ public class FileReadingTest {
     CompilationTask task = compiler.getTask(null, 
         fileManager,
         diagnosticCollector,
-        Collections.<String>emptySet(),
-        Collections.<String>emptySet(),
+        Collections.emptySet(),
+        Collections.emptySet(),
         Collections.singleton(javaFile.toJavaFileObject()));
     
     assertThat(task.call()).isTrue();

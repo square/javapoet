@@ -31,7 +31,7 @@ public final class ArrayTypeName extends TypeName {
   public final TypeName componentType;
 
   private ArrayTypeName(TypeName componentType) {
-    this(componentType, new ArrayList<AnnotationSpec>());
+    this(componentType, new ArrayList<>());
   }
 
   private ArrayTypeName(TypeName componentType, List<AnnotationSpec> annotations) {
@@ -63,7 +63,7 @@ public final class ArrayTypeName extends TypeName {
 
   /** Returns an array type equivalent to {@code mirror}. */
   public static ArrayTypeName get(ArrayType mirror) {
-    return get(mirror, new LinkedHashMap<TypeParameterElement, TypeVariableName>());
+    return get(mirror, new LinkedHashMap<>());
   }
 
   static ArrayTypeName get(
@@ -73,7 +73,7 @@ public final class ArrayTypeName extends TypeName {
 
   /** Returns an array type equivalent to {@code type}. */
   public static ArrayTypeName get(GenericArrayType type) {
-    return get(type, new LinkedHashMap<Type, TypeVariableName>());
+    return get(type, new LinkedHashMap<>());
   }
 
   static ArrayTypeName get(GenericArrayType type, Map<Type, TypeVariableName> map) {
