@@ -25,6 +25,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
 
 public final class AnnotationSpecTest {
 
@@ -348,6 +349,26 @@ public final class AnnotationSpecTest {
         + ")\n"
         + "class Taco {\n"
         + "}\n");
+  }
+
+  @Test public void disallowsNullMemberName() {
+    AnnotationSpec.Builder builder = AnnotationSpec.builder(HasDefaultsAnnotation.class);
+    try {
+      AnnotationSpec.Builder $L = builder.addMember(null, "$L", "");
+      fail($L.build().toString());
+    } catch (NullPointerException e) {
+      assertThat(e).hasMessageThat().isEqualTo("name == null");
+    }
+  }
+
+  @Test public void requiresValidMemberName() {
+    AnnotationSpec.Builder builder = AnnotationSpec.builder(HasDefaultsAnnotation.class);
+    try {
+      AnnotationSpec.Builder $L = builder.addMember("@", "$L", "");
+      fail($L.build().toString());
+    } catch (IllegalArgumentException e) {
+      assertThat(e).hasMessageThat().isEqualTo("not a valid name: @");
+    }
   }
 
   private String toString(TypeSpec typeSpec) {

@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
@@ -36,6 +37,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleAnnotationValueVisitor7;
 
 import static com.squareup.javapoet.Util.characterLiteralWithoutSingleQuotes;
+import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
 
 /** A generated annotation on a declaration. */
@@ -206,6 +208,8 @@ public final class AnnotationSpec {
     }
 
     public Builder addMember(String name, CodeBlock codeBlock) {
+      checkNotNull(name, "name == null");
+      checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
       List<CodeBlock> values = members.get(name);
       if (values == null) {
         values = new ArrayList<>();
@@ -223,6 +227,7 @@ public final class AnnotationSpec {
     Builder addMemberForValue(String memberName, Object value) {
       checkNotNull(memberName, "memberName == null");
       checkNotNull(value, "value == null, constant non-null value expected for %s", memberName);
+      checkArgument(SourceVersion.isName(memberName), "not a valid name: %s", memberName);
       if (value instanceof Class<?>) {
         return addMember(memberName, "$T.class", value);
       }
