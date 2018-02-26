@@ -268,6 +268,13 @@ public final class JavaFile {
       return this;
     }
 
+    public Builder indent(int indentCount) {
+      char[] indentChars = new char[indentCount];
+      Arrays.fill(indentChars, ' ');
+      this.indent = new String(indentChars);
+      return this;
+    }
+
     public JavaFile build() {
       return new JavaFile(this);
     }
