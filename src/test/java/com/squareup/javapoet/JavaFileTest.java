@@ -381,6 +381,33 @@ public final class JavaFileTest {
             + "}\n");
   }
 
+  @Test public void indentRemovesInvalidCharactersFromGivenStringForAValidIndent() throws Exception {
+    String source = JavaFile.builder("com.squareup.Strings",
+            TypeSpec.classBuilder("MyStringClass")
+                    .addField(String.class, "myString")
+                    .addMethod(
+                            MethodSpec.methodBuilder("returnMyString")
+                                      .returns(String.class)
+                                      .addStatement("return $N", "myString")
+                                      .build())
+                    .build())
+                            .indent("IAmNotAValidIndentButThisSpaceIs: AndSoIsThisTab:\t")
+                            .build()
+                            .toString();
+    assertThat(source).isEqualTo(""
+            + "package com.squareup.Strings;\n"
+            + "\n"
+            + "import java.lang.String;\n"
+            + "\n"
+            + "class MyStringClass {\n"
+            + " \tString myString;\n"
+            + "\n"
+            + " \tString returnMyString() {\n"
+            + " \t \treturn myString;\n"
+            + " \t}\n"
+            + "}\n");
+  }
+
   @Test public void conflictingParentName() throws Exception {
     String source = JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("A")

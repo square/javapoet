@@ -264,7 +264,7 @@ public final class JavaFile {
     }
 
     public Builder indent(String indent) {
-      this.indent = indent;
+      this.indent = indent.replaceAll("[^\\s\t]", "");;
       return this;
     }
 
