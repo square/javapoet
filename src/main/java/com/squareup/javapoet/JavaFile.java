@@ -275,8 +275,26 @@ public final class JavaFile {
       return this;
     }
 
+    public Builder indentChar(IndentChar indentChar) {
+      this.indent = this.indent.replaceAll(".", indentChar.value().toString());
+      return this;
+    }
+
     public JavaFile build() {
       return new JavaFile(this);
+    }
+  }
+
+  public enum IndentChar {
+    TAB('\t'), SPACE(' ');
+    private final Character indentChar;
+
+    IndentChar(Character indentChar) {
+      this.indentChar = indentChar;
+    }
+
+    public Character value() {
+      return indentChar;
     }
   }
 }
