@@ -278,6 +278,12 @@ public final class JavaFile {
       return this;
     }
 
+    public Builder indent(int indentCount, IndentChar indentChar) {
+      this.indentChar = indentChar;
+      this.indent(indentCount);
+      return this;
+    }
+
     public Builder indentChar(IndentChar indentChar) {
       this.indentChar = indentChar;
       this.indent = this.indent.replaceAll(".", indentChar.value().toString());

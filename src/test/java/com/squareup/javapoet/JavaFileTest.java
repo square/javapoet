@@ -518,6 +518,33 @@ public final class JavaFileTest {
             + "}\n");
   }
 
+  @Test public void indentWithIntAndIndentCharCorrectlySetsTheCharacterAndLengthOfTheIndent() {
+    String source = JavaFile.builder("com.squareup.Strings",
+            TypeSpec.classBuilder("MyStringClass")
+                    .addField(String.class, "myString")
+                    .addMethod(
+                            MethodSpec.methodBuilder("returnMyString")
+                                      .returns(String.class)
+                                      .addStatement("return $N", "myString")
+                                      .build())
+                    .build())
+                            .indent(4, JavaFile.IndentChar.TAB)
+                            .build()
+                            .toString();
+    assertThat(source).isEqualTo(""
+            + "package com.squareup.Strings;\n"
+            + "\n"
+            + "import java.lang.String;\n"
+            + "\n"
+            + "class MyStringClass {\n"
+            + "\t\t\t\tString myString;\n"
+            + "\n"
+            + "\t\t\t\tString returnMyString() {\n"
+            + "\t\t\t\t\t\t\t\treturn myString;\n"
+            + "\t\t\t\t}\n"
+            + "}\n");
+  }
+
   @Test public void conflictingParentName() throws Exception {
     String source = JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("A")
