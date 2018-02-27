@@ -219,6 +219,7 @@ public final class JavaFile {
     private final CodeBlock.Builder fileComment = CodeBlock.builder();
     private final Set<String> staticImports = new TreeSet<>();
     private boolean skipJavaLangImports;
+    private IndentChar indentChar = IndentChar.SPACE;
     private String indent = "  ";
 
     private Builder(String packageName, TypeSpec typeSpec) {
@@ -272,12 +273,13 @@ public final class JavaFile {
 
     public Builder indent(int indentCount) {
       char[] indentChars = new char[indentCount];
-      Arrays.fill(indentChars, ' ');
+      Arrays.fill(indentChars, indentChar.value());
       this.indent = new String(indentChars);
       return this;
     }
 
     public Builder indentChar(IndentChar indentChar) {
+      this.indentChar = indentChar;
       this.indent = this.indent.replaceAll(".", indentChar.value().toString());
       return this;
     }
