@@ -264,6 +264,12 @@ public final class JavaFile {
       return this;
     }
 
+    /**
+     * Sets the indentation of the Java file to the given String, filtering out any invalid characters, such as letters or
+     * symbols. Uses the {@link IndentChar} enum to define which characters are allowed.
+     *
+     * @param indent Value of the indent
+    */
     public Builder indent(String indent) {
       String allowedChars = Arrays.stream(IndentChar.values())
                                   .map(IndentChar::toString).reduce((a, b) -> a+b).orElse(" ");
@@ -271,6 +277,12 @@ public final class JavaFile {
       return this;
     }
 
+    /**
+     * Sets the length of the indentation in the Java file. The character used in the indent is
+     * stored in {@link #indentChar}. See {@link #indentChar(IndentChar)} for setting this value.
+     *
+     * @param indentCount Number of characters to indent with
+     */
     public Builder indent(int indentCount) {
       char[] indentChars = new char[indentCount];
       Arrays.fill(indentChars, indentChar.value());
@@ -278,12 +290,25 @@ public final class JavaFile {
       return this;
     }
 
+    /**
+     * Sets the indentation in the Java file to a given number of given characters. Combines the functionality of
+     * {@link #indent(int)} and {@link #indentChar(IndentChar)}.
+     *
+     * @param indentCount Number of characters to indent with
+     * @param indentChar The character used to indent the file
+     */
     public Builder indent(int indentCount, IndentChar indentChar) {
       this.indentChar = indentChar;
       this.indent(indentCount);
       return this;
     }
 
+    /**
+     * Sets the characters of the indentation in the Java file to the given characters. See {@link #indent(int)} for
+     * setting the number of characters to use.
+     *
+     * @param indentChar The character used to indent the file
+     */
     public Builder indentChar(IndentChar indentChar) {
       this.indentChar = indentChar;
       this.indent = this.indent.replaceAll(".", indentChar.value().toString());
@@ -295,6 +320,9 @@ public final class JavaFile {
     }
   }
 
+  /**
+   * An enum defining characters allowed for use in indentations.
+   */
   public enum IndentChar {
     TAB('\t'), SPACE(' ');
     private final Character indentChar;
