@@ -264,7 +264,9 @@ public final class JavaFile {
     }
 
     public Builder indent(String indent) {
-      this.indent = indent.replaceAll("[^\\s\t]", "");;
+      String allowedChars = Arrays.stream(IndentChar.values())
+                                  .map(IndentChar::toString).reduce((a, b) -> a+b).orElse(" ");
+      this.indent = indent.replaceAll("[^"+allowedChars+"]", "");
       return this;
     }
 
@@ -295,6 +297,11 @@ public final class JavaFile {
 
     public Character value() {
       return indentChar;
+    }
+
+    @Override
+    public String toString() {
+      return indentChar.toString();
     }
   }
 }
