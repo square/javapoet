@@ -51,10 +51,11 @@ public final class ParameterSpec {
     codeWriter.emitAnnotations(annotations, true);
     codeWriter.emitModifiers(modifiers);
     if (varargs) {
-      codeWriter.emit("$T... $L", TypeName.arrayComponent(type), name);
+      TypeName.asArray(type).emit(codeWriter, true);
     } else {
-      codeWriter.emit("$T $L", type, name);
+      type.emit(codeWriter);
     }
+    codeWriter.emit(" $L", name);
   }
 
   @Override public boolean equals(Object o) {

@@ -41,7 +41,7 @@ public final class ParameterizedTypeName extends TypeName {
   private ParameterizedTypeName(ParameterizedTypeName enclosingType, ClassName rawType,
       List<TypeName> typeArguments, List<AnnotationSpec> annotations) {
     super(annotations);
-    this.rawType = checkNotNull(rawType, "rawType == null");
+    this.rawType = checkNotNull(rawType, "rawType == null").annotated(annotations);
     this.enclosingType = enclosingType;
     this.typeArguments = Util.immutableList(typeArguments);
 
@@ -60,16 +60,22 @@ public final class ParameterizedTypeName extends TypeName {
 
   @Override public TypeName withoutAnnotations() {
     return new ParameterizedTypeName(
-        enclosingType, rawType, typeArguments, new ArrayList<AnnotationSpec>());
+        enclosingType,
+        rawType.withoutAnnotations(),
+        typeArguments,
+        new ArrayList<AnnotationSpec>());
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {
     if (enclosingType != null) {
-      enclosingType.emitAnnotations(out);
       enclosingType.emit(out);
-      out.emit("." + rawType.simpleName());
+      out.emit(".");
+      if (isAnnotated()) {
+        out.emit(" ");
+        emitAnnotations(out);
+      }
+      out.emit(rawType.simpleName());
     } else {
-      rawType.emitAnnotations(out);
       rawType.emit(out);
     }
     if (!typeArguments.isEmpty()) {
@@ -77,7 +83,6 @@ public final class ParameterizedTypeName extends TypeName {
       boolean firstParameter = true;
       for (TypeName parameter : typeArguments) {
         if (!firstParameter) out.emitAndIndent(", ");
-        parameter.emitAnnotations(out);
         parameter.emit(out);
         firstParameter = false;
       }
