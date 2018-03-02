@@ -237,6 +237,7 @@ public final class MethodSpec {
       ExecutableElement method, DeclaredType enclosing, Types types) {
     ExecutableType executableType = (ExecutableType) types.asMemberOf(enclosing, method);
     List<? extends TypeMirror> resolvedParameterTypes = executableType.getParameterTypes();
+    List<? extends TypeMirror> resolvedThrownTypes = executableType.getThrownTypes();
     TypeMirror resolvedReturnType = executableType.getReturnType();
 
     Builder builder = overriding(method);
@@ -245,6 +246,10 @@ public final class MethodSpec {
       ParameterSpec parameter = builder.parameters.get(i);
       TypeName type = TypeName.get(resolvedParameterTypes.get(i));
       builder.parameters.set(i, parameter.toBuilder(type, parameter.name).build());
+    }
+    builder.exceptions.clear();
+    for (int i = 0, size = resolvedThrownTypes.size(); i < size; i++) {
+      builder.addException(TypeName.get(resolvedThrownTypes.get(i)));
     }
 
     return builder;

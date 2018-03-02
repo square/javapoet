@@ -118,7 +118,12 @@ public final class MethodSpecTest {
     @Override public abstract String toString();
   }
 
-  interface ExtendsOthers extends Callable<Integer>, Comparable<ExtendsOthers> {
+  interface Throws<R extends RuntimeException> {
+    void fail() throws R;
+  }
+
+  interface ExtendsOthers extends Callable<Integer>, Comparable<ExtendsOthers>,
+      Throws<IllegalStateException> {
   }
 
   interface ExtendsIterableWithDefaultMethods extends Iterable<Object> {
@@ -176,6 +181,12 @@ public final class MethodSpecTest {
     assertThat(method.toString()).isEqualTo(""
         + "@java.lang.Override\n"
         + "public int compareTo(" + ExtendsOthers.class.getCanonicalName() + " arg0) {\n"
+        + "}\n");
+    exec = findFirst(methods, "fail");
+    method = MethodSpec.overriding(exec, classType, types).build();
+    assertThat(method.toString()).isEqualTo(""
+        + "@java.lang.Override\n"
+        + "public void fail() throws java.lang.IllegalStateException {\n"
         + "}\n");
   }
 
