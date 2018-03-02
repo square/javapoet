@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeParameterElement;
@@ -187,6 +188,11 @@ public final class MethodSpec {
    */
   public static Builder overriding(ExecutableElement method) {
     checkNotNull(method, "method == null");
+
+    Element enclosingClass = method.getEnclosingElement();
+    if (enclosingClass.getModifiers().contains(Modifier.FINAL)) {
+      throw new IllegalArgumentException("Cannot override method on final class " + enclosingClass);
+    }
 
     Set<Modifier> modifiers = method.getModifiers();
     if (modifiers.contains(Modifier.PRIVATE)
