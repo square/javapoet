@@ -29,7 +29,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 
 import static com.squareup.javapoet.Util.checkArgument;
-import static com.squareup.javapoet.Util.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 public final class TypeVariableName extends TypeName {
   public final String name;
@@ -41,11 +41,11 @@ public final class TypeVariableName extends TypeName {
 
   private TypeVariableName(String name, List<TypeName> bounds, List<AnnotationSpec> annotations) {
     super(annotations);
-    this.name = checkNotNull(name, "name == null");
+    this.name = requireNonNull(name, "name == null");
     this.bounds = bounds;
 
     for (TypeName bound : this.bounds) {
-      checkArgument(!bound.isPrimitive() && bound != VOID, "invalid bound: %s", bound);
+      checkArgument(!bound.isPrimitive() && bound != VOID, () -> "invalid bound: " + bound);
     }
   }
 

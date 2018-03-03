@@ -42,14 +42,15 @@ public final class WildcardTypeName extends TypeName {
     this.upperBounds = Util.immutableList(upperBounds);
     this.lowerBounds = Util.immutableList(lowerBounds);
 
-    checkArgument(this.upperBounds.size() == 1, "unexpected extends bounds: %s", upperBounds);
+    checkArgument(this.upperBounds.size() == 1,
+        () -> "unexpected extends bounds: " + upperBounds);
     for (TypeName upperBound : this.upperBounds) {
       checkArgument(!upperBound.isPrimitive() && upperBound != VOID,
-          "invalid upper bound: %s", upperBound);
+          () -> String.format("invalid upper bound: %s", upperBound));
     }
     for (TypeName lowerBound : this.lowerBounds) {
       checkArgument(!lowerBound.isPrimitive() && lowerBound != VOID,
-          "invalid lower bound: %s", lowerBound);
+          () -> String.format("invalid lower bound: %s", lowerBound));
     }
   }
 

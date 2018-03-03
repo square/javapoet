@@ -27,7 +27,7 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 
 import static com.squareup.javapoet.Util.checkArgument;
-import static com.squareup.javapoet.Util.checkNotNull;
+import static java.util.Objects.requireNonNull;
 import static javax.lang.model.element.NestingKind.MEMBER;
 import static javax.lang.model.element.NestingKind.TOP_LEVEL;
 
@@ -46,7 +46,8 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   private ClassName(List<String> names, List<AnnotationSpec> annotations) {
     super(annotations);
     for (int i = 1; i < names.size(); i++) {
-      checkArgument(SourceVersion.isName(names.get(i)), "part '%s' is keyword", names.get(i));
+      String name = names.get(i);
+      checkArgument(SourceVersion.isName(name), () -> String.format("part '%s' is keyword", name));
     }
     this.names = Util.immutableList(names);
     this.canonicalName = (names.get(0).isEmpty()
@@ -107,7 +108,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
    * class.
    */
   public ClassName nestedClass(String name) {
-    checkNotNull(name, "name == null");
+    requireNonNull(name, "name == null");
     List<String> result = new ArrayList<>(names.size() + 1);
     result.addAll(names);
     result.add(name);
@@ -135,7 +136,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   }
 
   public static ClassName get(Class<?> clazz) {
-    checkNotNull(clazz, "clazz == null");
+    requireNonNull(clazz, "clazz == null");
     checkArgument(!clazz.isPrimitive(), "primitive types cannot be represented as a ClassName");
     checkArgument(!void.class.equals(clazz), "'void' type cannot be represented as a ClassName");
     checkArgument(!clazz.isArray(), "array types cannot be represented as a ClassName");
@@ -174,18 +175,18 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     int p = 0;
     while (p < classNameString.length() && Character.isLowerCase(classNameString.codePointAt(p))) {
       p = classNameString.indexOf('.', p) + 1;
-      checkArgument(p != 0, "couldn't make a guess for %s", classNameString);
+      checkArgument(p != 0, () -> "couldn't make a guess for " + classNameString);
     }
     names.add(p != 0 ? classNameString.substring(0, p - 1) : "");
 
     // Add the class names, like "Map" and "Entry".
     for (String part : classNameString.substring(p).split("\\.", -1)) {
-      checkArgument(!part.isEmpty() && Character.isUpperCase(part.codePointAt(0)),
-          "couldn't make a guess for %s", classNameString);
+      boolean condition = !part.isEmpty() && Character.isUpperCase(part.codePointAt(0));
+      checkArgument(condition, () -> "couldn't make a guess for " + classNameString);
       names.add(part);
     }
 
-    checkArgument(names.size() >= 2, "couldn't make a guess for %s", classNameString);
+    checkArgument(names.size() >= 2, () -> "couldn't make a guess for " + classNameString);
     return new ClassName(names);
   }
 
@@ -203,7 +204,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
 
   /** Returns the class name for {@code element}. */
   public static ClassName get(TypeElement element) {
-    checkNotNull(element, "element == null");
+    requireNonNull(element, "element == null");
     List<String> names = new ArrayList<>();
     for (Element e = element; isClassOrInterface(e); e = e.getEnclosingElement()) {
       checkArgument(element.getNestingKind() == TOP_LEVEL || element.getNestingKind() == MEMBER,

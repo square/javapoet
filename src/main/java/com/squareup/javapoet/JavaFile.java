@@ -37,8 +37,8 @@ import javax.tools.JavaFileObject.Kind;
 import javax.tools.SimpleJavaFileObject;
 
 import static com.squareup.javapoet.Util.checkArgument;
-import static com.squareup.javapoet.Util.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Objects.requireNonNull;
 
 /** A Java file containing a single top level class. */
 public final class JavaFile {
@@ -84,7 +84,7 @@ public final class JavaFile {
   /** Writes this to {@code directory} as UTF-8 using the standard directory structure. */
   public void writeTo(Path directory) throws IOException {
     checkArgument(Files.notExists(directory) || Files.isDirectory(directory),
-        "path %s exists but is not a directory.", directory);
+        () -> String.format("path %s exists but is not a directory.", directory));
     Path outputDirectory = directory;
     if (!packageName.isEmpty()) {
       for (String packageComponent : packageName.split("\\.")) {
@@ -199,8 +199,8 @@ public final class JavaFile {
   }
 
   public static Builder builder(String packageName, TypeSpec typeSpec) {
-    checkNotNull(packageName, "packageName == null");
-    checkNotNull(typeSpec, "typeSpec == null");
+    requireNonNull(packageName, "packageName == null");
+    requireNonNull(typeSpec, "typeSpec == null");
     return new Builder(packageName, typeSpec);
   }
 
@@ -243,7 +243,7 @@ public final class JavaFile {
       checkArgument(names != null, "names == null");
       checkArgument(names.length > 0, "names array is empty");
       for (String name : names) {
-        checkArgument(name != null, "null entry in names array: %s", Arrays.toString(names));
+        checkArgument(name != null, () -> "null entry in names array: " + Arrays.toString(names));
         staticImports.add(className.canonicalName + "." + name);
       }
       return this;

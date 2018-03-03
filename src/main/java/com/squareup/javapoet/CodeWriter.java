@@ -31,10 +31,10 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
 
 import static com.squareup.javapoet.Util.checkArgument;
-import static com.squareup.javapoet.Util.checkNotNull;
 import static com.squareup.javapoet.Util.checkState;
 import static com.squareup.javapoet.Util.stringLiteralWithDoubleQuotes;
 import static java.lang.String.join;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Converts a {@link JavaFile} to a string suitable to both human- and javac-consumption. This
@@ -77,9 +77,9 @@ final class CodeWriter {
   CodeWriter(Appendable out, String indent, Map<String, ClassName> importedTypes,
       Set<String> staticImports) {
     this.out = new LineWrapper(out, indent, 100);
-    this.indent = checkNotNull(indent, "indent == null");
-    this.importedTypes = checkNotNull(importedTypes, "importedTypes == null");
-    this.staticImports = checkNotNull(staticImports, "staticImports == null");
+    this.indent = requireNonNull(indent, "indent == null");
+    this.importedTypes = requireNonNull(importedTypes, "importedTypes == null");
+    this.staticImports = requireNonNull(staticImports, "staticImports == null");
     this.staticImportClassNames = new LinkedHashSet<>();
     for (String signature : staticImports) {
       staticImportClassNames.add(signature.substring(0, signature.lastIndexOf('.')));
@@ -104,14 +104,15 @@ final class CodeWriter {
   }
 
   public CodeWriter unindent(int levels) {
-    checkArgument(indentLevel - levels >= 0, "cannot unindent %s from %s", levels, indentLevel);
+    checkArgument(indentLevel - levels >= 0,
+        () -> String.format("cannot unindent %s from %s", levels, indentLevel));
     indentLevel -= levels;
     return this;
   }
 
   public CodeWriter pushPackage(String packageName) {
-    checkState(this.packageName == NO_PACKAGE, "package already set: %s", this.packageName);
-    this.packageName = checkNotNull(packageName, "packageName == null");
+    checkState(this.packageName == NO_PACKAGE, () -> "package already set: " + this.packageName);
+    this.packageName = requireNonNull(packageName, "packageName == null");
     return this;
   }
 
@@ -313,7 +314,8 @@ final class CodeWriter {
   }
 
   private static String extractMemberName(String part) {
-    checkArgument(Character.isJavaIdentifierStart(part.charAt(0)), "not an identifier: %s", part);
+    checkArgument(Character.isJavaIdentifierStart(part.charAt(0)),
+        () -> "not an identifier: " + part);
     for (int i = 1; i <= part.length(); i++) {
       if (!SourceVersion.isIdentifier(part.substring(0, i))) {
         return part.substring(0, i - 1);

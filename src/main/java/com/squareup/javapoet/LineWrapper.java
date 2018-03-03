@@ -17,7 +17,7 @@ package com.squareup.javapoet;
 
 import java.io.IOException;
 
-import static com.squareup.javapoet.Util.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Implements soft line wrapping on an appendable. To use, append characters using {@link #append}
@@ -46,7 +46,7 @@ final class LineWrapper {
   private FlushType nextFlush;
 
   LineWrapper(Appendable out, String indent, int columnLimit) {
-    checkNotNull(out, "out == null");
+    requireNonNull(out, "out == null");
     this.out = out;
     this.indent = indent;
     this.columnLimit = columnLimit;

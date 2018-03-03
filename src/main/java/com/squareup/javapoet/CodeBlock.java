@@ -183,7 +183,7 @@ public final class CodeBlock {
 
       for (String argument : arguments.keySet()) {
         checkArgument(LOWERCASE.matcher(argument).matches(),
-            "argument '%s' must start with a lowercase character", argument);
+            () -> String.format("argument '%s' must start with a lowercase character", argument));
       }
 
       while (p < format.length()) {
@@ -206,16 +206,18 @@ public final class CodeBlock {
         }
         if (matcher != null && matcher.lookingAt()) {
           String argumentName = matcher.group("argumentName");
-          checkArgument(arguments.containsKey(argumentName), "Missing named argument for $%s",
-              argumentName);
+          checkArgument(arguments.containsKey(argumentName),
+              () -> "Missing named argument for $" + argumentName);
           char formatChar = matcher.group("typeChar").charAt(0);
           addArgument(format, formatChar, arguments.get(argumentName));
           formatParts.add("$" + formatChar);
           p += matcher.regionEnd();
         } else {
           checkArgument(p < format.length() - 1, "dangling $ at end");
-          checkArgument(isNoArgPlaceholder(format.charAt(p + 1)),
-              "unknown format $%s at %s in '%s'", format.charAt(p + 1), p + 1, format);
+          int formatPos = p + 1;
+          char formatChar = format.charAt(formatPos);
+          checkArgument(isNoArgPlaceholder(formatChar), () ->
+              String.format("unknown format $%s at %s in '%s'", formatChar, formatPos, format));
           formatParts.add(format.substring(p, p + 2));
           p += 2;
         }
@@ -257,7 +259,8 @@ public final class CodeBlock {
         int indexStart = p;
         char c;
         do {
-          checkArgument(p < format.length(), "dangling format characters in '%s'", format);
+          checkArgument(p < format.length(),
+              () -> String.format("dangling format characters in '%s'", format));
           c = format.charAt(p++);
         } while (c >= '0' && c <= '9');
         int indexEnd = p - 1;
@@ -285,8 +288,8 @@ public final class CodeBlock {
         }
 
         checkArgument(index >= 0 && index < args.length,
-            "index %d for '%s' not in range (received %s arguments)",
-            index + 1, format.substring(indexStart - 1, indexEnd + 1), args.length);
+            () -> String.format("index %d for '%s' not in range (received %s arguments)",
+                index + 1, format.substring(indexStart - 1, indexEnd + 1), args.length));
         checkArgument(!hasIndexed || !hasRelative, "cannot mix indexed and positional parameters");
 
         addArgument(format, c, args[index]);
@@ -295,8 +298,9 @@ public final class CodeBlock {
       }
 
       if (hasRelative) {
+        int count = relativeParameterCount;
         checkArgument(relativeParameterCount >= args.length,
-            "unused arguments: expected %s, received %s", relativeParameterCount, args.length);
+            () -> String.format("unused arguments: expected %s, received %s", count, args.length));
       }
       if (hasIndexed) {
         List<String> unused = new ArrayList<>();
@@ -305,8 +309,9 @@ public final class CodeBlock {
             unused.add("$" + (i + 1));
           }
         }
-        String s = unused.size() == 1 ? "" : "s";
-        checkArgument(unused.isEmpty(), "unused argument%s: %s", s, String.join(", ", unused));
+        checkArgument(unused.isEmpty(), () ->
+            String.format("unused argument%s: %s",
+                unused.size() == 1 ? "" : "s", String.join(", ", unused)));
       }
       return this;
     }

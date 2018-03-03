@@ -22,7 +22,7 @@ import java.util.Set;
 import java.util.UUID;
 import javax.lang.model.SourceVersion;
 
-import static com.squareup.javapoet.Util.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Assigns Java identifier names to avoid collisions, keywords, and invalid characters. To use,
@@ -106,8 +106,8 @@ public final class NameAllocator implements Cloneable {
    * {@link #get(Object)}.
    */
   public String newName(String suggestion, Object tag) {
-    checkNotNull(suggestion, "suggestion");
-    checkNotNull(tag, "tag");
+    requireNonNull(suggestion, "suggestion");
+    requireNonNull(tag, "tag");
 
     suggestion = toJavaIdentifier(suggestion);
 

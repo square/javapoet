@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.squareup.javapoet.Util.checkArgument;
-import static com.squareup.javapoet.Util.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 public final class ParameterizedTypeName extends TypeName {
   private final ParameterizedTypeName enclosingType;
@@ -41,15 +41,15 @@ public final class ParameterizedTypeName extends TypeName {
   private ParameterizedTypeName(ParameterizedTypeName enclosingType, ClassName rawType,
       List<TypeName> typeArguments, List<AnnotationSpec> annotations) {
     super(annotations);
-    this.rawType = checkNotNull(rawType, "rawType == null");
+    this.rawType = requireNonNull(rawType, "rawType == null");
     this.enclosingType = enclosingType;
     this.typeArguments = Util.immutableList(typeArguments);
 
     checkArgument(!this.typeArguments.isEmpty() || enclosingType != null,
-        "no type arguments: %s", rawType);
+        () -> "no type arguments: " + rawType);
     for (TypeName typeArgument : this.typeArguments) {
       checkArgument(!typeArgument.isPrimitive() && typeArgument != VOID,
-          "invalid type parameter: %s", typeArgument);
+          () -> "invalid type parameter: " + typeArgument);
     }
   }
 
@@ -90,7 +90,7 @@ public final class ParameterizedTypeName extends TypeName {
    * inside this class.
    */
   public ParameterizedTypeName nestedClass(String name) {
-    checkNotNull(name, "name == null");
+    requireNonNull(name, "name == null");
     return new ParameterizedTypeName(this, rawType.nestedClass(name), new ArrayList<>(),
         new ArrayList<>());
   }
@@ -100,7 +100,7 @@ public final class ParameterizedTypeName extends TypeName {
    * inside this class, with the specified {@code typeArguments}.
    */
   public ParameterizedTypeName nestedClass(String name, List<TypeName> typeArguments) {
-    checkNotNull(name, "name == null");
+    requireNonNull(name, "name == null");
     return new ParameterizedTypeName(this, rawType.nestedClass(name), typeArguments,
         new ArrayList<>());
   }
