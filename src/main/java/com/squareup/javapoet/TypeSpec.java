@@ -34,7 +34,6 @@ import javax.lang.model.element.Modifier;
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
 import static com.squareup.javapoet.Util.checkState;
-import static com.squareup.javapoet.Util.hasDefaultModifier;
 import static com.squareup.javapoet.Util.requireExactlyOneOf;
 
 /** A generated class, interface, or enum declaration. */
@@ -215,7 +214,7 @@ public final class TypeSpec {
           implementsTypes = Collections.emptyList();
         } else {
           extendsTypes = superclass.equals(ClassName.OBJECT)
-              ? Collections.<TypeName>emptyList()
+              ? Collections.emptyList()
               : Collections.singletonList(superclass);
           implementsTypes = superinterfaces;
         }
@@ -252,8 +251,7 @@ public final class TypeSpec {
           i.hasNext(); ) {
         Map.Entry<String, TypeSpec> enumConstant = i.next();
         if (!firstMember) codeWriter.emit("\n");
-        enumConstant.getValue()
-            .emit(codeWriter, enumConstant.getKey(), Collections.<Modifier>emptySet());
+        enumConstant.getValue().emit(codeWriter, enumConstant.getKey(), Collections.emptySet());
         firstMember = false;
         if (i.hasNext()) {
           codeWriter.emit(",\n");
@@ -343,7 +341,7 @@ public final class TypeSpec {
     StringBuilder out = new StringBuilder();
     try {
       CodeWriter codeWriter = new CodeWriter(out);
-      emit(codeWriter, null, Collections.<Modifier>emptySet());
+      emit(codeWriter, null, Collections.emptySet());
       return out.toString();
     } catch (IOException e) {
       throw new AssertionError();
@@ -352,28 +350,28 @@ public final class TypeSpec {
 
   public enum Kind {
     CLASS(
-        Collections.<Modifier>emptySet(),
-        Collections.<Modifier>emptySet(),
-        Collections.<Modifier>emptySet(),
-        Collections.<Modifier>emptySet()),
+        Collections.emptySet(),
+        Collections.emptySet(),
+        Collections.emptySet(),
+        Collections.emptySet()),
 
     INTERFACE(
         Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)),
         Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.ABSTRACT)),
         Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC)),
-        Util.immutableSet(Arrays.asList(Modifier.STATIC))),
+        Util.immutableSet(Collections.singletonList(Modifier.STATIC))),
 
     ENUM(
-        Collections.<Modifier>emptySet(),
-        Collections.<Modifier>emptySet(),
-        Collections.<Modifier>emptySet(),
+        Collections.emptySet(),
+        Collections.emptySet(),
+        Collections.emptySet(),
         Collections.singleton(Modifier.STATIC)),
 
     ANNOTATION(
         Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)),
         Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.ABSTRACT)),
         Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC)),
-        Util.immutableSet(Arrays.asList(Modifier.STATIC)));
+        Util.immutableSet(Collections.singletonList(Modifier.STATIC)));
 
     private final Set<Modifier> implicitFieldModifiers;
     private final Set<Modifier> implicitMethodModifiers;
@@ -571,7 +569,8 @@ public final class TypeSpec {
 
     public Builder addMethod(MethodSpec methodSpec) {
       if (kind == Kind.INTERFACE) {
-        requireExactlyOneOf(methodSpec.modifiers, Modifier.ABSTRACT, Modifier.STATIC, Util.DEFAULT);
+        requireExactlyOneOf(methodSpec.modifiers, Modifier.ABSTRACT, Modifier.STATIC,
+            Modifier.DEFAULT);
         requireExactlyOneOf(methodSpec.modifiers, Modifier.PUBLIC, Modifier.PRIVATE);
       } else if (kind == Kind.ANNOTATION) {
         checkState(methodSpec.modifiers.equals(kind.implicitMethodModifiers),
@@ -583,7 +582,7 @@ public final class TypeSpec {
             kind, name, methodSpec.name);
       }
       if (kind != Kind.INTERFACE) {
-        checkState(!hasDefaultModifier(methodSpec.modifiers), "%s %s.%s cannot be default",
+        checkState(!methodSpec.hasModifier(Modifier.DEFAULT), "%s %s.%s cannot be default",
             kind, name, methodSpec.name);
       }
       methodSpecs.add(methodSpec);

@@ -161,7 +161,7 @@ public final class MethodSpec {
     StringBuilder out = new StringBuilder();
     try {
       CodeWriter codeWriter = new CodeWriter(out);
-      emit(codeWriter, "Constructor", Collections.<Modifier>emptySet());
+      emit(codeWriter, "Constructor", Collections.emptySet());
       return out.toString();
     } catch (IOException e) {
       throw new AssertionError();
@@ -202,7 +202,7 @@ public final class MethodSpec {
 
     modifiers = new LinkedHashSet<>(modifiers);
     modifiers.remove(Modifier.ABSTRACT);
-    modifiers.remove(Util.DEFAULT); // LinkedHashSet permits null as element for Java 7
+    modifiers.remove(Modifier.DEFAULT);
     methodBuilder.addModifiers(modifiers);
 
     for (TypeParameterElement typeParameterElement : method.getTypeParameters()) {
