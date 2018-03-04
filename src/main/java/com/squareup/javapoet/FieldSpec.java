@@ -25,8 +25,8 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
 
 import static com.squareup.javapoet.Util.checkArgument;
-import static com.squareup.javapoet.Util.checkNotNull;
 import static com.squareup.javapoet.Util.checkState;
+import static java.util.Objects.requireNonNull;
 
 /** A generated field declaration. */
 public final class FieldSpec {
@@ -38,8 +38,8 @@ public final class FieldSpec {
   public final CodeBlock initializer;
 
   private FieldSpec(Builder builder) {
-    this.type = checkNotNull(builder.type, "type == null");
-    this.name = checkNotNull(builder.name, "name == null");
+    this.type = requireNonNull(builder.type, "type == null");
+    this.name = requireNonNull(builder.name, "name == null");
     this.javadoc = builder.javadoc.build();
     this.annotations = Util.immutableList(builder.annotations);
     this.modifiers = Util.immutableSet(builder.modifiers);
@@ -87,8 +87,8 @@ public final class FieldSpec {
   }
 
   public static Builder builder(TypeName type, String name, Modifier... modifiers) {
-    checkNotNull(type, "type == null");
-    checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
+    requireNonNull(type, "type == null");
+    checkArgument(SourceVersion.isName(name), () -> "not a valid name: " + name);
     return new Builder(type, name)
         .addModifiers(modifiers);
   }
@@ -163,7 +163,7 @@ public final class FieldSpec {
 
     public Builder initializer(CodeBlock codeBlock) {
       checkState(this.initializer == null, "initializer was already set");
-      this.initializer = checkNotNull(codeBlock, "codeBlock == null");
+      this.initializer = requireNonNull(codeBlock, "codeBlock == null");
       return this;
     }
 

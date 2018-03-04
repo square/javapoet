@@ -36,8 +36,8 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.Types;
 
 import static com.squareup.javapoet.Util.checkArgument;
-import static com.squareup.javapoet.Util.checkNotNull;
 import static com.squareup.javapoet.Util.checkState;
+import static java.util.Objects.requireNonNull;
 
 /** A generated constructor or method declaration. */
 public final class MethodSpec {
@@ -58,11 +58,11 @@ public final class MethodSpec {
   private MethodSpec(Builder builder) {
     CodeBlock code = builder.code.build();
     checkArgument(code.isEmpty() || !builder.modifiers.contains(Modifier.ABSTRACT),
-        "abstract method %s cannot have code", builder.name);
+        () -> String.format("abstract method %s cannot have code", builder.name));
     checkArgument(!builder.varargs || lastParameterIsArray(builder.parameters),
-        "last parameter of varargs method %s must be an array", builder.name);
+        () -> String.format("last parameter of varargs method %s must be an array", builder.name));
 
-    this.name = checkNotNull(builder.name, "name == null");
+    this.name = requireNonNull(builder.name, "name == null");
     this.javadoc = builder.javadoc.build();
     this.annotations = Util.immutableList(builder.annotations);
     this.modifiers = Util.immutableSet(builder.modifiers);
@@ -187,7 +187,7 @@ public final class MethodSpec {
    * parameters of the overridden method. Since JavaPoet 1.8 annotations must be added separately.
    */
   public static Builder overriding(ExecutableElement method) {
-    checkNotNull(method, "method == null");
+    requireNonNull(method, "method == null");
 
     Element enclosingClass = method.getEnclosingElement();
     if (enclosingClass.getModifiers().contains(Modifier.FINAL)) {
@@ -291,9 +291,9 @@ public final class MethodSpec {
     private CodeBlock defaultValue;
 
     private Builder(String name) {
-      checkNotNull(name, "name == null");
+      requireNonNull(name, "name == null");
       checkArgument(name.equals(CONSTRUCTOR) || SourceVersion.isName(name),
-          "not a valid name: %s", name);
+          () -> "not a valid name: " + name);
       this.name = name;
       this.returnType = name.equals(CONSTRUCTOR) ? null : TypeName.VOID;
     }
@@ -331,13 +331,13 @@ public final class MethodSpec {
     }
 
     public Builder addModifiers(Modifier... modifiers) {
-      checkNotNull(modifiers, "modifiers == null");
+      requireNonNull(modifiers, "modifiers == null");
       Collections.addAll(this.modifiers, modifiers);
       return this;
     }
 
     public Builder addModifiers(Iterable<Modifier> modifiers) {
-      checkNotNull(modifiers, "modifiers == null");
+      requireNonNull(modifiers, "modifiers == null");
       for (Modifier modifier : modifiers) {
         this.modifiers.add(modifier);
       }
@@ -440,7 +440,7 @@ public final class MethodSpec {
 
     public Builder defaultValue(CodeBlock codeBlock) {
       checkState(this.defaultValue == null, "defaultValue was already set");
-      this.defaultValue = checkNotNull(codeBlock, "codeBlock == null");
+      this.defaultValue = requireNonNull(codeBlock, "codeBlock == null");
       return this;
     }
 

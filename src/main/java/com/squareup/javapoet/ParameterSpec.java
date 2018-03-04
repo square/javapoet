@@ -27,7 +27,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.VariableElement;
 
 import static com.squareup.javapoet.Util.checkArgument;
-import static com.squareup.javapoet.Util.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 /** A generated parameter declaration. */
 public final class ParameterSpec {
@@ -37,10 +37,10 @@ public final class ParameterSpec {
   public final TypeName type;
 
   private ParameterSpec(Builder builder) {
-    this.name = checkNotNull(builder.name, "name == null");
+    this.name = requireNonNull(builder.name, "name == null");
     this.annotations = Util.immutableList(builder.annotations);
     this.modifiers = Util.immutableSet(builder.modifiers);
-    this.type = checkNotNull(builder.type, "type == null");
+    this.type = requireNonNull(builder.type, "type == null");
   }
 
   public boolean hasModifier(Modifier modifier) {
@@ -96,8 +96,8 @@ public final class ParameterSpec {
   }
 
   public static Builder builder(TypeName type, String name, Modifier... modifiers) {
-    checkNotNull(type, "type == null");
-    checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
+    requireNonNull(type, "type == null");
+    checkArgument(SourceVersion.isName(name), () -> "not a valid name: " + name);
     return new Builder(type, name)
         .addModifiers(modifiers);
   }
@@ -157,7 +157,7 @@ public final class ParameterSpec {
     }
 
     public Builder addModifiers(Iterable<Modifier> modifiers) {
-      checkNotNull(modifiers, "modifiers == null");
+      requireNonNull(modifiers, "modifiers == null");
       for (Modifier modifier : modifiers) {
         this.modifiers.add(modifier);
       }

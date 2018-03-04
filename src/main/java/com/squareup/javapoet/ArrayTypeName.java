@@ -25,7 +25,7 @@ import java.util.Map;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.ArrayType;
 
-import static com.squareup.javapoet.Util.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 public final class ArrayTypeName extends TypeName {
   public final TypeName componentType;
@@ -36,7 +36,7 @@ public final class ArrayTypeName extends TypeName {
 
   private ArrayTypeName(TypeName componentType, List<AnnotationSpec> annotations) {
     super(annotations);
-    this.componentType = checkNotNull(componentType, "rawType == null");
+    this.componentType = requireNonNull(componentType, "rawType == null");
   }
 
   @Override public ArrayTypeName annotated(List<AnnotationSpec> annotations) {

@@ -38,7 +38,7 @@ import javax.lang.model.util.SimpleAnnotationValueVisitor8;
 
 import static com.squareup.javapoet.Util.characterLiteralWithoutSingleQuotes;
 import static com.squareup.javapoet.Util.checkArgument;
-import static com.squareup.javapoet.Util.checkNotNull;
+import static java.util.Objects.requireNonNull;
 
 /** A generated annotation on a declaration. */
 public final class AnnotationSpec {
@@ -152,7 +152,7 @@ public final class AnnotationSpec {
   }
 
   public static Builder builder(ClassName type) {
-    checkNotNull(type, "type == null");
+    requireNonNull(type, "type == null");
     return new Builder(type);
   }
 
@@ -203,8 +203,8 @@ public final class AnnotationSpec {
     }
 
     public Builder addMember(String name, CodeBlock codeBlock) {
-      checkNotNull(name, "name == null");
-      checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
+      requireNonNull(name, "name == null");
+      checkArgument(SourceVersion.isName(name), () -> "not a valid name: " + name);
       List<CodeBlock> values = members.computeIfAbsent(name, k -> new ArrayList<>());
       values.add(codeBlock);
       return this;
@@ -216,9 +216,10 @@ public final class AnnotationSpec {
      * the class of the given {@code value} object is not supported.
      */
     Builder addMemberForValue(String memberName, Object value) {
-      checkNotNull(memberName, "memberName == null");
-      checkNotNull(value, "value == null, constant non-null value expected for %s", memberName);
-      checkArgument(SourceVersion.isName(memberName), "not a valid name: %s", memberName);
+      requireNonNull(memberName, "memberName == null");
+      requireNonNull(value,
+          () -> "value == null, constant non-null value expected for " + memberName);
+      checkArgument(SourceVersion.isName(memberName), () -> "not a valid name: " + memberName);
       if (value instanceof Class<?>) {
         return addMember(memberName, "$T.class", value);
       }

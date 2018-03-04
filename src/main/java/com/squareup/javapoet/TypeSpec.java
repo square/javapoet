@@ -32,9 +32,9 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 
 import static com.squareup.javapoet.Util.checkArgument;
-import static com.squareup.javapoet.Util.checkNotNull;
 import static com.squareup.javapoet.Util.checkState;
 import static com.squareup.javapoet.Util.requireExactlyOneOf;
+import static java.util.Objects.requireNonNull;
 
 /** A generated class, interface, or enum declaration. */
 public final class TypeSpec {
@@ -109,27 +109,27 @@ public final class TypeSpec {
   }
 
   public static Builder classBuilder(String name) {
-    return new Builder(Kind.CLASS, checkNotNull(name, "name == null"), null);
+    return new Builder(Kind.CLASS, requireNonNull(name, "name == null"), null);
   }
 
   public static Builder classBuilder(ClassName className) {
-    return classBuilder(checkNotNull(className, "className == null").simpleName());
+    return classBuilder(requireNonNull(className, "className == null").simpleName());
   }
 
   public static Builder interfaceBuilder(String name) {
-    return new Builder(Kind.INTERFACE, checkNotNull(name, "name == null"), null);
+    return new Builder(Kind.INTERFACE, requireNonNull(name, "name == null"), null);
   }
 
   public static Builder interfaceBuilder(ClassName className) {
-    return interfaceBuilder(checkNotNull(className, "className == null").simpleName());
+    return interfaceBuilder(requireNonNull(className, "className == null").simpleName());
   }
 
   public static Builder enumBuilder(String name) {
-    return new Builder(Kind.ENUM, checkNotNull(name, "name == null"), null);
+    return new Builder(Kind.ENUM, requireNonNull(name, "name == null"), null);
   }
 
   public static Builder enumBuilder(ClassName className) {
-    return enumBuilder(checkNotNull(className, "className == null").simpleName());
+    return enumBuilder(requireNonNull(className, "className == null").simpleName());
   }
 
   public static Builder anonymousClassBuilder(String typeArgumentsFormat, Object... args) {
@@ -143,11 +143,11 @@ public final class TypeSpec {
   }
 
   public static Builder annotationBuilder(String name) {
-    return new Builder(Kind.ANNOTATION, checkNotNull(name, "name == null"), null);
+    return new Builder(Kind.ANNOTATION, requireNonNull(name, "name == null"), null);
   }
 
   public static Builder annotationBuilder(ClassName className) {
-    return annotationBuilder(checkNotNull(className, "className == null").simpleName());
+    return annotationBuilder(requireNonNull(className, "className == null").simpleName());
   }
 
   public Builder toBuilder() {
@@ -410,7 +410,7 @@ public final class TypeSpec {
 
     private Builder(Kind kind, String name,
         CodeBlock anonymousTypeArguments) {
-      checkArgument(name == null || SourceVersion.isName(name), "not a valid name: %s", name);
+      checkArgument(name == null || SourceVersion.isName(name), () -> "not a valid name: " + name);
       this.kind = kind;
       this.name = name;
       this.anonymousTypeArguments = anonymousTypeArguments;
@@ -507,10 +507,10 @@ public final class TypeSpec {
     }
 
     public Builder addEnumConstant(String name, TypeSpec typeSpec) {
-      checkState(kind == Kind.ENUM, "%s is not enum", this.name);
+      checkState(kind == Kind.ENUM, () -> String.format("%s is not enum", this.name));
       checkArgument(typeSpec.anonymousTypeArguments != null,
           "enum constants must have anonymous type arguments");
-      checkArgument(SourceVersion.isName(name), "not a valid enum constant: %s", name);
+      checkArgument(SourceVersion.isName(name), () -> "not a valid enum constant: " + name);
       enumConstants.put(name, typeSpec);
       return this;
     }
@@ -527,8 +527,8 @@ public final class TypeSpec {
       if (kind == Kind.INTERFACE || kind == Kind.ANNOTATION) {
         requireExactlyOneOf(fieldSpec.modifiers, Modifier.PUBLIC, Modifier.PRIVATE);
         Set<Modifier> check = EnumSet.of(Modifier.STATIC, Modifier.FINAL);
-        checkState(fieldSpec.modifiers.containsAll(check), "%s %s.%s requires modifiers %s",
-            kind, name, fieldSpec.name, check);
+        checkState(fieldSpec.modifiers.containsAll(check), () ->
+            String.format("%s %s.%s requires modifiers %s", kind, name, fieldSpec.name, check));
       }
       fieldSpecs.add(fieldSpec);
       return this;
@@ -573,17 +573,17 @@ public final class TypeSpec {
             Modifier.DEFAULT);
         requireExactlyOneOf(methodSpec.modifiers, Modifier.PUBLIC, Modifier.PRIVATE);
       } else if (kind == Kind.ANNOTATION) {
-        checkState(methodSpec.modifiers.equals(kind.implicitMethodModifiers),
-            "%s %s.%s requires modifiers %s",
-            kind, name, methodSpec.name, kind.implicitMethodModifiers);
+        checkState(methodSpec.modifiers.equals(kind.implicitMethodModifiers), () ->
+            String.format("%s %s.%s requires modifiers %s",
+                kind, name, methodSpec.name, kind.implicitMethodModifiers));
       }
       if (kind != Kind.ANNOTATION) {
-        checkState(methodSpec.defaultValue == null, "%s %s.%s cannot have a default value",
-            kind, name, methodSpec.name);
+        checkState(methodSpec.defaultValue == null, () ->
+            String.format("%s %s.%s cannot have a default value", kind, name, methodSpec.name));
       }
       if (kind != Kind.INTERFACE) {
-        checkState(!methodSpec.hasModifier(Modifier.DEFAULT), "%s %s.%s cannot be default",
-            kind, name, methodSpec.name);
+        checkState(!methodSpec.hasModifier(Modifier.DEFAULT), () ->
+            String.format("%s %s.%s cannot be default", kind, name, methodSpec.name));
       }
       methodSpecs.add(methodSpec);
       return this;
@@ -598,9 +598,9 @@ public final class TypeSpec {
     }
 
     public Builder addType(TypeSpec typeSpec) {
-      checkArgument(typeSpec.modifiers.containsAll(kind.implicitTypeModifiers),
-          "%s %s.%s requires modifiers %s", kind, name, typeSpec.name,
-          kind.implicitTypeModifiers);
+      checkArgument(typeSpec.modifiers.containsAll(kind.implicitTypeModifiers), () ->
+          String.format("%s %s.%s requires modifiers %s",
+              kind, name, typeSpec.name, kind.implicitTypeModifiers));
       typeSpecs.add(typeSpec);
       return this;
     }
@@ -612,12 +612,13 @@ public final class TypeSpec {
 
     public TypeSpec build() {
       checkArgument(kind != Kind.ENUM || !enumConstants.isEmpty(),
-          "at least one enum constant is required for %s", name);
+          () -> String.format("at least one enum constant is required for %s", name));
 
       boolean isAbstract = modifiers.contains(Modifier.ABSTRACT) || kind != Kind.CLASS;
       for (MethodSpec methodSpec : methodSpecs) {
-        checkArgument(isAbstract || !methodSpec.hasModifier(Modifier.ABSTRACT),
-            "non-abstract type %s cannot declare abstract method %s", name, methodSpec.name);
+        checkArgument(isAbstract || !methodSpec.hasModifier(Modifier.ABSTRACT), () ->
+            String.format("non-abstract type %s cannot declare abstract method %s",
+                name, methodSpec.name));
       }
 
       boolean superclassIsObject = superclass.equals(ClassName.OBJECT);

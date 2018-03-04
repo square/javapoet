@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
@@ -113,7 +114,7 @@ public class TypeName {
   }
 
   public TypeName annotated(List<AnnotationSpec> annotations) {
-    Util.checkNotNull(annotations, "annotations == null");
+    Objects.requireNonNull(annotations, "annotations == null");
     return new TypeName(keyword, concatAnnotations(annotations));
   }
 

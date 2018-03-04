@@ -24,6 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import javax.lang.model.element.Modifier;
 
 import static java.lang.Character.isISOControl;
@@ -49,17 +50,20 @@ final class Util {
     return Collections.unmodifiableMap(new LinkedHashMap<>(map));
   }
 
-  static void checkArgument(boolean condition, String format, Object... args) {
-    if (!condition) throw new IllegalArgumentException(String.format(format, args));
+  static void checkArgument(boolean condition, String message) {
+    if (!condition) throw new IllegalArgumentException(message);
   }
 
-  static <T> T checkNotNull(T reference, String format, Object... args) {
-    if (reference == null) throw new NullPointerException(String.format(format, args));
-    return reference;
+  static void checkArgument(boolean condition, Supplier<String> messageSupplier) {
+    if (!condition) throw new IllegalArgumentException(messageSupplier.get());
   }
 
-  static void checkState(boolean condition, String format, Object... args) {
-    if (!condition) throw new IllegalStateException(String.format(format, args));
+  static void checkState(boolean condition, String message) {
+    if (!condition) throw new IllegalStateException(message);
+  }
+
+  static void checkState(boolean condition, Supplier<String> messageSupplier) {
+    if (!condition) throw new IllegalStateException(messageSupplier.get());
   }
 
   static <T> List<T> immutableList(Collection<T> collection) {
@@ -82,8 +86,9 @@ final class Util {
     for (Modifier modifier : mutuallyExclusive) {
       if (modifiers.contains(modifier)) count++;
     }
-    checkArgument(count == 1, "modifiers %s must contain one of %s",
-        modifiers, Arrays.toString(mutuallyExclusive));
+    checkArgument(count == 1, () ->
+        String.format("modifiers %s must contain one of %s",
+            modifiers, Arrays.toString(mutuallyExclusive)));
   }
 
   static String characterLiteralWithoutSingleQuotes(char c) {
