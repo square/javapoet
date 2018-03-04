@@ -123,6 +123,11 @@ public final class MethodSpecTest {
   interface ExtendsIterableWithDefaultMethods extends Iterable<Object> {
   }
 
+  final class FinalClass {
+    void method() {
+    }
+  }
+
   @Test public void overrideEverything() {
     TypeElement classElement = getElement(Everything.class);
     ExecutableElement methodElement = getOnlyElement(methodsIn(classElement.getEnclosedElements()));
@@ -175,6 +180,18 @@ public final class MethodSpecTest {
         + "@java.lang.Override\n"
         + "public int compareTo(" + ExtendsOthers.class.getCanonicalName() + " arg0) {\n"
         + "}\n");
+  }
+
+  @Test public void overrideFinalClassMethod() {
+    TypeElement classElement = getElement(FinalClass.class);
+    List<ExecutableElement> methods = methodsIn(elements.getAllMembers(classElement));
+    try {
+      MethodSpec.overriding(findFirst(methods, "method"));
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo(
+          "Cannot override method on final class com.squareup.javapoet.MethodSpecTest.FinalClass");
+    }
   }
 
   @Test public void overrideInvalidModifiers() {
