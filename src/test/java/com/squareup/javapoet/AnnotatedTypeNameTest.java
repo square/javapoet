@@ -31,8 +31,16 @@ public class AnnotatedTypeNameTest {
 
   private final static String NN = NeverNull.class.getCanonicalName();
   private final AnnotationSpec NEVER_NULL = AnnotationSpec.builder(NeverNull.class).build();
+  private final static String TUA = TypeUseAnnotation.class.getCanonicalName();
+  private final AnnotationSpec TYPE_USE_ANNOTATION =
+      AnnotationSpec.builder(TypeUseAnnotation.class).build();
 
+  @Target(ElementType.TYPE_USE)
   public @interface NeverNull {}
+
+  @Target(ElementType.TYPE_USE)
+  public @interface TypeUseAnnotation {}
+
 
   @Test(expected=NullPointerException.class) public void nullAnnotationArray() {
     TypeName.BOOLEAN.annotated((AnnotationSpec[]) null);
@@ -46,6 +54,7 @@ public class AnnotatedTypeNameTest {
     TypeName simpleString = TypeName.get(String.class);
     assertFalse(simpleString.isAnnotated());
     assertEquals(simpleString, TypeName.get(String.class));
+
     TypeName annotated = simpleString.annotated(NEVER_NULL);
     assertTrue(annotated.isAnnotated());
     assertEquals(annotated, annotated.annotated());
@@ -53,46 +62,41 @@ public class AnnotatedTypeNameTest {
 
   @Test public void annotatedType() {
     TypeName type = TypeName.get(String.class);
-    TypeName actual = type.annotated(NEVER_NULL);
-    assertThat(actual.toString()).isEqualTo("java.lang. @" + NN + " String");
+    TypeName actual = type.annotated(TYPE_USE_ANNOTATION);
+    assertThat(actual.toString()).isEqualTo("java.lang. @" + TUA + " String");
   }
 
   @Test public void annotatedTwice() {
     TypeName type = TypeName.get(String.class);
     TypeName actual =
         type.annotated(NEVER_NULL)
-            .annotated(AnnotationSpec.builder(Override.class).build());
+            .annotated(TYPE_USE_ANNOTATION);
     assertThat(actual.toString())
-        .isEqualTo("java.lang. @" + NN + " @java.lang.Override String");
+        .isEqualTo("java.lang. @" + NN + " @" + TUA + " String");
   }
 
   @Test public void annotatedParameterizedType() {
-    String expected = "java.util. @" + NN + " List<java.lang.String>";
     TypeName type = ParameterizedTypeName.get(List.class, String.class);
-    String actual = type.annotated(NEVER_NULL).toString();
-    assertEquals(expected, actual);
+    TypeName actual = type.annotated(TYPE_USE_ANNOTATION);
+    assertThat(actual.toString()).isEqualTo("java.util. @" + TUA + " List<java.lang.String>");
   }
 
   @Test public void annotatedArgumentOfParameterizedType() {
-    String expected = "java.util.List<java.lang. @" + NN + " String>";
-    TypeName type = TypeName.get(String.class).annotated(NEVER_NULL);
-    ClassName list = ClassName.get(List.class);
-    String actual = ParameterizedTypeName.get(list, type).toString();
-    assertEquals(expected, actual);
+    TypeName type = TypeName.get(String.class).annotated(TYPE_USE_ANNOTATION);
+    TypeName actual = ParameterizedTypeName.get(ClassName.get(List.class), type);
+    assertThat(actual.toString()).isEqualTo("java.util.List<java.lang. @" + TUA + " String>");
   }
 
   @Test public void annotatedWildcardTypeNameWithSuper() {
-    String expected = "? super java.lang. @" + NN + " String";
-    TypeName type = TypeName.get(String.class).annotated(NEVER_NULL);
-    String actual = WildcardTypeName.supertypeOf(type).toString();
-    assertEquals(expected, actual);
+    TypeName type = TypeName.get(String.class).annotated(TYPE_USE_ANNOTATION);
+    TypeName actual = WildcardTypeName.supertypeOf(type);
+    assertThat(actual.toString()).isEqualTo("? super java.lang. @" + TUA + " String");
   }
 
   @Test public void annotatedWildcardTypeNameWithExtends() {
-    String expected = "? extends java.lang. @" + NN + " String";
-    TypeName type = TypeName.get(String.class).annotated(NEVER_NULL);
-    String actual = WildcardTypeName.subtypeOf(type).toString();
-    assertEquals(expected, actual);
+    TypeName type = TypeName.get(String.class).annotated(TYPE_USE_ANNOTATION);
+    TypeName actual = WildcardTypeName.subtypeOf(type);
+    assertThat(actual.toString()).isEqualTo("? extends java.lang. @" + TUA + " String");
   }
 
   @Test public void annotatedEquivalence() {
@@ -107,19 +111,13 @@ public class AnnotatedTypeNameTest {
   private void annotatedEquivalence(TypeName type) {
     assertFalse(type.isAnnotated());
     assertEquals(type, type);
-    assertEquals(type.annotated(NEVER_NULL), type.annotated(NEVER_NULL));
-    assertNotEquals(type, type.annotated(NEVER_NULL));
+    assertEquals(type.annotated(TYPE_USE_ANNOTATION), type.annotated(TYPE_USE_ANNOTATION));
+    assertNotEquals(type, type.annotated(TYPE_USE_ANNOTATION));
     assertEquals(type.hashCode(), type.hashCode());
-    assertEquals(type.annotated(NEVER_NULL).hashCode(), type.annotated(NEVER_NULL).hashCode());
-    assertNotEquals(type.hashCode(), type.annotated(NEVER_NULL).hashCode());
+    assertEquals(type.annotated(TYPE_USE_ANNOTATION).hashCode(),
+        type.annotated(TYPE_USE_ANNOTATION).hashCode());
+    assertNotEquals(type.hashCode(), type.annotated(TYPE_USE_ANNOTATION).hashCode());
   }
-
-  private final static String TUA = TypeUseAnnotation.class.getCanonicalName();
-  private final AnnotationSpec TYPE_USE_ANNOTATION =
-      AnnotationSpec.builder(TypeUseAnnotation.class).build();
-
-  @Target(ElementType.TYPE_USE)
-  public @interface TypeUseAnnotation {}
 
   // https://github.com/square/javapoet/issues/431
   @Test public void annotatedNestedType() {
