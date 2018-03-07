@@ -37,14 +37,14 @@ public abstract class ClassName extends TypeName implements Comparable<ClassName
   String canonicalName;
 
   /** A fully-qualified class name for top-level classes. */
-  private static final class TopLeveLClassName extends ClassName {
+  private static final class TopLevelClassName extends ClassName {
     final String packageName;
 
-    private TopLeveLClassName(String packageName, String simpleName) {
+    private TopLevelClassName(String packageName, String simpleName) {
       this(packageName, simpleName, new ArrayList<>());
     }
 
-    private TopLeveLClassName(
+    private TopLevelClassName(
         String packageName, String simpleName, List<AnnotationSpec> annotations) {
       super(simpleName, annotations);
       this.packageName = packageName == null ? "" : packageName;
@@ -55,12 +55,12 @@ public abstract class ClassName extends TypeName implements Comparable<ClassName
           "part '%s' is keyword", simpleName);
     }
 
-    @Override public TopLeveLClassName annotated(List<AnnotationSpec> annotations) {
-      return new TopLeveLClassName(packageName, simpleName, concatAnnotations(annotations));
+    @Override public TopLevelClassName annotated(List<AnnotationSpec> annotations) {
+      return new TopLevelClassName(packageName, simpleName, concatAnnotations(annotations));
     }
 
-    @Override public TopLeveLClassName withoutAnnotations() {
-      return new TopLeveLClassName(packageName, simpleName);
+    @Override public TopLevelClassName withoutAnnotations() {
+      return new TopLevelClassName(packageName, simpleName);
     }
 
     public String packageName() {
@@ -73,7 +73,7 @@ public abstract class ClassName extends TypeName implements Comparable<ClassName
     }
 
     @Override
-    public TopLeveLClassName topLevelClassName() {
+    public TopLevelClassName topLevelClassName() {
       return this;
     }
 
@@ -91,21 +91,21 @@ public abstract class ClassName extends TypeName implements Comparable<ClassName
 
     @Override
     public ClassName peerClass(String name) {
-      return new TopLeveLClassName(packageName, name);
+      return new TopLevelClassName(packageName, name);
     }
 
     @Override
-    protected ClassName prefixWithAtMostOneAnnotatedClass() {
+    ClassName prefixWithAtMostOneAnnotatedClass() {
       return this;
     }
 
     @Override
-    protected boolean hasAnnotatedEnclosingClass() {
+    boolean hasAnnotatedEnclosingClass() {
       return false;
     }
 
     @Override
-    protected CodeWriter emitWithoutPrefix(CodeWriter out, ClassName unannotatedPrefix) {
+    CodeWriter emitWithoutPrefix(CodeWriter out, ClassName unannotatedPrefix) {
       return out;
     }
   }
@@ -168,7 +168,7 @@ public abstract class ClassName extends TypeName implements Comparable<ClassName
     }
 
     @Override
-    protected ClassName prefixWithAtMostOneAnnotatedClass() {
+    ClassName prefixWithAtMostOneAnnotatedClass() {
       if (hasAnnotatedEnclosingClass()) {
         enclosingClassName.prefixWithAtMostOneAnnotatedClass();
       }
@@ -177,7 +177,7 @@ public abstract class ClassName extends TypeName implements Comparable<ClassName
     }
 
     @Override
-    protected CodeWriter emitWithoutPrefix(
+    CodeWriter emitWithoutPrefix(
         CodeWriter out, ClassName unannotatedPrefix) throws IOException {
 
       if (unannotatedPrefix.equals(this)) {
@@ -194,7 +194,7 @@ public abstract class ClassName extends TypeName implements Comparable<ClassName
     }
 
     @Override
-    protected boolean hasAnnotatedEnclosingClass() {
+    boolean hasAnnotatedEnclosingClass() {
       return enclosingClassName.isAnnotated() || enclosingClassName.hasAnnotatedEnclosingClass();
     }
   }
@@ -252,11 +252,11 @@ public abstract class ClassName extends TypeName implements Comparable<ClassName
    */
   public abstract ClassName peerClass(String name);
 
-  protected abstract ClassName prefixWithAtMostOneAnnotatedClass();
+  abstract ClassName prefixWithAtMostOneAnnotatedClass();
 
-  protected abstract boolean hasAnnotatedEnclosingClass();
+  abstract boolean hasAnnotatedEnclosingClass();
 
-  protected abstract CodeWriter emitWithoutPrefix(
+  abstract CodeWriter emitWithoutPrefix(
       CodeWriter out, ClassName unannotatedPrefix) throws IOException;
 
   /** Returns the simple name of this class, like {@code "Entry"} for {@link Map.Entry}. */
@@ -282,7 +282,7 @@ public abstract class ClassName extends TypeName implements Comparable<ClassName
       // Avoid unreliable Class.getPackage(). https://github.com/square/javapoet/issues/295
       int lastDot = clazz.getName().lastIndexOf('.');
       String packageName = (lastDot != -1)  ? clazz.getName().substring(0, lastDot) : null;
-      return new TopLeveLClassName(packageName, name);
+      return new TopLevelClassName(packageName, name);
     }
 
     return ClassName.get(clazz.getEnclosingClass()).nestedClass(name);
@@ -313,7 +313,7 @@ public abstract class ClassName extends TypeName implements Comparable<ClassName
     String simpleName = classNames[0];
     checkArgument(!simpleName.isEmpty() && Character.isUpperCase(simpleName.codePointAt(0)),
         "couldn't make a guess for %s", classNameString);
-    ClassName className = new TopLeveLClassName(packageName, simpleName);
+    ClassName className = new TopLevelClassName(packageName, simpleName);
 
     // Add the class names, like "Map" and "Entry".
     for (String part : Arrays.asList(classNames).subList(1, classNames.length)) {
@@ -330,7 +330,7 @@ public abstract class ClassName extends TypeName implements Comparable<ClassName
    * {@code "java.util"} and simple names {@code "Map"}, {@code "Entry"} yields {@link Map.Entry}.
    */
   public static ClassName get(String packageName, String simpleName, String... simpleNames) {
-    ClassName className = new  TopLeveLClassName(packageName, simpleName);
+    ClassName className = new TopLevelClassName(packageName, simpleName);
     for (String name : simpleNames) {
       className = className.nestedClass(name);
     }
@@ -349,7 +349,7 @@ public abstract class ClassName extends TypeName implements Comparable<ClassName
     }
 
     String packageName = getPackage(element.getEnclosingElement()).getQualifiedName().toString();
-    return new TopLeveLClassName(packageName, simpleName);
+    return new TopLevelClassName(packageName, simpleName);
   }
 
   private static boolean isClassOrInterface(Element e) {
