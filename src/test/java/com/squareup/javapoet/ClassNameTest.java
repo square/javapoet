@@ -17,6 +17,9 @@ package com.squareup.javapoet;
 
 import com.google.testing.compile.CompilationRule;
 import java.util.Map;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.NestingKind;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import org.junit.Rule;
@@ -27,6 +30,8 @@ import org.junit.runners.JUnit4;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(JUnit4.class)
 public final class ClassNameTest {
@@ -160,5 +165,28 @@ public final class ClassNameTest {
     assertEquals("Foo", ClassName.get("", "Foo").reflectionName());
     assertEquals("Foo$Bar$Baz", ClassName.get("", "Foo", "Bar", "Baz").reflectionName());
     assertEquals("a.b.c.Foo$Bar$Baz", ClassName.get("a.b.c", "Foo", "Bar", "Baz").reflectionName());
+  }
+
+  @Test
+  public void sourceOnlyAbiDoesNotSupportGetClassKind() {
+    TypeElement innerElt = mock(TypeElement.class);
+    TypeElement outerElt = mock(TypeElement.class);
+    PackageElement packageElt = mock(PackageElement.class);
+    IllegalStateException getKindException = new IllegalStateException(
+        "Class elements don't support getKind in source-only ABI generation.");
+
+    when(innerElt.getNestingKind()).thenReturn(NestingKind.MEMBER);
+    when(innerElt.getSimpleName()).thenReturn(new SimpleElementName("Inner"));
+    when(innerElt.getEnclosingElement()).thenReturn(outerElt);
+    when(innerElt.getKind()).thenThrow(getKindException);
+    when(outerElt.getNestingKind()).thenReturn(NestingKind.TOP_LEVEL);
+    when(outerElt.getSimpleName()).thenReturn(new SimpleElementName("Outer"));
+    when(outerElt.getEnclosingElement()).thenReturn(packageElt);
+    when(outerElt.getKind()).thenThrow(getKindException);
+    when(packageElt.getKind()).thenReturn(ElementKind.PACKAGE);
+    when(packageElt.getQualifiedName()).thenReturn(new SimpleElementName("com.pack"));
+
+    ClassName className = ClassName.get(innerElt);
+    assertThat(className.reflectionName()).isEqualTo("com.pack.Outer$Inner");
   }
 }

@@ -205,18 +205,26 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   public static ClassName get(TypeElement element) {
     checkNotNull(element, "element == null");
     List<String> names = new ArrayList<>();
-    for (Element e = element; isClassOrInterface(e); e = e.getEnclosingElement()) {
-      checkArgument(element.getNestingKind() == TOP_LEVEL || element.getNestingKind() == MEMBER,
+    TypeElement e = element;
+    // Add nested class names one at a time before adding the package because our "names"
+    // field expects the package first as a single item, followed by nesting class names.
+    while (true) {
+      checkArgument(
+          e.getNestingKind() == TOP_LEVEL || e.getNestingKind() == MEMBER,
           "unexpected type testing");
       names.add(e.getSimpleName().toString());
+      if (e.getNestingKind() == TOP_LEVEL) {
+        break;
+      }
+      Element enclosingElement = e.getEnclosingElement();
+      if (!(enclosingElement instanceof TypeElement)) {
+        break;
+      }
+      e = (TypeElement) enclosingElement;
     }
-    names.add(getPackage(element).getQualifiedName().toString());
+    names.add(getPackage(e.getEnclosingElement()).getQualifiedName().toString());
     Collections.reverse(names);
     return new ClassName(names);
-  }
-
-  private static boolean isClassOrInterface(Element e) {
-    return e.getKind().isClass() || e.getKind().isInterface();
   }
 
   private static PackageElement getPackage(Element type) {
