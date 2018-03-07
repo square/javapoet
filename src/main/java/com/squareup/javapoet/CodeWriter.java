@@ -33,8 +33,8 @@ import javax.lang.model.element.Modifier;
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
 import static com.squareup.javapoet.Util.checkState;
-import static com.squareup.javapoet.Util.join;
 import static com.squareup.javapoet.Util.stringLiteralWithDoubleQuotes;
+import static java.lang.String.join;
 
 /**
  * Converts a {@link JavaFile} to a string suitable to both human- and javac-consumption. This
@@ -67,11 +67,11 @@ final class CodeWriter {
   int statementLine = -1;
 
   CodeWriter(Appendable out) {
-    this(out, "  ", Collections.<String>emptySet());
+    this(out, "  ", Collections.emptySet());
   }
 
   CodeWriter(Appendable out, String indent, Set<String> staticImports) {
-    this(out, indent, Collections.<String, ClassName>emptyMap(), staticImports);
+    this(out, indent, Collections.emptyMap(), staticImports);
   }
 
   CodeWriter(Appendable out, String indent, Map<String, ClassName> importedTypes,
@@ -177,7 +177,7 @@ final class CodeWriter {
   }
 
   public void emitModifiers(Set<Modifier> modifiers) throws IOException {
-    emitModifiers(modifiers, Collections.<Modifier>emptySet());
+    emitModifiers(modifiers, Collections.emptySet());
   }
 
   /**
@@ -335,7 +335,7 @@ final class CodeWriter {
   private void emitLiteral(Object o) throws IOException {
     if (o instanceof TypeSpec) {
       TypeSpec typeSpec = (TypeSpec) o;
-      typeSpec.emit(this, null, Collections.<Modifier>emptySet());
+      typeSpec.emit(this, null, Collections.emptySet());
     } else if (o instanceof AnnotationSpec) {
       AnnotationSpec annotationSpec = (AnnotationSpec) o;
       annotationSpec.emit(this, true);

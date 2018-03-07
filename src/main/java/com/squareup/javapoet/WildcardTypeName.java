@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -34,7 +33,7 @@ public final class WildcardTypeName extends TypeName {
   public final List<TypeName> lowerBounds;
 
   private WildcardTypeName(List<TypeName> upperBounds, List<TypeName> lowerBounds) {
-    this(upperBounds, lowerBounds, new ArrayList<AnnotationSpec>());
+    this(upperBounds, lowerBounds, new ArrayList<>());
   }
 
   private WildcardTypeName(List<TypeName> upperBounds, List<TypeName> lowerBounds,
@@ -78,7 +77,7 @@ public final class WildcardTypeName extends TypeName {
    * ? extends Object}.
    */
   public static WildcardTypeName subtypeOf(TypeName upperBound) {
-    return new WildcardTypeName(Arrays.asList(upperBound), Collections.<TypeName>emptyList());
+    return new WildcardTypeName(Collections.singletonList(upperBound), Collections.emptyList());
   }
 
   public static WildcardTypeName subtypeOf(Type upperBound) {
@@ -90,7 +89,8 @@ public final class WildcardTypeName extends TypeName {
    * bound} is {@code String.class}, this returns {@code ? super String}.
    */
   public static WildcardTypeName supertypeOf(TypeName lowerBound) {
-    return new WildcardTypeName(Arrays.<TypeName>asList(OBJECT), Arrays.asList(lowerBound));
+    return new WildcardTypeName(Collections.singletonList(OBJECT),
+        Collections.singletonList(lowerBound));
   }
 
   public static WildcardTypeName supertypeOf(Type lowerBound) {
@@ -98,7 +98,7 @@ public final class WildcardTypeName extends TypeName {
   }
 
   public static TypeName get(javax.lang.model.type.WildcardType mirror) {
-    return get(mirror, new LinkedHashMap<TypeParameterElement, TypeVariableName>());
+    return get(mirror, new LinkedHashMap<>());
   }
 
   static TypeName get(
@@ -118,7 +118,7 @@ public final class WildcardTypeName extends TypeName {
   }
 
   public static TypeName get(WildcardType wildcardName) {
-    return get(wildcardName, new LinkedHashMap<Type, TypeVariableName>());
+    return get(wildcardName, new LinkedHashMap<>());
   }
 
   static TypeName get(WildcardType wildcardName, Map<Type, TypeVariableName> map) {

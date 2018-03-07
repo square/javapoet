@@ -4,6 +4,7 @@ Change Log
 JavaPoet 1.10.0 *(2018-01-27)*
 -----------------------------
 
+ * **JavaPoet now requires Java 8 or newer.**
  * New: `$Z` as an optional newline (zero-width space) if a line may exceed 100 chars.
  * New: `CodeBlock.join()` and `CodeBlock.joining()` let you join codeblocks by delimiters.
  * New: Add `CodeBlock.Builder.isEmpty()`.

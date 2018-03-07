@@ -306,7 +306,7 @@ public final class CodeBlock {
           }
         }
         String s = unused.size() == 1 ? "" : "s";
-        checkArgument(unused.isEmpty(), "unused argument%s: %s", s, Util.join(", ", unused));
+        checkArgument(unused.isEmpty(), "unused argument%s: %s", s, String.join(", ", unused));
       }
       return this;
     }

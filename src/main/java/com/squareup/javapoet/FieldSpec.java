@@ -79,7 +79,7 @@ public final class FieldSpec {
     StringBuilder out = new StringBuilder();
     try {
       CodeWriter codeWriter = new CodeWriter(out);
-      emit(codeWriter, Collections.<Modifier>emptySet());
+      emit(codeWriter, Collections.emptySet());
       return out.toString();
     } catch (IOException e) {
       throw new AssertionError();

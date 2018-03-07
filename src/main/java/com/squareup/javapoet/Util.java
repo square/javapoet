@@ -36,17 +36,6 @@ final class Util {
   private Util() {
   }
 
-  /** Modifier.DEFAULT doesn't exist until Java 8, but we want to run on earlier releases. */
-  static final Modifier DEFAULT;
-  static {
-    Modifier def = null;
-    try {
-      def = Modifier.valueOf("DEFAULT");
-    } catch (IllegalArgumentException ignored) {
-    }
-    DEFAULT = def;
-  }
-
   static <K, V> Map<K, List<V>> immutableMultimap(Map<K, List<V>> multimap) {
     LinkedHashMap<K, List<V>> result = new LinkedHashMap<>();
     for (Map.Entry<K, List<V>> entry : multimap.entrySet()) {
@@ -81,16 +70,6 @@ final class Util {
     return Collections.unmodifiableSet(new LinkedHashSet<>(set));
   }
 
-  static String join(String separator, List<String> parts) {
-    if (parts.isEmpty()) return "";
-    StringBuilder result = new StringBuilder();
-    result.append(parts.get(0));
-    for (int i = 1; i < parts.size(); i++) {
-      result.append(separator).append(parts.get(i));
-    }
-    return result.toString();
-  }
-
   static <T> Set<T> union(Set<T> a, Set<T> b) {
     Set<T> result = new LinkedHashSet<>();
     result.addAll(a);
@@ -101,15 +80,10 @@ final class Util {
   static void requireExactlyOneOf(Set<Modifier> modifiers, Modifier... mutuallyExclusive) {
     int count = 0;
     for (Modifier modifier : mutuallyExclusive) {
-      if (modifier == null && Util.DEFAULT == null) continue; // Skip 'DEFAULT' if it doesn't exist!
       if (modifiers.contains(modifier)) count++;
     }
     checkArgument(count == 1, "modifiers %s must contain one of %s",
         modifiers, Arrays.toString(mutuallyExclusive));
-  }
-
-  static boolean hasDefaultModifier(Collection<Modifier> modifiers) {
-    return DEFAULT != null && modifiers.contains(DEFAULT);
   }
 
   static String characterLiteralWithoutSingleQuotes(char c) {

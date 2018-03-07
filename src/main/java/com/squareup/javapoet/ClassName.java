@@ -49,7 +49,7 @@ public abstract class ClassName extends TypeName implements Comparable<ClassName
       super(simpleName, annotations);
       this.packageName = packageName == null ? "" : packageName;
       this.canonicalName = isDefaultPackage(packageName)
-          ? simpleName : Util.join(".", Arrays.asList(packageName, simpleName));
+          ? simpleName : String.join(".", Arrays.asList(packageName, simpleName));
       checkArgument(
           isDefaultPackage(simpleName) || SourceVersion.isName(simpleName),
           "part '%s' is keyword", simpleName);
@@ -81,7 +81,7 @@ public abstract class ClassName extends TypeName implements Comparable<ClassName
     public String reflectionName() {
       return isDefaultPackage(packageName)
           ? simpleName
-          : Util.join(".", Arrays.asList(packageName, simpleName));
+          : String.join(".", Arrays.asList(packageName, simpleName));
     }
 
     @Override
@@ -124,7 +124,7 @@ public abstract class ClassName extends TypeName implements Comparable<ClassName
       super(simpleName, annotations);
       this.enclosingClassName = enclosingClassName;
       this.canonicalName =
-          Util.join(".", Arrays.asList(enclosingClassName.canonicalName, simpleName));
+          String.join(".", Arrays.asList(enclosingClassName.canonicalName, simpleName));
     }
 
     @Override public NestedClassName annotated(List<AnnotationSpec> annotations) {
