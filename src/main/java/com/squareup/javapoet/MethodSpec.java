@@ -77,7 +77,7 @@ public final class MethodSpec {
 
   private boolean lastParameterIsArray(List<ParameterSpec> parameters) {
     return !parameters.isEmpty()
-        && TypeName.arrayComponent(parameters.get(parameters.size() - 1).type) != null;
+        && TypeName.asArray((parameters.get(parameters.size() - 1).type)) != null;
   }
 
   void emit(CodeWriter codeWriter, String enclosingName, Set<Modifier> implicitModifiers)

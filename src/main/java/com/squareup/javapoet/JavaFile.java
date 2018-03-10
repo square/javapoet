@@ -145,7 +145,7 @@ public final class JavaFile {
     int importedTypesCount = 0;
     for (ClassName className : new TreeSet<>(codeWriter.importedTypes().values())) {
       if (skipJavaLangImports && className.packageName().equals("java.lang")) continue;
-      codeWriter.emit("import $L;\n", className);
+      codeWriter.emit("import $L;\n", className.withoutAnnotations());
       importedTypesCount++;
     }
 

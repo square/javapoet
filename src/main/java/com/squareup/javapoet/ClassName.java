@@ -17,7 +17,7 @@ package com.squareup.javapoet;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.lang.model.SourceVersion;
@@ -32,106 +32,236 @@ import static javax.lang.model.element.NestingKind.MEMBER;
 import static javax.lang.model.element.NestingKind.TOP_LEVEL;
 
 /** A fully-qualified class name for top-level and member classes. */
-public final class ClassName extends TypeName implements Comparable<ClassName> {
+public abstract class ClassName extends TypeName implements Comparable<ClassName> {
+  final String simpleName;
+  String canonicalName;
+
+  /** A fully-qualified class name for top-level classes. */
+  private static final class TopLevelClassName extends ClassName {
+    final String packageName;
+
+    private TopLevelClassName(String packageName, String simpleName) {
+      this(packageName, simpleName, new ArrayList<>());
+    }
+
+    private TopLevelClassName(
+        String packageName, String simpleName, List<AnnotationSpec> annotations) {
+      super(simpleName, annotations);
+      this.packageName = packageName == null ? "" : packageName;
+      this.canonicalName = isDefaultPackage(packageName)
+          ? simpleName : String.join(".", Arrays.asList(packageName, simpleName));
+      checkArgument(
+          isDefaultPackage(simpleName) || SourceVersion.isName(simpleName),
+          "part '%s' is keyword", simpleName);
+    }
+
+    @Override public TopLevelClassName annotated(List<AnnotationSpec> annotations) {
+      return new TopLevelClassName(packageName, simpleName, concatAnnotations(annotations));
+    }
+
+    @Override public TopLevelClassName withoutAnnotations() {
+      return new TopLevelClassName(packageName, simpleName);
+    }
+
+    public String packageName() {
+      return packageName;
+    }
+
+    @Override
+    public ClassName enclosingClassName() {
+      return null;
+    }
+
+    @Override
+    public TopLevelClassName topLevelClassName() {
+      return this;
+    }
+
+    @Override
+    public String reflectionName() {
+      return isDefaultPackage(packageName)
+          ? simpleName
+          : String.join(".", Arrays.asList(packageName, simpleName));
+    }
+
+    @Override
+    public List<String> simpleNames() {
+      return Arrays.asList(simpleName);
+    }
+
+    @Override
+    public ClassName peerClass(String name) {
+      return new TopLevelClassName(packageName, name);
+    }
+
+    @Override
+    ClassName prefixWithAtMostOneAnnotatedClass() {
+      return this;
+    }
+
+    @Override
+    boolean hasAnnotatedEnclosingClass() {
+      return false;
+    }
+
+    @Override
+    CodeWriter emitWithoutPrefix(CodeWriter out, ClassName unannotatedPrefix) {
+      return out;
+    }
+  }
+
+  /** A fully-qualified class name for nested classes. */
+  private static final class NestedClassName extends ClassName {
+    /** From top to bottom. This will be ["java.util", "Map", "Entry"] for {@link Map.Entry}. */
+    final ClassName enclosingClassName;
+
+    private NestedClassName(ClassName enclosingClassName, String simpleName) {
+      this(enclosingClassName, simpleName, new ArrayList<>());
+    }
+
+    private NestedClassName(
+        ClassName enclosingClassName, String simpleName, List<AnnotationSpec> annotations) {
+      super(simpleName, annotations);
+      this.enclosingClassName = enclosingClassName;
+      this.canonicalName =
+          String.join(".", Arrays.asList(enclosingClassName.canonicalName, simpleName));
+    }
+
+    @Override public NestedClassName annotated(List<AnnotationSpec> annotations) {
+      return new NestedClassName(enclosingClassName, simpleName, concatAnnotations(annotations));
+    }
+
+    @Override public NestedClassName withoutAnnotations() {
+      return new NestedClassName(enclosingClassName.withoutAnnotations(), simpleName);
+    }
+
+    /** Returns the package name, like {@code "java.util"} for {@code Map.Entry}. */
+    public String packageName() {
+      return enclosingClassName.packageName();
+    }
+
+    @Override
+    public ClassName enclosingClassName() {
+      return enclosingClassName;
+    }
+
+    @Override
+    public ClassName topLevelClassName() {
+      return enclosingClassName.topLevelClassName();
+    }
+
+    @Override
+    public String reflectionName() {
+      return enclosingClassName.reflectionName() + "$" + simpleName;
+    }
+
+    @Override
+    public List<String> simpleNames() {
+      List<String> simpleNames = new ArrayList<>(enclosingClassName().simpleNames());
+      simpleNames.add(simpleName);
+      return simpleNames;
+    }
+
+    @Override
+    public ClassName peerClass(String name) {
+      return enclosingClassName.nestedClass(name);
+    }
+
+    @Override
+    ClassName prefixWithAtMostOneAnnotatedClass() {
+      if (hasAnnotatedEnclosingClass()) {
+        enclosingClassName.prefixWithAtMostOneAnnotatedClass();
+      }
+
+      return this;
+    }
+
+    @Override
+    CodeWriter emitWithoutPrefix(
+        CodeWriter out, ClassName unannotatedPrefix) throws IOException {
+
+      if (unannotatedPrefix.equals(this)) {
+        return out;
+      }
+
+      enclosingClassName.emitWithoutPrefix(out, unannotatedPrefix);
+      out.emit(".");
+      if (isAnnotated()) {
+        out.emit(" ");
+        emitAnnotations(out);
+      }
+      return out.emit(simpleName);
+    }
+
+    @Override
+    boolean hasAnnotatedEnclosingClass() {
+      return enclosingClassName.isAnnotated() || enclosingClassName.hasAnnotatedEnclosingClass();
+    }
+  }
+
   public static final ClassName OBJECT = ClassName.get(Object.class);
 
-  /** From top to bottom. This will be ["java.util", "Map", "Entry"] for {@link Map.Entry}. */
-  final List<String> names;
-  final String canonicalName;
-
-  private ClassName(List<String> names) {
-    this(names, new ArrayList<>());
-  }
-
-  private ClassName(List<String> names, List<AnnotationSpec> annotations) {
+  private ClassName(String simpleName, List<AnnotationSpec> annotations) {
     super(annotations);
-    for (int i = 1; i < names.size(); i++) {
-      checkArgument(SourceVersion.isName(names.get(i)), "part '%s' is keyword", names.get(i));
-    }
-    this.names = Util.immutableList(names);
-    this.canonicalName = (names.get(0).isEmpty()
-        ? String.join(".", names.subList(1, names.size()))
-        : String.join(".", names));
+    checkArgument(SourceVersion.isName(simpleName), "part '%s' is keyword", simpleName);
+    this.simpleName = simpleName;
   }
 
-  @Override public ClassName annotated(List<AnnotationSpec> annotations) {
-    return new ClassName(names, concatAnnotations(annotations));
-  }
-
-  @Override public ClassName withoutAnnotations() {
-    return new ClassName(names);
-  }
 
   /** Returns the package name, like {@code "java.util"} for {@code Map.Entry}. */
-  public String packageName() {
-    return names.get(0);
-  }
+  public abstract String packageName();
 
   /**
    * Returns the enclosing class, like {@link Map} for {@code Map.Entry}. Returns null if this class
    * is not nested in another class.
    */
-  public ClassName enclosingClassName() {
-    if (names.size() == 2) return null;
-    return new ClassName(names.subList(0, names.size() - 1));
-  }
+  public abstract ClassName enclosingClassName();
 
   /**
    * Returns the top class in this nesting group. Equivalent to chained calls to {@link
    * #enclosingClassName()} until the result's enclosing class is null.
    */
-  public ClassName topLevelClassName() {
-    return new ClassName(names.subList(0, 2));
-  }
+  public abstract ClassName topLevelClassName();
 
-  public String reflectionName() {
-    // trivial case: no nested names
-    if (names.size() == 2) {
-      String packageName = packageName();
-      if (packageName.isEmpty()) {
-        return names.get(1);
-      }
-      return packageName + "." + names.get(1);
-    }
-    // concat top level class name and nested names
-    StringBuilder builder = new StringBuilder();
-    builder.append(topLevelClassName());
-    for (String name : simpleNames().subList(1, simpleNames().size())) {
-      builder.append('$').append(name);
-    }
-    return builder.toString();
-  }
+  /**
+   * Return the binary name of a class.
+   */
+  public abstract String reflectionName();
+
+  public abstract ClassName withoutAnnotations();
 
   /**
    * Returns a new {@link ClassName} instance for the specified {@code name} as nested inside this
    * class.
    */
   public ClassName nestedClass(String name) {
-    checkNotNull(name, "name == null");
-    List<String> result = new ArrayList<>(names.size() + 1);
-    result.addAll(names);
-    result.add(name);
-    return new ClassName(result);
+    return new NestedClassName(this, name);
   }
 
-  public List<String> simpleNames() {
-    return names.subList(1, names.size());
+  @Override
+  public ClassName annotated(List<AnnotationSpec> annotations) {
+    return (ClassName) super.annotated(annotations);
   }
+
+  public abstract List<String> simpleNames();
 
   /**
    * Returns a class that shares the same enclosing package or class. If this class is enclosed by
    * another class, this is equivalent to {@code enclosingClassName().nestedClass(name)}. Otherwise
    * it is equivalent to {@code get(packageName(), name)}.
    */
-  public ClassName peerClass(String name) {
-    List<String> result = new ArrayList<>(names);
-    result.set(result.size() - 1, name);
-    return new ClassName(result);
-  }
+  public abstract ClassName peerClass(String name);
+
+  abstract ClassName prefixWithAtMostOneAnnotatedClass();
+
+  abstract boolean hasAnnotatedEnclosingClass();
+
+  abstract CodeWriter emitWithoutPrefix(
+      CodeWriter out, ClassName unannotatedPrefix) throws IOException;
 
   /** Returns the simple name of this class, like {@code "Entry"} for {@link Map.Entry}. */
   public String simpleName() {
-    return names.get(names.size() - 1);
+    return simpleName;
   }
 
   public static ClassName get(Class<?> clazz) {
@@ -139,24 +269,23 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     checkArgument(!clazz.isPrimitive(), "primitive types cannot be represented as a ClassName");
     checkArgument(!void.class.equals(clazz), "'void' type cannot be represented as a ClassName");
     checkArgument(!clazz.isArray(), "array types cannot be represented as a ClassName");
-    List<String> names = new ArrayList<>();
-    while (true) {
-      String anonymousSuffix = "";
-      while (clazz.isAnonymousClass()) {
-        int lastDollar = clazz.getName().lastIndexOf('$');
-        anonymousSuffix = clazz.getName().substring(lastDollar) + anonymousSuffix;
-        clazz = clazz.getEnclosingClass();
-      }
-      names.add(clazz.getSimpleName() + anonymousSuffix);
-      Class<?> enclosing = clazz.getEnclosingClass();
-      if (enclosing == null) break;
-      clazz = enclosing;
+
+    String anonymousSuffix = "";
+    while (clazz.isAnonymousClass()) {
+      int lastDollar = clazz.getName().lastIndexOf('$');
+      anonymousSuffix = clazz.getName().substring(lastDollar) + anonymousSuffix;
+      clazz = clazz.getEnclosingClass();
     }
-    // Avoid unreliable Class.getPackage(). https://github.com/square/javapoet/issues/295
-    int lastDot = clazz.getName().lastIndexOf('.');
-    if (lastDot != -1) names.add(clazz.getName().substring(0, lastDot));
-    Collections.reverse(names);
-    return new ClassName(names);
+    String name = clazz.getSimpleName() + anonymousSuffix;
+
+    if (clazz.getEnclosingClass() == null) {
+      // Avoid unreliable Class.getPackage(). https://github.com/square/javapoet/issues/295
+      int lastDot = clazz.getName().lastIndexOf('.');
+      String packageName = (lastDot != -1)  ? clazz.getName().substring(0, lastDot) : null;
+      return new TopLevelClassName(packageName, name);
+    }
+
+    return ClassName.get(clazz.getEnclosingClass()).nestedClass(name);
   }
 
   /**
@@ -176,17 +305,24 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
       p = classNameString.indexOf('.', p) + 1;
       checkArgument(p != 0, "couldn't make a guess for %s", classNameString);
     }
-    names.add(p != 0 ? classNameString.substring(0, p - 1) : "");
+    String packageName = p == 0 ? null : classNameString.substring(0, p - 1);
+    String[] classNames = classNameString.substring(p).split("\\.", -1);
+
+    checkArgument(classNames.length >= 1, "couldn't make a guess for %s", classNameString);
+
+    String simpleName = classNames[0];
+    checkArgument(!simpleName.isEmpty() && Character.isUpperCase(simpleName.codePointAt(0)),
+        "couldn't make a guess for %s", classNameString);
+    ClassName className = new TopLevelClassName(packageName, simpleName);
 
     // Add the class names, like "Map" and "Entry".
-    for (String part : classNameString.substring(p).split("\\.", -1)) {
+    for (String part : Arrays.asList(classNames).subList(1, classNames.length)) {
       checkArgument(!part.isEmpty() && Character.isUpperCase(part.codePointAt(0)),
           "couldn't make a guess for %s", classNameString);
-      names.add(part);
+      className = className.nestedClass(part);
     }
 
-    checkArgument(names.size() >= 2, "couldn't make a guess for %s", classNameString);
-    return new ClassName(names);
+    return className;
   }
 
   /**
@@ -194,25 +330,26 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
    * {@code "java.util"} and simple names {@code "Map"}, {@code "Entry"} yields {@link Map.Entry}.
    */
   public static ClassName get(String packageName, String simpleName, String... simpleNames) {
-    List<String> result = new ArrayList<>();
-    result.add(packageName);
-    result.add(simpleName);
-    Collections.addAll(result, simpleNames);
-    return new ClassName(result);
+    ClassName className = new TopLevelClassName(packageName, simpleName);
+    for (String name : simpleNames) {
+      className = className.nestedClass(name);
+    }
+    return className;
   }
 
   /** Returns the class name for {@code element}. */
   public static ClassName get(TypeElement element) {
     checkNotNull(element, "element == null");
-    List<String> names = new ArrayList<>();
-    for (Element e = element; isClassOrInterface(e); e = e.getEnclosingElement()) {
-      checkArgument(element.getNestingKind() == TOP_LEVEL || element.getNestingKind() == MEMBER,
-          "unexpected type testing");
-      names.add(e.getSimpleName().toString());
+    checkArgument(element.getNestingKind() == TOP_LEVEL || element.getNestingKind() == MEMBER,
+        "unexpected type nesting");
+    String simpleName = element.getSimpleName().toString();
+
+    if (isClassOrInterface(element.getEnclosingElement())) {
+      return ClassName.get((TypeElement) element.getEnclosingElement()).nestedClass(simpleName);
     }
-    names.add(getPackage(element).getQualifiedName().toString());
-    Collections.reverse(names);
-    return new ClassName(names);
+
+    String packageName = getPackage(element.getEnclosingElement()).getQualifiedName().toString();
+    return new TopLevelClassName(packageName, simpleName);
   }
 
   private static boolean isClassOrInterface(Element e) {
@@ -227,10 +364,27 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   }
 
   @Override public int compareTo(ClassName o) {
-    return canonicalName.compareTo(o.canonicalName);
+    return reflectionName().compareTo(o.reflectionName());
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {
-    return out.emitAndIndent(out.lookupName(this));
+    ClassName prefix = prefixWithAtMostOneAnnotatedClass();
+    String unqualifiedName = out.lookupName(prefix);
+    if (prefix.isAnnotated())  {
+      int dot = unqualifiedName.lastIndexOf(".");
+      out.emitAndIndent(unqualifiedName.substring(0, dot + 1));
+      if (dot != -1) {
+        out.emit(" ");
+      }
+      prefix.emitAnnotations(out);
+      out.emit(unqualifiedName.substring(dot + 1));
+    } else {
+        out.emitAndIndent(unqualifiedName);
+    }
+    return emitWithoutPrefix(out, prefix);
+  }
+
+  private static boolean isDefaultPackage(String packageName) {
+    return packageName == null || packageName.isEmpty();
   }
 }

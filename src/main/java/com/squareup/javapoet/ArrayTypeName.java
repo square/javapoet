@@ -48,8 +48,35 @@ public final class ArrayTypeName extends TypeName {
   }
 
   @Override CodeWriter emit(CodeWriter out) throws IOException {
-    return out.emit("$T[]", componentType);
+    return emit(out, false);
   }
+
+  CodeWriter emit(CodeWriter out, boolean varargs) throws IOException {
+    emitLeafType(out);
+    return emitBrackets(out, varargs);
+  }
+
+  private CodeWriter emitLeafType(CodeWriter out) throws IOException {
+    if (TypeName.asArray(componentType) != null) {
+      return TypeName.asArray(componentType).emitLeafType(out);
+    }
+    return componentType.emit(out);
+  }
+
+  private CodeWriter emitBrackets(CodeWriter out, boolean varargs) throws IOException {
+    if (isAnnotated()) {
+      out.emit(" ");
+      emitAnnotations(out);
+    }
+
+    if (TypeName.asArray(componentType) == null) {
+      // Last bracket.
+      return out.emit(varargs ? "..." : "[]");
+    }
+    out.emit("[]");
+    return TypeName.asArray(componentType) .emitBrackets(out, varargs);
+  }
+
 
   /** Returns an array type whose elements are all instances of {@code componentType}. */
   public static ArrayTypeName of(TypeName componentType) {

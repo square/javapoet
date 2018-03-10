@@ -236,10 +236,6 @@ final class CodeWriter {
 
         case "$T":
           TypeName typeName = (TypeName) codeBlock.args.get(a++);
-          if (typeName.isAnnotated()) {
-            typeName.emitAnnotations(this);
-            typeName = typeName.withoutAnnotations();
-          }
           // defer "typeName.emit(this)" if next format part will be handled by the default case
           if (typeName instanceof ClassName && partIterator.hasNext()) {
             if (!codeBlock.formatParts.get(partIterator.nextIndex()).startsWith("$")) {

@@ -209,7 +209,6 @@ public class TypeName {
       try {
         StringBuilder resultBuilder = new StringBuilder();
         CodeWriter codeWriter = new CodeWriter(resultBuilder);
-        emitAnnotations(codeWriter);
         emit(codeWriter);
         result = resultBuilder.toString();
         cachedString = result;
@@ -222,6 +221,11 @@ public class TypeName {
 
   CodeWriter emit(CodeWriter out) throws IOException {
     if (keyword == null) throw new AssertionError();
+
+    if (isAnnotated()) {
+      out.emit("");
+      emitAnnotations(out);
+    }
     return out.emitAndIndent(keyword);
   }
 
@@ -232,6 +236,7 @@ public class TypeName {
     }
     return out;
   }
+
 
   /** Returns a type name equivalent to {@code mirror}. */
   public static TypeName get(TypeMirror mirror) {
@@ -369,4 +374,12 @@ public class TypeName {
         ? ((ArrayTypeName) type).componentType
         : null;
   }
+
+  /** Returns {@code type} as an array, or null if {@code type} is not an array. */
+  static ArrayTypeName asArray(TypeName type) {
+    return type instanceof ArrayTypeName
+        ? ((ArrayTypeName) type)
+        : null;
+  }
+
 }
