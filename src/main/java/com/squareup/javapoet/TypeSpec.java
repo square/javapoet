@@ -435,6 +435,7 @@ public final class TypeSpec {
     }
 
     public Builder addAnnotation(AnnotationSpec annotationSpec) {
+      checkNotNull(annotationSpec, "annotationSpec == null");
       this.annotations.add(annotationSpec);
       return this;
     }
