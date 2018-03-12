@@ -325,6 +325,27 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  @Test public void addAnnotationDisallowsNull() {
+    try {
+      TypeSpec.classBuilder("Foo").addAnnotation((AnnotationSpec) null);
+      fail();
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("annotationSpec == null");
+    }
+    try {
+      TypeSpec.classBuilder("Foo").addAnnotation((ClassName) null);
+      fail();
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("type == null");
+    }
+    try {
+      TypeSpec.classBuilder("Foo").addAnnotation((Class<?>) null);
+      fail();
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("clazz == null");
+    }
+  }
+
   @Test public void enumWithSubclassing() throws Exception {
     TypeSpec roshambo = TypeSpec.enumBuilder("Roshambo")
         .addModifiers(Modifier.PUBLIC)
