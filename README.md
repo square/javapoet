@@ -48,7 +48,7 @@ type, parameters and code statements. We add the main method to a `HelloWorld` c
 that to a `HelloWorld.java` file.
 
 In this case we write the file to `System.out`, but we could also get it as a string
-(`JavaFile.toString()`) or write it to the file system (`JavaPoet.writeTo()`).
+(`JavaFile.toString()`) or write it to the file system (`JavaFile.writeTo()`).
 
 The [Javadoc][javadoc] catalogs the complete JavaPoet API, which we explore below.
 
