@@ -297,8 +297,6 @@ public abstract class ClassName extends TypeName implements Comparable<ClassName
    * instances without such restrictions.
    */
   public static ClassName bestGuess(String classNameString) {
-    List<String> names = new ArrayList<>();
-
     // Add the package name, like "java.util.concurrent", or "" for no package.
     int p = 0;
     while (p < classNameString.length() && Character.isLowerCase(classNameString.codePointAt(p))) {
