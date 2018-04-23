@@ -104,7 +104,7 @@ we want to make the operation and range configurable. Here's a method that gener
 private MethodSpec computeRange(String name, int from, int to, String op) {
   return MethodSpec.methodBuilder(name)
       .returns(int.class)
-      .addStatement("int result = 0")
+      .addStatement("int result = 1")
       .beginControlFlow("for (int i = " + from + "; i < " + to + "; i++)")
       .addStatement("result = result " + op + " i")
       .endControlFlow()
@@ -117,7 +117,7 @@ And here's what we get when we call `computeRange("multiply10to20", 10, 20, "*")
 
 ```java
 int multiply10to20() {
-  int result = 0;
+  int result = 1;
   for (int i = 10; i < 20; i++) {
     result = result * i;
   }
