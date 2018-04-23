@@ -15,7 +15,6 @@
  */
 package com.squareup.javapoet;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.testing.compile.CompilationRule;
 import java.io.Closeable;
 import java.io.IOException;
@@ -26,7 +25,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
-import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -41,8 +39,6 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public final class MethodSpecTest {
   @Rule public final CompilationRule compilation = new CompilationRule();
@@ -113,6 +109,12 @@ public final class MethodSpecTest {
         @Nullable String thing, List<? extends T> things) throws IOException, SecurityException;
   }
 
+  abstract static class Generics {
+    <T, R, V extends Throwable> T run(R param) throws V {
+      return null;
+    }
+  }
+
   abstract static class HasAnnotation {
     @Override public abstract String toString();
   }
@@ -133,6 +135,17 @@ public final class MethodSpecTest {
     }
   }
 
+  abstract static class InvalidOverrideMethods {
+    final void finalMethod() {
+    }
+
+    private void privateMethod() {
+    }
+
+    static void staticMethod() {
+    }
+  }
+
   @Test public void overrideEverything() {
     TypeElement classElement = getElement(Everything.class);
     ExecutableElement methodElement = getOnlyElement(methodsIn(classElement.getEnclosedElements()));
@@ -143,6 +156,19 @@ public final class MethodSpecTest {
         + "everything(\n"
         + "    java.lang.String arg0, java.util.List<? extends T> arg1) throws java.io.IOException,\n"
         + "    java.lang.SecurityException {\n"
+        + "}\n");
+  }
+
+  @Test public void overrideGenerics() {
+    TypeElement classElement = getElement(Generics.class);
+    ExecutableElement methodElement = getOnlyElement(methodsIn(classElement.getEnclosedElements()));
+    MethodSpec method = MethodSpec.overriding(methodElement)
+        .addStatement("return null")
+        .build();
+    assertThat(method.toString()).isEqualTo(""
+        + "@java.lang.Override\n"
+        + "<T, R, V extends java.lang.Throwable> T run(R param) throws V {\n"
+        + "  return null;\n"
         + "}\n");
   }
 
@@ -160,8 +186,7 @@ public final class MethodSpecTest {
     TypeElement classElement = getElement(ExtendsIterableWithDefaultMethods.class);
     DeclaredType classType = (DeclaredType) classElement.asType();
     List<ExecutableElement> methods = methodsIn(elements.getAllMembers(classElement));
-    ExecutableElement exec = findFirst(methods, "iterator");
-    exec = findFirst(methods, "spliterator");
+    ExecutableElement exec = findFirst(methods, "spliterator");
     MethodSpec method = MethodSpec.overriding(exec, classType, types).build();
     assertThat(method.toString()).isEqualTo(""
         + "@java.lang.Override\n"
@@ -206,27 +231,22 @@ public final class MethodSpecTest {
   }
 
   @Test public void overrideInvalidModifiers() {
-    ExecutableElement method = mock(ExecutableElement.class);
-    when(method.getModifiers()).thenReturn(ImmutableSet.of(Modifier.FINAL));
-    Element element = mock(Element.class);
-    when(element.asType()).thenReturn(mock(DeclaredType.class));
-    when(method.getEnclosingElement()).thenReturn(element);
+    TypeElement classElement = getElement(InvalidOverrideMethods.class);
+    List<ExecutableElement> methods = methodsIn(elements.getAllMembers(classElement));
     try {
-      MethodSpec.overriding(method);
+      MethodSpec.overriding(findFirst(methods, "finalMethod"));
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessageThat().isEqualTo("cannot override method with modifiers: [final]");
     }
-    when(method.getModifiers()).thenReturn(ImmutableSet.of(Modifier.PRIVATE));
     try {
-      MethodSpec.overriding(method);
+      MethodSpec.overriding(findFirst(methods, "privateMethod"));
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessageThat().isEqualTo("cannot override method with modifiers: [private]");
     }
-    when(method.getModifiers()).thenReturn(ImmutableSet.of(Modifier.STATIC));
     try {
-      MethodSpec.overriding(method);
+      MethodSpec.overriding(findFirst(methods, "staticMethod"));
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessageThat().isEqualTo("cannot override method with modifiers: [static]");
