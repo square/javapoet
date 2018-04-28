@@ -15,17 +15,17 @@
  */
 package com.squareup.javapoet;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
+
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 public class AnnotatedTypeNameTest {
 
@@ -125,12 +125,39 @@ public class AnnotatedTypeNameTest {
     assertThat(type.toString()).isEqualTo("java.util.Map. @" + TUA + " Entry");
   }
 
+  @Test public void annotatedEnclosingAndNestedType() {
+    TypeName type = ((ClassName) TypeName.get(Map.class).annotated(TYPE_USE_ANNOTATION))
+        .nestedClass("Entry").annotated(TYPE_USE_ANNOTATION);
+    assertThat(type.toString()).isEqualTo("java.util. @" + TUA + " Map. @" + TUA + " Entry");
+  }
+
   // https://github.com/square/javapoet/issues/431
   @Test public void annotatedNestedParameterizedType() {
     TypeName type = ParameterizedTypeName.get(Map.Entry.class, Byte.class, Byte.class)
         .annotated(TYPE_USE_ANNOTATION);
     assertThat(type.toString())
         .isEqualTo("java.util.Map. @" + TUA + " Entry<java.lang.Byte, java.lang.Byte>");
+  }
+
+  @Test public void withoutAnnotationsOnAnnotatedEnclosingAndNestedType() {
+    TypeName type = ((ClassName) TypeName.get(Map.class).annotated(TYPE_USE_ANNOTATION))
+        .nestedClass("Entry").annotated(TYPE_USE_ANNOTATION);
+    assertThat(type.isAnnotated()).isTrue();
+    assertThat(type.withoutAnnotations()).isEqualTo(TypeName.get(Map.Entry.class));
+  }
+
+  @Test public void withoutAnnotationsOnAnnotatedEnclosingType() {
+    TypeName type = ((ClassName) TypeName.get(Map.class).annotated(TYPE_USE_ANNOTATION))
+        .nestedClass("Entry");
+    assertThat(type.isAnnotated()).isTrue();
+    assertThat(type.withoutAnnotations()).isEqualTo(TypeName.get(Map.Entry.class));
+  }
+
+  @Test public void withoutAnnotationsOnAnnotatedNestedType() {
+    TypeName type = ((ClassName) TypeName.get(Map.class))
+        .nestedClass("Entry").annotated(TYPE_USE_ANNOTATION);
+    assertThat(type.isAnnotated()).isTrue();
+    assertThat(type.withoutAnnotations()).isEqualTo(TypeName.get(Map.Entry.class));
   }
 
   // https://github.com/square/javapoet/issues/614
