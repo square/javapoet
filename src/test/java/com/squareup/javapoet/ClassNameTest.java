@@ -23,10 +23,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.when;
 
 @RunWith(JUnit4.class)
 public final class ClassNameTest {
@@ -108,6 +110,36 @@ public final class ClassNameTest {
     assertThat(ClassName.get(outer).toString()).isEqualTo("com.squareup.javapoet.ClassNameTest.$Outer");
     TypeElement inner = elements.getTypeElement($Outer.$Inner.class.getCanonicalName());
     assertThat(ClassName.get(inner).toString()).isEqualTo("com.squareup.javapoet.ClassNameTest.$Outer.$Inner");
+  }
+
+  /**
+   * Buck builds with "source-based ABI generation" and those builds don't support
+   * {@link TypeElement#getKind()}. Test to confirm that we don't use that API.
+   */
+  @Test public void classNameFromTypeElementDoesntUseGetKind() {
+    Elements elements = compilationRule.getElements();
+    TypeElement object = elements.getTypeElement(Object.class.getCanonicalName());
+    assertThat(ClassName.get(preventGetKind(object)).toString())
+        .isEqualTo("java.lang.Object");
+    TypeElement outer = elements.getTypeElement($Outer.class.getCanonicalName());
+    assertThat(ClassName.get(preventGetKind(outer)).toString())
+        .isEqualTo("com.squareup.javapoet.ClassNameTest.$Outer");
+    TypeElement inner = elements.getTypeElement($Outer.$Inner.class.getCanonicalName());
+    assertThat(ClassName.get(preventGetKind(inner)).toString())
+        .isEqualTo("com.squareup.javapoet.ClassNameTest.$Outer.$Inner");
+  }
+
+  /** Returns a new instance like {@code object} that throws on {@code getKind()}. */
+  private TypeElement preventGetKind(TypeElement object) {
+    TypeElement spy = Mockito.spy(object);
+    when(spy.getKind()).thenThrow(new AssertionError());
+    when(spy.getEnclosingElement()).thenAnswer(invocation -> {
+      Object enclosingElement = invocation.callRealMethod();
+      return enclosingElement instanceof TypeElement
+          ? preventGetKind((TypeElement) enclosingElement)
+          : enclosingElement;
+    });
+    return spy;
   }
 
   @Test public void classNameFromClass() {

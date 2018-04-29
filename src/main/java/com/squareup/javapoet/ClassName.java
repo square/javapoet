@@ -20,15 +20,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
-import static javax.lang.model.element.NestingKind.MEMBER;
-import static javax.lang.model.element.NestingKind.TOP_LEVEL;
 
 /** A fully-qualified class name for top-level and member classes. */
 public final class ClassName extends TypeName implements Comparable<ClassName> {
@@ -207,27 +204,20 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   /** Returns the class name for {@code element}. */
   public static ClassName get(TypeElement element) {
     checkNotNull(element, "element == null");
-    checkArgument(element.getNestingKind() == TOP_LEVEL || element.getNestingKind() == MEMBER,
-        "unexpected type nesting");
     String simpleName = element.getSimpleName().toString();
 
-    if (isClassOrInterface(element.getEnclosingElement())) {
-      return ClassName.get((TypeElement) element.getEnclosingElement()).nestedClass(simpleName);
+    switch (element.getNestingKind()) {
+      case TOP_LEVEL:
+        Name packageName = ((PackageElement) element.getEnclosingElement()).getQualifiedName();
+        return new ClassName(packageName.toString(), null, simpleName);
+
+      case MEMBER:
+        ClassName enclosingClass = get((TypeElement) element.getEnclosingElement());
+        return enclosingClass.nestedClass(simpleName);
+
+      default:
+        throw new IllegalArgumentException("unexpected type nesting");
     }
-
-    String packageName = getPackage(element.getEnclosingElement()).getQualifiedName().toString();
-    return new ClassName(packageName, null, simpleName);
-  }
-
-  private static boolean isClassOrInterface(Element e) {
-    return e.getKind().isClass() || e.getKind().isInterface();
-  }
-
-  private static PackageElement getPackage(Element type) {
-    while (type.getKind() != ElementKind.PACKAGE) {
-      type = type.getEnclosingElement();
-    }
-    return (PackageElement) type;
   }
 
   @Override public int compareTo(ClassName o) {
