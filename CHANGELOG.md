@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+JavaPoet 1.11.0 *(2018-04-29)*
+-----------------------------
+
+ * New: Support `TYPE_USE` annotations on each enclosing `ClassName`.
+ * New: Work around a compiler bug in `TypeName.get(TypeElement)`. There was a problem getting an
+   element's kind when building from source ABIs.
+
+
 JavaPoet 1.10.0 *(2018-01-27)*
 -----------------------------
 
