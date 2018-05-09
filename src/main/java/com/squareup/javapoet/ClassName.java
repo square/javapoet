@@ -24,7 +24,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.ErrorType;
+import javax.lang.model.util.SimpleElementVisitor8;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
@@ -208,17 +208,23 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     checkNotNull(element, "element == null");
     String simpleName = element.getSimpleName().toString();
 
-    Element enclosingElement = element.getEnclosingElement();
-    if (enclosingElement instanceof PackageElement) {
-      Name packageName = ((PackageElement) enclosingElement).getQualifiedName();
-      return new ClassName(packageName.toString(), null, simpleName);
-    } else if (enclosingElement instanceof TypeElement) {
-      ClassName enclosingClass = get((TypeElement) enclosingElement);
-      return enclosingClass.nestedClass(simpleName);
-    } else if (element.asType() instanceof ErrorType) {
-      return get("", simpleName);
-    }
-    throw new IllegalArgumentException("unexpected type nesting: " + element);
+    return element.getEnclosingElement().accept(new SimpleElementVisitor8<ClassName, Void>() {
+      @Override public ClassName visitPackage(PackageElement packageElement, Void p) {
+        return new ClassName(packageElement.getQualifiedName().toString(), null, simpleName);
+      }
+
+      @Override public ClassName visitType(TypeElement enclosingClass, Void p) {
+        return ClassName.get(enclosingClass).nestedClass(simpleName);
+      }
+
+      @Override public ClassName visitUnknown(Element unknown, Void p) {
+        return get("", simpleName);
+      }
+
+      @Override public ClassName defaultAction(Element enclosingElement, Void p) {
+        throw new IllegalArgumentException("Unexpected type nesting: " + element);
+      }
+    }, null);
   }
 
   @Override public int compareTo(ClassName o) {
