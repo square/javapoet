@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+JavaPoet 1.11.1 *(2018-05-16)*
+-----------------------------
+
+ * Fix: JavaPoet 1.11 had a regression where `TypeName.get()` would throw on error types, masking
+   other errors in an annotation processing round. This is fixed with a test to prevent future
+   regressions!
+
+
 JavaPoet 1.11.0 *(2018-04-29)*
 -----------------------------
 
