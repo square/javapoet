@@ -20,9 +20,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import javax.lang.model.element.Name;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.SimpleElementVisitor8;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
@@ -206,18 +207,23 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     checkNotNull(element, "element == null");
     String simpleName = element.getSimpleName().toString();
 
-    switch (element.getNestingKind()) {
-      case TOP_LEVEL:
-        Name packageName = ((PackageElement) element.getEnclosingElement()).getQualifiedName();
-        return new ClassName(packageName.toString(), null, simpleName);
+    return element.getEnclosingElement().accept(new SimpleElementVisitor8<ClassName, Void>() {
+      @Override public ClassName visitPackage(PackageElement packageElement, Void p) {
+        return new ClassName(packageElement.getQualifiedName().toString(), null, simpleName);
+      }
 
-      case MEMBER:
-        ClassName enclosingClass = get((TypeElement) element.getEnclosingElement());
-        return enclosingClass.nestedClass(simpleName);
+      @Override public ClassName visitType(TypeElement enclosingClass, Void p) {
+        return ClassName.get(enclosingClass).nestedClass(simpleName);
+      }
 
-      default:
-        throw new IllegalArgumentException("unexpected type nesting");
-    }
+      @Override public ClassName visitUnknown(Element unknown, Void p) {
+        return get("", simpleName);
+      }
+
+      @Override public ClassName defaultAction(Element enclosingElement, Void p) {
+        throw new IllegalArgumentException("Unexpected type nesting: " + element);
+      }
+    }, null);
   }
 
   @Override public int compareTo(ClassName o) {

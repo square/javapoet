@@ -16,19 +16,27 @@
 package com.squareup.javapoet;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.testing.compile.CompilationSubject.assertThat;
+import static com.google.testing.compile.Compiler.javac;
+import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static org.junit.Assert.*;
 
+import com.google.testing.compile.Compilation;
+import com.google.testing.compile.JavaFileObjects;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.TypeKind;
@@ -37,6 +45,7 @@ import javax.lang.model.type.TypeVisitor;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import javax.tools.JavaFileObject;
 
 import org.junit.Test;
 
@@ -68,10 +77,38 @@ public abstract class AbstractTypesTest {
         .isEqualTo(ParameterizedTypeName.get(ClassName.get(Set.class), ClassName.OBJECT));
   }
 
-  @Test public void getErrorType() {
-    ErrorType errorType =
-        new DeclaredTypeAsErrorType(getTypes().getDeclaredType(getElement(Set.class)));
-    assertThat(TypeName.get(errorType)).isEqualTo(ClassName.get(Set.class));
+  @Test public void errorTypes() {
+    JavaFileObject hasErrorTypes =
+        JavaFileObjects.forSourceLines(
+            "com.squareup.tacos.ErrorTypes",
+            "package com.squareup.tacos;",
+            "",
+            "@SuppressWarnings(\"hook-into-compiler\")",
+            "class ErrorTypes {",
+            "  Tacos tacos;",
+            "  Ingredients.Guacamole guacamole;",
+            "}");
+    Compilation compilation = javac().withProcessors(new AbstractProcessor() {
+      @Override
+      public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
+        TypeElement classFile =
+            processingEnv.getElementUtils().getTypeElement("com.squareup.tacos.ErrorTypes");
+        List<VariableElement> fields = fieldsIn(classFile.getEnclosedElements());
+        ErrorType topLevel = (ErrorType) fields.get(0).asType();
+        ErrorType member = (ErrorType) fields.get(1).asType();
+
+        assertThat(TypeName.get(topLevel)).isEqualTo(ClassName.get("", "Tacos"));
+        assertThat(TypeName.get(member)).isEqualTo(ClassName.get("Ingredients", "Guacamole"));
+        return false;
+      }
+
+      @Override
+      public Set<String> getSupportedAnnotationTypes() {
+        return Collections.singleton("*");
+      }
+    }).compile(hasErrorTypes);
+
+    assertThat(compilation).failed();
   }
 
   static class Parameterized<
@@ -243,52 +280,6 @@ public abstract class AbstractTypesTest {
       ClassName.get(String.class).unbox();
       fail();
     } catch (UnsupportedOperationException expected) {
-    }
-  }
-
-  private static class DeclaredTypeAsErrorType implements ErrorType {
-    private final DeclaredType declaredType;
-
-    public DeclaredTypeAsErrorType(DeclaredType declaredType) {
-      this.declaredType = declaredType;
-    }
-
-    @Override
-    public Element asElement() {
-      return declaredType.asElement();
-    }
-
-    @Override
-    public TypeMirror getEnclosingType() {
-      return declaredType.getEnclosingType();
-    }
-
-    @Override
-    public List<? extends TypeMirror> getTypeArguments() {
-      return declaredType.getTypeArguments();
-    }
-
-    @Override
-    public TypeKind getKind() {
-      return declaredType.getKind();
-    }
-
-    @Override
-    public <R, P> R accept(TypeVisitor<R, P> typeVisitor, P p) {
-      return typeVisitor.visitError(this, p);
-    }
-
-    // JDK8 Compatibility:
-    public <A extends Annotation> A[] getAnnotationsByType(Class<A> annotationType) {
-      throw new UnsupportedOperationException();
-    }
-
-    public <A extends Annotation> A getAnnotation(Class<A> annotationType) {
-      throw new UnsupportedOperationException();
-    }
-
-    public List<? extends AnnotationMirror> getAnnotationMirrors() {
-      throw new UnsupportedOperationException();
     }
   }
 }
