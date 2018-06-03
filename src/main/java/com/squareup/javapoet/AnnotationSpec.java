@@ -192,7 +192,8 @@ public final class AnnotationSpec {
 
   public static final class Builder {
     private final TypeName type;
-    private final Map<String, List<CodeBlock>> members = new LinkedHashMap<>();
+
+    public final Map<String, List<CodeBlock>> members = new LinkedHashMap<>();
 
     private Builder(TypeName type) {
       this.type = type;
