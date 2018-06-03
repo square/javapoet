@@ -295,15 +295,16 @@ public final class MethodSpec {
     private String name;
 
     private final CodeBlock.Builder javadoc = CodeBlock.builder();
-    private final List<AnnotationSpec> annotations = new ArrayList<>();
-    private final List<Modifier> modifiers = new ArrayList<>();
-    private List<TypeVariableName> typeVariables = new ArrayList<>();
     private TypeName returnType;
-    private final List<ParameterSpec> parameters = new ArrayList<>();
     private final Set<TypeName> exceptions = new LinkedHashSet<>();
     private final CodeBlock.Builder code = CodeBlock.builder();
     private boolean varargs;
     private CodeBlock defaultValue;
+
+    public final List<TypeVariableName> typeVariables = new ArrayList<>();
+    public final List<AnnotationSpec> annotations = new ArrayList<>();
+    public final List<Modifier> modifiers = new ArrayList<>();
+    public final List<ParameterSpec> parameters = new ArrayList<>();
 
     private Builder(String name) {
       setName(name);

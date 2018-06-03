@@ -25,6 +25,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
 import org.junit.Before;
 import org.junit.Rule;
+import javax.lang.model.element.Modifier;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -32,8 +33,6 @@ import static com.squareup.javapoet.TestUtil.findFirst;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.junit.Assert.fail;
-
-import javax.lang.model.element.Modifier;
 
 public class ParameterSpecTest {
   @Rule public final CompilationRule compilation = new CompilationRule();
