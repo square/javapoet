@@ -400,18 +400,19 @@ public final class TypeSpec {
     private final CodeBlock anonymousTypeArguments;
 
     private final CodeBlock.Builder javadoc = CodeBlock.builder();
-    private final List<AnnotationSpec> annotations = new ArrayList<>();
-    private final List<Modifier> modifiers = new ArrayList<>();
-    private final List<TypeVariableName> typeVariables = new ArrayList<>();
     private TypeName superclass = ClassName.OBJECT;
-    private final List<TypeName> superinterfaces = new ArrayList<>();
-    private final Map<String, TypeSpec> enumConstants = new LinkedHashMap<>();
-    private final List<FieldSpec> fieldSpecs = new ArrayList<>();
     private final CodeBlock.Builder staticBlock = CodeBlock.builder();
     private final CodeBlock.Builder initializerBlock = CodeBlock.builder();
-    private final List<MethodSpec> methodSpecs = new ArrayList<>();
-    private final List<TypeSpec> typeSpecs = new ArrayList<>();
-    private final List<Element> originatingElements = new ArrayList<>();
+
+    public final Map<String, TypeSpec> enumConstants = new LinkedHashMap<>();
+    public final List<AnnotationSpec> annotations = new ArrayList<>();
+    public final List<Modifier> modifiers = new ArrayList<>();
+    public final List<TypeVariableName> typeVariables = new ArrayList<>();
+    public final List<TypeName> superinterfaces = new ArrayList<>();
+    public final List<FieldSpec> fieldSpecs = new ArrayList<>();
+    public final List<MethodSpec> methodSpecs = new ArrayList<>();
+    public final List<TypeSpec> typeSpecs = new ArrayList<>();
+    public final List<Element> originatingElements = new ArrayList<>();
 
     private Builder(Kind kind, String name,
         CodeBlock anonymousTypeArguments) {
