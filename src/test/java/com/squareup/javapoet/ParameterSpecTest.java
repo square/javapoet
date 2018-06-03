@@ -109,11 +109,28 @@ public class ParameterSpecTest {
     modifiers.add(Modifier.PUBLIC);
 
     try {
-      ParameterSpec.builder(int.class, "foo").addModifiers(modifiers);
+      ParameterSpec.builder(int.class, "foo")
+          .addModifiers(modifiers);
       fail();
     } catch (Exception e) {
-      assertThat(e.getMessage())
-          .isEqualTo("unexpected parameter modifier: public");
+      assertThat(e.getMessage()).isEqualTo("unexpected parameter modifier: public");
     }
+  }
+
+  @Test public void modifyAnnotations() {
+    ParameterSpec.Builder builder = ParameterSpec.builder(int.class, "foo")
+            .addAnnotation(Override.class)
+            .addAnnotation(SuppressWarnings.class);
+
+    builder.annotations.remove(1);
+    assertThat(builder.build().annotations).hasSize(1);
+  }
+
+  @Test public void modifyModifiers() {
+    ParameterSpec.Builder builder = ParameterSpec.builder(int.class, "foo")
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
+
+    builder.modifiers.remove(1);
+    assertThat(builder.build().modifiers).containsExactly(Modifier.PUBLIC);
   }
 }
