@@ -204,8 +204,6 @@ public final class AnnotationSpec {
     }
 
     public Builder addMember(String name, CodeBlock codeBlock) {
-      checkNotNull(name, "name == null");
-      checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
       List<CodeBlock> values = members.computeIfAbsent(name, k -> new ArrayList<>());
       values.add(codeBlock);
       return this;
@@ -239,6 +237,10 @@ public final class AnnotationSpec {
     }
 
     public AnnotationSpec build() {
+      for (String name : members.keySet()) {
+        checkNotNull(name, "name == null");
+        checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
+      }
       return new AnnotationSpec(this);
     }
   }
