@@ -1911,7 +1911,7 @@ public final class TypeSpecTest {
 
   @Test public void nullModifiersAddition() {
     try {
-      TypeSpec.classBuilder("Taco").addModifiers((Modifier) null);
+      TypeSpec.classBuilder("Taco").addModifiers((Modifier) null).build();
       fail();
     } catch(IllegalArgumentException expected) {
       assertThat(expected.getMessage())
