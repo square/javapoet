@@ -601,7 +601,8 @@ public final class TypeSpec {
       }
 
       if (!typeVariables.isEmpty()) {
-        checkState(anonymousTypeArguments == null, "typevariables are forbidden on anonymous types.");
+        checkState(anonymousTypeArguments == null,
+            "typevariables are forbidden on anonymous types.");
         for (TypeVariableName typeVariableName : typeVariables) {
           checkArgument(typeVariableName != null, "typeVariables contain null");
         }
