@@ -674,7 +674,7 @@ public enum Roshambo {
 
 ### Anonymous Inner Classes
 
-In the enum code, we used `Types.anonymousInnerClass()`. Anonymous inner classes can also be used in
+In the enum code, we used `TypeSpec.anonymousInnerClass()`. Anonymous inner classes can also be used in
 code blocks. They are values that can be referenced with `$L`:
 
 ```java
