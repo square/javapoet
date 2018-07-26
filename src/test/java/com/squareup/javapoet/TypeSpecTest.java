@@ -1011,6 +1011,13 @@ public final class TypeSpecTest {
             .addStatement("$T inPackage = null", methodInPackage)
             .addStatement("$T otherType = null", methodOtherType)
             .build())
+        // https://github.com/square/javapoet/pull/657#discussion_r205514292
+        .addMethod(MethodSpec.methodBuilder("masksEnclosingTypeVariable")
+            .addTypeVariable(TypeVariableName.get("InPackage"))
+            .build())
+        .addMethod(MethodSpec.methodBuilder("hasSimpleNameThatWasPreviouslyMasked")
+            .addStatement("$T inPackage = null", inPackage)
+            .build())
         .build();
     assertThat(toString(gen)).isEqualTo(""
         + "package com.squareup.tacos;\n"
@@ -1035,6 +1042,13 @@ public final class TypeSpecTest {
         + "  <MethodInPackage, MethodOtherType> void againWithTypeVariables() {\n"
         + "    com.squareup.tacos.MethodInPackage inPackage = null;\n"
         + "    com.other.MethodOtherType otherType = null;\n"
+        + "  }\n"
+        + "\n"
+        + "  <InPackage> void masksEnclosingTypeVariable() {\n"
+        + "  }\n"
+        + "\n"
+        + "  void hasSimpleNameThatWasPreviouslyMasked() {\n"
+        + "    com.squareup.tacos.InPackage inPackage = null;\n"
         + "  }\n"
         + "}\n");
   }

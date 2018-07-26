@@ -57,7 +57,7 @@ final class CodeWriter {
   private final Map<String, ClassName> importedTypes;
   private final Map<String, ClassName> importableTypes = new LinkedHashMap<>();
   private final Set<String> referencedNames = new LinkedHashSet<>();
-  private final Set<String> currentTypeVariables = new LinkedHashSet<>();
+  private final Multiset<String> currentTypeVariables = new Multiset<>();
   private boolean trailingNewline;
 
   /**
@@ -506,5 +506,27 @@ final class CodeWriter {
     Map<String, ClassName> result = new LinkedHashMap<>(importableTypes);
     result.keySet().removeAll(referencedNames);
     return result;
+  }
+
+  // A makeshift multi-set implementation
+  private static final class Multiset<T> {
+    private final Map<T, Integer> map = new LinkedHashMap<>();
+
+    void add(T t) {
+      int count = map.getOrDefault(t, 0);
+      map.put(t, count + 1);
+    }
+
+    void remove(T t) {
+      int count = map.getOrDefault(t, 0);
+      if (count == 0) {
+        throw new IllegalStateException(t + " is not in the multiset");
+      }
+      map.put(t, count - 1);
+    }
+
+    boolean contains(T t) {
+      return map.getOrDefault(t, 0) > 0;
+    }
   }
 }
