@@ -57,6 +57,7 @@ final class CodeWriter {
   private final Map<String, ClassName> importedTypes;
   private final Map<String, ClassName> importableTypes = new LinkedHashMap<>();
   private final Set<String> referencedNames = new LinkedHashSet<>();
+  private final Set<String> currentTypeVariables = new LinkedHashSet<>();
   private boolean trailingNewline;
 
   /**
@@ -187,6 +188,8 @@ final class CodeWriter {
   public void emitTypeVariables(List<TypeVariableName> typeVariables) throws IOException {
     if (typeVariables.isEmpty()) return;
 
+    typeVariables.forEach(typeVariable -> currentTypeVariables.add(typeVariable.name));
+
     emit("<");
     boolean firstTypeVariable = true;
     for (TypeVariableName typeVariable : typeVariables) {
@@ -201,6 +204,10 @@ final class CodeWriter {
       firstTypeVariable = false;
     }
     emit(">");
+  }
+
+  public void popTypeVariables(List<TypeVariableName> typeVariables) throws IOException {
+    typeVariables.forEach(typeVariable -> currentTypeVariables.remove(typeVariable.name));
   }
 
   public CodeWriter emit(String s) throws IOException {
@@ -353,6 +360,12 @@ final class CodeWriter {
    * names visible due to inheritance.
    */
   String lookupName(ClassName className) {
+    // If the top level simple name is masked by a current type variable, use the canonical name.
+    String topLevelSimpleName = className.topLevelClassName().simpleName();
+    if (currentTypeVariables.contains(topLevelSimpleName)) {
+      return className.canonicalName;
+    }
+
     // Find the shortest suffix of className that resolves to className. This uses both local type
     // names (so `Entry` in `Map` refers to `Map.Entry`). Also uses imports.
     boolean nameResolved = false;
@@ -374,7 +387,7 @@ final class CodeWriter {
 
     // If the class is in the same package, we're done.
     if (Objects.equals(packageName, className.packageName())) {
-      referencedNames.add(className.topLevelClassName().simpleName());
+      referencedNames.add(topLevelSimpleName);
       return join(".", className.simpleNames());
     }
 

@@ -137,6 +137,7 @@ public final class MethodSpec {
 
       codeWriter.emit("}\n");
     }
+    codeWriter.popTypeVariables(typeVariables);
   }
 
   public boolean hasModifier(Modifier modifier) {

@@ -985,6 +985,60 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  @Test public void simpleNameConflictsWithTypeVariable() {
+    ClassName inPackage = ClassName.get("com.squareup.tacos", "InPackage");
+    ClassName otherType = ClassName.get("com.other", "OtherType");
+    ClassName methodInPackage = ClassName.get("com.squareup.tacos", "MethodInPackage");
+    ClassName methodOtherType = ClassName.get("com.other", "MethodOtherType");
+    TypeSpec gen = TypeSpec.classBuilder("Gen")
+        .addTypeVariable(TypeVariableName.get("InPackage"))
+        .addTypeVariable(TypeVariableName.get("OtherType"))
+        .addField(FieldSpec.builder(inPackage, "inPackage").build())
+        .addField(FieldSpec.builder(otherType, "otherType").build())
+        .addMethod(MethodSpec.methodBuilder("withTypeVariables")
+            .addTypeVariable(TypeVariableName.get("MethodInPackage"))
+            .addTypeVariable(TypeVariableName.get("MethodOtherType"))
+            .addStatement("$T inPackage = null", methodInPackage)
+            .addStatement("$T otherType = null", methodOtherType)
+            .build())
+        .addMethod(MethodSpec.methodBuilder("withoutTypeVariables")
+            .addStatement("$T inPackage = null", methodInPackage)
+            .addStatement("$T otherType = null", methodOtherType)
+            .build())
+        .addMethod(MethodSpec.methodBuilder("againWithTypeVariables")
+            .addTypeVariable(TypeVariableName.get("MethodInPackage"))
+            .addTypeVariable(TypeVariableName.get("MethodOtherType"))
+            .addStatement("$T inPackage = null", methodInPackage)
+            .addStatement("$T otherType = null", methodOtherType)
+            .build())
+        .build();
+    assertThat(toString(gen)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.other.MethodOtherType;\n"
+        + "\n"
+        + "class Gen<InPackage, OtherType> {\n"
+        + "  com.squareup.tacos.InPackage inPackage;\n"
+        + "\n"
+        + "  com.other.OtherType otherType;\n"
+        + "\n"
+        + "  <MethodInPackage, MethodOtherType> void withTypeVariables() {\n"
+        + "    com.squareup.tacos.MethodInPackage inPackage = null;\n"
+        + "    com.other.MethodOtherType otherType = null;\n"
+        + "  }\n"
+        + "\n"
+        + "  void withoutTypeVariables() {\n"
+        + "    MethodInPackage inPackage = null;\n"
+        + "    MethodOtherType otherType = null;\n"
+        + "  }\n"
+        + "\n"
+        + "  <MethodInPackage, MethodOtherType> void againWithTypeVariables() {\n"
+        + "    com.squareup.tacos.MethodInPackage inPackage = null;\n"
+        + "    com.other.MethodOtherType otherType = null;\n"
+        + "  }\n"
+        + "}\n");
+  }
+
   @Test public void originatingElementsIncludesThoseOfNestedTypes() {
     Element outerElement = Mockito.mock(Element.class);
     Element innerElement = Mockito.mock(Element.class);

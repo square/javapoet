@@ -316,6 +316,7 @@ public final class TypeSpec {
 
       codeWriter.unindent();
       codeWriter.popType();
+      codeWriter.popTypeVariables(typeVariables);
 
       codeWriter.emit("}");
       if (enumName == null && anonymousTypeArguments == null) {
