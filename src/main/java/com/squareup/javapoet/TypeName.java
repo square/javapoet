@@ -44,7 +44,7 @@ import javax.lang.model.util.SimpleTypeVisitor8;
  * identifies composite types like {@code char[]} and {@code Set<Long>}.
  *
  * <p>Type names are dumb identifiers only and do not model the values they name. For example, the
- * type name for {@code java.lang.List} doesn't know about the {@code size()} method, the fact that
+ * type name for {@code java.util.List} doesn't know about the {@code size()} method, the fact that
  * lists are collections, or even that it accepts a single type parameter.
  *
  * <p>Instances of this class are immutable value objects that implement {@code equals()} and {@code
