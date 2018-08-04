@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import javax.annotation.processing.Filer;
+import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
@@ -75,9 +76,10 @@ public final class JavaFile {
     CodeWriter importsCollector = new CodeWriter(NULL_APPENDABLE, indent, staticImports);
     emit(importsCollector);
     Map<String, ClassName> suggestedImports = importsCollector.suggestedImports();
+    Set<String> suggestedStaticImports = importsCollector.suggestedStaticImports();
 
     // Second pass: write the code, taking advantage of the imports.
-    CodeWriter codeWriter = new CodeWriter(out, indent, suggestedImports, staticImports);
+    CodeWriter codeWriter = new CodeWriter(out, indent, suggestedImports, suggestedStaticImports);
     emit(codeWriter);
   }
 
@@ -135,8 +137,8 @@ public final class JavaFile {
       codeWriter.emit("\n");
     }
 
-    if (!staticImports.isEmpty()) {
-      for (String signature : staticImports) {
+    if (!codeWriter.staticImports().isEmpty()) {
+      for (String signature : codeWriter.staticImports()) {
         codeWriter.emit("import static $L;\n", signature);
       }
       codeWriter.emit("\n");
@@ -244,6 +246,7 @@ public final class JavaFile {
       checkArgument(names.length > 0, "names array is empty");
       for (String name : names) {
         checkArgument(name != null, "null entry in names array: %s", Arrays.toString(names));
+        checkArgument(!SourceVersion.isKeyword(name), "keyword %s can not be imported", name);
         staticImports.add(className.canonicalName + "." + name);
       }
       return this;
