@@ -28,10 +28,12 @@ public class ParameterSpecTest {
     ParameterSpec b = ParameterSpec.builder(int.class, "foo").build();
     assertThat(a.equals(b)).isTrue();
     assertThat(a.hashCode()).isEqualTo(b.hashCode());
+    assertThat(a.toString()).isEqualTo(b.toString());
     a = ParameterSpec.builder(int.class, "i").addModifiers(Modifier.STATIC).build();
     b = ParameterSpec.builder(int.class, "i").addModifiers(Modifier.STATIC).build();
     assertThat(a.equals(b)).isTrue();
     assertThat(a.hashCode()).isEqualTo(b.hashCode());
+    assertThat(a.toString()).isEqualTo(b.toString());
   }
 
   @Test public void nullAnnotationsAddition() {
