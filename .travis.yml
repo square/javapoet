@@ -2,27 +2,15 @@ language: java
 
 matrix:
   include:
-    - env: JDK='Oracle JDK 8'
-      jdk: oraclejdk8
-    - env: JDK='Oracle JDK 9'
-      jdk: oraclejdk9
-    - env: JDK='Oracle JDK 10'
-      install: . ./install-jdk.sh -F 10 -L BCL
-    - env: JDK='OpenJDK 10'
-      install: . ./install-jdk.sh -F 10 -L GPL
-    - env: JDK='Oracle JDK 11'
-      install: . ./install-jdk.sh -F 11 -L BCL
-    - env: JDK='OpenJDK 11'
-      install: . ./install-jdk.sh -F 11 -L GPL
+    - jdk: oraclejdk8
+    - jdk: openjdk10
+    - jdk: openjdk11
   allow_failures:
     # ErrorProne/javac is not yet working on JDK 11
-    - env: JDK='Oracle JDK 11'
-    - env: JDK='OpenJDK 11'
+    - jdk: openjdk11
 
-# Direct usage of `install-jdk.sh` might be superseded by https://github.com/travis-ci/travis-build/pull/1347
 before_install:
   - unset _JAVA_OPTIONS
-  - wget https://github.com/sormuras/bach/raw/1.0.1/install-jdk.sh
 
 after_success:
   - .buildscript/deploy_snapshot.sh
