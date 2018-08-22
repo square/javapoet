@@ -28,10 +28,12 @@ public class FieldSpecTest {
     FieldSpec b = FieldSpec.builder(int.class, "foo").build();
     assertThat(a.equals(b)).isTrue();
     assertThat(a.hashCode()).isEqualTo(b.hashCode());
+    assertThat(a.toString()).isEqualTo(b.toString());
     a = FieldSpec.builder(int.class, "FOO", Modifier.PUBLIC, Modifier.STATIC).build();
     b = FieldSpec.builder(int.class, "FOO", Modifier.PUBLIC, Modifier.STATIC).build();
     assertThat(a.equals(b)).isTrue();
     assertThat(a.hashCode()).isEqualTo(b.hashCode());
+    assertThat(a.toString()).isEqualTo(b.toString());
   }
 
   @Test public void nullAnnotationsAddition() {
