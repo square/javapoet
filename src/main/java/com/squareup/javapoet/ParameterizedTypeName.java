@@ -41,16 +41,20 @@ public final class ParameterizedTypeName extends TypeName {
   private ParameterizedTypeName(ParameterizedTypeName enclosingType, ClassName rawType,
       List<TypeName> typeArguments, List<AnnotationSpec> annotations) {
     super(annotations);
+    
+    checkArgument(!typeArguments.isEmpty() || enclosingType != null, "no type arguments: %s",
+        rawType);
+    
     this.rawType = checkNotNull(rawType, "rawType == null").annotated(annotations);
     this.enclosingType = enclosingType;
-    this.typeArguments = Util.immutableList(typeArguments);
-
-    checkArgument(!this.typeArguments.isEmpty() || enclosingType != null,
-        "no type arguments: %s", rawType);
-    for (TypeName typeArgument : this.typeArguments) {
-      checkArgument(!typeArgument.isPrimitive() && typeArgument != VOID,
-          "invalid type parameter: %s", typeArgument);
+    
+    for (int argumentIndex = 0; argumentIndex < typeArguments.size(); argumentIndex++) {
+      /*
+       * NOTE: Ensures that all the type arguments are boxed.
+       */
+      typeArguments.set(argumentIndex, typeArguments.get(argumentIndex).box());
     }
+    this.typeArguments = Util.immutableList(typeArguments);
   }
 
   @Override public ParameterizedTypeName annotated(List<AnnotationSpec> annotations) {
