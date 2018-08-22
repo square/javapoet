@@ -18,9 +18,11 @@ package com.squareup.javapoet;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public final class NameAllocatorTest {
+
   @Test public void usage() throws Exception {
     NameAllocator nameAllocator = new NameAllocator();
     assertThat(nameAllocator.newName("foo", 1)).isEqualTo("foo");
@@ -59,6 +61,7 @@ public final class NameAllocatorTest {
   @Test public void characterMappingInvalidStartButValidPart() throws Exception {
     NameAllocator nameAllocator = new NameAllocator();
     assertThat(nameAllocator.newName("1ab", 1)).isEqualTo("_1ab");
+    assertThat(nameAllocator.newName("a-1", 2)).isEqualTo("a_1");
   }
 
   @Test public void characterMappingInvalidStartIsInvalidPart() throws Exception {
