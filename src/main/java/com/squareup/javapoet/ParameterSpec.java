@@ -35,12 +35,14 @@ public final class ParameterSpec {
   public final List<AnnotationSpec> annotations;
   public final Set<Modifier> modifiers;
   public final TypeName type;
+  public final CodeBlock javadoc;
 
   private ParameterSpec(Builder builder) {
     this.name = checkNotNull(builder.name, "name == null");
     this.annotations = Util.immutableList(builder.annotations);
     this.modifiers = Util.immutableSet(builder.modifiers);
     this.type = checkNotNull(builder.type, "type == null");
+    this.javadoc = builder.javadoc.build();
   }
 
   public boolean hasModifier(Modifier modifier) {
@@ -121,6 +123,7 @@ public final class ParameterSpec {
   public static final class Builder {
     private final TypeName type;
     private final String name;
+    private final CodeBlock.Builder javadoc = CodeBlock.builder();
 
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
@@ -128,6 +131,16 @@ public final class ParameterSpec {
     private Builder(TypeName type, String name) {
       this.type = type;
       this.name = name;
+    }
+
+    public Builder addJavadoc(String format, Object... args) {
+      javadoc.add(format, args);
+      return this;
+    }
+
+    public Builder addJavadoc(CodeBlock block) {
+      javadoc.add(block);
+      return this;
     }
 
     public Builder addAnnotations(Iterable<AnnotationSpec> annotationSpecs) {
