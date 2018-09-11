@@ -63,8 +63,6 @@ public final class MethodSpec {
         "last parameter of varargs method %s must be an array", builder.name);
 
     this.name = checkNotNull(builder.name, "name == null");
-    // Add parameter Javadoc to the method Javadoc
-    builder.javadoc.add(builder.parameterJavadoc.build());
     this.javadoc = builder.javadoc.build();
     this.annotations = Util.immutableList(builder.annotations);
     this.modifiers = Util.immutableSet(builder.modifiers);
@@ -84,7 +82,7 @@ public final class MethodSpec {
 
   void emit(CodeWriter codeWriter, String enclosingName, Set<Modifier> implicitModifiers)
       throws IOException {
-    codeWriter.emitJavadoc(javadoc);
+    codeWriter.emitJavadoc(javadocWithParameters());
     codeWriter.emitAnnotations(annotations, false);
     codeWriter.emitModifiers(modifiers, implicitModifiers);
 
@@ -140,6 +138,16 @@ public final class MethodSpec {
       codeWriter.emit("}\n");
     }
     codeWriter.popTypeVariables(typeVariables);
+  }
+
+  private CodeBlock javadocWithParameters() {
+    CodeBlock.Builder builder = javadoc.toBuilder();
+    for (ParameterSpec parameterSpec: parameters) {
+      if (!parameterSpec.javadoc.isEmpty()) {
+        builder.add("@param $L $L", parameterSpec.name, parameterSpec.javadoc);
+      }
+    }
+    return builder.build();
   }
 
   public boolean hasModifier(Modifier modifier) {
@@ -283,7 +291,6 @@ public final class MethodSpec {
     private final String name;
 
     private final CodeBlock.Builder javadoc = CodeBlock.builder();
-    private final CodeBlock.Builder parameterJavadoc = CodeBlock.builder();
     private final List<AnnotationSpec> annotations = new ArrayList<>();
     private final List<Modifier> modifiers = new ArrayList<>();
     private List<TypeVariableName> typeVariables = new ArrayList<>();
@@ -374,22 +381,14 @@ public final class MethodSpec {
     public Builder addParameters(Iterable<ParameterSpec> parameterSpecs) {
       checkArgument(parameterSpecs != null, "parameterSpecs == null");
       for (ParameterSpec parameterSpec : parameterSpecs) {
-        addParameterJavadoc(parameterSpec);
         this.parameters.add(parameterSpec);
       }
       return this;
     }
 
     public Builder addParameter(ParameterSpec parameterSpec) {
-      addParameterJavadoc(parameterSpec);
       this.parameters.add(parameterSpec);
       return this;
-    }
-
-    private void addParameterJavadoc(ParameterSpec parameterSpec) {
-      if (!parameterSpec.javadoc.isEmpty()) {
-        this.parameterJavadoc.add("@param $L $L", parameterSpec.name, parameterSpec.javadoc);
-      }
     }
 
     public Builder addParameter(TypeName type, String name, Modifier... modifiers) {
