@@ -388,8 +388,7 @@ public final class MethodSpec {
 
     private void addParameterJavadoc(ParameterSpec parameterSpec) {
       if (!parameterSpec.javadoc.isEmpty()) {
-        this.parameterJavadoc.add("@param $L ", parameterSpec.name)
-            .add(parameterSpec.javadoc);
+        this.parameterJavadoc.add("@param $L $L", parameterSpec.name, parameterSpec.javadoc);
       }
     }
 
