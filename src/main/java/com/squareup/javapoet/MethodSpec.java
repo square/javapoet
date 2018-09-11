@@ -142,7 +142,7 @@ public final class MethodSpec {
 
   private CodeBlock javadocWithParameters() {
     CodeBlock.Builder builder = javadoc.toBuilder();
-    for (ParameterSpec parameterSpec: parameters) {
+    for (ParameterSpec parameterSpec : parameters) {
       if (!parameterSpec.javadoc.isEmpty()) {
         builder.add("@param $L $L", parameterSpec.name, parameterSpec.javadoc);
       }
