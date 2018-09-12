@@ -142,8 +142,11 @@ public final class MethodSpec {
 
   private CodeBlock javadocWithParameters() {
     CodeBlock.Builder builder = javadoc.toBuilder();
+    boolean emitTagNewline = true;
     for (ParameterSpec parameterSpec : parameters) {
       if (!parameterSpec.javadoc.isEmpty()) {
+        if (emitTagNewline) builder.add("\n");
+        emitTagNewline = false;
         builder.add("@param $L $L", parameterSpec.name, parameterSpec.javadoc);
       }
     }

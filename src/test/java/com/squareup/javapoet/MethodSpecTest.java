@@ -297,6 +297,7 @@ public final class MethodSpecTest {
     assertThat(methodSpec.toString()).isEqualTo(""
         + "/**\n"
         + " * Gets the best Taco money can buy.\n"
+        + " *\n"
         + " * @param money the amount required to buy the taco.\n"
         + " * @param count the number of Tacos to buy.\n"
         + " */\n"
