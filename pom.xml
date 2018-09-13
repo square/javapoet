@@ -23,6 +23,7 @@
     <java.version>1.8</java.version>
     <junit.version>4.12</junit.version>
     <!-- Upgrade to JUnit 5.3.1 (Jupiter and Vintage) blocked by https://github.com/apache/maven-surefire/pull/193 -->
+    <junit.jupiter.version>5.2.0</junit.jupiter.version>
     <junit.vintage.version>5.2.0</junit.vintage.version>
     <maven.surefire.version>2.22.0</maven.surefire.version>
     <truth.version>0.39</truth.version>
@@ -77,6 +78,12 @@
       <artifactId>junit-vintage-engine</artifactId>
       <version>${junit.vintage.version}</version>
       <scope>runtime</scope> <!-- test-runtime -->
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId> <!-- junit-jupiter-api, Surefire is not smart enough, yet. -->
+      <version>${junit.jupiter.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.google.jimfs</groupId>
