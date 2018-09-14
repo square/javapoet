@@ -59,6 +59,7 @@ public final class JavaFile {
   public final TypeSpec typeSpec;
   public final boolean skipJavaLangImports;
   private final Set<String> staticImports;
+  private Set<String> imports;
   private final String indent;
 
   private JavaFile(Builder builder) {
@@ -67,6 +68,7 @@ public final class JavaFile {
     this.typeSpec = builder.typeSpec;
     this.skipJavaLangImports = builder.skipJavaLangImports;
     this.staticImports = Util.immutableSet(builder.staticImports);
+    this.imports = builder.imports;
     this.indent = builder.indent;
   }
 
@@ -138,6 +140,13 @@ public final class JavaFile {
     if (!staticImports.isEmpty()) {
       for (String signature : staticImports) {
         codeWriter.emit("import static $L;\n", signature);
+      }
+      codeWriter.emit("\n");
+    }
+
+    if (!imports.isEmpty()) {
+      for (String signature : imports) {
+        codeWriter.emit("import $L;\n", signature);
       }
       codeWriter.emit("\n");
     }
@@ -217,6 +226,7 @@ public final class JavaFile {
     private final TypeSpec typeSpec;
     private final CodeBlock.Builder fileComment = CodeBlock.builder();
     private final Set<String> staticImports = new TreeSet<>();
+    private final Set<String> imports = new TreeSet<>();
     private boolean skipJavaLangImports;
     private String indent = "  ";
 
@@ -236,6 +246,13 @@ public final class JavaFile {
 
     public Builder addStaticImport(Class<?> clazz, String... names) {
       return addStaticImport(ClassName.get(clazz), names);
+    }
+
+    public Builder addImports(TreeSet<String> imports) {
+      if (imports != null) {
+        this.imports.addAll(imports);
+      }
+      return this;
     }
 
     public Builder addStaticImport(ClassName className, String... names) {
