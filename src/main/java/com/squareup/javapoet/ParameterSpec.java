@@ -160,6 +160,9 @@ public final class ParameterSpec {
     public Builder addModifiers(Iterable<Modifier> modifiers) {
       checkNotNull(modifiers, "modifiers == null");
       for (Modifier modifier : modifiers) {
+        if (!modifier.equals(Modifier.FINAL)) {
+          throw new IllegalStateException("unexpected parameter modifier: " + modifier);
+        }
         this.modifiers.add(modifier);
       }
       return this;

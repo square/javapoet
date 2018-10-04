@@ -15,6 +15,8 @@
  */
 package com.squareup.javapoet;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -43,6 +45,20 @@ public class ParameterSpecTest {
     } catch (Exception e) {
       assertThat(e.getMessage())
           .isEqualTo("annotationSpecs == null");
+    }
+  }
+
+  @Test public void addNonFinalModifier() {
+    List<Modifier> modifiers = new ArrayList<>();
+    modifiers.add(Modifier.FINAL);
+    modifiers.add(Modifier.PUBLIC);
+
+    try {
+      ParameterSpec.builder(int.class, "foo").addModifiers(modifiers);
+      fail();
+    } catch (Exception e) {
+      assertThat(e.getMessage())
+          .isEqualTo("unexpected parameter modifier: public");
     }
   }
 }
