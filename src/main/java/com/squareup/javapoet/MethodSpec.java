@@ -82,7 +82,7 @@ public final class MethodSpec {
 
   void emit(CodeWriter codeWriter, String enclosingName, Set<Modifier> implicitModifiers)
       throws IOException {
-    codeWriter.emitJavadoc(javadoc);
+    codeWriter.emitJavadoc(javadocWithParameters());
     codeWriter.emitAnnotations(annotations, false);
     codeWriter.emitModifiers(modifiers, implicitModifiers);
 
@@ -138,6 +138,20 @@ public final class MethodSpec {
       codeWriter.emit("}\n");
     }
     codeWriter.popTypeVariables(typeVariables);
+  }
+
+  private CodeBlock javadocWithParameters() {
+    CodeBlock.Builder builder = javadoc.toBuilder();
+    boolean emitTagNewline = true;
+    for (ParameterSpec parameterSpec : parameters) {
+      if (!parameterSpec.javadoc.isEmpty()) {
+        // Emit a new line before @param section only if the method javadoc is present.
+        if (emitTagNewline && !javadoc.isEmpty()) builder.add("\n");
+        emitTagNewline = false;
+        builder.add("@param $L $L", parameterSpec.name, parameterSpec.javadoc);
+      }
+    }
+    return builder.build();
   }
 
   public boolean hasModifier(Modifier modifier) {

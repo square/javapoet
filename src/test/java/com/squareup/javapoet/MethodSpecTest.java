@@ -270,6 +270,59 @@ public final class MethodSpecTest {
     assertThat(a.hashCode()).isEqualTo(b.hashCode());
   }
 
+  @Test public void withoutParameterJavaDoc() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("getTaco")
+        .addModifiers(Modifier.PRIVATE)
+        .addParameter(TypeName.DOUBLE, "money")
+        .addJavadoc("Gets the best Taco\n")
+        .build();
+    assertThat(methodSpec.toString()).isEqualTo(""
+        + "/**\n"
+        + " * Gets the best Taco\n"
+        + " */\n"
+        + "private void getTaco(double money) {\n"
+        + "}\n");
+  }
+
+  @Test public void withParameterJavaDoc() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("getTaco")
+        .addParameter(ParameterSpec.builder(TypeName.DOUBLE, "money")
+            .addJavadoc("the amount required to buy the taco.\n")
+            .build())
+        .addParameter(ParameterSpec.builder(TypeName.INT, "count")
+            .addJavadoc("the number of Tacos to buy.\n")
+            .build())
+        .addJavadoc("Gets the best Taco money can buy.\n")
+        .build();
+    assertThat(methodSpec.toString()).isEqualTo(""
+        + "/**\n"
+        + " * Gets the best Taco money can buy.\n"
+        + " *\n"
+        + " * @param money the amount required to buy the taco.\n"
+        + " * @param count the number of Tacos to buy.\n"
+        + " */\n"
+        + "void getTaco(double money, int count) {\n"
+        + "}\n");
+  }
+
+  @Test public void withParameterJavaDocAndWithoutMethodJavadoc() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("getTaco")
+        .addParameter(ParameterSpec.builder(TypeName.DOUBLE, "money")
+            .addJavadoc("the amount required to buy the taco.\n")
+            .build())
+        .addParameter(ParameterSpec.builder(TypeName.INT, "count")
+            .addJavadoc("the number of Tacos to buy.\n")
+            .build())
+        .build();
+    assertThat(methodSpec.toString()).isEqualTo(""
+        + "/**\n"
+        + " * @param money the amount required to buy the taco.\n"
+        + " * @param count the number of Tacos to buy.\n"
+        + " */\n"
+        + "void getTaco(double money, int count) {\n"
+        + "}\n");
+  }
+
   @Test public void duplicateExceptionsIgnored() {
     ClassName ioException = ClassName.get(IOException.class);
     ClassName timeoutException = ClassName.get(TimeoutException.class);
