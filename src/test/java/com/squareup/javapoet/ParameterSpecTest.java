@@ -15,16 +15,69 @@
  */
 package com.squareup.javapoet;
 
+import com.google.testing.compile.CompilationRule;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import javax.annotation.Nullable;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
+import static javax.lang.model.util.ElementFilter.fieldsIn;
+import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.junit.Assert.fail;
 
 import javax.lang.model.element.Modifier;
 
 public class ParameterSpecTest {
+  @Rule public final CompilationRule compilation = new CompilationRule();
+
+  private Elements elements;
+
+  @Before public void setUp() {
+    elements = compilation.getElements();
+  }
+
+  private TypeElement getElement(Class<?> clazz) {
+    return elements.getTypeElement(clazz.getCanonicalName());
+  }
+
+  private VariableElement findFirst(Collection<VariableElement> elements, String name) {
+    for (VariableElement variableElement : elements) {
+      if (variableElement.getSimpleName().toString().equals(name)) {
+        return variableElement;
+      }
+    }
+    throw new IllegalArgumentException(name + " not found in " + elements);
+  }
+
+  private ExecutableElement findFirstExecutable(Collection<ExecutableElement> elements, String name) {
+    for (ExecutableElement executableElement : elements) {
+      if (executableElement.getSimpleName().toString().equals(name)) {
+        return executableElement;
+      }
+    }
+    throw new IllegalArgumentException(name + " not found in " + elements);
+  }
+
+  final class VariableElementFieldClass {
+    String name;
+  }
+
+  final class VariableElementParameterClass {
+    public void foo(@Nullable String bar) {
+    }
+  }
+
+
   @Test public void equalsAndHashCode() {
     ParameterSpec a = ParameterSpec.builder(int.class, "foo").build();
     ParameterSpec b = ParameterSpec.builder(int.class, "foo").build();
@@ -46,6 +99,28 @@ public class ParameterSpecTest {
       assertThat(e.getMessage())
           .isEqualTo("annotationSpecs == null");
     }
+  }
+
+  @Test public void fieldVariableElement() {
+    TypeElement classElement = getElement(VariableElementFieldClass.class);
+    List<VariableElement> methods = fieldsIn(elements.getAllMembers(classElement));
+    VariableElement element = findFirst(methods, "name");
+
+    try {
+      ParameterSpec.get(element);
+    } catch (IllegalArgumentException exception) {
+      assertThat(exception).hasMessageThat().isEqualTo("element is not a parameter");
+    }
+  }
+
+  @Test public void parameterVariableElement() {
+    TypeElement classElement = getElement(VariableElementParameterClass.class);
+    List<ExecutableElement> methods = methodsIn(elements.getAllMembers(classElement));
+    ExecutableElement element = findFirstExecutable(methods, "foo");
+    VariableElement parameterElement = element.getParameters().get(0);
+
+    assertThat(ParameterSpec.get(parameterElement).toString())
+        .isEqualTo("@javax.annotation.Nullable java.lang.String arg0");
   }
 
   @Test public void addNonFinalModifier() {
