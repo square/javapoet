@@ -5,7 +5,6 @@ import javax.lang.model.element.VariableElement;
 import java.util.Collection;
 
 final class TestUtil {
-
   static VariableElement findFirstVariableElement(Collection<VariableElement> elements, String name) {
     for (VariableElement variableElement : elements) {
       if (variableElement.getSimpleName().toString().equals(name)) {
