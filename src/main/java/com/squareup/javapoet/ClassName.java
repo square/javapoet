@@ -139,8 +139,8 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   }
 
   /**
-   * Returns the full class name of this class, like {@code "java.util.Map.Entry"}
-   * for {@link Map.Entry}.
+   * Returns the full class name of this class.
+   * Like {@code "java.util.Map.Entry"} for {@link Map.Entry}.
    * */
   public String canonicalName() {
     return canonicalName;
