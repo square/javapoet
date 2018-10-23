@@ -37,6 +37,7 @@ import org.junit.Test;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
+import static com.squareup.javapoet.TestUtil.findFirstExecutableElement;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.junit.Assert.fail;
 
@@ -53,15 +54,6 @@ public final class MethodSpecTest {
 
   private TypeElement getElement(Class<?> clazz) {
     return elements.getTypeElement(clazz.getCanonicalName());
-  }
-
-  private ExecutableElement findFirst(Collection<ExecutableElement> elements, String name) {
-    for (ExecutableElement executableElement : elements) {
-      if (executableElement.getSimpleName().toString().equals(name)) {
-        return executableElement;
-      }
-    }
-    throw new IllegalArgumentException(name + " not found in " + elements);
   }
 
   @Test public void nullAnnotationsAddition() {
@@ -186,7 +178,7 @@ public final class MethodSpecTest {
     TypeElement classElement = getElement(ExtendsIterableWithDefaultMethods.class);
     DeclaredType classType = (DeclaredType) classElement.asType();
     List<ExecutableElement> methods = methodsIn(elements.getAllMembers(classElement));
-    ExecutableElement exec = findFirst(methods, "spliterator");
+    ExecutableElement exec = findFirstExecutableElement(methods, "spliterator");
     MethodSpec method = MethodSpec.overriding(exec, classType, types).build();
     assertThat(method.toString()).isEqualTo(""
         + "@java.lang.Override\n"
@@ -198,19 +190,19 @@ public final class MethodSpecTest {
     TypeElement classElement = getElement(ExtendsOthers.class);
     DeclaredType classType = (DeclaredType) classElement.asType();
     List<ExecutableElement> methods = methodsIn(elements.getAllMembers(classElement));
-    ExecutableElement exec = findFirst(methods, "call");
+    ExecutableElement exec = findFirstExecutableElement(methods, "call");
     MethodSpec method = MethodSpec.overriding(exec, classType, types).build();
     assertThat(method.toString()).isEqualTo(""
         + "@java.lang.Override\n"
         + "public java.lang.Integer call() throws java.lang.Exception {\n"
         + "}\n");
-    exec = findFirst(methods, "compareTo");
+    exec = findFirstExecutableElement(methods, "compareTo");
     method = MethodSpec.overriding(exec, classType, types).build();
     assertThat(method.toString()).isEqualTo(""
         + "@java.lang.Override\n"
         + "public int compareTo(" + ExtendsOthers.class.getCanonicalName() + " arg0) {\n"
         + "}\n");
-    exec = findFirst(methods, "fail");
+    exec = findFirstExecutableElement(methods, "fail");
     method = MethodSpec.overriding(exec, classType, types).build();
     assertThat(method.toString()).isEqualTo(""
         + "@java.lang.Override\n"
@@ -222,7 +214,7 @@ public final class MethodSpecTest {
     TypeElement classElement = getElement(FinalClass.class);
     List<ExecutableElement> methods = methodsIn(elements.getAllMembers(classElement));
     try {
-      MethodSpec.overriding(findFirst(methods, "method"));
+      MethodSpec.overriding(findFirstExecutableElement(methods, "method"));
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessageThat().isEqualTo(
@@ -234,19 +226,19 @@ public final class MethodSpecTest {
     TypeElement classElement = getElement(InvalidOverrideMethods.class);
     List<ExecutableElement> methods = methodsIn(elements.getAllMembers(classElement));
     try {
-      MethodSpec.overriding(findFirst(methods, "finalMethod"));
+      MethodSpec.overriding(findFirstExecutableElement(methods, "finalMethod"));
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessageThat().isEqualTo("cannot override method with modifiers: [final]");
     }
     try {
-      MethodSpec.overriding(findFirst(methods, "privateMethod"));
+      MethodSpec.overriding(findFirstExecutableElement(methods, "privateMethod"));
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessageThat().isEqualTo("cannot override method with modifiers: [private]");
     }
     try {
-      MethodSpec.overriding(findFirst(methods, "staticMethod"));
+      MethodSpec.overriding(findFirstExecutableElement(methods, "staticMethod"));
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessageThat().isEqualTo("cannot override method with modifiers: [static]");
