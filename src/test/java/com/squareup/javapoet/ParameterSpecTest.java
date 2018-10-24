@@ -28,8 +28,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.squareup.javapoet.TestUtil.findFirstExecutableElement;
-import static com.squareup.javapoet.TestUtil.findFirstVariableElement;
+import static com.squareup.javapoet.TestUtil.findFirst;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.junit.Assert.fail;
@@ -79,7 +78,7 @@ public class ParameterSpecTest {
   @Test public void fieldVariableElement() {
     TypeElement classElement = getElement(VariableElementFieldClass.class);
     List<VariableElement> methods = fieldsIn(elements.getAllMembers(classElement));
-    VariableElement element = findFirstVariableElement(methods, "name");
+    VariableElement element = findFirst(methods, "name");
 
     try {
       ParameterSpec.get(element);
@@ -97,7 +96,7 @@ public class ParameterSpecTest {
   @Test public void parameterVariableElement() {
     TypeElement classElement = getElement(VariableElementParameterClass.class);
     List<ExecutableElement> methods = methodsIn(elements.getAllMembers(classElement));
-    ExecutableElement element = findFirstExecutableElement(methods, "foo");
+    ExecutableElement element = findFirst(methods, "foo");
     VariableElement parameterElement = element.getParameters().get(0);
 
     assertThat(ParameterSpec.get(parameterElement).toString())
