@@ -138,6 +138,14 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     return simpleName;
   }
 
+  /**
+   * Returns the full class name of this class.
+   * Like {@code "java.util.Map.Entry"} for {@link Map.Entry}.
+   * */
+  public String canonicalName() {
+    return canonicalName;
+  }
+
   public static ClassName get(Class<?> clazz) {
     checkNotNull(clazz, "clazz == null");
     checkArgument(!clazz.isPrimitive(), "primitive types cannot be represented as a ClassName");
