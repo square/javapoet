@@ -329,6 +329,9 @@ public final class CodeBlock {
         case 'T':
           this.args.add(argToType(arg));
           break;
+        case 'C':
+          this.args.add(argToChar(arg));
+          break;
         default:
           throw new IllegalArgumentException(
               String.format("invalid format string: '%s'", format));
@@ -357,6 +360,11 @@ public final class CodeBlock {
       if (o instanceof TypeMirror) return TypeName.get((TypeMirror) o);
       if (o instanceof Element) return TypeName.get(((Element) o).asType());
       if (o instanceof Type) return TypeName.get((Type) o);
+      throw new IllegalArgumentException("expected type but was " + o);
+    }
+
+    private Character argToChar(Object o) {
+      if (o instanceof Character) return (char) o;
       throw new IllegalArgumentException("expected type but was " + o);
     }
 

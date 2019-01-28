@@ -30,6 +30,7 @@ import java.util.Set;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
 
+import static com.squareup.javapoet.Util.characterLiteralWithSingleQuotes;
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
 import static com.squareup.javapoet.Util.checkState;
@@ -255,6 +256,14 @@ final class CodeWriter {
             }
           }
           typeName.emit(this);
+          break;
+
+        case "$C":
+          Character ch = (Character) codeBlock.args.get(a++);
+          // Emit null as a literal null: no quotes.
+          emitAndIndent(ch != null
+              ? characterLiteralWithSingleQuotes(ch)
+              : "null");
           break;
 
         case "$$":

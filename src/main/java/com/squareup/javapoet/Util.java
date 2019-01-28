@@ -128,4 +128,13 @@ final class Util {
     result.append('"');
     return result.toString();
   }
+
+  /** Returns the character literal representing {@code value}, including wrapping single quotes. */
+  static String characterLiteralWithSingleQuotes(char value) {
+    StringBuilder result = new StringBuilder(3);
+    result.append('\'');
+    result.append(characterLiteralWithoutSingleQuotes(value));
+    result.append('\'');
+    return result.toString();
+  }
 }

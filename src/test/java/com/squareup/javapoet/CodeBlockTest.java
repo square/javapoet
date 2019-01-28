@@ -16,6 +16,7 @@
 package com.squareup.javapoet;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -338,5 +339,51 @@ public final class CodeBlockTest {
 
     CodeBlock joined = codeBlocks.stream().collect(CodeBlock.joining(" || ", "start {", "} end"));
     assertThat(joined.toString()).isEqualTo("start {\"hello\" || world.World || need tacos} end");
+  }
+
+  @Test public void singleQuoteCharacterInLiteral() {
+    char ch = '\'';
+    CodeBlock chInLiteralBlock = CodeBlock.builder().add("'$L'", ch).build();
+    // Produces ''' instead of the '\''
+    assertThat(chInLiteralBlock.toString()).isEqualTo("'''");
+
+    String str = "\\'";
+    // Works but character is transformed into a String, user would need to do this
+    CodeBlock strInLiteralBlock = CodeBlock.builder().add("'$L'", str).build();
+    assertThat(strInLiteralBlock.toString()).isEqualTo("'\\''");
+
+    char ch2 = '\'';
+    // Util method not public, so user would need to create its own version
+    CodeBlock utilInBlock = CodeBlock.builder().add("'$L'", Util.characterLiteralWithoutSingleQuotes(ch2)).build();
+    assertThat(utilInBlock.toString()).isEqualTo("'\\''");
+  }
+
+  @Test public void asciiCharacterInCharacter() {
+    CodeBlock block = CodeBlock.builder().add("$C", 'a').build();
+    assertThat(block.toString()).isEqualTo("'a'");
+  }
+
+  @Test public void unicodeCharacterInCharacter() {
+    CodeBlock block = CodeBlock.builder().add("$C", '\u03A9').build();
+    assertThat(block.toString()).isEqualTo("'\u03A9'");
+  }
+
+  @Test public void escapedCharactersInCharacter() {
+    Map<Character, String> escapedCharacters = new HashMap<>();
+    escapedCharacters.put('\b', "'\\b'");
+    escapedCharacters.put('\t', "'\\t'");
+    escapedCharacters.put('\n', "'\\n'");
+    escapedCharacters.put('\f', "'\\f'");
+    escapedCharacters.put('\r', "'\\r'");
+    escapedCharacters.put('\"', "'\"'");
+    escapedCharacters.put('\'', "'\\''");
+    escapedCharacters.put('\\', "'\\\\'");
+
+    for (Map.Entry<Character, String> entry : escapedCharacters.entrySet()) {
+      final Character ch = entry.getKey();
+      final String expected = entry.getValue();
+      CodeBlock block = CodeBlock.builder().add("$C", ch).build();
+      assertThat(block.toString()).isEqualTo(expected);
+    }
   }
 }
