@@ -83,6 +83,12 @@ public final class JavaFile {
 
   /** Writes this to {@code directory} as UTF-8 using the standard directory structure. */
   public void writeTo(Path directory) throws IOException {
+    writeToPath(directory);
+  }
+
+  /** Writes this to {@code directory} as UTF-8 using the standard directory structure.
+   * Returns the {@link Path} instance to which source is actually written. */
+  public Path writeToPath(Path directory) throws IOException {
     checkArgument(Files.notExists(directory) || Files.isDirectory(directory),
         "path %s exists but is not a directory.", directory);
     Path outputDirectory = directory;
@@ -97,11 +103,20 @@ public final class JavaFile {
     try (Writer writer = new OutputStreamWriter(Files.newOutputStream(outputPath), UTF_8)) {
       writeTo(writer);
     }
+
+    return outputPath;
   }
 
   /** Writes this to {@code directory} as UTF-8 using the standard directory structure. */
   public void writeTo(File directory) throws IOException {
     writeTo(directory.toPath());
+  }
+
+  /** Writes this to {@code directory} as UTF-8 using the standard directory structure.
+   * Returns the {@link File} instance to which source is actually written. */
+  public File writeToFile(File directory) throws IOException {
+    final Path outputPath = writeToPath(directory.toPath());
+    return outputPath.toFile();
   }
 
   /** Writes this to {@code filer}. */
