@@ -278,7 +278,7 @@ public final class MethodSpec {
   }
 
   public static final class Builder {
-    private final String name;
+    private String name;
 
     private final CodeBlock.Builder javadoc = CodeBlock.builder();
     private final List<AnnotationSpec> annotations = new ArrayList<>();
@@ -292,11 +292,16 @@ public final class MethodSpec {
     private CodeBlock defaultValue;
 
     private Builder(String name) {
+      setName(name);
+    }
+
+    public Builder setName(String name) {
       checkNotNull(name, "name == null");
       checkArgument(name.equals(CONSTRUCTOR) || SourceVersion.isName(name),
-          "not a valid name: %s", name);
+              "not a valid name: %s", name);
       this.name = name;
       this.returnType = name.equals(CONSTRUCTOR) ? null : TypeName.VOID;
+      return this;
     }
 
     public Builder addJavadoc(String format, Object... args) {
