@@ -306,13 +306,13 @@ public final class MethodSpecTest {
 
   @Test public void modifyMethodName() {
     MethodSpec methodSpec = MethodSpec.methodBuilder("initialMethod")
-            .build()
-            .toBuilder()
-            .setName("revisedMethod")
-            .build();
+        .build()
+        .toBuilder()
+        .setName("revisedMethod")
+        .build();
 
     assertThat(methodSpec.toString()).isEqualTo(""
-            + "void revisedMethod() {\n"
-            + "}\n");
+        + "void revisedMethod() {\n"
+        + "}\n");
   }
 }

@@ -298,7 +298,7 @@ public final class MethodSpec {
     public Builder setName(String name) {
       checkNotNull(name, "name == null");
       checkArgument(name.equals(CONSTRUCTOR) || SourceVersion.isName(name),
-              "not a valid name: %s", name);
+          "not a valid name: %s", name);
       this.name = name;
       this.returnType = name.equals(CONSTRUCTOR) ? null : TypeName.VOID;
       return this;
