@@ -37,6 +37,7 @@ import org.junit.Test;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
+import static com.squareup.javapoet.MethodSpec.CONSTRUCTOR;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.junit.Assert.fail;
 
@@ -354,5 +355,17 @@ public final class MethodSpecTest {
     } catch (NullPointerException e) {
       assertThat(e.getMessage()).isEqualTo("modifiers == null");
     }
+  }
+
+  @Test public void modifyMethodName() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("initialMethod")
+        .build()
+        .toBuilder()
+        .setName("revisedMethod")
+        .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+        + "void revisedMethod() {\n"
+        + "}\n");
   }
 }
