@@ -128,6 +128,60 @@ int multiply10to20() {
 Methods generating methods! And since JavaPoet generates source instead of bytecode, you can
 read through it to make sure it's right.
 
+Some control flow statements, such as `if/else`, can have unlimited control flow possibilities.
+You can handle those options using `nextControlFlow()`:
+
+```java
+MethodSpec main = MethodSpec.methodBuilder("main")
+    .addStatement("long now = $T.currentTimeMillis()", System.class)
+    .beginControlFlow("if ($T.currentTimeMillis() < now)", System.class)
+    .addStatement("$T.out.println($S)", System.class, "Time travelling, woo hoo!")
+    .nextControlFlow("else if ($T.currentTimeMillis() == now)", System.class)
+    .addStatement("$T.out.println($S)", System.class, "Time stood still!")
+    .nextControlFlow("else")
+    .addStatement("$T.out.println($S)", System.class, "Ok, time still moving forward")
+    .endControlFlow()
+    .build();
+```
+
+Which generates:
+
+```java
+void main() {
+  long now = System.currentTimeMillis();
+  if (System.currentTimeMillis() < now)  {
+    System.out.println("Time travelling, woo hoo!");
+  } else if (System.currentTimeMillis() == now) {
+    System.out.println("Time stood still!");
+  } else {
+    System.out.println("Ok, time still moving forward");
+  }
+}
+``` 
+
+Catching exceptions using `try/catch` is also a use case for `nextControlFlow()`:
+
+```java
+MethodSpec main = MethodSpec.methodBuilder("main")
+    .beginControlFlow("try")
+    .addStatement("throw new Exception($S)", "Failed")
+    .nextControlFlow("catch ($T e)", Exception.class)
+    .addStatement("throw new $T(e)", RuntimeException.class)
+    .endControlFlow()
+    .build();
+```
+
+Which produces:
+
+```java
+void main() {
+  try {
+    throw new Exception("Failed");
+  } catch (Exception e) {
+    throw new RuntimeException(e);
+  }
+}
+```
 
 ### $L for Literals
 
