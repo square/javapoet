@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,6 +54,7 @@ public final class TypeSpec {
   public final CodeBlock initializerBlock;
   public final List<MethodSpec> methodSpecs;
   public final List<TypeSpec> typeSpecs;
+  final Set<String> nestedTypesSimpleNames;
   public final List<Element> originatingElements;
 
   private TypeSpec(Builder builder) {
@@ -72,11 +74,14 @@ public final class TypeSpec {
     this.methodSpecs = Util.immutableList(builder.methodSpecs);
     this.typeSpecs = Util.immutableList(builder.typeSpecs);
 
+    nestedTypesSimpleNames = new HashSet<>(builder.typeSpecs.size());
     List<Element> originatingElementsMutable = new ArrayList<>();
     originatingElementsMutable.addAll(builder.originatingElements);
     for (TypeSpec typeSpec : builder.typeSpecs) {
+      nestedTypesSimpleNames.add(typeSpec.name);
       originatingElementsMutable.addAll(typeSpec.originatingElements);
     }
+
     this.originatingElements = Util.immutableList(originatingElementsMutable);
   }
 
@@ -102,6 +107,7 @@ public final class TypeSpec {
     this.methodSpecs = Collections.emptyList();
     this.typeSpecs = Collections.emptyList();
     this.originatingElements = Collections.emptyList();
+    this.nestedTypesSimpleNames = Collections.emptySet();
   }
 
   public boolean hasModifier(Modifier modifier) {

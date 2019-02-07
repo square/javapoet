@@ -420,10 +420,8 @@ final class CodeWriter {
     // Match a child of the current (potentially nested) class.
     for (int i = typeSpecStack.size() - 1; i >= 0; i--) {
       TypeSpec typeSpec = typeSpecStack.get(i);
-      for (TypeSpec visibleChild : typeSpec.typeSpecs) {
-        if (Objects.equals(visibleChild.name, simpleName)) {
-          return stackClassName(i, simpleName);
-        }
+      if (typeSpec.nestedTypesSimpleNames.contains(simpleName)) {
+        return stackClassName(i, simpleName);
       }
     }
 
