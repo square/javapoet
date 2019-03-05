@@ -83,8 +83,7 @@ public final class JavaFile {
   }
 
   /** Writes this to {@code directory} as UTF-8 using the standard directory structure. */
-  public void writeTo(Path directory) throws IOException
-  {
+  public void writeTo(Path directory) throws IOException {
     writeTo(directory, UTF_8);
   }
 
