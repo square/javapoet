@@ -370,9 +370,9 @@ ClassName namedBoards = ClassName.get("com.mattel", "Hoverboard", "Boards");
 MethodSpec beyond = MethodSpec.methodBuilder("beyond")
     .returns(listOfHoverboards)
     .addStatement("$T result = new $T<>()", listOfHoverboards, arrayList)
-    .addStatement("result.add($T.createNimbus(2000))", hoverboard)
-    .addStatement("result.add($T.createNimbus(\"2001\"))", hoverboard)
-    .addStatement("result.add($T.createNimbus($T.THUNDERBOLT))", hoverboard, namedBoards)
+    .addStatement("result.add(createNimbus(2000))")
+    .addStatement("result.add(createNimbus(\"2001\"))")
+    .addStatement("result.add(createNimbus(THUNDERBOLT))")
     .addStatement("$T.sort(result)", Collections.class)
     .addStatement("return result.isEmpty() ? $T.emptyList() : result", Collections.class)
     .build();
