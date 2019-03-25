@@ -189,7 +189,7 @@ public final class CodeBlock {
       while (p < format.length()) {
         int nextP = format.indexOf("$", p);
         if (nextP == -1) {
-          formatParts.add(format.substring(p, format.length()));
+          formatParts.add(format.substring(p));
           break;
         }
 
