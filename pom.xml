@@ -141,6 +141,33 @@
         </executions>
       </plugin>
 
+	<plugin>
+		<groupId>biz.aQute.bnd</groupId>
+		<artifactId>bnd-maven-plugin</artifactId>
+		<executions>
+			<execution>
+				<goals>
+					<goal>bnd-process</goal>
+				</goals>
+			</execution>
+		</executions>
+		<configuration>
+			<bnd><![CDATA[
+-exportcontents:\
+ com.squareup.javapoet
+        ]]></bnd>
+		</configuration>
+	</plugin>
+	<plugin>
+		<groupId>org.apache.maven.plugins</groupId>
+		<artifactId>maven-jar-plugin</artifactId>
+		<configuration>
+			<archive>
+				<manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+			</archive>
+		</configuration>
+	</plugin>
+ 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
