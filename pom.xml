@@ -161,25 +161,13 @@
 	<plugin>
 		<groupId>org.apache.maven.plugins</groupId>
 		<artifactId>maven-jar-plugin</artifactId>
+        <version>3.0.2</version>
 		<configuration>
 			<archive>
 				<manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
 			</archive>
 		</configuration>
 	</plugin>
- 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>3.0.2</version>
-        <configuration>
-          <archive>
-            <manifestEntries>
-              <Automatic-Module-Name>com.squareup.javapoet</Automatic-Module-Name>
-            </manifestEntries>
-          </archive>
-        </configuration>
-      </plugin>
 
     </plugins>
   </build>
