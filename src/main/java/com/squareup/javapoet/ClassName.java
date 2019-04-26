@@ -58,7 +58,9 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     this.simpleName = simpleName;
     this.canonicalName = enclosingClassName != null
         ? (enclosingClassName.canonicalName + '.' + simpleName)
-        : (packageName.isEmpty() ? simpleName : packageName + '.' + simpleName);
+        : (packageName == null || packageName.isEmpty()
+            ? simpleName
+            : packageName + '.' + simpleName);
   }
 
   @Override public ClassName annotated(List<AnnotationSpec> annotations) {
