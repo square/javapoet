@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -32,7 +33,7 @@ import static com.squareup.javapoet.Util.checkNotNull;
 public final class ClassName extends TypeName implements Comparable<ClassName> {
   public static final ClassName OBJECT = ClassName.get(Object.class);
 
-  /** The name representing the default Java package */
+  /** The name representing the default Java package. */
   private static final String NO_PACKAGE = "";
 
   /** The package name of this class, or "" if this is in the default package. */
@@ -56,7 +57,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   private ClassName(String packageName, ClassName enclosingClassName, String simpleName,
       List<AnnotationSpec> annotations) {
     super(annotations);
-    this.packageName = (packageName != null) ? packageName : NO_PACKAGE;
+    this.packageName = Objects.requireNonNull(packageName, "packageName == null");
     this.enclosingClassName = enclosingClassName;
     this.simpleName = simpleName;
     this.canonicalName = enclosingClassName != null
