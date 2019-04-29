@@ -400,7 +400,7 @@ final class CodeWriter {
   }
 
   private void importableType(ClassName className) {
-    if (className.packageName() == null || className.packageName().isEmpty()) {
+    if (className.packageName().isEmpty()) {
       return;
     }
     ClassName topLevelClassName = className.topLevelClassName();

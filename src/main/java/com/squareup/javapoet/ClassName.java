@@ -32,6 +32,9 @@ import static com.squareup.javapoet.Util.checkNotNull;
 public final class ClassName extends TypeName implements Comparable<ClassName> {
   public static final ClassName OBJECT = ClassName.get(Object.class);
 
+  /** The name representing the default Java package */
+  private static final String NO_PACKAGE = "";
+
   /** The package name of this class, or "" if this is in the default package. */
   final String packageName;
 
@@ -53,14 +56,12 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   private ClassName(String packageName, ClassName enclosingClassName, String simpleName,
       List<AnnotationSpec> annotations) {
     super(annotations);
-    this.packageName = packageName;
+    this.packageName = (packageName != null) ? packageName : NO_PACKAGE;
     this.enclosingClassName = enclosingClassName;
     this.simpleName = simpleName;
     this.canonicalName = enclosingClassName != null
         ? (enclosingClassName.canonicalName + '.' + simpleName)
-        : (packageName == null || packageName.isEmpty()
-            ? simpleName
-            : packageName + '.' + simpleName);
+        : (this.packageName.isEmpty() ? simpleName : packageName + '.' + simpleName);
   }
 
   @Override public ClassName annotated(List<AnnotationSpec> annotations) {
@@ -174,7 +175,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
     if (clazz.getEnclosingClass() == null) {
       // Avoid unreliable Class.getPackage(). https://github.com/square/javapoet/issues/295
       int lastDot = clazz.getName().lastIndexOf('.');
-      String packageName = (lastDot != -1) ? clazz.getName().substring(0, lastDot) : null;
+      String packageName = (lastDot != -1) ? clazz.getName().substring(0, lastDot) : NO_PACKAGE;
       return new ClassName(packageName, null, name);
     }
 
@@ -196,7 +197,7 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
       p = classNameString.indexOf('.', p) + 1;
       checkArgument(p != 0, "couldn't make a guess for %s", classNameString);
     }
-    String packageName = p == 0 ? "" : classNameString.substring(0, p - 1);
+    String packageName = p == 0 ? NO_PACKAGE : classNameString.substring(0, p - 1);
 
     // Add class names like "Map" and "Entry".
     ClassName className = null;
