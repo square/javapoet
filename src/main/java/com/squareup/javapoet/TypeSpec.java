@@ -139,9 +139,7 @@ public final class TypeSpec {
   }
 
   public static Builder anonymousClassBuilder(String typeArgumentsFormat, Object... args) {
-    return anonymousClassBuilder(CodeBlock.builder()
-        .add(typeArgumentsFormat, args)
-        .build());
+    return anonymousClassBuilder(CodeBlock.of(typeArgumentsFormat, args));
   }
 
   public static Builder anonymousClassBuilder(CodeBlock typeArguments) {
