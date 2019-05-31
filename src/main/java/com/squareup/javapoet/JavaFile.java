@@ -87,7 +87,10 @@ public final class JavaFile {
     writeTo(directory, UTF_8);
   }
 
-  /** Writes this to {@code directory} with the provided {@code charset} using the standard directory structure. */
+  /**
+   * Writes this to {@code directory} with the provided {@code charset}
+   * using the standard directory structure.
+   */
   public void writeTo(Path directory, Charset charset) throws IOException {
     checkArgument(Files.notExists(directory) || Files.isDirectory(directory),
         "path %s exists but is not a directory.", directory);
