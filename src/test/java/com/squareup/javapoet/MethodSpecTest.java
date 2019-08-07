@@ -37,7 +37,6 @@ import org.junit.Test;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
-import static com.squareup.javapoet.MethodSpec.CONSTRUCTOR;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.junit.Assert.fail;
 
@@ -366,6 +365,29 @@ public final class MethodSpecTest {
 
     assertThat(methodSpec.toString()).isEqualTo(""
         + "void revisedMethod() {\n"
+        + "}\n");
+  }
+
+  @Test public void ensureTrailingNewline() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+        .addCode("codeWithNoNewline();")
+        .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+        + "void method() {\n"
+        + "  codeWithNoNewline();\n"
+        + "}\n");
+  }
+
+  /** Ensures that we don't add a duplicate newline if one is already present. */
+  @Test public void ensureTrailingNewlineWithExistingNewline() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+        .addCode("codeWithNoNewline();\n") // Have a newline already, so ensure we're not adding one
+        .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+        + "void method() {\n"
+        + "  codeWithNoNewline();\n"
         + "}\n");
   }
 }

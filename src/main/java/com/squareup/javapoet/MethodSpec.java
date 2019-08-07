@@ -132,7 +132,7 @@ public final class MethodSpec {
       codeWriter.emit(" {\n");
 
       codeWriter.indent();
-      codeWriter.emit(code);
+      codeWriter.emit(code, true);
       codeWriter.unindent();
 
       codeWriter.emit("}\n");
