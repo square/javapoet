@@ -2440,4 +2440,19 @@ public final class TypeSpecTest {
         + "class Taco {\n"
         + "}\n");
   }
+
+  @Test public void javadocEnsuresTrailingLine() {
+    TypeSpec spec = TypeSpec.classBuilder("Taco")
+        .addJavadoc("Some doc with a newline")
+        .build();
+
+    assertThat(toString(spec)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "/**\n"
+        + " * Some doc with a newline\n"
+        + " */\n"
+        + "class Taco {\n"
+        + "}\n");
+  }
 }
