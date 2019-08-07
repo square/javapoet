@@ -149,12 +149,9 @@ final class CodeWriter {
     emit("/**\n");
     javadoc = true;
     try {
-      emit(javadocCodeBlock);
+      emit(javadocCodeBlock, true);
     } finally {
       javadoc = false;
-    }
-    if (out.lastChar() != '\n') {
-      emit("\n");
     }
     emit(" */\n");
   }
@@ -222,6 +219,10 @@ final class CodeWriter {
   }
 
   public CodeWriter emit(CodeBlock codeBlock) throws IOException {
+    return emit(codeBlock, false);
+  }
+
+  public CodeWriter emit(CodeBlock codeBlock, boolean ensureTrailingNewline) throws IOException {
     int a = 0;
     ClassName deferredTypeName = null; // used by "import static" logic
     ListIterator<String> partIterator = codeBlock.formatParts.listIterator();
@@ -309,6 +310,9 @@ final class CodeWriter {
           emitAndIndent(part);
           break;
       }
+    }
+    if (ensureTrailingNewline && out.lastChar() != '\n') {
+      emit("\n");
     }
     return this;
   }
