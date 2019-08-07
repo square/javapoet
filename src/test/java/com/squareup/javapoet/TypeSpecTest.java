@@ -1848,7 +1848,8 @@ public final class TypeSpecTest {
         + "  }\n"
         + "\n"
         + "  /**\n"
-        + "   * chosen by fair dice roll ;) */\n"
+        + "   * chosen by fair dice roll ;)\n"
+        + "   */\n"
         + "  public int getRandomQuantity() {\n"
         + "    return 4;\n"
         + "  }\n"
@@ -2423,5 +2424,20 @@ public final class TypeSpecTest {
     assertThat(TypeSpec.interfaceBuilder(className).build().name).isEqualTo("Example");
     assertThat(TypeSpec.enumBuilder(className).addEnumConstant("A").build().name).isEqualTo("Example");
     assertThat(TypeSpec.annotationBuilder(className).build().name).isEqualTo("Example");
+  }
+
+  @Test public void javadocWithTrailingLineDoesNotAddAnother() {
+    TypeSpec spec = TypeSpec.classBuilder("Taco")
+        .addJavadoc("Some doc with a newline\n")
+        .build();
+
+    assertThat(toString(spec)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "/**\n"
+        + " * Some doc with a newline\n"
+        + " */\n"
+        + "class Taco {\n"
+        + "}\n");
   }
 }

@@ -153,6 +153,9 @@ final class CodeWriter {
     } finally {
       javadoc = false;
     }
+    if (out.lastChar() != '\n') {
+      emit("\n");
+    }
     emit(" */\n");
   }
 
