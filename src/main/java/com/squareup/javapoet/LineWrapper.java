@@ -24,7 +24,7 @@ import static com.squareup.javapoet.Util.checkNotNull;
  * or soft-wrapping spaces using {@link #wrappingSpace}.
  */
 final class LineWrapper {
-  private final Appendable out;
+  private final RecordingAppendable out;
   private final String indent;
   private final int columnLimit;
   private boolean closed;
@@ -47,9 +47,14 @@ final class LineWrapper {
 
   LineWrapper(Appendable out, String indent, int columnLimit) {
     checkNotNull(out, "out == null");
-    this.out = out;
+    this.out = new RecordingAppendable(out);
     this.indent = indent;
     this.columnLimit = columnLimit;
+  }
+
+  /** @return the last emitted char or {@link Character#MIN_VALUE} if nothing emitted yet. */
+  char lastChar() {
+    return out.lastChar;
   }
 
   /** Emit {@code s}. This may be buffered to permit line wraps to be inserted. */
@@ -133,5 +138,34 @@ final class LineWrapper {
 
   private enum FlushType {
     WRAP, SPACE, EMPTY;
+  }
+
+  /** A delegating {@link Appendable} that records info about the chars passing through it. */
+  final static class RecordingAppendable implements Appendable {
+    private final Appendable delegate;
+
+    char lastChar = Character.MIN_VALUE;
+
+    RecordingAppendable(Appendable delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override public Appendable append(CharSequence csq) throws IOException {
+      int length = csq.length();
+      if (length != 0) {
+        lastChar = csq.charAt(length - 1);
+      }
+      return delegate.append(csq);
+    }
+
+    @Override public Appendable append(CharSequence csq, int start, int end) throws IOException {
+      CharSequence sub = csq.subSequence(start, end);
+      return append(sub);
+    }
+
+    @Override public Appendable append(char c) throws IOException {
+      lastChar = c;
+      return delegate.append(c);
+    }
   }
 }
