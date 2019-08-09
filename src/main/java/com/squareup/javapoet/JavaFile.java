@@ -34,6 +34,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.util.ElementFilter;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 import javax.tools.SimpleJavaFileObject;
@@ -278,6 +280,70 @@ public final class JavaFile {
       for (String name : simpleNames) {
         checkArgument(name != null, "null entry in simpleNames array: %s", Arrays.toString(simpleNames));
         alwaysQualify.add(name);
+      }
+      return this;
+    }
+
+    /**
+     * Call this to always fully qualify any types that would conflict with possibly nested types of
+     * this {@code typeElement}. For example - if the following type was passed in as the
+     * typeElement:
+     *
+     * <pre><code>
+     *   class Foo {
+     *     class NestedTypeA {
+     *
+     *     }
+     *     class NestedTypeB {
+     *
+     *     }
+     *   }
+     * </code></pre>
+     *
+     * <p>
+     * Then this would add {@code "NestedTypeA"} and {@code "NestedTypeB"} as names that should
+     * always be qualified via {@link #alwaysQualify(String...)}. This way they would avoid
+     * possible import conflicts when this JavaFile is written.
+     *
+     * @param typeElement the {@link TypeElement} with nested types to avoid clashes with.
+     * @return this builder instance.
+     */
+    public Builder avoidClashesWithNestedClasses(TypeElement typeElement) {
+      checkArgument(typeElement != null, "typeElement == null");
+      for (TypeElement nestedType : ElementFilter.typesIn(typeElement.getEnclosedElements())) {
+        alwaysQualify(nestedType.getSimpleName().toString());
+      }
+      return this;
+    }
+
+    /**
+     * Call this to always fully qualify any types that would conflict with possibly nested types of
+     * this {@code typeElement}. For example - if the following type was passed in as the
+     * typeElement:
+     *
+     * <pre><code>
+     *   class Foo {
+     *     class NestedTypeA {
+     *
+     *     }
+     *     class NestedTypeB {
+     *
+     *     }
+     *   }
+     * </code></pre>
+     *
+     * <p>
+     * Then this would add {@code "NestedTypeA"} and {@code "NestedTypeB"} as names that should
+     * always be qualified via {@link #alwaysQualify(String...)}. This way they would avoid
+     * possible import conflicts when this JavaFile is written.
+     *
+     * @param clazz the {@link Class} with nested types to avoid clashes with.
+     * @return this builder instance.
+     */
+    public Builder avoidClashesWithNestedClasses(Class<?> clazz) {
+      checkArgument(clazz != null, "clazz == null");
+      for (Class<?> nestedType : clazz.getDeclaredClasses()) {
+        alwaysQualify(nestedType.getSimpleName());
       }
       return this;
     }

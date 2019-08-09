@@ -16,12 +16,15 @@
 package com.squareup.javapoet;
 
 import java.io.File;
+import com.google.testing.compile.CompilationRule;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -30,6 +33,13 @@ import static com.google.common.truth.Truth.assertThat;
 
 @RunWith(JUnit4.class)
 public final class JavaFileTest {
+
+  @Rule public final CompilationRule compilation = new CompilationRule();
+
+  private TypeElement getElement(Class<?> clazz) {
+    return compilation.getElements().getTypeElement(clazz.getCanonicalName());
+  }
+
   @Test public void importStaticReadmeExample() {
     ClassName hoverboard = ClassName.get("com.mattel", "Hoverboard");
     ClassName namedBoards = ClassName.get("com.mattel", "Hoverboard", "Boards");
@@ -742,5 +752,76 @@ public final class JavaFileTest {
         + "class Taco {\n"
         + "  java.lang.Thread thread;\n"
         + "}\n");
+  }
+
+  @Test public void avoidClashesWithNestedClasses_viaClass() {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            // These two should get qualified
+            .addField(ClassName.get("other", "NestedTypeA"), "nestedA")
+            .addField(ClassName.get("other", "NestedTypeB"), "nestedB")
+            // This one shouldn't since it's not a nested type of Foo
+            .addField(ClassName.get("other", "NestedTypeC"), "nestedC")
+            // This one shouldn't since we only look at nested types
+            .addField(ClassName.get("other", "Foo"), "foo")
+            .build())
+        .avoidClashesWithNestedClasses(Foo.class)
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import other.Foo;\n"
+        + "import other.NestedTypeC;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  other.NestedTypeA nestedA;\n"
+        + "\n"
+        + "  other.NestedTypeB nestedB;\n"
+        + "\n"
+        + "  NestedTypeC nestedC;\n"
+        + "\n"
+        + "  Foo foo;\n"
+        + "}\n");
+  }
+
+  @Test public void avoidClashesWithNestedClasses_viaTypeElement() {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            // These two should get qualified
+            .addField(ClassName.get("other", "NestedTypeA"), "nestedA")
+            .addField(ClassName.get("other", "NestedTypeB"), "nestedB")
+            // This one shouldn't since it's not a nested type of Foo
+            .addField(ClassName.get("other", "NestedTypeC"), "nestedC")
+            // This one shouldn't since we only look at nested types
+            .addField(ClassName.get("other", "Foo"), "foo")
+            .build())
+        .avoidClashesWithNestedClasses(getElement(Foo.class))
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import other.Foo;\n"
+        + "import other.NestedTypeC;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  other.NestedTypeA nestedA;\n"
+        + "\n"
+        + "  other.NestedTypeB nestedB;\n"
+        + "\n"
+        + "  NestedTypeC nestedC;\n"
+        + "\n"
+        + "  Foo foo;\n"
+        + "}\n");
+  }
+
+  class Foo {
+    class NestedTypeA {
+
+    }
+    class NestedTypeB {
+
+    }
   }
 }
