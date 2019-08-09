@@ -710,4 +710,37 @@ public final class JavaFileTest {
         + "class Taco {\n"
         + "}\n");
   }
+
+  @Test public void alwaysQualifySimple() {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addField(Thread.class, "thread")
+            .build())
+        .alwaysQualify("Thread")
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  java.lang.Thread thread;\n"
+        + "}\n");
+  }
+
+  @Test public void alwaysQualifySupersedesJavaLangImports() {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addField(Thread.class, "thread")
+            .build())
+        .alwaysQualify("Thread")
+        .skipJavaLangImports(true)
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  java.lang.Thread thread;\n"
+        + "}\n");
+  }
 }

@@ -54,6 +54,7 @@ final class CodeWriter {
   private final List<TypeSpec> typeSpecStack = new ArrayList<>();
   private final Set<String> staticImportClassNames;
   private final Set<String> staticImports;
+  private final Set<String> alwaysQualify;
   private final Map<String, ClassName> importedTypes;
   private final Map<String, ClassName> importableTypes = new LinkedHashMap<>();
   private final Set<String> referencedNames = new LinkedHashSet<>();
@@ -68,19 +69,23 @@ final class CodeWriter {
   int statementLine = -1;
 
   CodeWriter(Appendable out) {
-    this(out, "  ", Collections.emptySet());
+    this(out, "  ", Collections.emptySet(), Collections.emptySet());
   }
 
-  CodeWriter(Appendable out, String indent, Set<String> staticImports) {
-    this(out, indent, Collections.emptyMap(), staticImports);
+  CodeWriter(Appendable out, String indent, Set<String> staticImports, Set<String> alwaysQualify) {
+    this(out, indent, Collections.emptyMap(), staticImports, alwaysQualify);
   }
 
-  CodeWriter(Appendable out, String indent, Map<String, ClassName> importedTypes,
-      Set<String> staticImports) {
+  CodeWriter(Appendable out,
+      String indent,
+      Map<String, ClassName> importedTypes,
+      Set<String> staticImports,
+      Set<String> alwaysQualify) {
     this.out = new LineWrapper(out, indent, 100);
     this.indent = checkNotNull(indent, "indent == null");
     this.importedTypes = checkNotNull(importedTypes, "importedTypes == null");
     this.staticImports = checkNotNull(staticImports, "staticImports == null");
+    this.alwaysQualify = checkNotNull(alwaysQualify, "alwaysQualify == null");
     this.staticImportClassNames = new LinkedHashSet<>();
     for (String signature : staticImports) {
       staticImportClassNames.add(signature.substring(0, signature.lastIndexOf('.')));
@@ -408,6 +413,9 @@ final class CodeWriter {
 
   private void importableType(ClassName className) {
     if (className.packageName().isEmpty()) {
+      return;
+    } else if (alwaysQualify.contains(className.simpleName)) {
+      // TODO what about nested types like java.util.Map.Entry?
       return;
     }
     ClassName topLevelClassName = className.topLevelClassName();
