@@ -424,6 +424,12 @@ public final class CodeBlock {
       return this;
     }
 
+    public Builder clear() {
+      formatParts.clear();
+      args.clear();
+      return this;
+    }
+
     public CodeBlock build() {
       return new CodeBlock(this);
     }
