@@ -88,7 +88,8 @@ public final class JavaFile {
     Map<String, ClassName> suggestedImports = importsCollector.suggestedImports();
 
     // Second pass: write the code, taking advantage of the imports.
-    CodeWriter codeWriter = new CodeWriter(out, indent, suggestedImports, staticImports, alwaysQualify);
+    CodeWriter codeWriter
+        = new CodeWriter(out, indent, suggestedImports, staticImports, alwaysQualify);
     emit(codeWriter);
   }
 
@@ -278,7 +279,11 @@ public final class JavaFile {
     public Builder alwaysQualify(String... simpleNames) {
       checkArgument(simpleNames != null, "simpleNames == null");
       for (String name : simpleNames) {
-        checkArgument(name != null, "null entry in simpleNames array: %s", Arrays.toString(simpleNames));
+        checkArgument(
+            name != null,
+            "null entry in simpleNames array: %s",
+            Arrays.toString(simpleNames)
+        );
         alwaysQualify.add(name);
       }
       return this;
