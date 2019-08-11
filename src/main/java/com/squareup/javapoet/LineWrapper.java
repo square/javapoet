@@ -141,7 +141,7 @@ final class LineWrapper {
   }
 
   /** A delegating {@link Appendable} that records info about the chars passing through it. */
-  final static class RecordingAppendable implements Appendable {
+  static final class RecordingAppendable implements Appendable {
     private final Appendable delegate;
 
     char lastChar = Character.MIN_VALUE;
