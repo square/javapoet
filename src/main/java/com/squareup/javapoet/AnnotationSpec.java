@@ -42,7 +42,7 @@ import static com.squareup.javapoet.Util.checkNotNull;
 
 /** A generated annotation on a declaration. */
 public final class AnnotationSpec {
-  public final TypeName type;
+  public final ClassName type;
   public final Map<String, List<CodeBlock>> members;
 
   private AnnotationSpec(Builder builder) {
@@ -191,10 +191,10 @@ public final class AnnotationSpec {
   }
 
   public static final class Builder {
-    private final TypeName type;
+    private final ClassName type;
     private final Map<String, List<CodeBlock>> members = new LinkedHashMap<>();
 
-    private Builder(TypeName type) {
+    private Builder(ClassName type) {
       this.type = type;
     }
 
