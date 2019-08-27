@@ -434,13 +434,28 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
-  @Test public void enumConstantsRequired() throws Exception {
-    try {
-      TypeSpec.enumBuilder("Roshambo")
-          .build();
-      fail();
-    } catch (IllegalArgumentException expected) {
-    }
+  @Test public void enumConstantsNotRequired() throws Exception {
+    TypeSpec roshambo = TypeSpec.enumBuilder("Roshambo")
+        .build();
+    assertThat(toString(roshambo)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "enum Roshambo {\n"
+        + "}\n");
+    TypeSpec testEnum = TypeSpec.enumBuilder("TestEnum")
+        .addModifiers(Modifier.PUBLIC)
+        .addMethod(MethodSpec.methodBuilder("foo")
+            .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+            .build())
+        .build();
+    assertThat(toString(testEnum)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "public enum TestEnum {\n"
+        + "  ;\n"
+        + "\n"
+        + "  public abstract void foo();\n"
+        + "}\n");
   }
 
   @Test public void onlyEnumsMayHaveEnumConstants() throws Exception {
