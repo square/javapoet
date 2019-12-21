@@ -193,4 +193,14 @@ public final class ClassNameTest {
     assertEquals("Foo$Bar$Baz", ClassName.get("", "Foo", "Bar", "Baz").reflectionName());
     assertEquals("a.b.c.Foo$Bar$Baz", ClassName.get("a.b.c", "Foo", "Bar", "Baz").reflectionName());
   }
+
+  @Test
+  public void canonicalName() {
+    assertEquals("java.lang.Object", TypeName.OBJECT.canonicalName());
+    assertEquals("java.lang.Thread.State", ClassName.get(Thread.State.class).canonicalName());
+    assertEquals("java.util.Map.Entry", ClassName.get(Map.Entry.class).canonicalName());
+    assertEquals("Foo", ClassName.get("", "Foo").canonicalName());
+    assertEquals("Foo.Bar.Baz", ClassName.get("", "Foo", "Bar", "Baz").canonicalName());
+    assertEquals("a.b.c.Foo.Bar.Baz", ClassName.get("a.b.c", "Foo", "Bar", "Baz").canonicalName());
+  }
 }

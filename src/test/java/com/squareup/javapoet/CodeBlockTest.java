@@ -339,4 +339,13 @@ public final class CodeBlockTest {
     CodeBlock joined = codeBlocks.stream().collect(CodeBlock.joining(" || ", "start {", "} end"));
     assertThat(joined.toString()).isEqualTo("start {\"hello\" || world.World || need tacos} end");
   }
+
+  @Test public void clear() {
+    CodeBlock block = CodeBlock.builder()
+        .addStatement("$S", "Test string")
+        .clear()
+        .build();
+
+    assertThat(block.toString()).isEmpty();
+  }
 }

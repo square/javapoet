@@ -2,7 +2,7 @@ language: java
 
 matrix:
   include:
-    - jdk: oraclejdk8
+    - jdk: openjdk8
     - jdk: openjdk10
     - jdk: openjdk11
     - jdk: openjdk-ea
@@ -28,8 +28,6 @@ branches:
 
 notifications:
   email: false
-
-sudo: false
 
 cache:
   directories:
