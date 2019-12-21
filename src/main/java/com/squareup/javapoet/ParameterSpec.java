@@ -21,7 +21,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.VariableElement;
@@ -83,10 +85,19 @@ public final class ParameterSpec {
   }
 
   public static ParameterSpec get(VariableElement element) {
+    checkArgument(element.getKind().equals(ElementKind.PARAMETER), "element is not a parameter");
+
+    // Copy over any annotations from element.
+    List<AnnotationSpec> annotations = element.getAnnotationMirrors()
+        .stream()
+        .map((mirror) -> AnnotationSpec.get(mirror))
+        .collect(Collectors.toList());
+
     TypeName type = TypeName.get(element.asType());
     String name = element.getSimpleName().toString();
     return ParameterSpec.builder(type, name)
         .addModifiers(element.getModifiers())
+        .addAnnotations(annotations)
         .build();
   }
 
