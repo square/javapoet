@@ -179,9 +179,7 @@ public final class MethodSpecTest {
     TypeElement classElement = getElement(ExtendsIterableWithDefaultMethods.class);
     DeclaredType classType = (DeclaredType) classElement.asType();
     List<ExecutableElement> methods = methodsIn(elements.getAllMembers(classElement));
-    ExecutableElement exec = 
-      
-      (methods, "spliterator");
+    ExecutableElement exec = findFirst(methods, "spliterator");
     MethodSpec method = MethodSpec.overriding(exec, classType, types).build();
     assertThat(method.toString()).isEqualTo(""
         + "@java.lang.Override\n"
