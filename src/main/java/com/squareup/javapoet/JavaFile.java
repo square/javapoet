@@ -25,6 +25,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -58,6 +59,7 @@ public final class JavaFile {
   public final CodeBlock fileComment;
   public final String packageName;
   public final TypeSpec typeSpec;
+  public final List<TypeSpec> additionalTypeSpecs;
   public final boolean skipJavaLangImports;
   private final Set<String> staticImports;
   private final String indent;
@@ -66,6 +68,7 @@ public final class JavaFile {
     this.fileComment = builder.fileComment.build();
     this.packageName = builder.packageName;
     this.typeSpec = builder.typeSpec;
+    this.additionalTypeSpecs = builder.additionalTypeSpecs;
     this.skipJavaLangImports = builder.skipJavaLangImports;
     this.staticImports = Util.immutableSet(builder.staticImports);
     this.indent = builder.indent;
@@ -118,7 +121,9 @@ public final class JavaFile {
     String fileName = packageName.isEmpty()
         ? typeSpec.name
         : packageName + "." + typeSpec.name;
-    List<Element> originatingElements = typeSpec.originatingElements;
+    List<Element> originatingElements = new ArrayList<>(typeSpec.originatingElements);
+    additionalTypeSpecs.forEach(additionalTypeSpec ->
+        originatingElements.addAll(additionalTypeSpec.originatingElements));
     JavaFileObject filerSourceFile = filer.createSourceFile(fileName,
         originatingElements.toArray(new Element[originatingElements.size()]));
     try (Writer writer = filerSourceFile.openWriter()) {
@@ -163,6 +168,10 @@ public final class JavaFile {
     }
 
     typeSpec.emit(codeWriter, null, Collections.emptySet());
+
+    for (TypeSpec additionalTypeSpec : additionalTypeSpecs) {
+      additionalTypeSpec.emit(codeWriter, null, Collections.emptySet());
+    }
 
     codeWriter.popPackage();
   }
@@ -213,8 +222,20 @@ public final class JavaFile {
     return new Builder(packageName, typeSpec);
   }
 
+  public static Builder builder(String packageName, TypeSpec... typeSpecs) {
+    checkNotNull(packageName, "packageName == null");
+    checkNotNull(typeSpecs, "typeSpecs == null");
+    checkArgument(typeSpecs.length > 0, "typeSpecs.length == 0");
+    Builder builder = new Builder(packageName, typeSpecs[0]);
+    for (int i = 1; i < typeSpecs.length; i++) {
+      builder.addAdditionalTypeSpec(typeSpecs[i]);
+    }
+    return builder;
+  }
+
   public Builder toBuilder() {
     Builder builder = new Builder(packageName, typeSpec);
+    builder.additionalTypeSpecs.addAll(additionalTypeSpecs);
     builder.fileComment.add(fileComment);
     builder.skipJavaLangImports = skipJavaLangImports;
     builder.indent = indent;
@@ -224,6 +245,7 @@ public final class JavaFile {
   public static final class Builder {
     private final String packageName;
     private final TypeSpec typeSpec;
+    private final List<TypeSpec> additionalTypeSpecs = new ArrayList<>();
     private final CodeBlock.Builder fileComment = CodeBlock.builder();
     private final Set<String> staticImports = new TreeSet<>();
     private boolean skipJavaLangImports;
@@ -255,6 +277,11 @@ public final class JavaFile {
         checkArgument(name != null, "null entry in names array: %s", Arrays.toString(names));
         staticImports.add(className.canonicalName + "." + name);
       }
+      return this;
+    }
+
+    public Builder addAdditionalTypeSpec(TypeSpec typeSpec) {
+      additionalTypeSpecs.add(typeSpec);
       return this;
     }
 

@@ -20,6 +20,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.lang.model.element.Modifier;
+
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -689,4 +690,52 @@ public final class JavaFileTest {
         + "  A a;\n"
         + "}\n");
   }
+
+  @Test
+  public void multipleTypeSpecs() {
+    TypeSpec fooInterface = TypeSpec.interfaceBuilder("Foo")
+        .addModifiers(Modifier.PUBLIC)
+        .addMethod(
+            MethodSpec.methodBuilder("getBar")
+                .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
+                .returns(ClassName.get(String.class))
+                .build())
+        .build();
+
+    TypeSpec fooImpl = TypeSpec.classBuilder("FooImpl")
+        .addSuperinterface(ClassName.get("", fooInterface.name))
+        .addMethod(
+            MethodSpec.methodBuilder("getBar")
+                .addModifiers(Modifier.PUBLIC)
+                .addStatement("$T sb = new $T()",
+                    ClassName.get(StringBuilder.class),
+                    ClassName.get(StringBuilder.class))
+                .addStatement("sb.append(\"bar\")")
+                .addStatement("return sb.toString()")
+                .returns(String.class)
+                .build())
+        .build();
+
+    String source = JavaFile.builder("com.squareup.tacos", fooInterface, fooImpl).build().toString();
+
+    assertThat(source).isEqualTo("" +
+        "package com.squareup.tacos;\n" +
+        "\n" +
+        "import java.lang.String;\n" +
+        "import java.lang.StringBuilder;\n" +
+        "\n" +
+        "public interface Foo {\n" +
+        "  String getBar();\n" +
+        "}\n" +
+        "class FooImpl implements Foo {\n" +
+        "  public String getBar() {\n" +
+        "    StringBuilder sb = new StringBuilder();\n" +
+        "    sb.append(\"bar\");\n" +
+        "    return sb.toString();\n" +
+        "  }\n" +
+        "}\n" +
+        ""
+    );
+  }
+
 }
