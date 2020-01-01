@@ -725,8 +725,8 @@ public final class JavaFileTest {
     String source = JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("Taco")
             .addField(Thread.class, "thread")
+            .alwaysQualify("Thread")
             .build())
-        .alwaysQualify("Thread")
         .build()
         .toString();
     assertThat(source).isEqualTo(""
@@ -741,8 +741,8 @@ public final class JavaFileTest {
     String source = JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("Taco")
             .addField(Thread.class, "thread")
+            .alwaysQualify("Thread")
             .build())
-        .alwaysQualify("Thread")
         .skipJavaLangImports(true)
         .build()
         .toString();
@@ -764,8 +764,8 @@ public final class JavaFileTest {
             .addField(ClassName.get("other", "NestedTypeC"), "nestedC")
             // This one shouldn't since we only look at nested types
             .addField(ClassName.get("other", "Foo"), "foo")
+            .avoidClashesWithNestedClasses(Foo.class)
             .build())
-        .avoidClashesWithNestedClasses(Foo.class)
         .build()
         .toString();
     assertThat(source).isEqualTo(""
@@ -795,8 +795,8 @@ public final class JavaFileTest {
             .addField(ClassName.get("other", "NestedTypeC"), "nestedC")
             // This one shouldn't since we only look at nested types
             .addField(ClassName.get("other", "Foo"), "foo")
+            .avoidClashesWithNestedClasses(getElement(Foo.class))
             .build())
-        .avoidClashesWithNestedClasses(getElement(Foo.class))
         .build()
         .toString();
     assertThat(source).isEqualTo(""

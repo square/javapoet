@@ -72,8 +72,18 @@ public final class JavaFile {
     this.typeSpec = builder.typeSpec;
     this.skipJavaLangImports = builder.skipJavaLangImports;
     this.staticImports = Util.immutableSet(builder.staticImports);
-    this.alwaysQualify = Util.immutableSet(builder.alwaysQualify);
     this.indent = builder.indent;
+
+    Set<String> alwaysQualifiedNames = new LinkedHashSet<>();
+    fillAlwaysQualifiedNames(builder.typeSpec, alwaysQualifiedNames);
+    this.alwaysQualify = Util.immutableSet(alwaysQualifiedNames);
+  }
+
+  private void fillAlwaysQualifiedNames(TypeSpec spec, Set<String> alwaysQualifiedNames) {
+    alwaysQualifiedNames.addAll(spec.alwaysQualifiedNames);
+    for (TypeSpec nested : spec.typeSpecs) {
+      fillAlwaysQualifiedNames(nested, alwaysQualifiedNames);
+    }
   }
 
   public void writeTo(Appendable out) throws IOException {
@@ -241,7 +251,6 @@ public final class JavaFile {
     private final String packageName;
     private final TypeSpec typeSpec;
     private final CodeBlock.Builder fileComment = CodeBlock.builder();
-    private final Set<String> alwaysQualify = new LinkedHashSet<>();
     private boolean skipJavaLangImports;
     private String indent = "  ";
 
@@ -272,83 +281,6 @@ public final class JavaFile {
       for (String name : names) {
         checkArgument(name != null, "null entry in names array: %s", Arrays.toString(names));
         staticImports.add(className.canonicalName + "." + name);
-      }
-      return this;
-    }
-
-    public Builder alwaysQualify(String... simpleNames) {
-      checkArgument(simpleNames != null, "simpleNames == null");
-      for (String name : simpleNames) {
-        checkArgument(
-            name != null,
-            "null entry in simpleNames array: %s",
-            Arrays.toString(simpleNames)
-        );
-        alwaysQualify.add(name);
-      }
-      return this;
-    }
-
-    /**
-     * Call this to always fully qualify any types that would conflict with possibly nested types of
-     * this {@code typeElement}. For example - if the following type was passed in as the
-     * typeElement:
-     *
-     * <pre><code>
-     *   class Foo {
-     *     class NestedTypeA {
-     *
-     *     }
-     *     class NestedTypeB {
-     *
-     *     }
-     *   }
-     * </code></pre>
-     *
-     * <p>
-     * Then this would add {@code "NestedTypeA"} and {@code "NestedTypeB"} as names that should
-     * always be qualified via {@link #alwaysQualify(String...)}. This way they would avoid
-     * possible import conflicts when this JavaFile is written.
-     *
-     * @param typeElement the {@link TypeElement} with nested types to avoid clashes with.
-     * @return this builder instance.
-     */
-    public Builder avoidClashesWithNestedClasses(TypeElement typeElement) {
-      checkArgument(typeElement != null, "typeElement == null");
-      for (TypeElement nestedType : ElementFilter.typesIn(typeElement.getEnclosedElements())) {
-        alwaysQualify(nestedType.getSimpleName().toString());
-      }
-      return this;
-    }
-
-    /**
-     * Call this to always fully qualify any types that would conflict with possibly nested types of
-     * this {@code typeElement}. For example - if the following type was passed in as the
-     * typeElement:
-     *
-     * <pre><code>
-     *   class Foo {
-     *     class NestedTypeA {
-     *
-     *     }
-     *     class NestedTypeB {
-     *
-     *     }
-     *   }
-     * </code></pre>
-     *
-     * <p>
-     * Then this would add {@code "NestedTypeA"} and {@code "NestedTypeB"} as names that should
-     * always be qualified via {@link #alwaysQualify(String...)}. This way they would avoid
-     * possible import conflicts when this JavaFile is written.
-     *
-     * @param clazz the {@link Class} with nested types to avoid clashes with.
-     * @return this builder instance.
-     */
-    public Builder avoidClashesWithNestedClasses(Class<?> clazz) {
-      checkArgument(clazz != null, "clazz == null");
-      for (Class<?> nestedType : clazz.getDeclaredClasses()) {
-        alwaysQualify(nestedType.getSimpleName());
       }
       return this;
     }
