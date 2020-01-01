@@ -225,9 +225,10 @@ public final class JavaFile {
     private final String packageName;
     private final TypeSpec typeSpec;
     private final CodeBlock.Builder fileComment = CodeBlock.builder();
-    private final Set<String> staticImports = new TreeSet<>();
     private boolean skipJavaLangImports;
     private String indent = "  ";
+
+    public final Set<String> staticImports = new TreeSet<>();
 
     private Builder(String packageName, TypeSpec typeSpec) {
       this.packageName = packageName;

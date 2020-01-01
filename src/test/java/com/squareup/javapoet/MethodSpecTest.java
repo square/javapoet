@@ -356,9 +356,42 @@ public final class MethodSpecTest {
         .setName("revisedMethod")
         .build();
 
-    assertThat(methodSpec.toString()).isEqualTo(""
-        + "void revisedMethod() {\n"
-        + "}\n");
+    assertThat(methodSpec.toString()).isEqualTo("" + "void revisedMethod() {\n" + "}\n");
+  }
+
+  @Test public void modifyAnnotations() {
+    MethodSpec.Builder builder = MethodSpec.methodBuilder("foo")
+            .addAnnotation(Override.class)
+            .addAnnotation(SuppressWarnings.class);
+
+    builder.annotations.remove(1);
+    assertThat(builder.build().annotations).hasSize(1);
+  }
+
+  @Test public void modifyModifiers() {
+    MethodSpec.Builder builder = MethodSpec.methodBuilder("foo")
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
+
+    builder.modifiers.remove(1);
+    assertThat(builder.build().modifiers).containsExactly(Modifier.PUBLIC);
+  }
+
+  @Test public void modifyParameters() {
+    MethodSpec.Builder builder = MethodSpec.methodBuilder("foo")
+            .addParameter(int.class, "source");
+
+    builder.parameters.remove(0);
+    assertThat(builder.build().parameters).isEmpty();
+  }
+
+  @Test public void modifyTypeVariables() {
+    TypeVariableName t = TypeVariableName.get("T");
+    MethodSpec.Builder builder = MethodSpec.methodBuilder("foo")
+            .addTypeVariable(t)
+            .addTypeVariable(TypeVariableName.get("V"));
+
+    builder.typeVariables.remove(1);
+    assertThat(builder.build().typeVariables).containsExactly(t);
   }
 
   @Test public void ensureTrailingNewline() {

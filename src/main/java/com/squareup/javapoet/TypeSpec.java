@@ -400,18 +400,19 @@ public final class TypeSpec {
     private final CodeBlock anonymousTypeArguments;
 
     private final CodeBlock.Builder javadoc = CodeBlock.builder();
-    private final List<AnnotationSpec> annotations = new ArrayList<>();
-    private final List<Modifier> modifiers = new ArrayList<>();
-    private final List<TypeVariableName> typeVariables = new ArrayList<>();
     private TypeName superclass = ClassName.OBJECT;
-    private final List<TypeName> superinterfaces = new ArrayList<>();
-    private final Map<String, TypeSpec> enumConstants = new LinkedHashMap<>();
-    private final List<FieldSpec> fieldSpecs = new ArrayList<>();
     private final CodeBlock.Builder staticBlock = CodeBlock.builder();
     private final CodeBlock.Builder initializerBlock = CodeBlock.builder();
-    private final List<MethodSpec> methodSpecs = new ArrayList<>();
-    private final List<TypeSpec> typeSpecs = new ArrayList<>();
-    private final List<Element> originatingElements = new ArrayList<>();
+
+    public final Map<String, TypeSpec> enumConstants = new LinkedHashMap<>();
+    public final List<AnnotationSpec> annotations = new ArrayList<>();
+    public final List<Modifier> modifiers = new ArrayList<>();
+    public final List<TypeVariableName> typeVariables = new ArrayList<>();
+    public final List<TypeName> superinterfaces = new ArrayList<>();
+    public final List<FieldSpec> fieldSpecs = new ArrayList<>();
+    public final List<MethodSpec> methodSpecs = new ArrayList<>();
+    public final List<TypeSpec> typeSpecs = new ArrayList<>();
+    public final List<Element> originatingElements = new ArrayList<>();
 
     private Builder(Kind kind, String name,
         CodeBlock anonymousTypeArguments) {
@@ -454,16 +455,11 @@ public final class TypeSpec {
     }
 
     public Builder addModifiers(Modifier... modifiers) {
-      checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
-      for (Modifier modifier : modifiers) {
-        checkArgument(modifier != null, "modifiers contain null");
-        this.modifiers.add(modifier);
-      }
+      Collections.addAll(this.modifiers, modifiers);
       return this;
     }
 
     public Builder addTypeVariables(Iterable<TypeVariableName> typeVariables) {
-      checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
       checkArgument(typeVariables != null, "typeVariables == null");
       for (TypeVariableName typeVariable : typeVariables) {
         this.typeVariables.add(typeVariable);
@@ -472,7 +468,6 @@ public final class TypeSpec {
     }
 
     public Builder addTypeVariable(TypeVariableName typeVariable) {
-      checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
       typeVariables.add(typeVariable);
       return this;
     }
@@ -513,10 +508,6 @@ public final class TypeSpec {
     }
 
     public Builder addEnumConstant(String name, TypeSpec typeSpec) {
-      checkState(kind == Kind.ENUM, "%s is not enum", this.name);
-      checkArgument(typeSpec.anonymousTypeArguments != null,
-          "enum constants must have anonymous type arguments");
-      checkArgument(SourceVersion.isName(name), "not a valid enum constant: %s", name);
       enumConstants.put(name, typeSpec);
       return this;
     }
@@ -530,12 +521,6 @@ public final class TypeSpec {
     }
 
     public Builder addField(FieldSpec fieldSpec) {
-      if (kind == Kind.INTERFACE || kind == Kind.ANNOTATION) {
-        requireExactlyOneOf(fieldSpec.modifiers, Modifier.PUBLIC, Modifier.PRIVATE);
-        Set<Modifier> check = EnumSet.of(Modifier.STATIC, Modifier.FINAL);
-        checkState(fieldSpec.modifiers.containsAll(check), "%s %s.%s requires modifiers %s",
-            kind, name, fieldSpec.name, check);
-      }
       fieldSpecs.add(fieldSpec);
       return this;
     }
@@ -574,23 +559,6 @@ public final class TypeSpec {
     }
 
     public Builder addMethod(MethodSpec methodSpec) {
-      if (kind == Kind.INTERFACE) {
-        requireExactlyOneOf(methodSpec.modifiers, Modifier.ABSTRACT, Modifier.STATIC,
-            Modifier.DEFAULT);
-        requireExactlyOneOf(methodSpec.modifiers, Modifier.PUBLIC, Modifier.PRIVATE);
-      } else if (kind == Kind.ANNOTATION) {
-        checkState(methodSpec.modifiers.equals(kind.implicitMethodModifiers),
-            "%s %s.%s requires modifiers %s",
-            kind, name, methodSpec.name, kind.implicitMethodModifiers);
-      }
-      if (kind != Kind.ANNOTATION) {
-        checkState(methodSpec.defaultValue == null, "%s %s.%s cannot have a default value",
-            kind, name, methodSpec.name);
-      }
-      if (kind != Kind.INTERFACE) {
-        checkState(!methodSpec.hasModifier(Modifier.DEFAULT), "%s %s.%s cannot be default",
-            kind, name, methodSpec.name);
-      }
       methodSpecs.add(methodSpec);
       return this;
     }
@@ -604,9 +572,6 @@ public final class TypeSpec {
     }
 
     public Builder addType(TypeSpec typeSpec) {
-      checkArgument(typeSpec.modifiers.containsAll(kind.implicitTypeModifiers),
-          "%s %s.%s requires modifiers %s", kind, name, typeSpec.name,
-          kind.implicitTypeModifiers);
       typeSpecs.add(typeSpec);
       return this;
     }
@@ -617,8 +582,73 @@ public final class TypeSpec {
     }
 
     public TypeSpec build() {
+      for (AnnotationSpec annotationSpec : annotations) {
+        checkNotNull(annotationSpec, "annotationSpec == null");
+      }
+
+      if (!modifiers.isEmpty()) {
+        checkState(anonymousTypeArguments == null, "forbidden on anonymous types.");
+        for (Modifier modifier : modifiers) {
+          checkArgument(modifier != null, "modifiers contain null");
+        }
+      }
+
       checkArgument(kind != Kind.ENUM || !enumConstants.isEmpty(),
           "at least one enum constant is required for %s", name);
+
+      for (TypeName superinterface : superinterfaces) {
+        checkArgument(superinterface != null, "superinterfaces contains null");
+      }
+
+      if (!typeVariables.isEmpty()) {
+        checkState(anonymousTypeArguments == null,
+            "typevariables are forbidden on anonymous types.");
+        for (TypeVariableName typeVariableName : typeVariables) {
+          checkArgument(typeVariableName != null, "typeVariables contain null");
+        }
+      }
+
+      for (Map.Entry<String, TypeSpec> enumConstant : enumConstants.entrySet()) {
+        checkState(kind == Kind.ENUM, "%s is not enum", this.name);
+        checkArgument(enumConstant.getValue().anonymousTypeArguments != null,
+            "enum constants must have anonymous type arguments");
+        checkArgument(SourceVersion.isName(name), "not a valid enum constant: %s", name);
+      }
+
+      for (FieldSpec fieldSpec : fieldSpecs) {
+        if (kind == Kind.INTERFACE || kind == Kind.ANNOTATION) {
+          requireExactlyOneOf(fieldSpec.modifiers, Modifier.PUBLIC, Modifier.PRIVATE);
+          Set<Modifier> check = EnumSet.of(Modifier.STATIC, Modifier.FINAL);
+          checkState(fieldSpec.modifiers.containsAll(check), "%s %s.%s requires modifiers %s",
+              kind, name, fieldSpec.name, check);
+        }
+      }
+
+      for (MethodSpec methodSpec : methodSpecs) {
+        if (kind == Kind.INTERFACE) {
+          requireExactlyOneOf(methodSpec.modifiers, Modifier.ABSTRACT, Modifier.STATIC,
+              Modifier.DEFAULT);
+          requireExactlyOneOf(methodSpec.modifiers, Modifier.PUBLIC, Modifier.PRIVATE);
+        } else if (kind == Kind.ANNOTATION) {
+          checkState(methodSpec.modifiers.equals(kind.implicitMethodModifiers),
+              "%s %s.%s requires modifiers %s",
+              kind, name, methodSpec.name, kind.implicitMethodModifiers);
+        }
+        if (kind != Kind.ANNOTATION) {
+          checkState(methodSpec.defaultValue == null, "%s %s.%s cannot have a default value",
+              kind, name, methodSpec.name);
+        }
+        if (kind != Kind.INTERFACE) {
+          checkState(!methodSpec.hasModifier(Modifier.DEFAULT), "%s %s.%s cannot be default",
+              kind, name, methodSpec.name);
+        }
+      }
+
+      for (TypeSpec typeSpec : typeSpecs) {
+        checkArgument(typeSpec.modifiers.containsAll(kind.implicitTypeModifiers),
+            "%s %s.%s requires modifiers %s", kind, name, typeSpec.name,
+            kind.implicitTypeModifiers);
+      }
 
       boolean isAbstract = modifiers.contains(Modifier.ABSTRACT) || kind != Kind.CLASS;
       for (MethodSpec methodSpec : methodSpecs) {
