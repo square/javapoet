@@ -168,6 +168,7 @@ public final class TypeSpec {
     builder.typeSpecs.addAll(typeSpecs);
     builder.initializerBlock.add(initializerBlock);
     builder.staticBlock.add(staticBlock);
+    builder.originatingElements.addAll(originatingElements);
     return builder;
   }
 

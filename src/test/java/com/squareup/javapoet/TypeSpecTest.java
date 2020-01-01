@@ -17,13 +17,6 @@ package com.squareup.javapoet;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.testing.compile.CompilationRule;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-import org.mockito.Mockito;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -39,11 +32,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
-
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+import org.mockito.Mockito;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -2269,6 +2266,7 @@ public final class TypeSpecTest {
 
   @Test public void initializersToBuilder() {
     // Tests if toBuilder() contains correct static and instance initializers
+    Element originatingElement = getElement(TypeSpecTest.class);
     TypeSpec taco = TypeSpec.classBuilder("Taco")
         .addField(String.class, "foo", Modifier.PRIVATE)
         .addField(String.class, "FOO", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
@@ -2285,10 +2283,13 @@ public final class TypeSpecTest {
         .addInitializerBlock(CodeBlock.builder()
             .addStatement("foo = $S", "FOO")
             .build())
+        .addOriginatingElement(originatingElement)
         .build();
 
     TypeSpec recreatedTaco = taco.toBuilder().build();
     assertThat(toString(taco)).isEqualTo(toString(recreatedTaco));
+    assertThat(taco.originatingElements)
+        .containsExactlyElementsIn(recreatedTaco.originatingElements);
 
     TypeSpec initializersAdded = taco.toBuilder()
         .addInitializerBlock(CodeBlock.builder()
