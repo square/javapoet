@@ -15,6 +15,7 @@
  */
 package com.squareup.javapoet;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -687,6 +688,26 @@ public final class JavaFileTest {
         + "\n"
         + "class Taco extends com.taco.bell.A {\n"
         + "  A a;\n"
+        + "}\n");
+  }
+
+  @Test public void modifyStaticImports() throws Exception {
+    JavaFile.Builder builder = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .build())
+            .addStaticImport(File.class, "separator");
+
+    builder.staticImports.clear();
+    builder.staticImports.add(File.class.getCanonicalName() + ".separatorChar");
+
+    String source = builder.build().toString();
+
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import static java.io.File.separatorChar;\n"
+        + "\n"
+        + "class Taco {\n"
         + "}\n");
   }
 }

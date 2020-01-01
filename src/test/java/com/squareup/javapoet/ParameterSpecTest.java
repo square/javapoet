@@ -25,6 +25,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
 import org.junit.Before;
 import org.junit.Rule;
+import javax.lang.model.element.Modifier;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -32,8 +33,6 @@ import static com.squareup.javapoet.TestUtil.findFirst;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.junit.Assert.fail;
-
-import javax.lang.model.element.Modifier;
 
 public class ParameterSpecTest {
   @Rule public final CompilationRule compilation = new CompilationRule();
@@ -109,11 +108,28 @@ public class ParameterSpecTest {
     modifiers.add(Modifier.PUBLIC);
 
     try {
-      ParameterSpec.builder(int.class, "foo").addModifiers(modifiers);
+      ParameterSpec.builder(int.class, "foo")
+          .addModifiers(modifiers);
       fail();
     } catch (Exception e) {
-      assertThat(e.getMessage())
-          .isEqualTo("unexpected parameter modifier: public");
+      assertThat(e.getMessage()).isEqualTo("unexpected parameter modifier: public");
     }
+  }
+
+  @Test public void modifyAnnotations() {
+    ParameterSpec.Builder builder = ParameterSpec.builder(int.class, "foo")
+            .addAnnotation(Override.class)
+            .addAnnotation(SuppressWarnings.class);
+
+    builder.annotations.remove(1);
+    assertThat(builder.build().annotations).hasSize(1);
+  }
+
+  @Test public void modifyModifiers() {
+    ParameterSpec.Builder builder = ParameterSpec.builder(int.class, "foo")
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
+
+    builder.modifiers.remove(1);
+    assertThat(builder.build().modifiers).containsExactly(Modifier.PUBLIC);
   }
 }

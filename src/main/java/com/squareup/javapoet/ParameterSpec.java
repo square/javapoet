@@ -136,8 +136,8 @@ public final class ParameterSpec {
     private final String name;
     private final CodeBlock.Builder javadoc = CodeBlock.builder();
 
-    private final List<AnnotationSpec> annotations = new ArrayList<>();
-    private final List<Modifier> modifiers = new ArrayList<>();
+    public final List<AnnotationSpec> annotations = new ArrayList<>();
+    public final List<Modifier> modifiers = new ArrayList<>();
 
     private Builder(TypeName type, String name) {
       this.type = type;
