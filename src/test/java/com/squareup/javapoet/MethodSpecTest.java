@@ -393,4 +393,27 @@ public final class MethodSpecTest {
     builder.typeVariables.remove(1);
     assertThat(builder.build().typeVariables).containsExactly(t);
   }
+
+  @Test public void ensureTrailingNewline() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+        .addCode("codeWithNoNewline();")
+        .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+        + "void method() {\n"
+        + "  codeWithNoNewline();\n"
+        + "}\n");
+  }
+
+  /** Ensures that we don't add a duplicate newline if one is already present. */
+  @Test public void ensureTrailingNewlineWithExistingNewline() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+        .addCode("codeWithNoNewline();\n") // Have a newline already, so ensure we're not adding one
+        .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+        + "void method() {\n"
+        + "  codeWithNoNewline();\n"
+        + "}\n");
+  }
 }
