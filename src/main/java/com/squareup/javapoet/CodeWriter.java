@@ -461,7 +461,7 @@ final class CodeWriter {
    */
   CodeWriter emitAndIndent(String s) throws IOException {
     boolean first = true;
-    for (String line : s.split("\n", -1)) {
+    for (String line : s.split("\\R", -1)) {
       // Emit a newline character. Make sure blank lines in Javadoc & comments look good.
       if (!first) {
         if ((javadoc || comment) && trailingNewline) {
