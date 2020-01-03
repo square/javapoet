@@ -20,6 +20,7 @@ import com.google.testing.compile.CompilationRule;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -973,6 +974,7 @@ public final class JavaFileTest {
         + "}\n");
   }
 
+  // Regression test for https://github.com/square/javapoet/issues/77
   // This covers class and inheritance
   static class Parent implements ParentInterface {
     static class Pattern {
@@ -984,5 +986,29 @@ public final class JavaFileTest {
     class Optional {
 
     }
+  }
+
+  // Regression test for case raised here: https://github.com/square/javapoet/issues/77#issuecomment-519972404
+  @Test
+  public void avoidClashes_mapEntry() {
+    String source = JavaFile.builder("com.squareup.javapoet",
+        TypeSpec.classBuilder("MapType")
+            .addMethod(MethodSpec.methodBuilder("optionalString")
+                .returns(ClassName.get("com.foo", "Entry"))
+                .addStatement("return null")
+                .build())
+            .addSuperinterface(Map.class)
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo("package com.squareup.javapoet;\n"
+        + "\n"
+        + "import java.util.Map;\n"
+        + "\n"
+        + "class MapType implements Map {\n"
+        + "  com.foo.Entry optionalString() {\n"
+        + "    return null;\n"
+        + "  }\n"
+        + "}\n");
   }
 }
