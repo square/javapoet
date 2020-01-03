@@ -16,6 +16,7 @@
 package com.squareup.javapoet;
 
 import java.io.IOException;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -494,7 +495,32 @@ public final class TypeSpec {
     }
 
     public Builder superclass(Type superclass) {
-      return superclass(TypeName.get(superclass));
+      return superclass(superclass, true);
+    }
+
+    public Builder superclass(Type superclass, boolean avoidNestedTypeNameClashes) {
+      superclass(TypeName.get(superclass));
+      if (avoidNestedTypeNameClashes) {
+        Class<?> clazz = getRawType(superclass);
+        if (clazz != null) {
+          avoidClashesWithNestedClasses(clazz);
+        }
+      }
+      return this;
+    }
+
+    public Builder superclass(TypeMirror superclass) {
+      return superclass(superclass, true);
+    }
+
+    public Builder superclass(TypeMirror superclass, boolean avoidNestedTypeNameClashes) {
+      superclass(TypeName.get(superclass));
+      if (avoidNestedTypeNameClashes && superclass instanceof DeclaredType) {
+        TypeElement superInterfaceElement =
+            (TypeElement) ((DeclaredType) superclass).asElement();
+        avoidClashesWithNestedClasses(superInterfaceElement);
+      }
+      return this;
     }
 
     public Builder addSuperinterfaces(Iterable<? extends TypeName> superinterfaces) {
@@ -512,7 +538,42 @@ public final class TypeSpec {
     }
 
     public Builder addSuperinterface(Type superinterface) {
-      return addSuperinterface(TypeName.get(superinterface));
+      return addSuperinterface(superinterface, true);
+    }
+
+    public Builder addSuperinterface(Type superinterface, boolean avoidNestedTypeNameClashes) {
+      addSuperinterface(TypeName.get(superinterface));
+      if (avoidNestedTypeNameClashes) {
+        Class<?> clazz = getRawType(superinterface);
+        if (clazz != null) {
+          avoidClashesWithNestedClasses(clazz);
+        }
+      }
+      return this;
+    }
+
+    private Class<?> getRawType(Type type) {
+      if (type instanceof Class<?>) {
+        return (Class<?>) type;
+      } else if (type instanceof ParameterizedType) {
+        return getRawType(((ParameterizedType) type).getRawType());
+      } else {
+        return null;
+      }
+    }
+
+    public Builder addSuperinterface(TypeMirror superinterface) {
+      return addSuperinterface(superinterface, true);
+    }
+
+    public Builder addSuperinterface(TypeMirror superinterface, boolean avoidNestedTypeNameClashes) {
+      addSuperinterface(TypeName.get(superinterface));
+      if (avoidNestedTypeNameClashes && superinterface instanceof DeclaredType) {
+        TypeElement superInterfaceElement =
+            (TypeElement) ((DeclaredType) superinterface).asElement();
+        avoidClashesWithNestedClasses(superInterfaceElement);
+      }
+      return this;
     }
 
     public Builder addEnumConstant(String name) {

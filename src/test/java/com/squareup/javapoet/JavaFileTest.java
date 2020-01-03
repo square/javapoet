@@ -20,7 +20,9 @@ import com.google.testing.compile.CompilationRule;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import org.junit.Ignore;
@@ -816,11 +818,170 @@ public final class JavaFileTest {
         + "}\n");
   }
 
-  class Foo {
+  @Test public void avoidClashesWithNestedClasses_viaSuperinterfaceType() {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            // These two should get qualified
+            .addField(ClassName.get("other", "NestedTypeA"), "nestedA")
+            .addField(ClassName.get("other", "NestedTypeB"), "nestedB")
+            // This one shouldn't since it's not a nested type of Foo
+            .addField(ClassName.get("other", "NestedTypeC"), "nestedC")
+            // This one shouldn't since we only look at nested types
+            .addField(ClassName.get("other", "Foo"), "foo")
+            .addType(TypeSpec.classBuilder("NestedTypeA").build())
+            .addType(TypeSpec.classBuilder("NestedTypeB").build())
+            .addSuperinterface(FooInterface.class)
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo("package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.javapoet.JavaFileTest;\n"
+        + "import other.Foo;\n"
+        + "import other.NestedTypeC;\n"
+        + "\n"
+        + "class Taco implements JavaFileTest.FooInterface {\n"
+        + "  other.NestedTypeA nestedA;\n"
+        + "\n"
+        + "  other.NestedTypeB nestedB;\n"
+        + "\n"
+        + "  NestedTypeC nestedC;\n"
+        + "\n"
+        + "  Foo foo;\n"
+        + "\n"
+        + "  class NestedTypeA {\n"
+        + "  }\n"
+        + "\n"
+        + "  class NestedTypeB {\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  static class Foo {
+    static class NestedTypeA {
+
+    }
+    static class NestedTypeB {
+
+    }
+  }
+
+  interface FooInterface {
     class NestedTypeA {
 
     }
     class NestedTypeB {
+
+    }
+  }
+
+  private TypeSpec.Builder childTypeBuilder() {
+    return TypeSpec.classBuilder("Child")
+        .addMethod(MethodSpec.methodBuilder("optionalString")
+            .returns(ParameterizedTypeName.get(Optional.class, String.class))
+            .addStatement("return $T.empty()", Optional.class)
+            .build())
+        .addMethod(MethodSpec.methodBuilder("pattern")
+            .returns(Pattern.class)
+            .addStatement("return null")
+            .build());
+  }
+
+  @Test
+  public void avoidClashes_parentChild_superclass_type() {
+    String source = JavaFile.builder("com.squareup.javapoet",
+        childTypeBuilder().superclass(Parent.class).build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo("package com.squareup.javapoet;\n"
+        + "\n"
+        + "import java.lang.String;\n"
+        + "\n"
+        + "class Child extends JavaFileTest.Parent {\n"
+        + "  java.util.Optional<String> optionalString() {\n"
+        + "    return java.util.Optional.empty();\n"
+        + "  }\n"
+        + "\n"
+        + "  java.util.regex.Pattern pattern() {\n"
+        + "    return null;\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test
+  public void avoidClashes_parentChild_superclass_typeMirror() {
+    String source = JavaFile.builder("com.squareup.javapoet",
+        childTypeBuilder().superclass(getElement(Parent.class).asType()).build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo("package com.squareup.javapoet;\n"
+        + "\n"
+        + "import java.lang.String;\n"
+        + "\n"
+        + "class Child extends JavaFileTest.Parent {\n"
+        + "  java.util.Optional<String> optionalString() {\n"
+        + "    return java.util.Optional.empty();\n"
+        + "  }\n"
+        + "\n"
+        + "  java.util.regex.Pattern pattern() {\n"
+        + "    return null;\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test
+  public void avoidClashes_parentChild_superinterface_type() {
+    String source = JavaFile.builder("com.squareup.javapoet",
+        childTypeBuilder().addSuperinterface(ParentInterface.class).build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo("package com.squareup.javapoet;\n"
+        + "\n"
+        + "import java.lang.String;\n"
+        + "import java.util.regex.Pattern;\n"
+        + "\n"
+        + "class Child implements JavaFileTest.ParentInterface {\n"
+        + "  java.util.Optional<String> optionalString() {\n"
+        + "    return java.util.Optional.empty();\n"
+        + "  }\n"
+        + "\n"
+        + "  Pattern pattern() {\n"
+        + "    return null;\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test
+  public void avoidClashes_parentChild_superinterface_typeMirror() {
+    String source = JavaFile.builder("com.squareup.javapoet",
+        childTypeBuilder().addSuperinterface(getElement(ParentInterface.class).asType()).build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo("package com.squareup.javapoet;\n"
+        + "\n"
+        + "import java.lang.String;\n"
+        + "import java.util.regex.Pattern;\n"
+        + "\n"
+        + "class Child implements JavaFileTest.ParentInterface {\n"
+        + "  java.util.Optional<String> optionalString() {\n"
+        + "    return java.util.Optional.empty();\n"
+        + "  }\n"
+        + "\n"
+        + "  Pattern pattern() {\n"
+        + "    return null;\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  // This covers class and inheritance
+  static class Parent implements ParentInterface {
+    static class Pattern {
+
+    }
+  }
+
+  interface ParentInterface {
+    class Optional {
 
     }
   }
