@@ -33,6 +33,9 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.NoType;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 
 import static com.squareup.javapoet.Util.checkArgument;
@@ -632,6 +635,17 @@ public final class TypeSpec {
       for (TypeElement nestedType : ElementFilter.typesIn(typeElement.getEnclosedElements())) {
         alwaysQualify(nestedType.getSimpleName().toString());
       }
+      TypeMirror superclass = typeElement.getSuperclass();
+      if (!(superclass instanceof NoType) && superclass instanceof DeclaredType) {
+        TypeElement superclassElement = (TypeElement) ((DeclaredType) superclass).asElement();
+        avoidClashesWithNestedClasses(superclassElement);
+      }
+      for (TypeMirror superinterface : typeElement.getInterfaces()) {
+        if (superinterface instanceof DeclaredType) {
+          TypeElement superinterfaceElement = (TypeElement) ((DeclaredType) superinterface).asElement();
+          avoidClashesWithNestedClasses(superinterfaceElement);
+        }
+      }
       return this;
     }
 
@@ -663,6 +677,13 @@ public final class TypeSpec {
       checkArgument(clazz != null, "clazz == null");
       for (Class<?> nestedType : clazz.getDeclaredClasses()) {
         alwaysQualify(nestedType.getSimpleName());
+      }
+      Class<?> superclass = clazz.getSuperclass();
+      if (superclass != null && !Object.class.equals(superclass)) {
+        avoidClashesWithNestedClasses(superclass);
+      }
+      for (Class<?> superinterface : clazz.getInterfaces()) {
+        avoidClashesWithNestedClasses(superinterface);
       }
       return this;
     }
