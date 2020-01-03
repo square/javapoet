@@ -424,17 +424,17 @@ public final class MethodSpecTest {
     m.put("threshold", "5");
 
     MethodSpec methodSpec = MethodSpec.methodBuilder("method")
-            .beginControlFlow(named("if ($field:N > $threshold:L)", m))
-            .nextControlFlow(named("else if ($field:N == $threshold:L)", m))
-            .endControlFlow()
-            .build();
+        .beginControlFlow(named("if ($field:N > $threshold:L)", m))
+        .nextControlFlow(named("else if ($field:N == $threshold:L)", m))
+        .endControlFlow()
+        .build();
 
     assertThat(methodSpec.toString()).isEqualTo(""
-            + "void method() {\n"
-            + "  if (valueField > 5) {\n"
-            + "  } else if (valueField == 5) {\n"
-            + "  }\n"
-            + "}\n");
+        + "void method() {\n"
+        + "  if (valueField > 5) {\n"
+        + "  } else if (valueField == 5) {\n"
+        + "  }\n"
+        + "}\n");
   }
 
   @Test public void doWhileWithNamedCodeBlocks() {
@@ -443,17 +443,17 @@ public final class MethodSpecTest {
     m.put("threshold", "5");
 
     MethodSpec methodSpec = MethodSpec.methodBuilder("method")
-            .beginControlFlow("do")
-            .addStatement(named("$field:N--", m))
-            .endControlFlow(named("while ($field:N > $threshold:L)", m))
-            .build();
+        .beginControlFlow("do")
+        .addStatement(named("$field:N--", m))
+        .endControlFlow(named("while ($field:N > $threshold:L)", m))
+        .build();
 
     assertThat(methodSpec.toString()).isEqualTo(""
-            + "void method() {\n" +
-            "  do {\n" +
-            "    valueField--;\n" +
-            "  } while (valueField > 5);\n" +
-            "}\n");
+        + "void method() {\n" +
+        "  do {\n" +
+        "    valueField--;\n" +
+        "  } while (valueField > 5);\n" +
+        "}\n");
   }
 
   private static CodeBlock named(String format, Map<String, ?> args){
