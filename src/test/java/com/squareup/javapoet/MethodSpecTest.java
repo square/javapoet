@@ -21,8 +21,9 @@ import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
 import javax.lang.model.element.ExecutableElement;
@@ -416,4 +417,24 @@ public final class MethodSpecTest {
         + "  codeWithNoNewline();\n"
         + "}\n");
   }
+
+  @Test public void controlFlowWithNamedCodeBlocks() {
+    Map<String, Object> m = new HashMap<>();
+    m.put("field", "valueField");
+    m.put("threshold", "5");
+
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+            .beginControlFlow(CodeBlock.builder().addNamed("if ($field:N > $threshold:L)", m).build())
+            .nextControlFlow(CodeBlock.builder().addNamed("else if ($field:N == $threshold:L)", m).build())
+            .endControlFlow()
+            .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+            + "void method() {\n"
+            + "  if (valueField > 5) {\n"
+            + "  } else if (valueField == 5) {\n"
+            + "  }\n"
+            + "}\n");
+  }
+
 }
