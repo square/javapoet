@@ -566,7 +566,8 @@ public final class TypeSpec {
       return addSuperinterface(superinterface, true);
     }
 
-    public Builder addSuperinterface(TypeMirror superinterface, boolean avoidNestedTypeNameClashes) {
+    public Builder addSuperinterface(TypeMirror superinterface,
+        boolean avoidNestedTypeNameClashes) {
       addSuperinterface(TypeName.get(superinterface));
       if (avoidNestedTypeNameClashes && superinterface instanceof DeclaredType) {
         TypeElement superInterfaceElement =
@@ -703,7 +704,8 @@ public final class TypeSpec {
       }
       for (TypeMirror superinterface : typeElement.getInterfaces()) {
         if (superinterface instanceof DeclaredType) {
-          TypeElement superinterfaceElement = (TypeElement) ((DeclaredType) superinterface).asElement();
+          TypeElement superinterfaceElement
+              = (TypeElement) ((DeclaredType) superinterface).asElement();
           avoidClashesWithNestedClasses(superinterfaceElement);
         }
       }
