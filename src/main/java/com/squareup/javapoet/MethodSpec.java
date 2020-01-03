@@ -474,6 +474,10 @@ public final class MethodSpec {
       return this;
     }
 
+    public Builder beginControlFlow(CodeBlock codeBlock) {
+      return beginControlFlow("$L", codeBlock);
+    }
+
     /**
      * @param controlFlow the control flow construct and its code, such as "else if (foo == 10)".
      *     Shouldn't contain braces or newline characters.
@@ -481,6 +485,10 @@ public final class MethodSpec {
     public Builder nextControlFlow(String controlFlow, Object... args) {
       code.nextControlFlow(controlFlow, args);
       return this;
+    }
+
+    public Builder nextControlFlow(CodeBlock codeBlock) {
+      return nextControlFlow("$L", codeBlock);
     }
 
     public Builder endControlFlow() {
