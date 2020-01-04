@@ -475,12 +475,28 @@ public final class MethodSpec {
     }
 
     /**
+     * @param codeBlock the control flow construct and its code, such as "if (foo == 5)".
+     * Shouldn't contain braces or newline characters.
+     */
+    public Builder beginControlFlow(CodeBlock codeBlock) {
+      return beginControlFlow("$L", codeBlock);
+    }
+
+    /**
      * @param controlFlow the control flow construct and its code, such as "else if (foo == 10)".
      *     Shouldn't contain braces or newline characters.
      */
     public Builder nextControlFlow(String controlFlow, Object... args) {
       code.nextControlFlow(controlFlow, args);
       return this;
+    }
+
+    /**
+     * @param codeBlock the control flow construct and its code, such as "else if (foo == 10)".
+     *     Shouldn't contain braces or newline characters.
+     */
+    public Builder nextControlFlow(CodeBlock codeBlock) {
+      return nextControlFlow("$L", codeBlock);
     }
 
     public Builder endControlFlow() {
@@ -495,6 +511,14 @@ public final class MethodSpec {
     public Builder endControlFlow(String controlFlow, Object... args) {
       code.endControlFlow(controlFlow, args);
       return this;
+    }
+
+    /**
+     * @param codeBlock the optional control flow construct and its code, such as
+     *     "while(foo == 20)". Only used for "do/while" control flows.
+     */
+    public Builder endControlFlow(CodeBlock codeBlock) {
+      return endControlFlow("$L", codeBlock);
     }
 
     public Builder addStatement(String format, Object... args) {

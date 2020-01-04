@@ -21,8 +21,9 @@ import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
 import javax.lang.model.element.ExecutableElement;
@@ -416,4 +417,47 @@ public final class MethodSpecTest {
         + "  codeWithNoNewline();\n"
         + "}\n");
   }
+
+  @Test public void controlFlowWithNamedCodeBlocks() {
+    Map<String, Object> m = new HashMap<>();
+    m.put("field", "valueField");
+    m.put("threshold", "5");
+
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+        .beginControlFlow(named("if ($field:N > $threshold:L)", m))
+        .nextControlFlow(named("else if ($field:N == $threshold:L)", m))
+        .endControlFlow()
+        .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+        + "void method() {\n"
+        + "  if (valueField > 5) {\n"
+        + "  } else if (valueField == 5) {\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void doWhileWithNamedCodeBlocks() {
+    Map<String, Object> m = new HashMap<>();
+    m.put("field", "valueField");
+    m.put("threshold", "5");
+
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+        .beginControlFlow("do")
+        .addStatement(named("$field:N--", m))
+        .endControlFlow(named("while ($field:N > $threshold:L)", m))
+        .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+        + "void method() {\n" +
+        "  do {\n" +
+        "    valueField--;\n" +
+        "  } while (valueField > 5);\n" +
+        "}\n");
+  }
+
+  private static CodeBlock named(String format, Map<String, ?> args){
+    return CodeBlock.builder().addNamed(format, args).build();
+  }
+
 }
