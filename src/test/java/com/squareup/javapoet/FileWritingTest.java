@@ -216,4 +216,11 @@ public final class FileWritingTest {
         + "class Taco {\n"
         + "}\n");
   }
+
+  @Test public void writeToPathReturnsPath() throws IOException {
+    JavaFile javaFile = JavaFile.builder("foo", TypeSpec.classBuilder("Taco").build()).build();
+    Path filePath = javaFile.writeToPath(fsRoot);
+    // Cast to avoid ambiguity between assertThat(Path) and assertThat(Iterable<?>)
+    assertThat((Iterable<?>) filePath).isEqualTo(fsRoot.resolve(fs.getPath("foo", "Taco.java")));
+  }
 }
