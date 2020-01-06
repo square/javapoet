@@ -16,12 +16,18 @@
 package com.squareup.javapoet;
 
 import java.io.File;
+import com.google.testing.compile.CompilationRule;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -30,6 +36,13 @@ import static com.google.common.truth.Truth.assertThat;
 
 @RunWith(JUnit4.class)
 public final class JavaFileTest {
+
+  @Rule public final CompilationRule compilation = new CompilationRule();
+
+  private TypeElement getElement(Class<?> clazz) {
+    return compilation.getElements().getTypeElement(clazz.getCanonicalName());
+  }
+
   @Test public void importStaticReadmeExample() {
     ClassName hoverboard = ClassName.get("com.mattel", "Hoverboard");
     ClassName namedBoards = ClassName.get("com.mattel", "Hoverboard", "Boards");
@@ -708,6 +721,294 @@ public final class JavaFileTest {
         + "import static java.io.File.separatorChar;\n"
         + "\n"
         + "class Taco {\n"
+        + "}\n");
+  }
+
+  @Test public void alwaysQualifySimple() {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addField(Thread.class, "thread")
+            .alwaysQualify("Thread")
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  java.lang.Thread thread;\n"
+        + "}\n");
+  }
+
+  @Test public void alwaysQualifySupersedesJavaLangImports() {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .addField(Thread.class, "thread")
+            .alwaysQualify("Thread")
+            .build())
+        .skipJavaLangImports(true)
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  java.lang.Thread thread;\n"
+        + "}\n");
+  }
+
+  @Test public void avoidClashesWithNestedClasses_viaClass() {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            // These two should get qualified
+            .addField(ClassName.get("other", "NestedTypeA"), "nestedA")
+            .addField(ClassName.get("other", "NestedTypeB"), "nestedB")
+            // This one shouldn't since it's not a nested type of Foo
+            .addField(ClassName.get("other", "NestedTypeC"), "nestedC")
+            // This one shouldn't since we only look at nested types
+            .addField(ClassName.get("other", "Foo"), "foo")
+            .avoidClashesWithNestedClasses(Foo.class)
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import other.Foo;\n"
+        + "import other.NestedTypeC;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  other.NestedTypeA nestedA;\n"
+        + "\n"
+        + "  other.NestedTypeB nestedB;\n"
+        + "\n"
+        + "  NestedTypeC nestedC;\n"
+        + "\n"
+        + "  Foo foo;\n"
+        + "}\n");
+  }
+
+  @Test public void avoidClashesWithNestedClasses_viaTypeElement() {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            // These two should get qualified
+            .addField(ClassName.get("other", "NestedTypeA"), "nestedA")
+            .addField(ClassName.get("other", "NestedTypeB"), "nestedB")
+            // This one shouldn't since it's not a nested type of Foo
+            .addField(ClassName.get("other", "NestedTypeC"), "nestedC")
+            // This one shouldn't since we only look at nested types
+            .addField(ClassName.get("other", "Foo"), "foo")
+            .avoidClashesWithNestedClasses(getElement(Foo.class))
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import other.Foo;\n"
+        + "import other.NestedTypeC;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "  other.NestedTypeA nestedA;\n"
+        + "\n"
+        + "  other.NestedTypeB nestedB;\n"
+        + "\n"
+        + "  NestedTypeC nestedC;\n"
+        + "\n"
+        + "  Foo foo;\n"
+        + "}\n");
+  }
+
+  @Test public void avoidClashesWithNestedClasses_viaSuperinterfaceType() {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            // These two should get qualified
+            .addField(ClassName.get("other", "NestedTypeA"), "nestedA")
+            .addField(ClassName.get("other", "NestedTypeB"), "nestedB")
+            // This one shouldn't since it's not a nested type of Foo
+            .addField(ClassName.get("other", "NestedTypeC"), "nestedC")
+            // This one shouldn't since we only look at nested types
+            .addField(ClassName.get("other", "Foo"), "foo")
+            .addType(TypeSpec.classBuilder("NestedTypeA").build())
+            .addType(TypeSpec.classBuilder("NestedTypeB").build())
+            .addSuperinterface(FooInterface.class)
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo("package com.squareup.tacos;\n"
+        + "\n"
+        + "import com.squareup.javapoet.JavaFileTest;\n"
+        + "import other.Foo;\n"
+        + "import other.NestedTypeC;\n"
+        + "\n"
+        + "class Taco implements JavaFileTest.FooInterface {\n"
+        + "  other.NestedTypeA nestedA;\n"
+        + "\n"
+        + "  other.NestedTypeB nestedB;\n"
+        + "\n"
+        + "  NestedTypeC nestedC;\n"
+        + "\n"
+        + "  Foo foo;\n"
+        + "\n"
+        + "  class NestedTypeA {\n"
+        + "  }\n"
+        + "\n"
+        + "  class NestedTypeB {\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  static class Foo {
+    static class NestedTypeA {
+
+    }
+    static class NestedTypeB {
+
+    }
+  }
+
+  interface FooInterface {
+    class NestedTypeA {
+
+    }
+    class NestedTypeB {
+
+    }
+  }
+
+  private TypeSpec.Builder childTypeBuilder() {
+    return TypeSpec.classBuilder("Child")
+        .addMethod(MethodSpec.methodBuilder("optionalString")
+            .returns(ParameterizedTypeName.get(Optional.class, String.class))
+            .addStatement("return $T.empty()", Optional.class)
+            .build())
+        .addMethod(MethodSpec.methodBuilder("pattern")
+            .returns(Pattern.class)
+            .addStatement("return null")
+            .build());
+  }
+
+  @Test
+  public void avoidClashes_parentChild_superclass_type() {
+    String source = JavaFile.builder("com.squareup.javapoet",
+        childTypeBuilder().superclass(Parent.class).build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo("package com.squareup.javapoet;\n"
+        + "\n"
+        + "import java.lang.String;\n"
+        + "\n"
+        + "class Child extends JavaFileTest.Parent {\n"
+        + "  java.util.Optional<String> optionalString() {\n"
+        + "    return java.util.Optional.empty();\n"
+        + "  }\n"
+        + "\n"
+        + "  java.util.regex.Pattern pattern() {\n"
+        + "    return null;\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test
+  public void avoidClashes_parentChild_superclass_typeMirror() {
+    String source = JavaFile.builder("com.squareup.javapoet",
+        childTypeBuilder().superclass(getElement(Parent.class).asType()).build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo("package com.squareup.javapoet;\n"
+        + "\n"
+        + "import java.lang.String;\n"
+        + "\n"
+        + "class Child extends JavaFileTest.Parent {\n"
+        + "  java.util.Optional<String> optionalString() {\n"
+        + "    return java.util.Optional.empty();\n"
+        + "  }\n"
+        + "\n"
+        + "  java.util.regex.Pattern pattern() {\n"
+        + "    return null;\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test
+  public void avoidClashes_parentChild_superinterface_type() {
+    String source = JavaFile.builder("com.squareup.javapoet",
+        childTypeBuilder().addSuperinterface(ParentInterface.class).build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo("package com.squareup.javapoet;\n"
+        + "\n"
+        + "import java.lang.String;\n"
+        + "import java.util.regex.Pattern;\n"
+        + "\n"
+        + "class Child implements JavaFileTest.ParentInterface {\n"
+        + "  java.util.Optional<String> optionalString() {\n"
+        + "    return java.util.Optional.empty();\n"
+        + "  }\n"
+        + "\n"
+        + "  Pattern pattern() {\n"
+        + "    return null;\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test
+  public void avoidClashes_parentChild_superinterface_typeMirror() {
+    String source = JavaFile.builder("com.squareup.javapoet",
+        childTypeBuilder().addSuperinterface(getElement(ParentInterface.class).asType()).build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo("package com.squareup.javapoet;\n"
+        + "\n"
+        + "import java.lang.String;\n"
+        + "import java.util.regex.Pattern;\n"
+        + "\n"
+        + "class Child implements JavaFileTest.ParentInterface {\n"
+        + "  java.util.Optional<String> optionalString() {\n"
+        + "    return java.util.Optional.empty();\n"
+        + "  }\n"
+        + "\n"
+        + "  Pattern pattern() {\n"
+        + "    return null;\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  // Regression test for https://github.com/square/javapoet/issues/77
+  // This covers class and inheritance
+  static class Parent implements ParentInterface {
+    static class Pattern {
+
+    }
+  }
+
+  interface ParentInterface {
+    class Optional {
+
+    }
+  }
+
+  // Regression test for case raised here: https://github.com/square/javapoet/issues/77#issuecomment-519972404
+  @Test
+  public void avoidClashes_mapEntry() {
+    String source = JavaFile.builder("com.squareup.javapoet",
+        TypeSpec.classBuilder("MapType")
+            .addMethod(MethodSpec.methodBuilder("optionalString")
+                .returns(ClassName.get("com.foo", "Entry"))
+                .addStatement("return null")
+                .build())
+            .addSuperinterface(Map.class)
+            .build())
+        .build()
+        .toString();
+    assertThat(source).isEqualTo("package com.squareup.javapoet;\n"
+        + "\n"
+        + "import java.util.Map;\n"
+        + "\n"
+        + "class MapType implements Map {\n"
+        + "  com.foo.Entry optionalString() {\n"
+        + "    return null;\n"
+        + "  }\n"
         + "}\n");
   }
 }

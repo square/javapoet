@@ -2284,12 +2284,15 @@ public final class TypeSpecTest {
             .addStatement("foo = $S", "FOO")
             .build())
         .addOriginatingElement(originatingElement)
+        .alwaysQualify("com.example.AlwaysQualified")
         .build();
 
     TypeSpec recreatedTaco = taco.toBuilder().build();
     assertThat(toString(taco)).isEqualTo(toString(recreatedTaco));
     assertThat(taco.originatingElements)
         .containsExactlyElementsIn(recreatedTaco.originatingElements);
+    assertThat(taco.alwaysQualifiedNames)
+        .containsExactlyElementsIn(recreatedTaco.alwaysQualifiedNames);
 
     TypeSpec initializersAdded = taco.toBuilder()
         .addInitializerBlock(CodeBlock.builder()

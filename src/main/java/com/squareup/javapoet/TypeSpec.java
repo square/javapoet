@@ -16,6 +16,7 @@
 package com.squareup.javapoet;
 
 import java.io.IOException;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +25,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -31,6 +33,11 @@ import java.util.Set;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.NoType;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.ElementFilter;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
@@ -56,6 +63,7 @@ public final class TypeSpec {
   public final List<TypeSpec> typeSpecs;
   final Set<String> nestedTypesSimpleNames;
   public final List<Element> originatingElements;
+  public final Set<String> alwaysQualifiedNames;
 
   private TypeSpec(Builder builder) {
     this.kind = builder.kind;
@@ -73,6 +81,7 @@ public final class TypeSpec {
     this.initializerBlock = builder.initializerBlock.build();
     this.methodSpecs = Util.immutableList(builder.methodSpecs);
     this.typeSpecs = Util.immutableList(builder.typeSpecs);
+    this.alwaysQualifiedNames = Util.immutableSet(builder.alwaysQualifiedNames);
 
     nestedTypesSimpleNames = new HashSet<>(builder.typeSpecs.size());
     List<Element> originatingElementsMutable = new ArrayList<>();
@@ -108,6 +117,7 @@ public final class TypeSpec {
     this.typeSpecs = Collections.emptyList();
     this.originatingElements = Collections.emptyList();
     this.nestedTypesSimpleNames = Collections.emptySet();
+    this.alwaysQualifiedNames = Collections.emptySet();
   }
 
   public boolean hasModifier(Modifier modifier) {
@@ -169,6 +179,7 @@ public final class TypeSpec {
     builder.initializerBlock.add(initializerBlock);
     builder.staticBlock.add(staticBlock);
     builder.originatingElements.addAll(originatingElements);
+    builder.alwaysQualifiedNames.addAll(alwaysQualifiedNames);
     return builder;
   }
 
@@ -414,6 +425,7 @@ public final class TypeSpec {
     public final List<MethodSpec> methodSpecs = new ArrayList<>();
     public final List<TypeSpec> typeSpecs = new ArrayList<>();
     public final List<Element> originatingElements = new ArrayList<>();
+    public final Set<String> alwaysQualifiedNames = new LinkedHashSet<>();
 
     private Builder(Kind kind, String name,
         CodeBlock anonymousTypeArguments) {
@@ -483,7 +495,32 @@ public final class TypeSpec {
     }
 
     public Builder superclass(Type superclass) {
-      return superclass(TypeName.get(superclass));
+      return superclass(superclass, true);
+    }
+
+    public Builder superclass(Type superclass, boolean avoidNestedTypeNameClashes) {
+      superclass(TypeName.get(superclass));
+      if (avoidNestedTypeNameClashes) {
+        Class<?> clazz = getRawType(superclass);
+        if (clazz != null) {
+          avoidClashesWithNestedClasses(clazz);
+        }
+      }
+      return this;
+    }
+
+    public Builder superclass(TypeMirror superclass) {
+      return superclass(superclass, true);
+    }
+
+    public Builder superclass(TypeMirror superclass, boolean avoidNestedTypeNameClashes) {
+      superclass(TypeName.get(superclass));
+      if (avoidNestedTypeNameClashes && superclass instanceof DeclaredType) {
+        TypeElement superInterfaceElement =
+            (TypeElement) ((DeclaredType) superclass).asElement();
+        avoidClashesWithNestedClasses(superInterfaceElement);
+      }
+      return this;
     }
 
     public Builder addSuperinterfaces(Iterable<? extends TypeName> superinterfaces) {
@@ -501,7 +538,43 @@ public final class TypeSpec {
     }
 
     public Builder addSuperinterface(Type superinterface) {
-      return addSuperinterface(TypeName.get(superinterface));
+      return addSuperinterface(superinterface, true);
+    }
+
+    public Builder addSuperinterface(Type superinterface, boolean avoidNestedTypeNameClashes) {
+      addSuperinterface(TypeName.get(superinterface));
+      if (avoidNestedTypeNameClashes) {
+        Class<?> clazz = getRawType(superinterface);
+        if (clazz != null) {
+          avoidClashesWithNestedClasses(clazz);
+        }
+      }
+      return this;
+    }
+
+    private Class<?> getRawType(Type type) {
+      if (type instanceof Class<?>) {
+        return (Class<?>) type;
+      } else if (type instanceof ParameterizedType) {
+        return getRawType(((ParameterizedType) type).getRawType());
+      } else {
+        return null;
+      }
+    }
+
+    public Builder addSuperinterface(TypeMirror superinterface) {
+      return addSuperinterface(superinterface, true);
+    }
+
+    public Builder addSuperinterface(TypeMirror superinterface,
+        boolean avoidNestedTypeNameClashes) {
+      addSuperinterface(TypeName.get(superinterface));
+      if (avoidNestedTypeNameClashes && superinterface instanceof DeclaredType) {
+        TypeElement superInterfaceElement =
+            (TypeElement) ((DeclaredType) superinterface).asElement();
+        avoidClashesWithNestedClasses(superInterfaceElement);
+      }
+      return this;
     }
 
     public Builder addEnumConstant(String name) {
@@ -579,6 +652,102 @@ public final class TypeSpec {
 
     public Builder addOriginatingElement(Element originatingElement) {
       originatingElements.add(originatingElement);
+      return this;
+    }
+
+    public Builder alwaysQualify(String... simpleNames) {
+      checkArgument(simpleNames != null, "simpleNames == null");
+      for (String name : simpleNames) {
+        checkArgument(
+            name != null,
+            "null entry in simpleNames array: %s",
+            Arrays.toString(simpleNames)
+        );
+        alwaysQualifiedNames.add(name);
+      }
+      return this;
+    }
+
+    /**
+     * Call this to always fully qualify any types that would conflict with possibly nested types of
+     * this {@code typeElement}. For example - if the following type was passed in as the
+     * typeElement:
+     *
+     * <pre><code>
+     *   class Foo {
+     *     class NestedTypeA {
+     *
+     *     }
+     *     class NestedTypeB {
+     *
+     *     }
+     *   }
+     * </code></pre>
+     *
+     * <p>
+     * Then this would add {@code "NestedTypeA"} and {@code "NestedTypeB"} as names that should
+     * always be qualified via {@link #alwaysQualify(String...)}. This way they would avoid
+     * possible import conflicts when this JavaFile is written.
+     *
+     * @param typeElement the {@link TypeElement} with nested types to avoid clashes with.
+     * @return this builder instance.
+     */
+    public Builder avoidClashesWithNestedClasses(TypeElement typeElement) {
+      checkArgument(typeElement != null, "typeElement == null");
+      for (TypeElement nestedType : ElementFilter.typesIn(typeElement.getEnclosedElements())) {
+        alwaysQualify(nestedType.getSimpleName().toString());
+      }
+      TypeMirror superclass = typeElement.getSuperclass();
+      if (!(superclass instanceof NoType) && superclass instanceof DeclaredType) {
+        TypeElement superclassElement = (TypeElement) ((DeclaredType) superclass).asElement();
+        avoidClashesWithNestedClasses(superclassElement);
+      }
+      for (TypeMirror superinterface : typeElement.getInterfaces()) {
+        if (superinterface instanceof DeclaredType) {
+          TypeElement superinterfaceElement
+              = (TypeElement) ((DeclaredType) superinterface).asElement();
+          avoidClashesWithNestedClasses(superinterfaceElement);
+        }
+      }
+      return this;
+    }
+
+    /**
+     * Call this to always fully qualify any types that would conflict with possibly nested types of
+     * this {@code typeElement}. For example - if the following type was passed in as the
+     * typeElement:
+     *
+     * <pre><code>
+     *   class Foo {
+     *     class NestedTypeA {
+     *
+     *     }
+     *     class NestedTypeB {
+     *
+     *     }
+     *   }
+     * </code></pre>
+     *
+     * <p>
+     * Then this would add {@code "NestedTypeA"} and {@code "NestedTypeB"} as names that should
+     * always be qualified via {@link #alwaysQualify(String...)}. This way they would avoid
+     * possible import conflicts when this JavaFile is written.
+     *
+     * @param clazz the {@link Class} with nested types to avoid clashes with.
+     * @return this builder instance.
+     */
+    public Builder avoidClashesWithNestedClasses(Class<?> clazz) {
+      checkArgument(clazz != null, "clazz == null");
+      for (Class<?> nestedType : clazz.getDeclaredClasses()) {
+        alwaysQualify(nestedType.getSimpleName());
+      }
+      Class<?> superclass = clazz.getSuperclass();
+      if (superclass != null && !Object.class.equals(superclass)) {
+        avoidClashesWithNestedClasses(superclass);
+      }
+      for (Class<?> superinterface : clazz.getInterfaces()) {
+        avoidClashesWithNestedClasses(superinterface);
+      }
       return this;
     }
 

@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,6 +61,7 @@ public final class JavaFile {
   public final TypeSpec typeSpec;
   public final boolean skipJavaLangImports;
   private final Set<String> staticImports;
+  private final Set<String> alwaysQualify;
   private final String indent;
 
   private JavaFile(Builder builder) {
@@ -69,16 +71,33 @@ public final class JavaFile {
     this.skipJavaLangImports = builder.skipJavaLangImports;
     this.staticImports = Util.immutableSet(builder.staticImports);
     this.indent = builder.indent;
+
+    Set<String> alwaysQualifiedNames = new LinkedHashSet<>();
+    fillAlwaysQualifiedNames(builder.typeSpec, alwaysQualifiedNames);
+    this.alwaysQualify = Util.immutableSet(alwaysQualifiedNames);
+  }
+
+  private void fillAlwaysQualifiedNames(TypeSpec spec, Set<String> alwaysQualifiedNames) {
+    alwaysQualifiedNames.addAll(spec.alwaysQualifiedNames);
+    for (TypeSpec nested : spec.typeSpecs) {
+      fillAlwaysQualifiedNames(nested, alwaysQualifiedNames);
+    }
   }
 
   public void writeTo(Appendable out) throws IOException {
     // First pass: emit the entire class, just to collect the types we'll need to import.
-    CodeWriter importsCollector = new CodeWriter(NULL_APPENDABLE, indent, staticImports);
+    CodeWriter importsCollector = new CodeWriter(
+        NULL_APPENDABLE,
+        indent,
+        staticImports,
+        alwaysQualify
+    );
     emit(importsCollector);
     Map<String, ClassName> suggestedImports = importsCollector.suggestedImports();
 
     // Second pass: write the code, taking advantage of the imports.
-    CodeWriter codeWriter = new CodeWriter(out, indent, suggestedImports, staticImports);
+    CodeWriter codeWriter
+        = new CodeWriter(out, indent, suggestedImports, staticImports, alwaysQualify);
     emit(codeWriter);
   }
 
@@ -153,7 +172,12 @@ public final class JavaFile {
 
     int importedTypesCount = 0;
     for (ClassName className : new TreeSet<>(codeWriter.importedTypes().values())) {
-      if (skipJavaLangImports && className.packageName().equals("java.lang")) continue;
+      // TODO what about nested types like java.util.Map.Entry?
+      if (skipJavaLangImports
+          && className.packageName().equals("java.lang")
+          && !alwaysQualify.contains(className.simpleName)) {
+        continue;
+      }
       codeWriter.emit("import $L;\n", className.withoutAnnotations());
       importedTypesCount++;
     }
