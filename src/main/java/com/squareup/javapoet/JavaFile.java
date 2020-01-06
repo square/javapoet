@@ -22,10 +22,12 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,6 +61,7 @@ public final class JavaFile {
   public final TypeSpec typeSpec;
   public final boolean skipJavaLangImports;
   private final Set<String> staticImports;
+  private final Set<String> alwaysQualify;
   private final String indent;
 
   private JavaFile(Builder builder) {
@@ -68,16 +71,33 @@ public final class JavaFile {
     this.skipJavaLangImports = builder.skipJavaLangImports;
     this.staticImports = Util.immutableSet(builder.staticImports);
     this.indent = builder.indent;
+
+    Set<String> alwaysQualifiedNames = new LinkedHashSet<>();
+    fillAlwaysQualifiedNames(builder.typeSpec, alwaysQualifiedNames);
+    this.alwaysQualify = Util.immutableSet(alwaysQualifiedNames);
+  }
+
+  private void fillAlwaysQualifiedNames(TypeSpec spec, Set<String> alwaysQualifiedNames) {
+    alwaysQualifiedNames.addAll(spec.alwaysQualifiedNames);
+    for (TypeSpec nested : spec.typeSpecs) {
+      fillAlwaysQualifiedNames(nested, alwaysQualifiedNames);
+    }
   }
 
   public void writeTo(Appendable out) throws IOException {
     // First pass: emit the entire class, just to collect the types we'll need to import.
-    CodeWriter importsCollector = new CodeWriter(NULL_APPENDABLE, indent, staticImports);
+    CodeWriter importsCollector = new CodeWriter(
+        NULL_APPENDABLE,
+        indent,
+        staticImports,
+        alwaysQualify
+    );
     emit(importsCollector);
     Map<String, ClassName> suggestedImports = importsCollector.suggestedImports();
 
     // Second pass: write the code, taking advantage of the imports.
-    CodeWriter codeWriter = new CodeWriter(out, indent, suggestedImports, staticImports);
+    CodeWriter codeWriter
+        = new CodeWriter(out, indent, suggestedImports, staticImports, alwaysQualify);
     emit(codeWriter);
   }
 
@@ -86,9 +106,19 @@ public final class JavaFile {
     writeToPath(directory);
   }
 
-  /** Writes this to {@code directory} as UTF-8 using the standard directory structure.
-   * Returns the {@link Path} instance to which source is actually written. */
+  /** 
+   * Writes this to {@code directory} as UTF-8 using the standard directory structure.
+   * Returns the {@link Path} instance to which source is actually written. 
+   */
   public Path writeToPath(Path directory) throws IOException {
+    writeTo(directory, UTF_8);
+  }
+
+  /**
+   * Writes this to {@code directory} with the provided {@code charset}
+   * using the standard directory structure.
+   */
+  public void writeTo(Path directory, Charset charset) throws IOException {
     checkArgument(Files.notExists(directory) || Files.isDirectory(directory),
         "path %s exists but is not a directory.", directory);
     Path outputDirectory = directory;
@@ -100,7 +130,7 @@ public final class JavaFile {
     }
 
     Path outputPath = outputDirectory.resolve(typeSpec.name + ".java");
-    try (Writer writer = new OutputStreamWriter(Files.newOutputStream(outputPath), UTF_8)) {
+    try (Writer writer = new OutputStreamWriter(Files.newOutputStream(outputPath), charset)) {
       writeTo(writer);
     }
 
@@ -112,8 +142,10 @@ public final class JavaFile {
     writeTo(directory.toPath());
   }
 
-  /** Writes this to {@code directory} as UTF-8 using the standard directory structure.
-   * Returns the {@link File} instance to which source is actually written. */
+  /** 
+   * Writes this to {@code directory} as UTF-8 using the standard directory structure.
+   * Returns the {@link File} instance to which source is actually written. 
+   */
   public File writeToFile(File directory) throws IOException {
     final Path outputPath = writeToPath(directory.toPath());
     return outputPath.toFile();
@@ -159,7 +191,12 @@ public final class JavaFile {
 
     int importedTypesCount = 0;
     for (ClassName className : new TreeSet<>(codeWriter.importedTypes().values())) {
-      if (skipJavaLangImports && className.packageName().equals("java.lang")) continue;
+      // TODO what about nested types like java.util.Map.Entry?
+      if (skipJavaLangImports
+          && className.packageName().equals("java.lang")
+          && !alwaysQualify.contains(className.simpleName)) {
+        continue;
+      }
       codeWriter.emit("import $L;\n", className.withoutAnnotations());
       importedTypesCount++;
     }
@@ -231,9 +268,10 @@ public final class JavaFile {
     private final String packageName;
     private final TypeSpec typeSpec;
     private final CodeBlock.Builder fileComment = CodeBlock.builder();
-    private final Set<String> staticImports = new TreeSet<>();
     private boolean skipJavaLangImports;
     private String indent = "  ";
+
+    public final Set<String> staticImports = new TreeSet<>();
 
     private Builder(String packageName, TypeSpec typeSpec) {
       this.packageName = packageName;

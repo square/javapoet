@@ -2,14 +2,10 @@ language: java
 
 matrix:
   include:
-    - jdk: oraclejdk8
-    - jdk: openjdk10
+    - jdk: openjdk8
     - jdk: openjdk11
-    - jdk: openjdk-ea
   allow_failures:
-    # ErrorProne/javac is not yet working on JDK 11 nor 12 (current -ea)
     - jdk: openjdk11
-    - jdk: openjdk-ea
 
 before_install:
   - unset _JAVA_OPTIONS

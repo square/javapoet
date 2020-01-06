@@ -54,6 +54,7 @@ final class CodeWriter {
   private final List<TypeSpec> typeSpecStack = new ArrayList<>();
   private final Set<String> staticImportClassNames;
   private final Set<String> staticImports;
+  private final Set<String> alwaysQualify;
   private final Map<String, ClassName> importedTypes;
   private final Map<String, ClassName> importableTypes = new LinkedHashMap<>();
   private final Set<String> referencedNames = new LinkedHashSet<>();
@@ -68,19 +69,23 @@ final class CodeWriter {
   int statementLine = -1;
 
   CodeWriter(Appendable out) {
-    this(out, "  ", Collections.emptySet());
+    this(out, "  ", Collections.emptySet(), Collections.emptySet());
   }
 
-  CodeWriter(Appendable out, String indent, Set<String> staticImports) {
-    this(out, indent, Collections.emptyMap(), staticImports);
+  CodeWriter(Appendable out, String indent, Set<String> staticImports, Set<String> alwaysQualify) {
+    this(out, indent, Collections.emptyMap(), staticImports, alwaysQualify);
   }
 
-  CodeWriter(Appendable out, String indent, Map<String, ClassName> importedTypes,
-      Set<String> staticImports) {
+  CodeWriter(Appendable out,
+      String indent,
+      Map<String, ClassName> importedTypes,
+      Set<String> staticImports,
+      Set<String> alwaysQualify) {
     this.out = new LineWrapper(out, indent, 100);
     this.indent = checkNotNull(indent, "indent == null");
     this.importedTypes = checkNotNull(importedTypes, "importedTypes == null");
     this.staticImports = checkNotNull(staticImports, "staticImports == null");
+    this.alwaysQualify = checkNotNull(alwaysQualify, "alwaysQualify == null");
     this.staticImportClassNames = new LinkedHashSet<>();
     for (String signature : staticImports) {
       staticImportClassNames.add(signature.substring(0, signature.lastIndexOf('.')));
@@ -149,7 +154,7 @@ final class CodeWriter {
     emit("/**\n");
     javadoc = true;
     try {
-      emit(javadocCodeBlock);
+      emit(javadocCodeBlock, true);
     } finally {
       javadoc = false;
     }
@@ -219,6 +224,10 @@ final class CodeWriter {
   }
 
   public CodeWriter emit(CodeBlock codeBlock) throws IOException {
+    return emit(codeBlock, false);
+  }
+
+  public CodeWriter emit(CodeBlock codeBlock, boolean ensureTrailingNewline) throws IOException {
     int a = 0;
     ClassName deferredTypeName = null; // used by "import static" logic
     ListIterator<String> partIterator = codeBlock.formatParts.listIterator();
@@ -306,6 +315,9 @@ final class CodeWriter {
           emitAndIndent(part);
           break;
       }
+    }
+    if (ensureTrailingNewline && out.lastChar() != '\n') {
+      emit("\n");
     }
     return this;
   }
@@ -402,6 +414,9 @@ final class CodeWriter {
   private void importableType(ClassName className) {
     if (className.packageName().isEmpty()) {
       return;
+    } else if (alwaysQualify.contains(className.simpleName)) {
+      // TODO what about nested types like java.util.Map.Entry?
+      return;
     }
     ClassName topLevelClassName = className.topLevelClassName();
     String simpleName = topLevelClassName.simpleName();
@@ -420,10 +435,8 @@ final class CodeWriter {
     // Match a child of the current (potentially nested) class.
     for (int i = typeSpecStack.size() - 1; i >= 0; i--) {
       TypeSpec typeSpec = typeSpecStack.get(i);
-      for (TypeSpec visibleChild : typeSpec.typeSpecs) {
-        if (Objects.equals(visibleChild.name, simpleName)) {
-          return stackClassName(i, simpleName);
-        }
+      if (typeSpec.nestedTypesSimpleNames.contains(simpleName)) {
+        return stackClassName(i, simpleName);
       }
     }
 
@@ -456,7 +469,7 @@ final class CodeWriter {
    */
   CodeWriter emitAndIndent(String s) throws IOException {
     boolean first = true;
-    for (String line : s.split("\n", -1)) {
+    for (String line : s.split("\\R", -1)) {
       // Emit a newline character. Make sure blank lines in Javadoc & comments look good.
       if (!first) {
         if ((javadoc || comment) && trailingNewline) {

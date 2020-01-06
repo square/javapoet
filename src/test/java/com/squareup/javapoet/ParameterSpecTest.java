@@ -15,16 +15,38 @@
  */
 package com.squareup.javapoet;
 
+import com.google.testing.compile.CompilationRule;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.util.Elements;
+import org.junit.Before;
+import org.junit.Rule;
+import javax.lang.model.element.Modifier;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.squareup.javapoet.TestUtil.findFirst;
+import static javax.lang.model.util.ElementFilter.fieldsIn;
+import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.junit.Assert.fail;
 
-import javax.lang.model.element.Modifier;
-
 public class ParameterSpecTest {
+  @Rule public final CompilationRule compilation = new CompilationRule();
+
+  private Elements elements;
+
+  @Before public void setUp() {
+    elements = compilation.getElements();
+  }
+
+  private TypeElement getElement(Class<?> clazz) {
+    return elements.getTypeElement(clazz.getCanonicalName());
+  }
+
   @Test public void equalsAndHashCode() {
     ParameterSpec a = ParameterSpec.builder(int.class, "foo").build();
     ParameterSpec b = ParameterSpec.builder(int.class, "foo").build();
@@ -48,17 +70,66 @@ public class ParameterSpecTest {
     }
   }
 
+  final class VariableElementFieldClass {
+    String name;
+  }
+
+  @Test public void fieldVariableElement() {
+    TypeElement classElement = getElement(VariableElementFieldClass.class);
+    List<VariableElement> methods = fieldsIn(elements.getAllMembers(classElement));
+    VariableElement element = findFirst(methods, "name");
+
+    try {
+      ParameterSpec.get(element);
+      fail();
+    } catch (IllegalArgumentException exception) {
+      assertThat(exception).hasMessageThat().isEqualTo("element is not a parameter");
+    }
+  }
+
+  final class VariableElementParameterClass {
+    public void foo(@Nullable final String bar) {
+    }
+  }
+
+  @Test public void parameterVariableElement() {
+    TypeElement classElement = getElement(VariableElementParameterClass.class);
+    List<ExecutableElement> methods = methodsIn(elements.getAllMembers(classElement));
+    ExecutableElement element = findFirst(methods, "foo");
+    VariableElement parameterElement = element.getParameters().get(0);
+
+    assertThat(ParameterSpec.get(parameterElement).toString())
+        .isEqualTo("@javax.annotation.Nullable java.lang.String arg0");
+  }
+
   @Test public void addNonFinalModifier() {
     List<Modifier> modifiers = new ArrayList<>();
     modifiers.add(Modifier.FINAL);
     modifiers.add(Modifier.PUBLIC);
 
     try {
-      ParameterSpec.builder(int.class, "foo").addModifiers(modifiers);
+      ParameterSpec.builder(int.class, "foo")
+          .addModifiers(modifiers);
       fail();
     } catch (Exception e) {
-      assertThat(e.getMessage())
-          .isEqualTo("unexpected parameter modifier: public");
+      assertThat(e.getMessage()).isEqualTo("unexpected parameter modifier: public");
     }
+  }
+
+  @Test public void modifyAnnotations() {
+    ParameterSpec.Builder builder = ParameterSpec.builder(int.class, "foo")
+            .addAnnotation(Override.class)
+            .addAnnotation(SuppressWarnings.class);
+
+    builder.annotations.remove(1);
+    assertThat(builder.build().annotations).hasSize(1);
+  }
+
+  @Test public void modifyModifiers() {
+    ParameterSpec.Builder builder = ParameterSpec.builder(int.class, "foo")
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
+
+    builder.modifiers.remove(1);
+    assertThat(builder.build().modifiers).containsExactly(Modifier.PUBLIC);
   }
 }

@@ -132,7 +132,7 @@ public final class MethodSpec {
       codeWriter.emit(" {\n");
 
       codeWriter.indent();
-      codeWriter.emit(code);
+      codeWriter.emit(code, true);
       codeWriter.unindent();
 
       codeWriter.emit("}\n");
@@ -292,25 +292,31 @@ public final class MethodSpec {
   }
 
   public static final class Builder {
-    private final String name;
+    private String name;
 
     private final CodeBlock.Builder javadoc = CodeBlock.builder();
-    private final List<AnnotationSpec> annotations = new ArrayList<>();
-    private final List<Modifier> modifiers = new ArrayList<>();
-    private List<TypeVariableName> typeVariables = new ArrayList<>();
     private TypeName returnType;
-    private final List<ParameterSpec> parameters = new ArrayList<>();
     private final Set<TypeName> exceptions = new LinkedHashSet<>();
     private final CodeBlock.Builder code = CodeBlock.builder();
     private boolean varargs;
     private CodeBlock defaultValue;
 
+    public final List<TypeVariableName> typeVariables = new ArrayList<>();
+    public final List<AnnotationSpec> annotations = new ArrayList<>();
+    public final List<Modifier> modifiers = new ArrayList<>();
+    public final List<ParameterSpec> parameters = new ArrayList<>();
+
     private Builder(String name) {
+      setName(name);
+    }
+
+    public Builder setName(String name) {
       checkNotNull(name, "name == null");
       checkArgument(name.equals(CONSTRUCTOR) || SourceVersion.isName(name),
           "not a valid name: %s", name);
       this.name = name;
       this.returnType = name.equals(CONSTRUCTOR) ? null : TypeName.VOID;
+      return this;
     }
 
     public Builder addJavadoc(String format, Object... args) {
@@ -469,12 +475,28 @@ public final class MethodSpec {
     }
 
     /**
+     * @param codeBlock the control flow construct and its code, such as "if (foo == 5)".
+     * Shouldn't contain braces or newline characters.
+     */
+    public Builder beginControlFlow(CodeBlock codeBlock) {
+      return beginControlFlow("$L", codeBlock);
+    }
+
+    /**
      * @param controlFlow the control flow construct and its code, such as "else if (foo == 10)".
      *     Shouldn't contain braces or newline characters.
      */
     public Builder nextControlFlow(String controlFlow, Object... args) {
       code.nextControlFlow(controlFlow, args);
       return this;
+    }
+
+    /**
+     * @param codeBlock the control flow construct and its code, such as "else if (foo == 10)".
+     *     Shouldn't contain braces or newline characters.
+     */
+    public Builder nextControlFlow(CodeBlock codeBlock) {
+      return nextControlFlow("$L", codeBlock);
     }
 
     public Builder endControlFlow() {
@@ -489,6 +511,14 @@ public final class MethodSpec {
     public Builder endControlFlow(String controlFlow, Object... args) {
       code.endControlFlow(controlFlow, args);
       return this;
+    }
+
+    /**
+     * @param codeBlock the optional control flow construct and its code, such as
+     *     "while(foo == 20)". Only used for "do/while" control flows.
+     */
+    public Builder endControlFlow(CodeBlock codeBlock) {
+      return endControlFlow("$L", codeBlock);
     }
 
     public Builder addStatement(String format, Object... args) {

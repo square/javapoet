@@ -21,8 +21,9 @@ import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
 import javax.lang.model.element.ExecutableElement;
@@ -37,6 +38,8 @@ import org.junit.Test;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
+import static com.squareup.javapoet.MethodSpec.CONSTRUCTOR;
+import static com.squareup.javapoet.TestUtil.findFirst;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.junit.Assert.fail;
 
@@ -53,15 +56,6 @@ public final class MethodSpecTest {
 
   private TypeElement getElement(Class<?> clazz) {
     return elements.getTypeElement(clazz.getCanonicalName());
-  }
-
-  private ExecutableElement findFirst(Collection<ExecutableElement> elements, String name) {
-    for (ExecutableElement executableElement : elements) {
-      if (executableElement.getSimpleName().toString().equals(name)) {
-        return executableElement;
-      }
-    }
-    throw new IllegalArgumentException(name + " not found in " + elements);
   }
 
   @Test public void nullAnnotationsAddition() {
@@ -154,8 +148,8 @@ public final class MethodSpecTest {
         + "@java.lang.Override\n"
         + "protected <T extends java.lang.Runnable & java.io.Closeable> java.lang.Runnable "
         + "everything(\n"
-        + "    java.lang.String arg0, java.util.List<? extends T> arg1) throws java.io.IOException,\n"
-        + "    java.lang.SecurityException {\n"
+        + "    @com.squareup.javapoet.MethodSpecTest.Nullable java.lang.String arg0,\n"
+        + "    java.util.List<? extends T> arg1) throws java.io.IOException, java.lang.SecurityException {\n"
         + "}\n");
   }
 
@@ -355,4 +349,115 @@ public final class MethodSpecTest {
       assertThat(e.getMessage()).isEqualTo("modifiers == null");
     }
   }
+
+  @Test public void modifyMethodName() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("initialMethod")
+        .build()
+        .toBuilder()
+        .setName("revisedMethod")
+        .build();
+
+    assertThat(methodSpec.toString()).isEqualTo("" + "void revisedMethod() {\n" + "}\n");
+  }
+
+  @Test public void modifyAnnotations() {
+    MethodSpec.Builder builder = MethodSpec.methodBuilder("foo")
+            .addAnnotation(Override.class)
+            .addAnnotation(SuppressWarnings.class);
+
+    builder.annotations.remove(1);
+    assertThat(builder.build().annotations).hasSize(1);
+  }
+
+  @Test public void modifyModifiers() {
+    MethodSpec.Builder builder = MethodSpec.methodBuilder("foo")
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC);
+
+    builder.modifiers.remove(1);
+    assertThat(builder.build().modifiers).containsExactly(Modifier.PUBLIC);
+  }
+
+  @Test public void modifyParameters() {
+    MethodSpec.Builder builder = MethodSpec.methodBuilder("foo")
+            .addParameter(int.class, "source");
+
+    builder.parameters.remove(0);
+    assertThat(builder.build().parameters).isEmpty();
+  }
+
+  @Test public void modifyTypeVariables() {
+    TypeVariableName t = TypeVariableName.get("T");
+    MethodSpec.Builder builder = MethodSpec.methodBuilder("foo")
+            .addTypeVariable(t)
+            .addTypeVariable(TypeVariableName.get("V"));
+
+    builder.typeVariables.remove(1);
+    assertThat(builder.build().typeVariables).containsExactly(t);
+  }
+
+  @Test public void ensureTrailingNewline() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+        .addCode("codeWithNoNewline();")
+        .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+        + "void method() {\n"
+        + "  codeWithNoNewline();\n"
+        + "}\n");
+  }
+
+  /** Ensures that we don't add a duplicate newline if one is already present. */
+  @Test public void ensureTrailingNewlineWithExistingNewline() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+        .addCode("codeWithNoNewline();\n") // Have a newline already, so ensure we're not adding one
+        .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+        + "void method() {\n"
+        + "  codeWithNoNewline();\n"
+        + "}\n");
+  }
+
+  @Test public void controlFlowWithNamedCodeBlocks() {
+    Map<String, Object> m = new HashMap<>();
+    m.put("field", "valueField");
+    m.put("threshold", "5");
+
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+        .beginControlFlow(named("if ($field:N > $threshold:L)", m))
+        .nextControlFlow(named("else if ($field:N == $threshold:L)", m))
+        .endControlFlow()
+        .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+        + "void method() {\n"
+        + "  if (valueField > 5) {\n"
+        + "  } else if (valueField == 5) {\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test public void doWhileWithNamedCodeBlocks() {
+    Map<String, Object> m = new HashMap<>();
+    m.put("field", "valueField");
+    m.put("threshold", "5");
+
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+        .beginControlFlow("do")
+        .addStatement(named("$field:N--", m))
+        .endControlFlow(named("while ($field:N > $threshold:L)", m))
+        .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+        + "void method() {\n" +
+        "  do {\n" +
+        "    valueField--;\n" +
+        "  } while (valueField > 5);\n" +
+        "}\n");
+  }
+
+  private static CodeBlock named(String format, Map<String, ?> args){
+    return CodeBlock.builder().addNamed(format, args).build();
+  }
+
 }
