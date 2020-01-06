@@ -117,7 +117,7 @@ public final class JavaFile {
   /**
    * Writes this to {@code directory} as UTF-8 using the standard directory structure.
    * Returns the {@link Path} instance to which source is actually written.
-   * */
+   */
   public Path writeToPath(Path directory) throws IOException {
     return writeToPath(directory, UTF_8);
   }
@@ -125,7 +125,8 @@ public final class JavaFile {
   /**
    * Writes this to {@code directory} with the provided {@code charset} using the standard directory
    * structure.
-   * Returns the {@link Path} instance to which source is actually written. */
+   * Returns the {@link Path} instance to which source is actually written.
+   */
   public Path writeToPath(Path directory, Charset charset) throws IOException {
     checkArgument(Files.notExists(directory) || Files.isDirectory(directory),
         "path %s exists but is not a directory.", directory);
@@ -150,8 +151,10 @@ public final class JavaFile {
     writeTo(directory.toPath());
   }
 
-  /** Writes this to {@code directory} as UTF-8 using the standard directory structure.
-   * Returns the {@link File} instance to which source is actually written. */
+  /**
+   * Writes this to {@code directory} as UTF-8 using the standard directory structure.
+   * Returns the {@link File} instance to which source is actually written.
+   */
   public File writeToFile(File directory) throws IOException {
     final Path outputPath = writeToPath(directory.toPath());
     return outputPath.toFile();
