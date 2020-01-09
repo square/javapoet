@@ -21,7 +21,7 @@ JavaPoet 1.12.0 *(2020-01-09)*
  * Fix: Ensure trailing newlines in Javadocs and method bodies.
  * Fix: Copy annotations when creating a `ParameterSpec` from a `VariableElement`.
  * Fix: Properly handle classes located in empty packages in `ClassName`.
- * Fix: Disallow `final` modifier on a `ParameterSpec`.
+ * Fix: Only allow `final` modifier on a `ParameterSpec`.
  * Fix: Use fully-qualified names for type names that are masked by type variable names.
 
 
