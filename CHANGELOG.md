@@ -1,6 +1,30 @@
 Change Log
 ==========
 
+JavaPoet 1.12.0 *(2020-01-09)*
+-----------------------------
+
+ * New: Add `JavaFile.writeToPath()` and `JavaFile.writeToFile()` methods that return paths to the 
+   generated file as `Path` and `File` respectively.
+ * New: Add `TypeSpec.alwaysQualify()` API to avoid clashes involving nested type names.
+ * New: Add overloads accepting `CodeBlock`s to `MethodSpec`'s control flow methods.
+ * New: Make list fields of all `Builder` types mutable.
+ * New: Add `CodeBlock.clear()`.
+ * New: Allow passing a custom `Charset` to `JavaFile.writeTo()`.
+ * New: Improved performance of `ClassName.simpleNames()` by memoizing results.
+ * New: Significant performance improvements for `CodeWriter.resolve()` as all nested simple names 
+   of a `TypeSpec` get pre-computed.
+ * New: Add `TypeName.Builder.setName()` to allow overriding names passed in the constructor.
+ * New: Add `TypeName.canonicalName()`.
+ * Fix: Use `\\R` instead of `\n` as line separator in `CodeWriter.emitAndIndent()`.
+ * Fix: Copy originating elements in `TypeSpec.toBuilder()`.
+ * Fix: Ensure trailing newlines in Javadocs and method bodies.
+ * Fix: Copy annotations when creating a `ParameterSpec` from a `VariableElement`.
+ * Fix: Properly handle classes located in empty packages in `ClassName`.
+ * Fix: Disallow `final` modifier on a `ParameterSpec`.
+ * Fix: Use fully-qualified names for type names that are masked by type variable names.
+
+
 JavaPoet 1.11.1 *(2018-05-16)*
 -----------------------------
 
