@@ -24,6 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -232,7 +233,14 @@ public final class MethodSpec {
     }
 
     methodBuilder.returns(TypeName.get(method.getReturnType()));
-    methodBuilder.addParameters(ParameterSpec.parametersOf(method));
+    methodBuilder.addParameters(ParameterSpec.parametersOf(method)
+        .stream()
+        .map(parameterSpec -> {
+          ParameterSpec.Builder builder = parameterSpec.toBuilder();
+          builder.annotations.clear();
+          return builder.build();
+        })
+        .collect(Collectors.toList()));
     methodBuilder.varargs(method.isVarArgs());
 
     for (TypeMirror thrownType : method.getThrownTypes()) {
