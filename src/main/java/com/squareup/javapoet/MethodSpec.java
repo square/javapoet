@@ -233,6 +233,8 @@ public final class MethodSpec {
     }
 
     methodBuilder.returns(TypeName.get(method.getReturnType()));
+    // Copying parameter annotations from the overridden method can be incorrect so we're
+    // deliberately dropping them. See https://github.com/square/javapoet/issues/482.
     methodBuilder.addParameters(ParameterSpec.parametersOf(method)
         .stream()
         .map(parameterSpec -> {
