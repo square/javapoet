@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+JavaPoet 1.12.1 *(2020-01-20)*
+-----------------------------
+
+ * Fix: Ignore parameter annotations in `MethodSpec.overriding()`.
+
+
 JavaPoet 1.12.0 *(2020-01-09)*
 -----------------------------
 
