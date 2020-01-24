@@ -456,6 +456,18 @@ public final class MethodSpecTest {
         "}\n");
   }
 
+  @Test public void multilineComments() {
+    MethodSpec main = MethodSpec.methodBuilder("main")
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+            .returns(void.class)
+            .addParameter(String[].class, "args")
+            .addStatement("$T.out.println($S)", System.class, "Hello, JavaPoet!")
+            .addComment("Hey Friends!")
+            .build();
+
+    System.out.println(main.toString());
+  }
+
   private static CodeBlock named(String format, Map<String, ?> args){
     return CodeBlock.builder().addNamed(format, args).build();
   }
