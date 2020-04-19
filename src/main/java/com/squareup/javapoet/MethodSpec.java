@@ -24,7 +24,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -233,16 +232,7 @@ public final class MethodSpec {
     }
 
     methodBuilder.returns(TypeName.get(method.getReturnType()));
-    // Copying parameter annotations from the overridden method can be incorrect so we're
-    // deliberately dropping them. See https://github.com/square/javapoet/issues/482.
-    methodBuilder.addParameters(ParameterSpec.parametersOf(method)
-        .stream()
-        .map(parameterSpec -> {
-          ParameterSpec.Builder builder = parameterSpec.toBuilder();
-          builder.annotations.clear();
-          return builder.build();
-        })
-        .collect(Collectors.toList()));
+    methodBuilder.addParameters(ParameterSpec.parametersOf(method));
     methodBuilder.varargs(method.isVarArgs());
 
     for (TypeMirror thrownType : method.getThrownTypes()) {
