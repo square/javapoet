@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -87,17 +86,12 @@ public final class ParameterSpec {
   public static ParameterSpec get(VariableElement element) {
     checkArgument(element.getKind().equals(ElementKind.PARAMETER), "element is not a parameter");
 
-    // Copy over any annotations from element.
-    List<AnnotationSpec> annotations = element.getAnnotationMirrors()
-        .stream()
-        .map((mirror) -> AnnotationSpec.get(mirror))
-        .collect(Collectors.toList());
-
     TypeName type = TypeName.get(element.asType());
     String name = element.getSimpleName().toString();
+    // Copying parameter annotations can be incorrect so we're deliberately not including them.
+    // See https://github.com/square/javapoet/issues/482.
     return ParameterSpec.builder(type, name)
         .addModifiers(element.getModifiers())
-        .addAnnotations(annotations)
         .build();
   }
 
