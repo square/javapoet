@@ -15,6 +15,7 @@
  */
 package com.squareup.javapoet;
 
+import com.google.testing.compile.Compilation;
 import com.google.testing.compile.CompilationRule;
 import java.io.Closeable;
 import java.io.IOException;
@@ -30,14 +31,20 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import javax.tools.JavaFileObject;
+
+import com.google.testing.compile.CompilationSubject;
+import com.google.testing.compile.JavaFileObjects;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.testing.compile.Compiler.javac;
 import static com.squareup.javapoet.MethodSpec.CONSTRUCTOR;
 import static com.squareup.javapoet.TestUtil.findFirst;
 import static javax.lang.model.util.ElementFilter.methodsIn;
@@ -245,6 +252,26 @@ public final class MethodSpecTest {
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessageThat().isEqualTo("cannot override method with modifiers: [static]");
     }
+  }
+
+  abstract static class AbstractClassWithPrivateAnnotation {
+
+    private @interface PrivateAnnotation{ }
+
+    abstract void foo(@PrivateAnnotation final String bar);
+  }
+
+  @Test public void overrideNotCopyParameterAnnotations() {
+    TypeElement abstractTypeElement = getElement(AbstractClassWithPrivateAnnotation.class);
+    ExecutableElement fooElement = ElementFilter.methodsIn(abstractTypeElement.getEnclosedElements()).get(0);
+    ClassName implClassName = ClassName.get("com.squareup.javapoet", "Impl");
+    TypeSpec type = TypeSpec.classBuilder(implClassName)
+            .superclass(abstractTypeElement.asType())
+            .addMethod(MethodSpec.overriding(fooElement).build())
+            .build();
+    JavaFileObject jfo = JavaFile.builder(implClassName.packageName, type).build().toJavaFileObject();
+    Compilation compilation = javac().compile(jfo);
+    CompilationSubject.assertThat(compilation).succeeded();
   }
 
   @Test public void equalsAndHashCode() {
