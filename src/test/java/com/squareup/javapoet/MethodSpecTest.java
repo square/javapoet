@@ -37,7 +37,6 @@ import javax.lang.model.util.Types;
 import javax.tools.JavaFileObject;
 
 import com.google.testing.compile.CompilationSubject;
-import com.google.testing.compile.JavaFileObjects;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -261,7 +260,7 @@ public final class MethodSpecTest {
     abstract void foo(@PrivateAnnotation final String bar);
   }
 
-  @Test public void overrideNotCopyParameterAnnotations() {
+  @Test public void overrideDoesNotCopyParameterAnnotations() {
     TypeElement abstractTypeElement = getElement(AbstractClassWithPrivateAnnotation.class);
     ExecutableElement fooElement = ElementFilter.methodsIn(abstractTypeElement.getEnclosedElements()).get(0);
     ClassName implClassName = ClassName.get("com.squareup.javapoet", "Impl");
