@@ -36,15 +36,14 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.JavaFileObject;
 
-import com.google.testing.compile.CompilationSubject;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.testing.compile.CompilationSubject.assertThat;
 import static com.google.testing.compile.Compiler.javac;
-import static com.squareup.javapoet.MethodSpec.CONSTRUCTOR;
 import static com.squareup.javapoet.TestUtil.findFirst;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.junit.Assert.fail;
@@ -270,7 +269,7 @@ public final class MethodSpecTest {
             .build();
     JavaFileObject jfo = JavaFile.builder(implClassName.packageName, type).build().toJavaFileObject();
     Compilation compilation = javac().compile(jfo);
-    CompilationSubject.assertThat(compilation).succeeded();
+    assertThat(compilation).succeeded();
   }
 
   @Test public void equalsAndHashCode() {
