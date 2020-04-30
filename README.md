@@ -157,7 +157,7 @@ void main() {
     System.out.println("Ok, time still moving forward");
   }
 }
-``` 
+```
 
 Catching exceptions using `try/catch` is also a use case for `nextControlFlow()`:
 
@@ -487,6 +487,147 @@ map.put("food", "tacos");
 map.put("count", 3);
 CodeBlock.builder().addNamed("I ate $count:L $food:L", map)
 ```
+
+#### Place Holder
+
+##### `$$` emits a dollar sign
+
+Use $$ to emit a dollar sign. It can add $ into the format string instead of being recognized as other Arguments.
+
+```JAVA
+CodeBlock.builder().add("Print dollar sign $$\nThe price of $L is $L$$","burger",10);
+```
+
+Result:
+
+```
+Print dollar sign $
+The price of burger is 10$
+```
+
+
+
+##### `$>` `$<` increases/decreases the indentation level.
+
+```java
+CodeBlock codeBlock =CodeBlock.builder().add("CodeBlock codeBlock =CodeBlock.builder()")
+                .add("$>$>")
+                .add("\n.add($S, $S)", '\'', "&#39;")
+                .add("\n.add($S, $S)", '>', "&gt;")
+                .add("\n.build()")
+                .add("$<$<")
+                .build();
+```
+
+```java
+CodeBlock codeBlock =CodeBlock.builder()
+    .add("'", "&#39;")
+    .add(">", "&gt;")
+    .build()
+```
+
+##### `$[` `$]` begin/end a statement. 
+
+`$[` and `$]` are used to start or end a statement. What should be mentioned is that every line after the first line will be double-indented if there is multiple statements.
+
+```java
+CodeBlock codeBlock =CodeBlock.builder().add("class Student")
+                .add("{$[\n")
+                .add("String name;\n")
+                .add("int score;\n")
+                .add("public Student(){}")
+                .add("$]\n}")
+                .build();
+```
+
+```java
+class Student{
+    String name;
+    int score;
+    public Student(){}
+}
+```
+
+
+
+#### $Z and $W
+
+##### `$Z` emits a zero-space or newline
+
+`$Z` will emit a newline character if the line will exceed it's limit. If not, `$Z` will emit a zero-width space, which means it will do nothing. Thus, you can use it in method call, such as after an opening parenthesis , or before a dot operator and other similar conditions like field access. 
+
+```java
+MethodSpec method = MethodSpec.methodBuilder("call")
+                .addCode("$[aMethodWithLongName($Z")
+                .addCode("it, has, been, far, too, long, of, a, wait, and, i, would, like, to, eat, ")
+                .addCode("this, is, a, run, on, sentence")
+                .addCode(");$]\n")
+                .build();
+```
+
+```java
+void call() {
+    aMethodWithLongName(
+        it, has, been, far, too, long, of, a, wait, and, i, would, like, to, eat, this, is, a, run, on, sentence);
+  }
+```
+
+In comparison:
+
+```java
+MethodSpec method2 = MethodSpec.methodBuilder("call")
+                .addCode("$[aMethodWithLongName($Z")
+                .addCode("it, is, not, so, long, ")
+                .addCode("this, is, a, run, on, sentence")
+                .addCode(");$]\n")
+                .build();
+```
+
+```java
+void call() {
+    aMethodWithLongName(it, is, not, so, long, this, is, a, run, on, sentence);
+  }
+```
+
+Example of  usage before dot operator:
+
+```java
+MethodSpec method3 = MethodSpec.methodBuilder("call")
+                .addCode("$[instanceA$Z.methodA(")
+                .addCode("The, first, line, has, been, far, too, long, of, a, wait, and, i, would, like, to, eat,")
+                .addCode(");$]\n")
+                .build();
+```
+
+```java
+void call() {
+    instanceA
+        .methodA(The, first, line, has, been, far, too, long, of, a, wait, and, i, would, like, to, eat,);
+  }
+```
+
+
+
+##### `$W`  emits a space or newline
+
+`$W` will emit a newline character if the line will exceed it's limit. If not, `$W` will emit a space. Thus, it can be used where needs a space to keep code readable. You can use it after a comma in a method call, or a semicolon in a for loop, or before/after an operator.
+
+```java
+MethodSpec method = MethodSpec.methodBuilder("methodCall")
+                .addCode("$[aMethodWithParameters(int a,$Wint b,$Wint c,$Wint d);$W")
+                .addCode("it, has, been, far, too, long, of, a, wait, and, i, would, like, to, eat")
+                .addCode(";$]\n")
+                .build();
+```
+
+```java
+void methodCall() {
+    aMethodWithParameters(int a, int b, int c, int d);
+        it, has, been, far, too, long, of, a, wait, and, i, would, like, to, eat;
+  }
+```
+
+
 
 ### Methods
 
@@ -908,13 +1049,13 @@ License
 -------
 
     Copyright 2015 Square, Inc.
-
+    
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
-
+    
        http://www.apache.org/licenses/LICENSE-2.0
-
+    
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -934,10 +1075,10 @@ top-to-bottom in a single pass, a file can be assembled as a tree of declaration
 JavaWriter continues to be available in [GitHub][javawriter] and [Maven Central][javawriter_maven].
 
 
- [dl]: https://search.maven.org/remote_content?g=com.squareup&a=javapoet&v=LATEST
- [snap]: https://oss.sonatype.org/content/repositories/snapshots/com/squareup/javapoet/
- [javadoc]: https://square.github.io/javapoet/1.x/javapoet/
- [javawriter]: https://github.com/square/javapoet/tree/javawriter_2
- [javawriter_maven]: https://search.maven.org/#artifactdetails%7Ccom.squareup%7Cjavawriter%7C2.5.1%7Cjar
- [formatter]: https://developer.android.com/reference/java/util/Formatter.html
- [modifier]: https://docs.oracle.com/javase/8/docs/api/javax/lang/model/element/Modifier.html
+[dl]: https://search.maven.org/remote_content?g=com.squareup&a=javapoet&v=LATEST
+[snap]: https://oss.sonatype.org/content/repositories/snapshots/com/squareup/javapoet/
+[javadoc]: https://square.github.io/javapoet/1.x/javapoet/
+[javawriter]: https://github.com/square/javapoet/tree/javawriter_2
+[javawriter_maven]: https://search.maven.org/#artifactdetails%7Ccom.squareup%7Cjavawriter%7C2.5.1%7Cjar
+[formatter]: https://developer.android.com/reference/java/util/Formatter.html
+[modifier]: https://docs.oracle.com/javase/8/docs/api/javax/lang/model/element/Modifier.html
