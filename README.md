@@ -510,20 +510,19 @@ The price of burger is 10$
 ##### `$>` `$<` increases/decreases the indentation level.
 
 ```java
-CodeBlock codeBlock =CodeBlock.builder().add("CodeBlock codeBlock =CodeBlock.builder()")
-                .add("$>$>")
-                .add("\n.add($S, $S)", '\'', "&#39;")
-                .add("\n.add($S, $S)", '>', "&gt;")
-                .add("\n.build()")
-                .add("$<$<")
+CodeBlock codeBlock =CodeBlock.builder().add("class Student")
+                .add("{$>$>\n")
+                .add("int studentId;\n")
+                .add("String name;\n")
+                .add("$<$<}")
                 .build();
 ```
 
 ```java
-CodeBlock codeBlock =CodeBlock.builder()
-    .add("'", "&#39;")
-    .add(">", "&gt;")
-    .build()
+class Student{
+    int studentId;
+    String name;
+}
 ```
 
 ##### `$[` `$]` begin/end a statement. 
@@ -531,20 +530,20 @@ CodeBlock codeBlock =CodeBlock.builder()
 `$[` and `$]` are used to start or end a statement. What should be mentioned is that every line after the first line will be double-indented if there is multiple statements.
 
 ```java
-CodeBlock codeBlock =CodeBlock.builder().add("class Student")
+CodeBlock codeBlock =CodeBlock.builder().add("void method")
                 .add("{$[\n")
-                .add("String name;\n")
-                .add("int score;\n")
-                .add("public Student(){}")
-                .add("$]\n}")
+                .add("int a = 1;\n")
+                .add("int b = 2;\n")
+                .add("int c = a+b;\n")
+                .add("$]}")
                 .build();
 ```
 
 ```java
-class Student{
-    String name;
-    int score;
-    public Student(){}
+void method{
+    int a = 1;
+    int b = 2;
+    int c = a+b;
 }
 ```
 
@@ -554,7 +553,7 @@ class Student{
 
 ##### `$Z` emits a zero-space or newline
 
-`$Z` will emit a newline character if the line will exceed it's limit. If not, `$Z` will emit a zero-width space, which means it will do nothing. Thus, you can use it in method call, such as after an opening parenthesis , or before a dot operator and other similar conditions like field access. 
+`$Z` will emit a newline character if the line will exceed it's limit. If not, `$Z` won't do anything. Thus, you can use it in method call, such as after an opening parenthesis , or before a dot operator and other similar conditions like field access. 
 
 ```java
 MethodSpec method = MethodSpec.methodBuilder("call")
