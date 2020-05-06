@@ -15,6 +15,11 @@
  */
 package com.squareup.javapoet;
 
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.VariableElement;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -22,13 +27,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.VariableElement;
 
-import static com.squareup.javapoet.Util.*;
+import static com.squareup.javapoet.Util.checkArgument;
+import static com.squareup.javapoet.Util.checkNotNull;
 
 /** A generated parameter declaration. */
 public final class ParameterSpec {
@@ -44,7 +45,7 @@ public final class ParameterSpec {
     this.annotations = Util.immutableList(builder.annotations);
     this.modifiers = Util.immutableSet(builder.modifiers);
     this.isLambda = builder.isLambda;
-    if(!isLambda)
+    if (!isLambda)
       this.type = checkNotNull(builder.type, "type == null");
     else
       this.type = null;
@@ -57,17 +58,17 @@ public final class ParameterSpec {
   }
 
   void emit(CodeWriter codeWriter, boolean varargs) throws IOException {
-    if(type != null){
+    if (type != null) {
       codeWriter.emitAnnotations(annotations, true);
       codeWriter.emitModifiers(modifiers);
     }
     if (varargs) {
       TypeName.asArray(type).emit(codeWriter, true);
     } else {
-      if(type != null)
+      if (type != null)
         type.emit(codeWriter);
     }
-    if(type != null)
+    if (type != null)
      codeWriter.emit(" $L", name);
     else
       codeWriter.emit("$L", name);
@@ -119,10 +120,9 @@ public final class ParameterSpec {
     }
     return result;
   }
-  //using for Lamada expression
-  public static Builder builder(TypeName type, String name, boolean isLambda,Modifier... modifiers) {
+  public static Builder builder(TypeName type, String name, boolean lambda, Modifier... modifiers) {
     checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
-    return new Builder(type, name, isLambda);
+    return new Builder(type, name, lambda);
   }
   public static Builder builder(TypeName type, String name, Modifier... modifiers) {
     checkNotNull(type, "type == null");
@@ -155,7 +155,7 @@ public final class ParameterSpec {
     public final List<AnnotationSpec> annotations = new ArrayList<>();
     public final List<Modifier> modifiers = new ArrayList<>();
 
-    private Builder(TypeName type, String name, boolean isLambda){
+    private Builder(TypeName type, String name, boolean isLambda) {
       this.type = type;
       this.name = name;
       this.isLambda = isLambda;

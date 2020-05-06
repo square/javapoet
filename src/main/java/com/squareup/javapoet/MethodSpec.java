@@ -85,7 +85,7 @@ public final class MethodSpec {
 
   void emit(CodeWriter codeWriter, String enclosingName, Set<Modifier> implicitModifiers)
       throws IOException {
-    if(!isLambda) {
+    if (!isLambda) {
       codeWriter.emitJavadoc(javadocWithParameters());
       codeWriter.emitAnnotations(annotations, false);
       codeWriter.emitModifiers(modifiers, implicitModifiers);
@@ -99,7 +99,7 @@ public final class MethodSpec {
     if (isConstructor()) {
       codeWriter.emit("$L($Z", enclosingName);
     } else {
-      if(isLambda)
+      if (isLambda)
         codeWriter.emit("(");
       else
         codeWriter.emit("$T $L($Z", returnType, name);
@@ -114,7 +114,7 @@ public final class MethodSpec {
     }
 
     codeWriter.emit(")");
-    if(isLambda)
+    if (isLambda)
       codeWriter.emit(" ->");
 
     if (defaultValue != null && !defaultValue.isEmpty()) {
@@ -144,7 +144,7 @@ public final class MethodSpec {
       codeWriter.indent();
       codeWriter.emit(code, true);
       codeWriter.unindent();
-      if(isLambda)
+      if (isLambda)
         codeWriter.emit("}");
       else
         codeWriter.emit("}\n");
@@ -337,7 +337,7 @@ public final class MethodSpec {
       checkNotNull(name, "name == null");
       checkArgument(name.equals(CONSTRUCTOR) || name.equals("") || SourceVersion.isName(name),
           "not a valid name: %s", name);
-      if(name.equals("")) this.isLambda = true;
+      if (name.equals("")) this.isLambda = true;
       this.name = name;
       this.returnType = name.equals(CONSTRUCTOR) ? null : TypeName.VOID;
       return this;
@@ -413,7 +413,7 @@ public final class MethodSpec {
     }
 
     public Builder addParameters(Iterable<ParameterSpec> parameterSpecs) {
-      if(!isLambda)
+      if (!isLambda)
         checkArgument(parameterSpecs != null, "parameterSpecs == null");
       for (ParameterSpec parameterSpec : parameterSpecs) {
         this.parameters.add(parameterSpec);
@@ -427,7 +427,7 @@ public final class MethodSpec {
     }
 
     public Builder addParameter(TypeName type, String name, Modifier... modifiers) {
-      if(isLambda)
+      if (isLambda)
         return addParameter(ParameterSpec.builder(type, name, isLambda).build());
       return addParameter(ParameterSpec.builder(type, name, modifiers).build());
     }
@@ -476,7 +476,6 @@ public final class MethodSpec {
       code.add(codeBlock);
       return this;
     }
-
     public Builder addComment(String format, Object... args) {
       //code.add("// " + format + "\n", args);
       String[] lines = format.split("\\R");

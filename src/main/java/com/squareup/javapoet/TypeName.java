@@ -38,6 +38,7 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.SimpleTypeVisitor8;
 
+
 /**
  * Any type in Java's type system, plus {@code void}. This class is an identifier for primitive
  * types like {@code int} and raw reference types like {@code String} and {@code List}. It also
@@ -350,7 +351,7 @@ public class TypeName {
     } else if (type instanceof GenericArrayType) {
       return ArrayTypeName.get((GenericArrayType) type, map);
 
-    } else if(type == null){
+    } else if (type == null) {
       return null;
     } else {
       throw new IllegalArgumentException("unexpected type: " + type);
