@@ -42,7 +42,7 @@ import static java.lang.String.join;
  */
 final class CodeWriter {
   /** Sentinel value that indicates that no user-provided package has been set. */
-  private static final String NO_PACKAGE = new String();
+  private static final String NO_PACKAGE = "";
 
   private final String indent;
   private final LineWrapper out;

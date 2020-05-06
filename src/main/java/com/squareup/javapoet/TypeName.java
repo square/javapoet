@@ -350,6 +350,8 @@ public class TypeName {
     } else if (type instanceof GenericArrayType) {
       return ArrayTypeName.get((GenericArrayType) type, map);
 
+    } else if(type == null){
+      return null;
     } else {
       throw new IllegalArgumentException("unexpected type: " + type);
     }
