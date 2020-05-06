@@ -109,7 +109,6 @@ public final class ParameterSpec {
     String name = element.getSimpleName().toString();
     return ParameterSpec.builder(type, name)
         .addModifiers(element.getModifiers())
-        .addAnnotations(annotations)
         .build();
   }
 
@@ -178,6 +177,7 @@ public final class ParameterSpec {
     public Builder addAnnotations(Iterable<AnnotationSpec> annotationSpecs) {
       checkArgument(annotationSpecs != null, "annotationSpecs == null");
       for (AnnotationSpec annotationSpec : annotationSpecs) {
+        System.out.println(annotationSpec.type);
         this.annotations.add(annotationSpec);
       }
       return this;
