@@ -24,6 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -54,6 +55,7 @@ public final class MethodSpec {
   public final List<TypeName> exceptions;
   public final CodeBlock code;
   public final CodeBlock defaultValue;
+  public final boolean isLambda;
 
   private MethodSpec(Builder builder) {
     CodeBlock code = builder.code.build();
@@ -73,6 +75,7 @@ public final class MethodSpec {
     this.exceptions = Util.immutableList(builder.exceptions);
     this.defaultValue = builder.defaultValue;
     this.code = code;
+    this.isLambda = builder.isLambda;
   }
 
   private boolean lastParameterIsArray(List<ParameterSpec> parameters) {
@@ -82,9 +85,11 @@ public final class MethodSpec {
 
   void emit(CodeWriter codeWriter, String enclosingName, Set<Modifier> implicitModifiers)
       throws IOException {
-    codeWriter.emitJavadoc(javadocWithParameters());
-    codeWriter.emitAnnotations(annotations, false);
-    codeWriter.emitModifiers(modifiers, implicitModifiers);
+    if (!isLambda) {
+      codeWriter.emitJavadoc(javadocWithParameters());
+      codeWriter.emitAnnotations(annotations, false);
+      codeWriter.emitModifiers(modifiers, implicitModifiers);
+    }
 
     if (!typeVariables.isEmpty()) {
       codeWriter.emitTypeVariables(typeVariables);
@@ -94,7 +99,10 @@ public final class MethodSpec {
     if (isConstructor()) {
       codeWriter.emit("$L($Z", enclosingName);
     } else {
-      codeWriter.emit("$T $L($Z", returnType, name);
+      if (isLambda)
+        codeWriter.emit("(");
+      else
+        codeWriter.emit("$T $L($Z", returnType, name);
     }
 
     boolean firstParameter = true;
@@ -106,6 +114,8 @@ public final class MethodSpec {
     }
 
     codeWriter.emit(")");
+    if (isLambda)
+      codeWriter.emit(" ->");
 
     if (defaultValue != null && !defaultValue.isEmpty()) {
       codeWriter.emit(" default ");
@@ -134,8 +144,10 @@ public final class MethodSpec {
       codeWriter.indent();
       codeWriter.emit(code, true);
       codeWriter.unindent();
-
-      codeWriter.emit("}\n");
+      if (isLambda)
+        codeWriter.emit("}");
+      else
+        codeWriter.emit("}\n");
     }
     codeWriter.popTypeVariables(typeVariables);
   }
@@ -188,6 +200,7 @@ public final class MethodSpec {
     return new Builder(name);
   }
 
+
   public static Builder constructorBuilder() {
     return new Builder(CONSTRUCTOR);
   }
@@ -232,7 +245,16 @@ public final class MethodSpec {
     }
 
     methodBuilder.returns(TypeName.get(method.getReturnType()));
-    methodBuilder.addParameters(ParameterSpec.parametersOf(method));
+    // Copying parameter annotations from the overridden method can be incorrect so we're
+    // deliberately dropping them. See https://github.com/square/javapoet/issues/482.
+    methodBuilder.addParameters(ParameterSpec.parametersOf(method)
+        .stream()
+        .map(parameterSpec -> {
+          ParameterSpec.Builder builder = parameterSpec.toBuilder();
+          builder.annotations.clear();
+          return builder.build();
+        })
+        .collect(Collectors.toList()));
     methodBuilder.varargs(method.isVarArgs());
 
     for (TypeMirror thrownType : method.getThrownTypes()) {
@@ -300,6 +322,7 @@ public final class MethodSpec {
     private final CodeBlock.Builder code = CodeBlock.builder();
     private boolean varargs;
     private CodeBlock defaultValue;
+    private boolean isLambda;
 
     public final List<TypeVariableName> typeVariables = new ArrayList<>();
     public final List<AnnotationSpec> annotations = new ArrayList<>();
@@ -312,8 +335,9 @@ public final class MethodSpec {
 
     public Builder setName(String name) {
       checkNotNull(name, "name == null");
-      checkArgument(name.equals(CONSTRUCTOR) || SourceVersion.isName(name),
+      checkArgument(name.equals(CONSTRUCTOR) || name.equals("") || SourceVersion.isName(name),
           "not a valid name: %s", name);
+      if (name.equals("")) this.isLambda = true;
       this.name = name;
       this.returnType = name.equals(CONSTRUCTOR) ? null : TypeName.VOID;
       return this;
@@ -389,7 +413,8 @@ public final class MethodSpec {
     }
 
     public Builder addParameters(Iterable<ParameterSpec> parameterSpecs) {
-      checkArgument(parameterSpecs != null, "parameterSpecs == null");
+      if (!isLambda)
+        checkArgument(parameterSpecs != null, "parameterSpecs == null");
       for (ParameterSpec parameterSpec : parameterSpecs) {
         this.parameters.add(parameterSpec);
       }
@@ -402,6 +427,8 @@ public final class MethodSpec {
     }
 
     public Builder addParameter(TypeName type, String name, Modifier... modifiers) {
+      if (isLambda)
+        return addParameter(ParameterSpec.builder(type, name, isLambda).build());
       return addParameter(ParameterSpec.builder(type, name, modifiers).build());
     }
 
@@ -449,9 +476,14 @@ public final class MethodSpec {
       code.add(codeBlock);
       return this;
     }
-
     public Builder addComment(String format, Object... args) {
-      code.add("// " + format + "\n", args);
+      //code.add("// " + format + "\n", args);
+      String[] lines = format.split("\\R");
+      code.add("/*\n");
+      for (String line : lines) {
+        code.add("* " + line + "\n");
+      }
+      code.add("**/\n");
       return this;
     }
 

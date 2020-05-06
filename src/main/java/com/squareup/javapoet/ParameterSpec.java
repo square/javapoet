@@ -15,17 +15,18 @@
  */
 package com.squareup.javapoet;
 
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.VariableElement;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.VariableElement;
+import java.util.stream.Collectors;
 
 import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
@@ -37,13 +38,19 @@ public final class ParameterSpec {
   public final Set<Modifier> modifiers;
   public final TypeName type;
   public final CodeBlock javadoc;
+  public final boolean isLambda;
 
   private ParameterSpec(Builder builder) {
     this.name = checkNotNull(builder.name, "name == null");
     this.annotations = Util.immutableList(builder.annotations);
     this.modifiers = Util.immutableSet(builder.modifiers);
-    this.type = checkNotNull(builder.type, "type == null");
+    this.isLambda = builder.isLambda;
+    if (!isLambda)
+      this.type = checkNotNull(builder.type, "type == null");
+    else
+      this.type = null;
     this.javadoc = builder.javadoc.build();
+
   }
 
   public boolean hasModifier(Modifier modifier) {
@@ -51,14 +58,20 @@ public final class ParameterSpec {
   }
 
   void emit(CodeWriter codeWriter, boolean varargs) throws IOException {
-    codeWriter.emitAnnotations(annotations, true);
-    codeWriter.emitModifiers(modifiers);
+    if (type != null) {
+      codeWriter.emitAnnotations(annotations, true);
+      codeWriter.emitModifiers(modifiers);
+    }
     if (varargs) {
       TypeName.asArray(type).emit(codeWriter, true);
     } else {
-      type.emit(codeWriter);
+      if (type != null)
+        type.emit(codeWriter);
     }
-    codeWriter.emit(" $L", name);
+    if (type != null)
+     codeWriter.emit(" $L", name);
+    else
+      codeWriter.emit("$L", name);
   }
 
   @Override public boolean equals(Object o) {
@@ -86,10 +99,14 @@ public final class ParameterSpec {
   public static ParameterSpec get(VariableElement element) {
     checkArgument(element.getKind().equals(ElementKind.PARAMETER), "element is not a parameter");
 
+    // Copy over any annotations from element.
+    List<AnnotationSpec> annotations = element.getAnnotationMirrors()
+        .stream()
+        .map((mirror) -> AnnotationSpec.get(mirror))
+        .collect(Collectors.toList());
+
     TypeName type = TypeName.get(element.asType());
     String name = element.getSimpleName().toString();
-    // Copying parameter annotations can be incorrect so we're deliberately not including them.
-    // See https://github.com/square/javapoet/issues/482.
     return ParameterSpec.builder(type, name)
         .addModifiers(element.getModifiers())
         .build();
@@ -102,7 +119,10 @@ public final class ParameterSpec {
     }
     return result;
   }
-
+  public static Builder builder(TypeName type, String name, boolean lambda, Modifier... modifiers) {
+    checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
+    return new Builder(type, name, lambda);
+  }
   public static Builder builder(TypeName type, String name, Modifier... modifiers) {
     checkNotNull(type, "type == null");
     checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
@@ -129,10 +149,16 @@ public final class ParameterSpec {
     private final TypeName type;
     private final String name;
     private final CodeBlock.Builder javadoc = CodeBlock.builder();
+    private boolean isLambda = false;
 
     public final List<AnnotationSpec> annotations = new ArrayList<>();
     public final List<Modifier> modifiers = new ArrayList<>();
 
+    private Builder(TypeName type, String name, boolean isLambda) {
+      this.type = type;
+      this.name = name;
+      this.isLambda = isLambda;
+    }
     private Builder(TypeName type, String name) {
       this.type = type;
       this.name = name;
@@ -151,6 +177,7 @@ public final class ParameterSpec {
     public Builder addAnnotations(Iterable<AnnotationSpec> annotationSpecs) {
       checkArgument(annotationSpecs != null, "annotationSpecs == null");
       for (AnnotationSpec annotationSpec : annotationSpecs) {
+        System.out.println(annotationSpec.type);
         this.annotations.add(annotationSpec);
       }
       return this;
