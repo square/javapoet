@@ -2551,4 +2551,80 @@ public final class TypeSpecTest {
         + "class Taco {\n"
         + "}\n");
   }
+  //  When there is no sort method
+//  2020.05.08
+  @Test public void MethodNotsorted() throws IOException {
+    MethodSpec onCreate = MethodSpec.methodBuilder("onCreate")
+            .addStatement("super.onCreate(savedInstanceState)")
+            .build();
+
+    MethodSpec onDelete = MethodSpec.methodBuilder("onDelete")
+            .addStatement("super.onDelete(savedInstanceState)")
+            .build();
+    TypeSpec spec = TypeSpec.classBuilder("sortMethod")
+            .addMethod(onDelete)
+            .addMethod(onCreate)
+            .build();
+    assertThat(toString(spec)).isEqualTo(""+
+            "package com.squareup.tacos;\n"+
+            "\n" +
+            "class sortMethod {\n" +
+            "  void onDelete() {\n" +
+            "    super.onDelete(savedInstanceState);\n" +
+            "  }\n" +
+            "\n" +
+            "  void onCreate() {\n" +
+            "    super.onCreate(savedInstanceState);\n" +
+            "  }\n" +
+
+            "}\n"
+    );
+  }
+  //  To test sort Methods
+//  2020.05.08
+  @Test public void MethodSorted() throws IOException {
+    MethodSpec onCreate = MethodSpec.methodBuilder("onCreate")
+            .addStatement("super.onCreate(savedInstanceState)")
+            .build();
+
+    MethodSpec onDelete = MethodSpec.methodBuilder("onDelete")
+            .addStatement("super.onDelete(savedInstanceState)")
+            .build();
+    MethodSpec toString = MethodSpec.methodBuilder("toString")
+            .build();
+    MethodSpec methodA = MethodSpec.methodBuilder("methodA")
+            .build();
+    MethodSpec methodB = MethodSpec.methodBuilder("methodB")
+            .build();
+    TypeSpec spec = TypeSpec.classBuilder("sortMethod")
+            .addMethod(onDelete)
+            .addMethod(methodB)
+            .addMethod(toString)
+            .addMethod(methodA)
+            .addMethod(onCreate)
+            .sortMethod()
+            .build();
+    assertThat(toString(spec)).isEqualTo(""+
+            "package com.squareup.tacos;\n"+
+            "\n" +
+            "class sortMethod {\n" +
+            "  void methodA() {\n" +
+            "  }\n" +
+            "\n" +
+            "  void methodB() {\n" +
+            "  }\n" +
+            "\n"+
+            "  void onCreate() {\n" +
+            "    super.onCreate(savedInstanceState);\n" +
+            "  }\n" +
+            "\n" +
+            "  void onDelete() {\n" +
+            "    super.onDelete(savedInstanceState);\n" +
+            "  }\n" +
+            "\n" +
+            "  void toString() {\n" +
+            "  }\n"+
+            "}\n"
+    );
+  }
 }

@@ -18,18 +18,7 @@ package com.squareup.javapoet;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
@@ -832,6 +821,21 @@ public final class TypeSpec {
           "anonymous type has too many supertypes");
 
       return new TypeSpec(this);
+    }
+    /**
+     * Sort Methods by their names in Dictionary order
+     * @return builder itself
+     * 2020.05.08
+     */
+    public Builder sortMethod() {
+
+      Collections.sort(this.methodSpecs, new Comparator<MethodSpec>() {
+        @Override
+        public int compare(MethodSpec m1, MethodSpec m2) {
+          return m1.name.compareTo(m2.name);
+        }
+      });
+      return this;
     }
   }
 }
