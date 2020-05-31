@@ -15,7 +15,6 @@
  */
 package com.squareup.javapoet;
 
-import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
@@ -68,7 +67,6 @@ public class UtilTest {
 
   void stringLiteral(String string) {
     stringLiteral(string, string, " ");
-
   }
 
   void stringLiteral(String expected, String value, String indent) {
