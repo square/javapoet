@@ -485,4 +485,74 @@ public final class MethodSpecTest {
     return CodeBlock.builder().addNamed(format, args).build();
   }
 
+  /**
+   * Add comments without using $S and without "\n".
+   */
+  @Test public void addCommentsWithout$S() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+            .returns(void.class)
+            .addStatement("System.out.println($S)", "No string literal format test.")
+            .addComment("There is no string literal", "Not has a format", "No ouput later")
+            .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+            + "void method() {\n" +
+            "  System.out.println(\"No string literal format test.\");\n" +
+            "  // There is no string literal\n" +
+            "}\n");
+  }
+
+  /**
+   * Add comments using $S and without "\n".
+   */
+  @Test public void addCommentsWithFormat$S() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+            .returns(void.class)
+            .addStatement("System.out.println($S)", "String literal format test.")
+            .addComment("Using string literal format: $S", "here is the first", "the second shoud also display")
+            .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+            + "void method() {\n" +
+            "  System.out.println(\"String literal format test.\");\n" +
+            "  // Using string literal format: \"here is the first\"\n" +
+            "}\n");
+  }
+
+  /**
+   * Add comments with "\n" only in param format.
+   */
+  @Test public void addCommentsWithNewLineInFormat() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+            .returns(void.class)
+            .addStatement("System.out.println($S)", "Newline in param format.")
+            .addComment("Using new line\nin format: $S", "here is the first", "the second not display")
+            .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+            + "void method() {\n" +
+            "  System.out.println(\"Newline in param format.\");\n" +
+            "  // Using new line\n" +
+            "  // in format: \"here is the first\"\n" +
+            "}\n");
+  }
+
+  /**
+   * Add comments with "\n" in both param format and param args.
+   */
+  @Test public void addCommentsWithNewLineBoth() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+            .returns(void.class)
+            .addStatement("System.out.println($S)", "Newline in both params.")
+            .addComment("Using new line in format: $S\nand in format: $S", "here is the first\nnew line in args", "the second not display")
+            .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+            + "void method() {\n" +
+            "  System.out.println(\"Newline in both params.\");\n" +
+            "  // Using new line in format: \"here is the first\"\n" +
+            "  // \"new line in args\" \n" +
+            "  // and in format: \"the second not display\"\n" +
+            "}\n");
+  }
 }
