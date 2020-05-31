@@ -453,7 +453,7 @@ public final class MethodSpec {
     public Builder addComment(String format, Object... args) {
       CodeBlock.Builder tempCode = CodeBlock.builder();
       tempCode.add(format, args);
-      String newFormat = tempCode.build(1).toString();
+      String newFormat = tempCode.build().toString();
       String[] lines = newFormat.split("\\R");
       if (lines.length == 1) {
         code.add("// " + lines[0] + "\n");
