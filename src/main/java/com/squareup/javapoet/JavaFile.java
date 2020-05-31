@@ -25,13 +25,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
 import javax.tools.JavaFileObject;
@@ -59,6 +53,7 @@ public final class JavaFile {
   public final CodeBlock fileComment;
   public final String packageName;
   public final TypeSpec typeSpec;
+  public final ArrayList<AnnotationSpec> packageAnnotations;
   public final boolean skipJavaLangImports;
   private final Set<String> staticImports;
   private final Set<String> alwaysQualify;
@@ -68,6 +63,7 @@ public final class JavaFile {
     this.fileComment = builder.fileComment.build();
     this.packageName = builder.packageName;
     this.typeSpec = builder.typeSpec;
+    this.packageAnnotations = (ArrayList<AnnotationSpec>) builder.annotations;
     this.skipJavaLangImports = builder.skipJavaLangImports;
     this.staticImports = Util.immutableSet(builder.staticImports);
     this.indent = builder.indent;
@@ -191,6 +187,10 @@ public final class JavaFile {
       codeWriter.emit("\n");
     }
 
+    if (!packageAnnotations.isEmpty()){
+      codeWriter.emitAnnotations(packageAnnotations, false);
+    }
+
     if (!staticImports.isEmpty()) {
       for (String signature : staticImports) {
         codeWriter.emit("import static $L;\n", signature);
@@ -277,6 +277,7 @@ public final class JavaFile {
     private final String packageName;
     private final TypeSpec typeSpec;
     private final CodeBlock.Builder fileComment = CodeBlock.builder();
+    public final List<AnnotationSpec> annotations = new ArrayList<AnnotationSpec>();
     private boolean skipJavaLangImports;
     private String indent = "  ";
 
@@ -285,6 +286,17 @@ public final class JavaFile {
     private Builder(String packageName, TypeSpec typeSpec) {
       this.packageName = packageName;
       this.typeSpec = typeSpec;
+    }
+
+    /**
+     * add package annotation by using AnnotationSpec object
+     * @param annotationSpec annotation object
+     * @return Builder
+     */
+    public Builder addPackageAnno(AnnotationSpec annotationSpec) {
+      checkArgument(annotationSpec != null, "annotationSpec == null");
+      this.annotations.add(annotationSpec);
+      return this;
     }
 
     public Builder addFileComment(String format, Object... args) {
