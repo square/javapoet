@@ -187,10 +187,6 @@ public final class JavaFile {
       codeWriter.emit("\n");
     }
 
-    if (!packageAnnotations.isEmpty()){
-      codeWriter.emitAnnotations(packageAnnotations, false);
-    }
-
     if (!staticImports.isEmpty()) {
       for (String signature : staticImports) {
         codeWriter.emit("import static $L;\n", signature);
