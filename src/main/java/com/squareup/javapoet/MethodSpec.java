@@ -17,7 +17,13 @@ package com.squareup.javapoet;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -444,10 +450,7 @@ public final class MethodSpec {
       return this;
     }
 
-    /**
-     * @param format the input format, usually use $S for string literal.
-     * @param args the Object array of input comments.
-     */
+
     public Builder addComment(String format, Object... args) {
       int argIndex = 0;
       String[] formatArray = format.split("\n");
