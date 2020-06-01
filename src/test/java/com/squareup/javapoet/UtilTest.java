@@ -74,15 +74,39 @@ public class UtilTest {
     assertEquals("\"" + expected + "\"", Util.stringLiteralWithDoubleQuotes(value, indent));
   }
 
-  @Test public void newLineAsString() {
+  @Test public void newLineAsStringStatement() {
     MethodSpec methodSpec = MethodSpec.methodBuilder("method")
             .returns(void.class)
             .addStatement("System.out.println($S)", "Newline as string\\n.")
             .build();
 
     assertThat(methodSpec.toString()).isEqualTo(""
-            + "void method() {\n" +
-            "  System.out.println(\"Newline as string\\n.\");\n" +
-            "}\n");
+            + "void method() {\n"
+            + "  System.out.println(\"Newline as string\\n.\");\n"
+            + "}\n");
+  }
+
+  @Test public void newLineAsStringCommentWithout$S() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+            .returns(void.class)
+            .addComment("The result of\\nissue \\\\n#604!")
+            .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+            + "void method() {\n"
+            + "  // The result of\\nissue \\\\n#604!\n"
+            + "}\n");
+  }
+
+  @Test public void newLineAsStringCommentWith$S() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+            .returns(void.class)
+            .addComment("The result is: $S", "fixed\\nissue \\\\n#604!")
+            .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+            + "void method() {\n"
+            + "  // The result is: \"fixed\\nissue \\\\n#604!\"\n"
+            + "}\n");
   }
 }
