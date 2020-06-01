@@ -79,11 +79,16 @@ public class UtilTest {
     MethodSpec methodSpec = MethodSpec.methodBuilder("method")
             .returns(void.class)
             .addStatement("System.out.println($S)", "Newline as string\\n.")
+            .addComment("Using new line as \nand as string \\\\n", "here is the first\nnew line in args")
             .build();
 
     assertThat(methodSpec.toString()).isEqualTo(""
             + "void method() {\n" +
             "  System.out.println(\"Newline as string\\n.\");\n" +
+            "  // Using new line as \n" +
+            "  // and as string \\\\n\n" +
             "}\n");
   }
+
+
 }
