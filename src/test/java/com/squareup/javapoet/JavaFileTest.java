@@ -16,7 +16,16 @@
 package com.squareup.javapoet;
 
 import java.io.File;
+
 import com.google.testing.compile.CompilationRule;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -1011,4 +1020,47 @@ public final class JavaFileTest {
         + "  }\n"
         + "}\n");
   }
+
+  static class packageLevelAnnotation {
+
+    @Retention(RetentionPolicy.CLASS)
+    @Target(ElementType.PACKAGE)
+    public @interface testAnnotation1 {
+    }
+
+    @Retention(RetentionPolicy.CLASS)
+    @Target(ElementType.PACKAGE)
+    public @interface testAnnotation2 {
+    }
+  }
+
+  @Test
+  public void writePackageInfo() throws IOException {
+    JavaFile javaFile = JavaFile.builder("com.squareup.javapoet",
+            TypeSpec.classBuilder("writePackage")
+                    .addMethod(MethodSpec.methodBuilder("optionalString")
+                            .returns(ClassName.get("com.foo", "Entry"))
+                            .addStatement("return null")
+                            .build())
+                    .addSuperinterface(Map.class)
+                    .build())
+            .addPackageAnnotation(packageLevelAnnotation.testAnnotation1.class)
+            .addPackageAnnotation(packageLevelAnnotation.testAnnotation2.class)
+            .addFileComment("The file comment.")
+            .build();
+    Path outputDirectory = Paths.get("D:\\WorkPlace\\WorkGithub\\javapoet\\src\\main\\java\\");
+    javaFile.writeToPackageInfo(javaFile, outputDirectory, false);
+    StringBuilder stringBuilder = new StringBuilder();
+    for (String content : javaFile.packageInfo) {
+      stringBuilder.append(content);
+    }
+    assertThat(stringBuilder.toString()).isEqualTo("//The file comment.\n"
+            + "@testAnnotation1\n"
+            + "@testAnnotation2\n"
+            + "package com.squareup.javapoet;\n"
+            + "import com.squareup.javapoet.JavaFileTest.packageLevelAnnotation.testAnnotation1;\n"
+            + "import com.squareup.javapoet.JavaFileTest.packageLevelAnnotation.testAnnotation2;\n"
+            );
+  }
+
 }
