@@ -15,8 +15,14 @@
  */
 package com.squareup.javapoet;
 
-
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.FileOutputStream;
+import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -208,7 +214,7 @@ public final class JavaFile {
     Path packageInfoPath = outputDirectory.resolve("package-info.java");
     List<String> contents = readFromPackageInfo(outputDirectory);
     OutputStreamWriter out = null;
-    if (javaFile.write){
+    if (javaFile.write) {
       FileOutputStream fos = new FileOutputStream(packageInfoPath.toString());
       out = new OutputStreamWriter(fos, UTF_8);
     }
@@ -260,7 +266,7 @@ public final class JavaFile {
     try {
       File file = new File(packageInfoPath.toString());
       if (file.exists()) {
-        Scanner scanner = new Scanner(file);
+        Scanner scanner = new Scanner(file, "utf-8");
         while (scanner.hasNextLine()) {
           contents.add(scanner.nextLine());
         }
