@@ -61,7 +61,7 @@ public final class JavaFile {
       return this;
     }
   };
-
+  public boolean write;
   public final CodeBlock fileComment;
   public final String packageName;
   public final TypeSpec typeSpec;
@@ -80,6 +80,7 @@ public final class JavaFile {
     this.staticImports = Util.immutableSet(builder.staticImports);
     this.indent = builder.indent;
     this.packageInfo = new ArrayList<>();
+    this.write = false;
     Set<String> alwaysQualifiedNames = new LinkedHashSet<>();
     fillAlwaysQualifiedNames(builder.typeSpec, alwaysQualifiedNames);
     this.alwaysQualify = Util.immutableSet(alwaysQualifiedNames);
@@ -149,7 +150,7 @@ public final class JavaFile {
     try (Writer writer = new OutputStreamWriter(Files.newOutputStream(outputPath), charset)) {
       writeTo(writer);
     }
-    writeToPackageInfo(this, outputDirectory, true);
+    writeToPackageInfo(this, outputDirectory);
     return outputPath;
   }
 
@@ -211,17 +212,19 @@ public final class JavaFile {
 
   /** Writes package-info.java to {@code outputDirectory}. */
   public void writeToPackageInfo(JavaFile javaFile,
-              Path outputDirectory, boolean write) throws IOException {
+              Path outputDirectory) throws IOException {
     Path packageInfoPath = outputDirectory.resolve("package-info.java");
     List<String> contents = readFromPackageInfo(outputDirectory);
     BufferedWriter out = null;
-    if (write)
+    if (javaFile.write)
       out = new BufferedWriter(new FileWriter(packageInfoPath.toString(), false));
 
     String[] fileComments = String.valueOf(javaFile.fileComment).split("\n");
     for (String subFileComment : fileComments) {
-      if (write)
+      if (javaFile.write) {
+        assert out != null;
         out.write("//" + subFileComment + "\n");
+      }
       packageInfo.add("//" + subFileComment + "\n");
     }
     int index = 0;
@@ -229,20 +232,26 @@ public final class JavaFile {
 
     for (AnnotationSpec annotation : javaFile.packageAnnotations) {
       String[] annotations = annotation.toString().split("\\.");
-      if (write)
+      if (javaFile.write) {
+        assert out != null;
         out.write("@" + annotations[annotations.length - 1] + "\n");
+      }
       packageInfo.add("@" + annotations[annotations.length - 1] + "\n");
     }
 
-    if (write)
+    if (javaFile.write) {
+      assert out != null;
       out.write("package " + javaFile.packageName + ";\n");
+    }
     packageInfo.add("package " + javaFile.packageName + ";\n");
     index = writePrevInfo("import", contents, out, index + 1, write);
 
     for (AnnotationSpec annotation : javaFile.packageAnnotations) {
       String[] withAnnotations = annotation.toString().split("@");
-      if (write)
+      if (javaFile.write) {
+        assert out != null;
         out.write("import " + withAnnotations[withAnnotations.length - 1] + ";\n");
+      }
       packageInfo.add("import " + withAnnotations[withAnnotations.length - 1] + ";\n");
     }
     writePrevInfo("@", contents, out, index, write);

@@ -1049,7 +1049,7 @@ public final class JavaFileTest {
             .addFileComment("The file comment.")
             .build();
     Path outputDirectory = Paths.get("D:\\WorkPlace\\WorkGithub\\javapoet\\src\\main\\java\\");
-    javaFile.writeToPackageInfo(javaFile, outputDirectory, false);
+    javaFile.writeToPackageInfo(javaFile, outputDirectory);
     StringBuilder stringBuilder = new StringBuilder();
     for (String content : javaFile.packageInfo) {
       stringBuilder.append(content);
