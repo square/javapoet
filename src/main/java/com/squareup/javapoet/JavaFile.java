@@ -16,15 +16,7 @@
 package com.squareup.javapoet;
 
 
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
-import java.io.FileWriter;
+import java.io.*;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -193,7 +185,7 @@ public final class JavaFile {
    * Returns the current {@code index} in contents.
    */
   public int writePrevInfo(String types, List<String> contents,
-             BufferedWriter out, int index, boolean write) throws IOException {
+                           OutputStreamWriter out, int index, boolean write) throws IOException {
     if (contents != null) {
       for (int i = index; i < contents.size(); i++) {
         if (!contents.get(i).startsWith(types)) {
@@ -212,12 +204,14 @@ public final class JavaFile {
 
   /** Writes package-info.java to {@code outputDirectory}. */
   public void writeToPackageInfo(JavaFile javaFile,
-              Path outputDirectory) throws IOException {
+                                 Path outputDirectory) throws IOException {
     Path packageInfoPath = outputDirectory.resolve("package-info.java");
     List<String> contents = readFromPackageInfo(outputDirectory);
-    BufferedWriter out = null;
-    if (javaFile.write)
-      out = new BufferedWriter(new FileWriter(packageInfoPath.toString(), false));
+    OutputStreamWriter out = null;
+    if (javaFile.write){
+      FileOutputStream fos = new FileOutputStream(packageInfoPath.toString());
+      out = new OutputStreamWriter(fos, UTF_8);
+    }
 
     String[] fileComments = String.valueOf(javaFile.fileComment).split("\n");
     for (String subFileComment : fileComments) {
