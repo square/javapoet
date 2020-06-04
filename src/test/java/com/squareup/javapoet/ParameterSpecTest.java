@@ -60,6 +60,25 @@ public class ParameterSpecTest {
     assertThat(a.toString()).isEqualTo(b.toString());
   }
 
+  @Test public void receiverParameterInstanceMethod() {
+    ParameterSpec.Builder builder = ParameterSpec.builder(int.class, "this");
+    assertThat(builder.build().name).isEqualTo("this");
+  }
+
+  @Test public void receiverParameterNestedClass() {
+    ParameterSpec.Builder builder = ParameterSpec.builder(int.class, "Foo.this");
+    assertThat(builder.build().name).isEqualTo("Foo.this");
+  }
+
+  @Test public void keywordName() {
+    try {
+      ParameterSpec.builder(int.class, "super");
+      fail();
+    } catch (Exception e) {
+      assertThat(e.getMessage()).isEqualTo("not a valid name: super");
+    }
+  }
+
   @Test public void nullAnnotationsAddition() {
     try {
       ParameterSpec.builder(int.class, "foo").addAnnotations(null);

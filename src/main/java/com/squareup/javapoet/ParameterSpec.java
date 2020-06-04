@@ -103,9 +103,18 @@ public final class ParameterSpec {
     return result;
   }
 
+  private static boolean isValidParameterName(String name) {
+    // Allow "this" for explicit receiver parameters
+    // See https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.4.1.
+    if (name.endsWith(".this")) {
+      return SourceVersion.isIdentifier(name.substring(0, name.length() - ".this".length()));
+    }
+    return name.equals("this") || SourceVersion.isName(name);
+  }
+
   public static Builder builder(TypeName type, String name, Modifier... modifiers) {
     checkNotNull(type, "type == null");
-    checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);
+    checkArgument(isValidParameterName(name), "not a valid name: %s", name);
     return new Builder(type, name)
         .addModifiers(modifiers);
   }
