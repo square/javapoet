@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+JavaPoet 1.13.0 *(2020-06-18)*
+-----------------------------
+
+ * New: Add support for explicit receiver parameters.
+ * Fix: Don't copy parameter annotations when creating a `ParameterSpec`.
+
+
 JavaPoet 1.12.1 *(2020-01-20)*
 -----------------------------
 
