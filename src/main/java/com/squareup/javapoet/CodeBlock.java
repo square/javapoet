@@ -365,7 +365,7 @@ public final class CodeBlock {
      * Shouldn't contain braces or newline characters.
      */
     public Builder beginControlFlow(String controlFlow, Object... args) {
-      add(controlFlow + " {\n", args);
+      add(controlFlow + (!controlFlow.isEmpty() ? " ": "" ) + "{\n", args);
       indent();
       return this;
     }

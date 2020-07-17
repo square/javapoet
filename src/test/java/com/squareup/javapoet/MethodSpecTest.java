@@ -462,6 +462,26 @@ public final class MethodSpecTest {
         + "}\n");
   }
 
+  @Test public void controlBlockTestWithEmptyBeginBlock(){
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+            .beginControlFlow("")
+            .addStatement("int value = 42")
+            .endControlFlow()
+            .beginControlFlow("")
+            .addStatement("int value = 42")
+            .endControlFlow()
+            .build();
+    assertThat(methodSpec.toString()).isEqualTo("" +
+            "void method() {\n" +
+            "  {\n" +
+            "    int value = 42;\n" +
+            "  }\n" +
+            "  {\n" +
+            "    int value = 42;\n" +
+            "  }\n" +
+            "}\n");
+  }
+
   @Test public void doWhileWithNamedCodeBlocks() {
     Map<String, Object> m = new HashMap<>();
     m.put("field", "valueField");
