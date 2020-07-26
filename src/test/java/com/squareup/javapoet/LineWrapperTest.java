@@ -15,15 +15,12 @@
  */
 package com.squareup.javapoet;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import org.junit.jupiter.api.Test;
 
 import static com.google.common.truth.Truth.assertThat;
 
-@RunWith(JUnit4.class)
-public final class LineWrapperTest {
-  @Test public void wrap() throws Exception {
+final class LineWrapperTest {
+  @Test void wrap() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.append("abcde");
@@ -33,7 +30,7 @@ public final class LineWrapperTest {
     assertThat(out.toString()).isEqualTo("abcde\n    fghij");
   }
 
-  @Test public void noWrap() throws Exception {
+  @Test void noWrap() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.append("abcde");
@@ -43,7 +40,7 @@ public final class LineWrapperTest {
     assertThat(out.toString()).isEqualTo("abcde fghi");
   }
 
-  @Test public void zeroWidthNoWrap() throws Exception {
+  @Test void zeroWidthNoWrap() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.append("abcde");
@@ -53,7 +50,7 @@ public final class LineWrapperTest {
     assertThat(out.toString()).isEqualTo("abcdefghij");
   }
 
-  @Test public void nospaceWrapMax() throws Exception {
+  @Test void nospaceWrapMax() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.append("abcde");
@@ -63,7 +60,7 @@ public final class LineWrapperTest {
     assertThat(out.toString()).isEqualTo("abcde\n    fghijk");
   }
 
-  @Test public void multipleWrite() throws Exception {
+  @Test void multipleWrite() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.append("ab");
@@ -87,7 +84,7 @@ public final class LineWrapperTest {
     assertThat(out.toString()).isEqualTo("ab cd ef\n  gh ij kl\n  mn op qr");
   }
 
-  @Test public void fencepost() throws Exception {
+  @Test void fencepost() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.append("abcde");
@@ -99,7 +96,7 @@ public final class LineWrapperTest {
     assertThat(out.toString()).isEqualTo("abcdefghij\n    klmnop");
   }
 
-  @Test public void fencepostZeroWidth() throws Exception {
+  @Test void fencepostZeroWidth() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.append("abcde");
@@ -111,7 +108,7 @@ public final class LineWrapperTest {
     assertThat(out.toString()).isEqualTo("abcdefghij\n    klmnop");
   }
 
-  @Test public void overlyLongLinesWithoutLeadingSpace() throws Exception {
+  @Test void overlyLongLinesWithoutLeadingSpace() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.append("abcdefghijkl");
@@ -119,7 +116,7 @@ public final class LineWrapperTest {
     assertThat(out.toString()).isEqualTo("abcdefghijkl");
   }
 
-  @Test public void overlyLongLinesWithLeadingSpace() throws Exception {
+  @Test void overlyLongLinesWithLeadingSpace() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.wrappingSpace(2);
@@ -128,7 +125,7 @@ public final class LineWrapperTest {
     assertThat(out.toString()).isEqualTo("\n    abcdefghijkl");
   }
 
-  @Test public void overlyLongLinesWithLeadingZeroWidth() throws Exception {
+  @Test void overlyLongLinesWithLeadingZeroWidth() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.zeroWidthSpace(2);
@@ -137,7 +134,7 @@ public final class LineWrapperTest {
     assertThat(out.toString()).isEqualTo("abcdefghijkl");
   }
 
-  @Test public void noWrapEmbeddedNewlines() throws Exception {
+  @Test void noWrapEmbeddedNewlines() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.append("abcde");
@@ -148,7 +145,7 @@ public final class LineWrapperTest {
     assertThat(out.toString()).isEqualTo("abcde fghi\njklmnopqrstuvwxy");
   }
 
-  @Test public void wrapEmbeddedNewlines() throws Exception {
+  @Test void wrapEmbeddedNewlines() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.append("abcde");
@@ -159,7 +156,7 @@ public final class LineWrapperTest {
     assertThat(out.toString()).isEqualTo("abcde\n    fghij\nklmnopqrstuvwxy");
   }
 
-  @Test public void noWrapEmbeddedNewlines_ZeroWidth() throws Exception {
+  @Test void noWrapEmbeddedNewlines_ZeroWidth() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.append("abcde");
@@ -170,7 +167,7 @@ public final class LineWrapperTest {
     assertThat(out.toString()).isEqualTo("abcdefghij\nklmnopqrstuvwxyz");
   }
 
-  @Test public void wrapEmbeddedNewlines_ZeroWidth() throws Exception {
+  @Test void wrapEmbeddedNewlines_ZeroWidth() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.append("abcde");
@@ -181,7 +178,7 @@ public final class LineWrapperTest {
     assertThat(out.toString()).isEqualTo("abcde\n    fghijk\nlmnopqrstuvwxy");
   }
 
-  @Test public void noWrapMultipleNewlines() throws Exception {
+  @Test void noWrapMultipleNewlines() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.append("abcde");
@@ -193,7 +190,7 @@ public final class LineWrapperTest {
     assertThat(out.toString()).isEqualTo("abcde fghi\nklmnopq\nr stuvwxyz");
   }
 
-  @Test public void wrapMultipleNewlines() throws Exception {
+  @Test void wrapMultipleNewlines() throws Exception {
     StringBuffer out = new StringBuffer();
     LineWrapper lineWrapper = new LineWrapper(out, "  ", 10);
     lineWrapper.append("abcde");
