@@ -481,6 +481,17 @@ public final class MethodSpecTest {
         "}\n");
   }
 
+  @Test public void clearCode() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+        .addCode("someCode()")
+        .clearCode()
+        .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+        + "void method() {\n"
+        + "}\n");
+  }
+
   private static CodeBlock named(String format, Map<String, ?> args){
     return CodeBlock.builder().addNamed(format, args).build();
   }
