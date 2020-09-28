@@ -904,6 +904,83 @@ public final class TypeSpecTest {
     );
   }
 
+  @Test
+  public void invalidInterfacePrivateMethods() {
+    try {
+      TypeSpec.interfaceBuilder("Tacos")
+          .addMethod(MethodSpec.methodBuilder("test")
+              .addModifiers(Modifier.PRIVATE, Modifier.DEFAULT)
+              .returns(int.class)
+              .addCode(CodeBlock.builder().addStatement("return 0").build())
+              .build())
+          .build();
+      fail();
+    } catch (IllegalStateException expected) {
+    }
+
+    try {
+      TypeSpec.interfaceBuilder("Tacos")
+          .addMethod(MethodSpec.methodBuilder("test")
+              .addModifiers(Modifier.PRIVATE, Modifier.ABSTRACT)
+              .returns(int.class)
+              .build())
+          .build();
+      fail();
+    } catch (IllegalStateException expected) {
+    }
+
+    try {
+      TypeSpec.interfaceBuilder("Tacos")
+          .addMethod(MethodSpec.methodBuilder("test")
+              .addModifiers(Modifier.PRIVATE, Modifier.PUBLIC)
+              .returns(int.class)
+              .addCode(CodeBlock.builder().addStatement("return 0").build())
+              .build())
+          .build();
+      fail();
+    } catch (IllegalArgumentException expected) {
+    }
+  }
+
+  @Test
+  public void interfacePrivateMethods() {
+    TypeSpec bar = TypeSpec.interfaceBuilder("Tacos")
+        .addMethod(MethodSpec.methodBuilder("test")
+            .addModifiers(Modifier.PRIVATE)
+            .returns(int.class)
+            .addCode(CodeBlock.builder().addStatement("return 0").build())
+            .build())
+        .build();
+
+    assertThat(toString(bar)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "interface Tacos {\n"
+        + "  private int test() {\n"
+        + "    return 0;\n"
+        + "  }\n"
+        + "}\n"
+    );
+
+    bar = TypeSpec.interfaceBuilder("Tacos")
+        .addMethod(MethodSpec.methodBuilder("test")
+            .addModifiers(Modifier.PRIVATE, Modifier.STATIC)
+            .returns(int.class)
+            .addCode(CodeBlock.builder().addStatement("return 0").build())
+            .build())
+        .build();
+
+    assertThat(toString(bar)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "interface Tacos {\n"
+        + "  private static int test() {\n"
+        + "    return 0;\n"
+        + "  }\n"
+        + "}\n"
+    );
+  }
+
   @Test public void referencedAndDeclaredSimpleNamesConflict() throws Exception {
     FieldSpec internalTop = FieldSpec.builder(
         ClassName.get(tacosPackage, "Top"), "internalTop").build();
