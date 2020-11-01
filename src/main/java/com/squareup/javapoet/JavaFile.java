@@ -103,7 +103,7 @@ public final class JavaFile {
 
   /** Writes this to {@code directory} as UTF-8 using the standard directory structure. */
   public Path writeTo(Path directory) throws IOException {
-    writeToPath(directory);
+    return writeToPath(directory);
   }
 
   /**
@@ -111,7 +111,7 @@ public final class JavaFile {
    * structure.
    */
   public Path writeTo(Path directory, Charset charset) throws IOException {
-    writeToPath(directory, charset);
+    return writeToPath(directory, charset);
   }
 
   /**
