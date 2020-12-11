@@ -134,7 +134,7 @@ public final class TypeSpec {
     }
 
     public static Builder classBuilder(ClassName className) {
-        return new Builder(Kind.CLASS, checkNotNull(className, "className == null"),null);
+        return new Builder(Kind.CLASS, checkNotNull(className, "className == null"), null);
     }
 
     public static Builder interfaceBuilder(String name) {
@@ -142,7 +142,7 @@ public final class TypeSpec {
     }
 
     public static Builder interfaceBuilder(ClassName className) {
-        return new Builder(Kind.INTERFACE, checkNotNull(className, "className == null"),null);
+        return new Builder(Kind.INTERFACE, checkNotNull(className, "className == null"), null);
     }
 
     public static Builder enumBuilder(String name) {
@@ -150,7 +150,7 @@ public final class TypeSpec {
     }
 
     public static Builder enumBuilder(ClassName className) {
-        return new Builder(Kind.ENUM, checkNotNull(className, "className == null"),null);
+        return new Builder(Kind.ENUM, checkNotNull(className, "className == null"), null);
     }
 
     public static Builder anonymousClassBuilder(String typeArgumentsFormat, Object... args) {
@@ -166,7 +166,7 @@ public final class TypeSpec {
     }
 
     public static Builder annotationBuilder(ClassName className) {
-        return new Builder(Kind.ANNOTATION, checkNotNull(className, "className == null"),null);
+        return new Builder(Kind.ANNOTATION, checkNotNull(className, "className == null"), null);
     }
 
     public Builder toBuilder() {
@@ -190,11 +190,10 @@ public final class TypeSpec {
 
     void emit(CodeWriter codeWriter, String enumName, Set<Modifier> implicitModifiers)
             throws IOException {
-        // Nested classes interrupt wrapped line indentation. Stash the current wrapping state and put
-        // it back afterwards when this type is complete.
+        // Nested classes interrupt wrapped line indentation. Stash the current
+        // wrapping state and put it back afterwards when this type is complete.
         int previousStatementLine = codeWriter.statementLine;
         codeWriter.statementLine = -1;
-
         try {
             if (enumName != null) {
                 codeWriter.emitJavadoc(javadoc);
@@ -218,7 +217,6 @@ public final class TypeSpec {
             } else {
                 // Push an empty type (specifically without nested types) for type-resolution.
                 codeWriter.pushType(new TypeSpec(this));
-
                 codeWriter.emitJavadoc(javadoc);
                 codeWriter.emitAnnotations(annotations, false);
                 codeWriter.emitModifiers(modifiers,
@@ -263,7 +261,6 @@ public final class TypeSpec {
                 }
 
                 codeWriter.popType();
-
                 codeWriter.emit(" {\n");
             }
 
@@ -279,8 +276,9 @@ public final class TypeSpec {
                 firstMember = false;
                 if (i.hasNext()) {
                     codeWriter.emit(",\n");
-                } else if (!fieldSpecs.isEmpty() || !methodSpecs.isEmpty() ||
-                        !typeSpecs.isEmpty()) {
+                } else if (!fieldSpecs.isEmpty()
+                        || !methodSpecs.isEmpty()
+                        || !typeSpecs.isEmpty()) {
                     codeWriter.emit(";\n");
                 } else {
                     codeWriter.emit("\n");
@@ -342,7 +340,6 @@ public final class TypeSpec {
             codeWriter.unindent();
             codeWriter.popType();
             codeWriter.popTypeVariables(typeVariables);
-
             codeWriter.emit("}");
             if (enumName == null && anonymousTypeArguments == null) {
                 codeWriter
@@ -355,8 +352,8 @@ public final class TypeSpec {
 
     public ClassName getClassName() {
         if (className == null) {
-            throw new NullPointerException("className property is only available if " +
-                    "TypeSpec.Builder is instantiated with a ClassName object");
+            throw new NullPointerException("className property is only available if "
+                    + "TypeSpec.Builder is instantiated with a ClassName object");
         }
         return className;
     }
@@ -703,9 +700,9 @@ public final class TypeSpec {
         }
 
         /**
-         * Call this to always fully qualify any types that would conflict with possibly nested types of
-         * this {@code typeElement}. For example - if the following type was passed in as the
-         * typeElement:
+         * Call this to always fully qualify any types that would conflict with possibly nested
+         * types of this {@code typeElement}. For example - if the following type was passed in as
+         * the typeElement:
          *
          * <pre><code>
          *   class Foo {
@@ -749,9 +746,9 @@ public final class TypeSpec {
         }
 
         /**
-         * Call this to always fully qualify any types that would conflict with possibly nested types of
-         * this {@code typeElement}. For example - if the following type was passed in as the
-         * typeElement:
+         * Call this to always fully qualify any types that would conflict with possibly nested
+         * types of this {@code typeElement}. For example - if the following type was passed in as
+         * the typeElement:
          *
          * <pre><code>
          *   class Foo {
