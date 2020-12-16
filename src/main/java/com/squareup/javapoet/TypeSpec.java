@@ -44,9 +44,7 @@ import static com.squareup.javapoet.Util.checkNotNull;
 import static com.squareup.javapoet.Util.checkState;
 import static com.squareup.javapoet.Util.requireExactlyOneOf;
 
-/**
- * A generated class, interface, or enum declaration.
- */
+/** A generated class, interface, or enum declaration. */
 public final class TypeSpec {
   public final Kind kind;
   private final ClassName className;
@@ -99,8 +97,8 @@ public final class TypeSpec {
   }
 
   /**
-   * Creates a dummy type spec for type-resolution only (in CodeWriter) while emitting the type
-   * declaration but before entering the type body.
+   * Creates a dummy type spec for type-resolution only (in CodeWriter)
+   * while emitting the type declaration but before entering the type body.
    */
   private TypeSpec(TypeSpec type) {
     assert type.anonymousTypeArguments == null;
@@ -190,8 +188,8 @@ public final class TypeSpec {
 
   void emit(CodeWriter codeWriter, String enumName, Set<Modifier> implicitModifiers)
       throws IOException {
-    // Nested classes interrupt wrapped line indentation. Stash the current
-    // wrapping state and put it back afterwards when this type is complete.
+    // Nested classes interrupt wrapped line indentation. Stash the current wrapping state and put
+    // it back afterwards when this type is complete.
     int previousStatementLine = codeWriter.statementLine;
     codeWriter.statementLine = -1;
     try {
@@ -209,8 +207,7 @@ public final class TypeSpec {
         }
         codeWriter.emit(" {\n");
       } else if (anonymousTypeArguments != null) {
-        TypeName supertype =
-            !superinterfaces.isEmpty() ? superinterfaces.get(0) : superclass;
+        TypeName supertype = !superinterfaces.isEmpty() ? superinterfaces.get(0) : superclass;
         codeWriter.emit("new $T(", supertype);
         codeWriter.emit(anonymousTypeArguments);
         codeWriter.emit(") {\n");
@@ -219,8 +216,7 @@ public final class TypeSpec {
         codeWriter.pushType(new TypeSpec(this));
         codeWriter.emitJavadoc(javadoc);
         codeWriter.emitAnnotations(annotations, false);
-        codeWriter.emitModifiers(modifiers,
-            Util.union(implicitModifiers, kind.asMemberModifiers));
+        codeWriter.emitModifiers(modifiers, Util.union(implicitModifiers, kind.asMemberModifiers));
         if (kind == Kind.ANNOTATION) {
           codeWriter.emit("$L $L", "@interface", name);
         } else {
@@ -271,14 +267,11 @@ public final class TypeSpec {
           i.hasNext(); ) {
         Map.Entry<String, TypeSpec> enumConstant = i.next();
         if (!firstMember) codeWriter.emit("\n");
-        enumConstant.getValue()
-            .emit(codeWriter, enumConstant.getKey(), Collections.emptySet());
+        enumConstant.getValue().emit(codeWriter, enumConstant.getKey(), Collections.emptySet());
         firstMember = false;
         if (i.hasNext()) {
           codeWriter.emit(",\n");
-        } else if (!fieldSpecs.isEmpty()
-            || !methodSpecs.isEmpty()
-            || !typeSpecs.isEmpty()) {
+        } else if (!fieldSpecs.isEmpty() || !methodSpecs.isEmpty() || !typeSpecs.isEmpty()) {
           codeWriter.emit(";\n");
         } else {
           codeWriter.emit("\n");
@@ -342,8 +335,7 @@ public final class TypeSpec {
       codeWriter.popTypeVariables(typeVariables);
       codeWriter.emit("}");
       if (enumName == null && anonymousTypeArguments == null) {
-        codeWriter
-            .emit("\n"); // If this type isn't also a value, include a trailing newline.
+        codeWriter.emit("\n"); // If this type isn't also a value, include a trailing newline.
       }
     } finally {
       codeWriter.statementLine = previousStatementLine;
@@ -358,21 +350,18 @@ public final class TypeSpec {
     return className;
   }
 
-  @Override
-  public boolean equals(Object o) {
+  @Override public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null) return false;
     if (getClass() != o.getClass()) return false;
     return toString().equals(o.toString());
   }
 
-  @Override
-  public int hashCode() {
+  @Override public int hashCode() {
     return toString().hashCode();
   }
 
-  @Override
-  public String toString() {
+  @Override public String toString() {
     StringBuilder out = new StringBuilder();
     try {
       CodeWriter codeWriter = new CodeWriter(out);
@@ -516,8 +505,7 @@ public final class TypeSpec {
     }
 
     public Builder superclass(TypeName superclass) {
-      checkState(this.kind == Kind.CLASS,
-          "only classes have super classes, not " + this.kind);
+      checkState(this.kind == Kind.CLASS, "only classes have super classes, not " + this.kind);
       checkState(this.superclass == ClassName.OBJECT,
           "superclass already set to " + this.superclass);
       checkArgument(!superclass.isPrimitive(), "superclass may not be a primitive");
@@ -717,22 +705,20 @@ public final class TypeSpec {
      *
      * <p>
      * Then this would add {@code "NestedTypeA"} and {@code "NestedTypeB"} as names that should
-     * always be qualified via {@link #alwaysQualify(String...)}. This way they would avoid possible
-     * import conflicts when this JavaFile is written.
+     * always be qualified via {@link #alwaysQualify(String...)}. This way they would avoid
+     * possible import conflicts when this JavaFile is written.
      *
      * @param typeElement the {@link TypeElement} with nested types to avoid clashes with.
      * @return this builder instance.
      */
     public Builder avoidClashesWithNestedClasses(TypeElement typeElement) {
       checkArgument(typeElement != null, "typeElement == null");
-      for (TypeElement nestedType : ElementFilter
-          .typesIn(typeElement.getEnclosedElements())) {
+      for (TypeElement nestedType : ElementFilter.typesIn(typeElement.getEnclosedElements())) {
         alwaysQualify(nestedType.getSimpleName().toString());
       }
       TypeMirror superclass = typeElement.getSuperclass();
       if (!(superclass instanceof NoType) && superclass instanceof DeclaredType) {
-        TypeElement superclassElement =
-            (TypeElement) ((DeclaredType) superclass).asElement();
+        TypeElement superclassElement = (TypeElement) ((DeclaredType) superclass).asElement();
         avoidClashesWithNestedClasses(superclassElement);
       }
       for (TypeMirror superinterface : typeElement.getInterfaces()) {
@@ -763,8 +749,8 @@ public final class TypeSpec {
      *
      * <p>
      * Then this would add {@code "NestedTypeA"} and {@code "NestedTypeB"} as names that should
-     * always be qualified via {@link #alwaysQualify(String...)}. This way they would avoid possible
-     * import conflicts when this JavaFile is written.
+     * always be qualified via {@link #alwaysQualify(String...)}. This way they would avoid
+     * possible import conflicts when this JavaFile is written.
      *
      * @param clazz the {@link Class} with nested types to avoid clashes with.
      * @return this builder instance.
@@ -822,8 +808,7 @@ public final class TypeSpec {
         if (kind == Kind.INTERFACE || kind == Kind.ANNOTATION) {
           requireExactlyOneOf(fieldSpec.modifiers, Modifier.PUBLIC, Modifier.PRIVATE);
           Set<Modifier> check = EnumSet.of(Modifier.STATIC, Modifier.FINAL);
-          checkState(fieldSpec.modifiers.containsAll(check),
-              "%s %s.%s requires modifiers %s",
+          checkState(fieldSpec.modifiers.containsAll(check), "%s %s.%s requires modifiers %s",
               kind, name, fieldSpec.name, check);
         }
       }
@@ -839,13 +824,11 @@ public final class TypeSpec {
               kind, name, methodSpec.name, kind.implicitMethodModifiers);
         }
         if (kind != Kind.ANNOTATION) {
-          checkState(methodSpec.defaultValue == null,
-              "%s %s.%s cannot have a default value",
+          checkState(methodSpec.defaultValue == null, "%s %s.%s cannot have a default value",
               kind, name, methodSpec.name);
         }
         if (kind != Kind.INTERFACE) {
-          checkState(!methodSpec.hasModifier(Modifier.DEFAULT),
-              "%s %s.%s cannot be default",
+          checkState(!methodSpec.hasModifier(Modifier.DEFAULT), "%s %s.%s cannot be default",
               kind, name, methodSpec.name);
         }
       }
@@ -859,8 +842,7 @@ public final class TypeSpec {
       boolean isAbstract = modifiers.contains(Modifier.ABSTRACT) || kind != Kind.CLASS;
       for (MethodSpec methodSpec : methodSpecs) {
         checkArgument(isAbstract || !methodSpec.hasModifier(Modifier.ABSTRACT),
-            "non-abstract type %s cannot declare abstract method %s", name,
-            methodSpec.name);
+            "non-abstract type %s cannot declare abstract method %s", name, methodSpec.name);
       }
 
       boolean superclassIsObject = superclass.equals(ClassName.OBJECT);
