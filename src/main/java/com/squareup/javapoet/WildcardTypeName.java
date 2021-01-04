@@ -65,7 +65,7 @@ public final class WildcardTypeName extends TypeName {
     if (lowerBounds.size() == 1) {
       return out.emit("? super $T", lowerBounds.get(0));
     }
-    return upperBounds.get(0).equals(TypeName.OBJECT)
+    return upperBounds.get(0).equals(ClassName.OBJECT)
         ? out.emit("?")
         : out.emit("? extends $T", upperBounds.get(0));
   }
@@ -89,7 +89,7 @@ public final class WildcardTypeName extends TypeName {
    * bound} is {@code String.class}, this returns {@code ? super String}.
    */
   public static WildcardTypeName supertypeOf(TypeName lowerBound) {
-    return new WildcardTypeName(Collections.singletonList(OBJECT),
+    return new WildcardTypeName(Collections.singletonList(ClassName.OBJECT),
         Collections.singletonList(lowerBound));
   }
 

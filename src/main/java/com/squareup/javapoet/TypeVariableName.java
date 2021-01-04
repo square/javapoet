@@ -75,7 +75,7 @@ public final class TypeVariableName extends TypeName {
   private static TypeVariableName of(String name, List<TypeName> bounds) {
     // Strip java.lang.Object from bounds if it is present.
     List<TypeName> boundsNoObject = new ArrayList<>(bounds);
-    boundsNoObject.remove(OBJECT);
+    boundsNoObject.remove(ClassName.OBJECT);
     return new TypeVariableName(name, Collections.unmodifiableList(boundsNoObject));
   }
 
@@ -126,7 +126,7 @@ public final class TypeVariableName extends TypeName {
       for (TypeMirror typeMirror : element.getBounds()) {
         bounds.add(TypeName.get(typeMirror, typeVariables));
       }
-      bounds.remove(OBJECT);
+      bounds.remove(ClassName.OBJECT);
     }
     return typeVariableName;
   }
@@ -161,7 +161,7 @@ public final class TypeVariableName extends TypeName {
       for (Type bound : type.getBounds()) {
         bounds.add(TypeName.get(bound, map));
       }
-      bounds.remove(OBJECT);
+      bounds.remove(ClassName.OBJECT);
     }
     return result;
   }
