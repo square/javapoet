@@ -123,7 +123,8 @@ public final class ParameterSpec {
     return builder(TypeName.get(type), name, modifiers);
   }
 
-  public static Builder builder(TypeName type, String name, Iterable<? extends Modifier> modifiers) {
+  public static Builder builder(TypeName type, String name,
+      Iterable<? extends Modifier> modifiers) {
     checkNotNull(type, "type == null");
     checkArgument(isValidParameterName(name), "not a valid name: %s", name);
     return new Builder(type, name)

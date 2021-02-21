@@ -125,7 +125,8 @@ public class TypeName {
     return new TypeName(keyword);
   }
 
-  protected final List<AnnotationSpec> concatAnnotations(Iterable<? extends AnnotationSpec> annotations) {
+  protected final List<AnnotationSpec> concatAnnotations(
+      Iterable<? extends AnnotationSpec> annotations) {
     List<AnnotationSpec> allAnnotations = new ArrayList<>(this.annotations);
     Util.addAll(allAnnotations, annotations);
     return allAnnotations;

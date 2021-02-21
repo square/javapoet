@@ -120,7 +120,8 @@ public final class ParameterizedTypeName extends TypeName {
   }
 
   /** Returns a parameterized type, applying {@code typeArguments} to {@code rawType}. */
-  public static ParameterizedTypeName get(ClassName rawType, Iterable<? extends TypeName> typeArguments) {
+  public static ParameterizedTypeName get(ClassName rawType,
+      Iterable<? extends TypeName> typeArguments) {
     return new ParameterizedTypeName(null, rawType, Util.asList(typeArguments));
   }
 
@@ -130,7 +131,8 @@ public final class ParameterizedTypeName extends TypeName {
   }
 
   /** Returns a parameterized type, applying {@code typeArguments} to {@code rawType}. */
-  public static ParameterizedTypeName get(Class<?> rawType, Iterable<? extends Type> typeArguments) {
+  public static ParameterizedTypeName get(Class<?> rawType,
+      Iterable<? extends Type> typeArguments) {
     return new ParameterizedTypeName(null, ClassName.get(rawType), list(typeArguments));
   }
 

@@ -97,7 +97,8 @@ public final class FieldSpec {
     return builder(TypeName.get(type), name, modifiers);
   }
 
-  public static Builder builder(TypeName type, String name, Iterable<? extends Modifier> modifiers) {
+  public static Builder builder(TypeName type, String name,
+      Iterable<? extends Modifier> modifiers) {
     checkNotNull(type, "type == null");
     checkNotNull(modifiers, "modifiers == null");
     checkArgument(SourceVersion.isName(name), "not a valid name: %s", name);

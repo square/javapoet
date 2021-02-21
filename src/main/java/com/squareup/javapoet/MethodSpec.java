@@ -409,7 +409,8 @@ public final class MethodSpec {
       return addParameter(TypeName.get(type), name, modifiers);
     }
 
-    public Builder addParameter(TypeName type, String name, Iterable<? extends Modifier> modifiers) {
+    public Builder addParameter(TypeName type, String name,
+        Iterable<? extends Modifier> modifiers) {
       return addParameter(ParameterSpec.builder(type, name, modifiers).build());
     }
 
