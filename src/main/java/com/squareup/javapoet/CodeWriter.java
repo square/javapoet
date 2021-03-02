@@ -27,6 +27,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Pattern;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
 
@@ -43,6 +44,7 @@ import static java.lang.String.join;
 final class CodeWriter {
   /** Sentinel value that indicates that no user-provided package has been set. */
   private static final String NO_PACKAGE = new String();
+  private static final Pattern LINE_BREAKING_PATTERN = Pattern.compile("\\R");
 
   private final String indent;
   private final LineWrapper out;
@@ -469,7 +471,7 @@ final class CodeWriter {
    */
   CodeWriter emitAndIndent(String s) throws IOException {
     boolean first = true;
-    for (String line : s.split("\\R", -1)) {
+    for (String line : LINE_BREAKING_PATTERN.split(s, -1)) {
       // Emit a newline character. Make sure blank lines in Javadoc & comments look good.
       if (!first) {
         if ((javadoc || comment) && trailingNewline) {
