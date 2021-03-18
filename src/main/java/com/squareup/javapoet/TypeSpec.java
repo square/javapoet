@@ -796,9 +796,16 @@ public final class TypeSpec {
 
       for (MethodSpec methodSpec : methodSpecs) {
         if (kind == Kind.INTERFACE) {
-          requireExactlyOneOf(methodSpec.modifiers, Modifier.ABSTRACT, Modifier.STATIC,
-              Modifier.DEFAULT);
           requireExactlyOneOf(methodSpec.modifiers, Modifier.PUBLIC, Modifier.PRIVATE);
+          if (methodSpec.modifiers.contains(Modifier.PRIVATE)) {
+            checkState(!methodSpec.hasModifier(Modifier.DEFAULT),
+                "%s %s.%s cannot be private and default", kind, name, methodSpec.name);
+            checkState(!methodSpec.hasModifier(Modifier.ABSTRACT),
+                "%s %s.%s cannot be private and abstract", kind, name, methodSpec.name);
+          } else {
+            requireExactlyOneOf(methodSpec.modifiers, Modifier.ABSTRACT, Modifier.STATIC,
+                Modifier.DEFAULT);
+          }
         } else if (kind == Kind.ANNOTATION) {
           checkState(methodSpec.modifiers.equals(kind.implicitMethodModifiers),
               "%s %s.%s requires modifiers %s",
