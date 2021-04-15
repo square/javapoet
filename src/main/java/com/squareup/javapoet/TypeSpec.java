@@ -263,6 +263,8 @@ public final class TypeSpec {
       codeWriter.pushType(this);
       codeWriter.indent();
       boolean firstMember = true;
+      boolean needsSeparator = kind == Kind.ENUM
+              && (!fieldSpecs.isEmpty() || !methodSpecs.isEmpty() || !typeSpecs.isEmpty());
       for (Iterator<Map.Entry<String, TypeSpec>> i = enumConstants.entrySet().iterator();
           i.hasNext(); ) {
         Map.Entry<String, TypeSpec> enumConstant = i.next();
@@ -271,12 +273,12 @@ public final class TypeSpec {
         firstMember = false;
         if (i.hasNext()) {
           codeWriter.emit(",\n");
-        } else if (!fieldSpecs.isEmpty() || !methodSpecs.isEmpty() || !typeSpecs.isEmpty()) {
-          codeWriter.emit(";\n");
-        } else {
+        } else if (!needsSeparator) {
           codeWriter.emit("\n");
         }
       }
+
+      if (needsSeparator) codeWriter.emit(";\n");
 
       // Static fields.
       for (FieldSpec fieldSpec : fieldSpecs) {
@@ -762,9 +764,6 @@ public final class TypeSpec {
           checkArgument(modifier != null, "modifiers contain null");
         }
       }
-
-      checkArgument(kind != Kind.ENUM || !enumConstants.isEmpty(),
-          "at least one enum constant is required for %s", name);
 
       for (TypeName superinterface : superinterfaces) {
         checkArgument(superinterface != null, "superinterfaces contains null");
