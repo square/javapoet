@@ -50,7 +50,9 @@ public final class TypeVariableName extends TypeName {
   }
 
   @Override public TypeVariableName annotated(List<AnnotationSpec> annotations) {
-    return new TypeVariableName(name, bounds, annotations);
+    //CS304 Issue link: https://github.com/square/javapoet/issues/826
+//    return new TypeVariableName(name, bounds, annotations);
+    return new TypeVariableName(name, bounds, concatAnnotations(annotations));
   }
 
   @Override public TypeName withoutAnnotations() {
