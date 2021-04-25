@@ -47,12 +47,14 @@ public class AnnotationIssueTest {
 
     }
 
-    @Test public void test(){
+    @Test public void annotationOnTypeVariableName2(){
         list.add(AnnotationSpec.builder(Integer.class).build());
+        List<AnnotationSpec> subList = new ArrayList<>();
+        subList.add(AnnotationSpec.builder(Float.class).build());
 
         TypeVariableName typeVar = TypeVariableName.get("int");
-        typeVar = (TypeVariableName) typeVar.annotated(AnnotationSpec.builder(Float.class).build());
         typeVar = typeVar.annotated(list);
+        typeVar = typeVar.annotated(subList);
         assertThat(typeVar.toString()).contains("Float");
         assertThat(typeVar.toString()).contains("Integer");
     }
