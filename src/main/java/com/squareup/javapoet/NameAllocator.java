@@ -134,9 +134,10 @@ public final class NameAllocator implements Cloneable {
           && Character.isJavaIdentifierPart(codePoint)) {
         result.append("_");
       }
-
-      int validCodePoint = Character.isJavaIdentifierPart(codePoint) ? codePoint : '_';
-      result.appendCodePoint(validCodePoint);
+      if(!Character.isIdentifierIgnorable(codePoint)) {
+        int validCodePoint = Character.isJavaIdentifierPart(codePoint) ? codePoint : '_';
+        result.appendCodePoint(validCodePoint);
+      }
       i += Character.charCount(codePoint);
     }
     return result.toString();
