@@ -347,6 +347,93 @@ public final class TypeSpecTest {
     }
   }
 
+  @Test
+  public void basicRecord() throws Exception {
+    ParameterSpec keyComponent = ParameterSpec.builder(ClassName.get(String.class), "key").build();
+    ParameterSpec valueComponent = ParameterSpec.builder(ClassName.get(String.class), "value").build();
+    TypeSpec rec = TypeSpec.recordBuilder("KeyValue")
+        .addModifiers(Modifier.PUBLIC)
+        .addRecordComponent(keyComponent)
+        .addRecordComponent(valueComponent)
+        .compactConstructor(MethodSpec.constructorBuilder()
+            .addModifiers(Modifier.PUBLIC)
+            .addCode(
+                CodeBlock.builder()
+                .beginControlFlow("if ($N.indexOf(':') != -1)", keyComponent)
+                .addStatement("throw new $T()", ClassName.get(IllegalArgumentException.class))
+                .endControlFlow()
+                .build())
+            .build())
+        .addSuperinterface(Cloneable.class)
+        .build();
+
+    assertThat(toString(rec)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.Cloneable;\n"
+        + "import java.lang.IllegalArgumentException;\n"
+        + "import java.lang.String;\n"
+        + "\n"
+        + "public record KeyValue(String key, String value) implements Cloneable {\n"
+        + "  public KeyValue {\n"
+        + "    if (key.indexOf(':') != -1) {\n"
+        + "      throw new IllegalArgumentException();\n"
+        + "    }\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test
+  public void emptyRecord() throws Exception {
+    TypeSpec rec = TypeSpec.recordBuilder("Empty").build();
+
+    assertThat(toString(rec)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "record Empty() {\n"
+        + "}\n");
+  }
+
+  @Test
+  public void compactConstructorOnlyRecord() throws Exception {
+    TypeSpec rec = TypeSpec.recordBuilder("Empty")
+        .addModifiers(Modifier.PUBLIC)
+        .compactConstructor(MethodSpec.constructorBuilder()
+            .addModifiers(Modifier.PUBLIC)
+            .addCode("$T.out.println($S);", ClassName.get(System.class), "Hello!")
+            .build())
+        .build();
+
+    assertThat(toString(rec)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.System;\n"
+        + "\n"
+        + "public record Empty() {\n"
+        + "  public Empty {\n"
+        + "    System.out.println(\"Hello!\");\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test
+  public void varargsRecord() throws Exception {
+    TypeSpec rec = TypeSpec.recordBuilder("Vararg")
+        .addModifiers(Modifier.PUBLIC)
+        .addRecordComponent(ParameterSpec.builder(TypeName.INT, "val").build())
+        .addRecordComponent(ParameterSpec.builder(ArrayTypeName.of(ClassName.get(String.class)), "keys").build())
+        .varargs()
+        .build();
+
+    assertThat(toString(rec)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.String;\n"
+        + "\n"
+        + "public record Vararg(int val, String... keys) {\n"
+        + "}\n");
+  }
+
   @Test public void enumWithSubclassing() throws Exception {
     TypeSpec roshambo = TypeSpec.enumBuilder("Roshambo")
         .addModifiers(Modifier.PUBLIC)
@@ -1226,6 +1313,46 @@ public final class TypeSpecTest {
         + "}\n");
   }
 
+  @Test
+  public void recordComponentJavadoc() throws Exception {
+    TypeSpec taco = TypeSpec.recordBuilder("Taco")
+        .addJavadoc("Wants a cat to be a tacocat.\n")
+        .addRecordComponent(ParameterSpec.builder(ClassName.get(String.class), "shell")
+            .addJavadoc("the outer level of tortilla of the taco\n")
+            .build())
+        .addRecordComponent(ParameterSpec.builder(boolean.class, "soft")
+            .addJavadoc("true for a soft flour tortilla, or false for a crunchy corn tortilla\n")
+            .build())
+        .compactConstructor(MethodSpec.constructorBuilder()
+            .addJavadoc("Makes a taco without a cat :(.\n")
+            .addParameter(ParameterSpec.builder(ClassName.get(String.class), "shell")
+                .addJavadoc("the outer level of tortilla of the taco\n")
+                .build())
+            .build())
+        .build();
+    // Ensures that the parameter javadoc inclusion works
+    assertThat(toString(taco)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.String;\n"
+        + "\n"
+        + "/**\n"
+        + " * Wants a cat to be a tacocat.\n"
+        + " *\n"
+        + " * @param shell the outer level of tortilla of the taco\n"
+        + " * @param soft true for a soft flour tortilla, or false for a crunchy corn tortilla\n"
+        + " */\n"
+        + "record Taco(String shell, boolean soft) {\n"
+        + "  /**\n"
+        + "   * Makes a taco without a cat :(.\n"
+        + "   *\n"
+        + "   * @param shell the outer level of tortilla of the taco\n"
+        + "   */\n"
+        + "  Taco {\n"
+        + "  }\n"
+        + "}\n");
+  }
+
   @Test public void annotationsInAnnotations() throws Exception {
     ClassName beef = ClassName.get(tacosPackage, "Beef");
     ClassName chicken = ClassName.get(tacosPackage, "Chicken");
@@ -1482,6 +1609,10 @@ public final class TypeSpecTest {
             .addModifiers(Modifier.STATIC)
             .addEnumConstant("SALSA")
             .build())
+        .addType(TypeSpec.recordBuilder("Veggie")
+            .addModifiers(Modifier.STATIC)
+            .addRecordComponent(ParameterSpec.builder(TypeName.INT, "name").build())
+            .build())
         .build();
     assertThat(toString(taco)).isEqualTo(""
         + "package com.squareup.tacos;\n"
@@ -1495,6 +1626,9 @@ public final class TypeSpecTest {
         + "\n"
         + "  enum Topping {\n"
         + "    SALSA\n"
+        + "  }\n"
+        + "\n"
+        + "  record Veggie(int name) {\n"
         + "  }\n"
         + "}\n");
   }
@@ -2583,6 +2717,17 @@ public final class TypeSpecTest {
 
     builder.typeSpecs.clear();
     assertThat(builder.build().typeSpecs).isEmpty();
+  }
+
+  @Test
+  public void modifyRecordComponents() {
+    ParameterSpec shellComponent = ParameterSpec.builder(ClassName.get(String.class), "shell").build();
+    TypeSpec.Builder builder = TypeSpec.recordBuilder("Taco")
+        .addRecordComponent(shellComponent)
+        .addRecordComponent(ParameterSpec.builder(TypeName.DOUBLE, "price").build());
+
+    builder.recordComponents.removeIf(p -> p.name.equals("price"));
+    assertThat(builder.build().recordComponents).containsExactly(shellComponent);
   }
 
   @Test
