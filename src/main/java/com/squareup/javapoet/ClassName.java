@@ -32,6 +32,15 @@ import static com.squareup.javapoet.Util.checkNotNull;
 /** A fully-qualified class name for top-level and member classes. */
 public final class ClassName extends TypeName implements Comparable<ClassName> {
   public static final ClassName OBJECT = ClassName.get(Object.class);
+  static final ClassName BOXED_VOID = ClassName.get("java.lang", "Void");
+  static final ClassName BOXED_BOOLEAN = ClassName.get("java.lang", "Boolean");
+  static final ClassName BOXED_BYTE = ClassName.get("java.lang", "Byte");
+  static final ClassName BOXED_SHORT = ClassName.get("java.lang", "Short");
+  static final ClassName BOXED_INT = ClassName.get("java.lang", "Integer");
+  static final ClassName BOXED_LONG = ClassName.get("java.lang", "Long");
+  static final ClassName BOXED_CHAR = ClassName.get("java.lang", "Character");
+  static final ClassName BOXED_FLOAT = ClassName.get("java.lang", "Float");
+  static final ClassName BOXED_DOUBLE = ClassName.get("java.lang", "Double");
 
   /** The name representing the default Java package. */
   private static final String NO_PACKAGE = "";
