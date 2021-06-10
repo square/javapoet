@@ -79,10 +79,10 @@ final class CodeWriter {
   }
 
   CodeWriter(Appendable out,
-      String indent,
-      Map<String, ClassName> importedTypes,
-      Set<String> staticImports,
-      Set<String> alwaysQualify) {
+             String indent,
+             Map<String, ClassName> importedTypes,
+             Set<String> staticImports,
+             Set<String> alwaysQualify) {
     this.out = new LineWrapper(out, indent, 100);
     this.indent = checkNotNull(indent, "indent == null");
     this.importedTypes = checkNotNull(importedTypes, "importedTypes == null");
@@ -175,7 +175,7 @@ final class CodeWriter {
    * be emitted.
    */
   public void emitModifiers(Set<Modifier> modifiers, Set<Modifier> implicitModifiers)
-      throws IOException {
+          throws IOException {
     if (modifiers.isEmpty()) return;
     for (Modifier modifier : EnumSet.copyOf(modifiers)) {
       if (implicitModifiers.contains(modifier)) continue;
@@ -248,8 +248,8 @@ final class CodeWriter {
           String string = (String) codeBlock.args.get(a++);
           // Emit null as a literal null: no quotes.
           emitAndIndent(string != null
-              ? stringLiteralWithDoubleQuotes(string, indent)
-              : "null");
+                  ? stringLiteralWithDoubleQuotes(string, indent)
+                  : "null");
           break;
 
         case "$T":
@@ -266,6 +266,10 @@ final class CodeWriter {
             }
           }
           typeName.emit(this);
+          break;
+
+        case "$C":
+          emitAndIndent((String) codeBlock.args.get(a++));
           break;
 
         case "$$":
@@ -390,7 +394,7 @@ final class CodeWriter {
       if (resolved != null && Objects.equals(resolved.canonicalName, c.canonicalName)) {
         int suffixOffset = c.simpleNames().size() - 1;
         return join(".", className.simpleNames().subList(
-            suffixOffset, className.simpleNames().size()));
+                suffixOffset, className.simpleNames().size()));
       }
     }
 

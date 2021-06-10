@@ -50,7 +50,8 @@ import static com.squareup.javapoet.Util.checkArgument;
  *       that. For example, {@code 6" sandwich} is emitted {@code "6\" sandwich"}.
  *   <li>{@code $T} emits a <em>type</em> reference. Types will be imported if possible. Arguments
  *       for types may be {@linkplain Class classes}, {@linkplain javax.lang.model.type.TypeMirror
-,*       type mirrors}, and {@linkplain javax.lang.model.element.Element elements}.
+ *       type mirrors}, and {@linkplain javax.lang.model.element.Element elements}.
+ *   <li>{@code $C} emits a char type, let '\n' to be '\\n', '\r' to be '\\r' , '\'' to be '\\''.
  *   <li>{@code $$} emits a dollar sign.
  *   <li>{@code $W} emits a space or a newline, depending on its position on the line. This prefers
  *       to wrap lines before 100 columns.
@@ -64,7 +65,7 @@ import static com.squareup.javapoet.Util.checkArgument;
  */
 public final class CodeBlock {
   private static final Pattern NAMED_ARGUMENT =
-      Pattern.compile("\\$(?<argumentName>[\\w_]+):(?<typeChar>[\\w]).*");
+          Pattern.compile("\\$(?<argumentName>[\\w_]+):(?<typeChar>[\\w]).*");
   private static final Pattern LOWERCASE = Pattern.compile("[a-z]+[\\w_]*");
 
   /** A heterogeneous list containing string literals and value placeholders. */
@@ -121,10 +122,10 @@ public final class CodeBlock {
    */
   public static Collector<CodeBlock, ?, CodeBlock> joining(String separator) {
     return Collector.of(
-        () -> new CodeBlockJoiner(separator, builder()),
-        CodeBlockJoiner::add,
-        CodeBlockJoiner::merge,
-        CodeBlockJoiner::join);
+            () -> new CodeBlockJoiner(separator, builder()),
+            CodeBlockJoiner::add,
+            CodeBlockJoiner::merge,
+            CodeBlockJoiner::join);
   }
 
   /**
@@ -133,16 +134,16 @@ public final class CodeBlock {
    * {@code int i} using {@code ", "} would produce {@code String s, Object o, int i}.
    */
   public static Collector<CodeBlock, ?, CodeBlock> joining(
-      String separator, String prefix, String suffix) {
+          String separator, String prefix, String suffix) {
     Builder builder = builder().add("$N", prefix);
     return Collector.of(
-        () -> new CodeBlockJoiner(separator, builder),
-        CodeBlockJoiner::add,
-        CodeBlockJoiner::merge,
-        joiner -> {
-            builder.add(CodeBlock.of("$N", suffix));
-            return joiner.join();
-        });
+            () -> new CodeBlockJoiner(separator, builder),
+            CodeBlockJoiner::add,
+            CodeBlockJoiner::merge,
+            joiner -> {
+              builder.add(CodeBlock.of("$N", suffix));
+              return joiner.join();
+            });
   }
 
   public static Builder builder() {
@@ -183,7 +184,7 @@ public final class CodeBlock {
 
       for (String argument : arguments.keySet()) {
         checkArgument(LOWERCASE.matcher(argument).matches(),
-            "argument '%s' must start with a lowercase character", argument);
+                "argument '%s' must start with a lowercase character", argument);
       }
 
       while (p < format.length()) {
@@ -207,7 +208,7 @@ public final class CodeBlock {
         if (matcher != null && matcher.lookingAt()) {
           String argumentName = matcher.group("argumentName");
           checkArgument(arguments.containsKey(argumentName), "Missing named argument for $%s",
-              argumentName);
+                  argumentName);
           char formatChar = matcher.group("typeChar").charAt(0);
           addArgument(format, formatChar, arguments.get(argumentName));
           formatParts.add("$" + formatChar);
@@ -215,7 +216,7 @@ public final class CodeBlock {
         } else {
           checkArgument(p < format.length() - 1, "dangling $ at end");
           checkArgument(isNoArgPlaceholder(format.charAt(p + 1)),
-              "unknown format $%s at %s in '%s'", format.charAt(p + 1), p + 1, format);
+                  "unknown format $%s at %s in '%s'", format.charAt(p + 1), p + 1, format);
           formatParts.add(format.substring(p, p + 2));
           p += 2;
         }
@@ -265,7 +266,7 @@ public final class CodeBlock {
         // If 'c' doesn't take an argument, we're done.
         if (isNoArgPlaceholder(c)) {
           checkArgument(
-              indexStart == indexEnd, "$$, $>, $<, $[, $], $W, and $Z may not have an index");
+                  indexStart == indexEnd, "$$, $>, $<, $[, $], $W, and $Z may not have an index");
           formatParts.add("$" + c);
           continue;
         }
@@ -285,8 +286,8 @@ public final class CodeBlock {
         }
 
         checkArgument(index >= 0 && index < args.length,
-            "index %d for '%s' not in range (received %s arguments)",
-            index + 1, format.substring(indexStart - 1, indexEnd + 1), args.length);
+                "index %d for '%s' not in range (received %s arguments)",
+                index + 1, format.substring(indexStart - 1, indexEnd + 1), args.length);
         checkArgument(!hasIndexed || !hasRelative, "cannot mix indexed and positional parameters");
 
         addArgument(format, c, args[index]);
@@ -296,7 +297,7 @@ public final class CodeBlock {
 
       if (hasRelative) {
         checkArgument(relativeParameterCount >= args.length,
-            "unused arguments: expected %s, received %s", relativeParameterCount, args.length);
+                "unused arguments: expected %s, received %s", relativeParameterCount, args.length);
       }
       if (hasIndexed) {
         List<String> unused = new ArrayList<>();
@@ -329,10 +330,33 @@ public final class CodeBlock {
         case 'T':
           this.args.add(argToType(arg));
           break;
+        case 'C':
+          this.args.add(argToCharString(arg));
+          break;
         default:
           throw new IllegalArgumentException(
-              String.format("invalid format string: '%s'", format));
+                  String.format("invalid format string: '%s'", format));
       }
+    }
+
+    private String argToCharString(Object o) {
+      if("\'".equals(o.toString()))
+        return "'\\''";
+      if("\"".equals(o.toString()))
+        return "'\\\"'";
+      if("\n".equals(o.toString()))
+        return "'\\n'";
+      if("\b".equals(o.toString()))
+        return "'\\b'";
+      if("\r".equals(o.toString()))
+        return "'\\r'";
+      if("\t".equals(o.toString()))
+        return "'\\t'";
+      if("\\".equals(o.toString()))
+        return "'\\\'";
+      if("\0".equals(o.toString()))
+        return "'\\0'";
+      return "\'"+o+"\'";
     }
 
     private String argToName(Object o) {
