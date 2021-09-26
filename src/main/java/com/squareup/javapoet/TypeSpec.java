@@ -872,7 +872,7 @@ public final class TypeSpec {
         }
 
         if (kind == Kind.RECORD) {
-          checkState(!modifiers.contains(Modifier.ABSTRACT), "%s is an abstract record");
+          checkState(!modifiers.contains(Modifier.ABSTRACT), "abstract record");
         }
       }
 
