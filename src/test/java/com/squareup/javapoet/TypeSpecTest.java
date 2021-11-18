@@ -417,6 +417,29 @@ public final class TypeSpecTest {
   }
 
   @Test
+  public void secondaryConstructorRecord() throws Exception {
+    TypeSpec rec = TypeSpec.recordBuilder("Person")
+        .addRecordComponent(ParameterSpec.builder(ClassName.get(String.class), "name").build())
+        .addMethod(MethodSpec.constructorBuilder()
+            .addParameter(TypeName.INT, "number")
+            .addCode("this.name = $T.toString(number);", ClassName.get(Integer.class))
+            .build())
+        .build();
+
+    assertThat(toString(rec)).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "import java.lang.Integer;\n"
+        + "import java.lang.String;\n"
+        + "\n"
+        + "record Person(String name) {\n"
+        + "  Person(int number) {\n"
+        + "    this.name = Integer.toString(number);\n"
+        + "  }\n"
+        + "}\n");
+  }
+
+  @Test
   public void varargsRecord() throws Exception {
     TypeSpec rec = TypeSpec.recordBuilder("Vararg")
         .addModifiers(Modifier.PUBLIC)
