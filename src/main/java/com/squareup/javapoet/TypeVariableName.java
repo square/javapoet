@@ -96,7 +96,17 @@ public final class TypeVariableName extends TypeName {
 
   /** Returns type variable named {@code name} with {@code bounds}. */
   public static TypeVariableName get(String name, Type... bounds) {
-    return TypeVariableName.of(name, TypeName.list(bounds));
+    return TypeVariableName.of(name, list(bounds));
+  }
+
+  /** Returns type variable named {@code name} with {@code bounds}. */
+  public static TypeVariableName get(String name, List<TypeName> bounds) {
+    return TypeVariableName.of(name, bounds);
+  }
+
+  /** Returns type variable named {@code name} with {@code bounds}. */
+  public static TypeVariableName get(String name, Iterable<Type> bounds) {
+    return TypeVariableName.of(name, list(bounds));
   }
 
   /** Returns type variable equivalent to {@code mirror}. */

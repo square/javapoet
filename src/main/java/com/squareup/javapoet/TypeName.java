@@ -368,6 +368,16 @@ public class TypeName {
     return result;
   }
 
+  /** Converts an iterable of types to a list of type names. */
+  static List<TypeName> list(Iterable<Type> types) {
+    Map<Type, TypeVariableName> map = new LinkedHashMap<>();
+    List<TypeName> result = new ArrayList<>();
+    for (Type type : types) {
+      result.add(get(type, map));
+    }
+    return result;
+  }
+
   /** Returns the array component of {@code type}, or null if {@code type} is not an array. */
   static TypeName arrayComponent(TypeName type) {
     return type instanceof ArrayTypeName
