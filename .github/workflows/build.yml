@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         java-version:
-          - 1.8
+          - 8
           - 9
           - 10
           # TODO:
@@ -32,4 +32,4 @@ jobs:
       - run: mvn --no-transfer-progress verify source:jar javadoc:jar
 
       - run: mvn --no-transfer-progress deploy --settings=".github/workflows/settings.xml" -Dmaven.test.skip=true
-        if: ${{ github.ref == 'refs/heads/master' && github.repository == 'square/javapoet' && matrix.java-version == '1.8' }}
+        if: ${{ github.ref == 'refs/heads/master' && github.repository == 'square/javapoet' && matrix.java-version == '8' }}
