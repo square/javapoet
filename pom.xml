@@ -23,7 +23,7 @@
     <java.version>1.8</java.version>
     <junit.version>4.13.1</junit.version>
     <truth.version>0.39</truth.version>
-    <compile-testing.version>0.15</compile-testing.version>
+    <compile-testing.version>0.19</compile-testing.version>
   </properties>
 
   <scm>
