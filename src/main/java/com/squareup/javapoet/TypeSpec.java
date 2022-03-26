@@ -626,6 +626,11 @@ public final class TypeSpec {
       return this;
     }
 
+    public Builder addRawInitializerBlock(CodeBlock block) {
+      initializerBlock.add(block).add("\n");
+      return this;
+    }
+
     public Builder addMethods(Iterable<MethodSpec> methodSpecs) {
       checkArgument(methodSpecs != null, "methodSpecs == null");
       for (MethodSpec methodSpec : methodSpecs) {

@@ -2307,6 +2307,7 @@ public final class TypeSpecTest {
         .addStaticBlock(CodeBlock.builder()
             .addStatement("FOO = $S", "FOO")
             .build())
+        .addRawInitializerBlock(CodeBlock.builder().add("// @@protoc_insertion_point(service_scope:)").build())
         .addMethod(MethodSpec.constructorBuilder().build())
         .addMethod(MethodSpec.methodBuilder("toString")
             .addAnnotation(Override.class)
@@ -2333,6 +2334,7 @@ public final class TypeSpecTest {
         + "\n"
         + "  private String foo;\n"
         + "\n"
+        + "  // @@protoc_insertion_point(service_scope:)\n"
         + "  {\n"
         + "    foo = \"FOO\";\n"
         + "  }\n"
