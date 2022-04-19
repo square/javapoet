@@ -43,7 +43,7 @@ import static com.squareup.javapoet.Util.checkNotNull;
 /** A generated annotation on a declaration. */
 public final class AnnotationSpec {
   public static final String VALUE = "value";
-  
+
   public final TypeName type;
   public final Map<String, List<CodeBlock>> members;
 
