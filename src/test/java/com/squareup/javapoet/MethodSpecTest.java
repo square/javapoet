@@ -484,5 +484,38 @@ public final class MethodSpecTest {
   private static CodeBlock named(String format, Map<String, ?> args){
     return CodeBlock.builder().addNamed(format, args).build();
   }
+  @Test public void multilineComments() {
+    MethodSpec main = MethodSpec.methodBuilder("main")
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+            .returns(void.class)
+            .addParameter(String[].class, "args")
+            .addComment("Hello\nmultiline\ncomments!")
+            .addStatement("$T.out.println($S)", System.class, "Hello, JavaPoet!")
+            .build();
+
+    assertThat(main.toString()).isEqualTo("" +
+            "public static void main(java.lang.String[] args) {\n" +
+            "  // Hello\n" +
+            "  // multiline\n" +
+            "  // comments!\n" +
+            "  java.lang.System.out.println(\"Hello, JavaPoet!\");\n" +
+            "}\n");
+  }
+
+  @Test public void singleLineComments() {
+    MethodSpec main = MethodSpec.methodBuilder("main")
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+            .returns(void.class)
+            .addParameter(String[].class, "args")
+            .addComment("Hello single line comments!")
+            .addStatement("$T.out.println($S)", System.class, "Hello, JavaPoet!")
+            .build();
+
+    assertThat(main.toString()).isEqualTo("" +
+            "public static void main(java.lang.String[] args) {\n" +
+            "  // Hello single line comments!\n" +
+            "  java.lang.System.out.println(\"Hello, JavaPoet!\");\n" +
+            "}\n");
+  }
 
 }
