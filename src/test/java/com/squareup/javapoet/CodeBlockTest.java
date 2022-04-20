@@ -47,6 +47,9 @@ public final class CodeBlockTest {
   @Test public void ofStatement() {
     CodeBlock a = CodeBlock.ofStatement("$L taco", "delicious");
     assertThat(a.toString()).isEqualTo("delicious taco;\n");
+  }
+
+  @Test public void ofStatement2() {
     assertThat(CodeBlock.ofStatement("println($L)", "\"hello world\"").toString()).isEqualTo("println(\"hello world\");\n");
   }
 
