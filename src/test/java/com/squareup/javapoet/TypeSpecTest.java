@@ -2000,6 +2000,14 @@ public final class TypeSpecTest {
     }
   }
 
+  @Test public void ModifiersListAdditions(){
+    Modifier[] modifiers = {Modifier.PUBLIC, Modifier.FINAL};
+    TypeSpec.Builder builder =
+            TypeSpec.classBuilder("Taco").addModifiers(modifiers);
+
+    assertThat(builder.build().modifiers).containsExactly(Modifier.PUBLIC, Modifier.FINAL);
+  }
+
   @Test public void nullModifiersListAdditions(){
     try {
       TypeSpec.classBuilder("Taco").addModifiers((Modifier[]) null).build();
