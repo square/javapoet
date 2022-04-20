@@ -2000,6 +2000,16 @@ public final class TypeSpecTest {
     }
   }
 
+  @Test public void nullModifiersListAdditions(){
+    try {
+      TypeSpec.classBuilder("Taco").addModifiers((Modifier[]) null).build();
+      fail();
+    } catch(IllegalArgumentException expected) {
+      assertThat(expected.getMessage())
+              .isEqualTo("modifiers contain null");
+    }
+  }
+
   @Test public void nullTypeVariablesAddition() {
     try {
       TypeSpec.classBuilder("Taco").addTypeVariables(null);
