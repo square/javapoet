@@ -56,6 +56,7 @@ public final class TypeSpec {
   public final TypeName superclass;
   public final List<TypeName> superinterfaces;
   public final Map<String, TypeSpec> enumConstants;
+  public final Map<String, TypeName> recordArguments;
   public final List<FieldSpec> fieldSpecs;
   public final CodeBlock staticBlock;
   public final CodeBlock initializerBlock;
@@ -76,6 +77,7 @@ public final class TypeSpec {
     this.superclass = builder.superclass;
     this.superinterfaces = Util.immutableList(builder.superinterfaces);
     this.enumConstants = Util.immutableMap(builder.enumConstants);
+    this.recordArguments = Util.immutableMap(builder.recordArguments);
     this.fieldSpecs = Util.immutableList(builder.fieldSpecs);
     this.staticBlock = builder.staticBlock.build();
     this.initializerBlock = builder.initializerBlock.build();
@@ -110,6 +112,7 @@ public final class TypeSpec {
     this.superclass = null;
     this.superinterfaces = Collections.emptyList();
     this.enumConstants = Collections.emptyMap();
+    this.recordArguments = Collections.emptyMap();
     this.fieldSpecs = Collections.emptyList();
     this.staticBlock = type.staticBlock;
     this.initializerBlock = type.initializerBlock;
@@ -148,6 +151,14 @@ public final class TypeSpec {
     return enumBuilder(checkNotNull(className, "className == null").simpleName());
   }
 
+  public static Builder recordBuilder(String name) {
+    return new Builder(Kind.RECORD, checkNotNull(name, "name == null"), null);
+  }
+
+  public static Builder recordBuilder(ClassName className) {
+    return recordBuilder(checkNotNull(className, "className == null").simpleName());
+  }
+
   public static Builder anonymousClassBuilder(String typeArgumentsFormat, Object... args) {
     return anonymousClassBuilder(CodeBlock.of(typeArgumentsFormat, args));
   }
@@ -163,6 +174,7 @@ public final class TypeSpec {
   public static Builder annotationBuilder(ClassName className) {
     return annotationBuilder(checkNotNull(className, "className == null").simpleName());
   }
+
 
   public Builder toBuilder() {
     Builder builder = new Builder(kind, name, anonymousTypeArguments);
@@ -256,7 +268,19 @@ public final class TypeSpec {
         }
 
         codeWriter.popType();
-
+        if (kind == Kind.RECORD){
+          codeWriter.emit("(");
+          boolean firstMember = true;
+          for (Iterator<Map.Entry<String, TypeName>> i = recordArguments.entrySet().iterator(); i.hasNext(); ) {
+//          for (FieldSpec fieldSpec : fieldSpecs) {
+            Map.Entry<String, TypeName> entry = i.next();
+            codeWriter.emit(CodeBlock.builder().add("$T "+entry.getKey(),entry.getValue()).build());
+//            fieldSpec.emit(codeWriter, kind.implicitFieldModifiers);
+            if (i.hasNext()) codeWriter.emit(", ");
+            firstMember = false;
+          }
+          codeWriter.emit(")");
+        }
         codeWriter.emit(" {\n");
       }
 
@@ -373,6 +397,11 @@ public final class TypeSpec {
         Collections.emptySet(),
         Collections.emptySet(),
         Collections.emptySet()),
+    RECORD(
+        Collections.emptySet(),
+        Collections.emptySet(),
+        Collections.emptySet(),
+        Collections.emptySet()),
 
     INTERFACE(
         Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)),
@@ -419,6 +448,7 @@ public final class TypeSpec {
     private final CodeBlock.Builder initializerBlock = CodeBlock.builder();
 
     public final Map<String, TypeSpec> enumConstants = new LinkedHashMap<>();
+    public final Map<String, TypeName> recordArguments = new LinkedHashMap<>();
     public final List<AnnotationSpec> annotations = new ArrayList<>();
     public final List<Modifier> modifiers = new ArrayList<>();
     public final List<TypeVariableName> typeVariables = new ArrayList<>();
@@ -608,7 +638,14 @@ public final class TypeSpec {
     public Builder addField(Type type, String name, Modifier... modifiers) {
       return addField(TypeName.get(type), name, modifiers);
     }
-
+    public Builder addRecord(TypeName type, String name) {
+      this.recordArguments.put(name,type);
+      return this;
+    }
+    public Builder addRecord(Type type, String name) {
+      this.recordArguments.put(name,TypeName.get(type));
+      return this;
+    }
     public Builder addStaticBlock(CodeBlock block) {
       staticBlock.beginControlFlow("static").add(block).endControlFlow();
       return this;

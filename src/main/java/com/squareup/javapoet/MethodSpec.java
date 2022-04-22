@@ -42,7 +42,7 @@ import static com.squareup.javapoet.Util.checkState;
 /** A generated constructor or method declaration. */
 public final class MethodSpec {
   static final String CONSTRUCTOR = "<init>";
-
+  static final String COMPACT_CONSTRUCTOR = "compact";
   public final String name;
   public final CodeBlock javadoc;
   public final List<AnnotationSpec> annotations;
@@ -93,6 +93,8 @@ public final class MethodSpec {
 
     if (isConstructor()) {
       codeWriter.emit("$L($Z", enclosingName);
+    } else if(isCompactConstructor()){
+      codeWriter.emit("$L",enclosingName);
     } else {
       codeWriter.emit("$T $L($Z", returnType, name);
     }
@@ -105,7 +107,7 @@ public final class MethodSpec {
       firstParameter = false;
     }
 
-    codeWriter.emit(")");
+    if(!isCompactConstructor()) codeWriter.emit(")");
 
     if (defaultValue != null && !defaultValue.isEmpty()) {
       codeWriter.emit(" default ");
@@ -161,6 +163,9 @@ public final class MethodSpec {
   public boolean isConstructor() {
     return name.equals(CONSTRUCTOR);
   }
+  public boolean isCompactConstructor() {
+    return name.equals(COMPACT_CONSTRUCTOR);
+  }
 
   @Override public boolean equals(Object o) {
     if (this == o) return true;
@@ -190,6 +195,9 @@ public final class MethodSpec {
 
   public static Builder constructorBuilder() {
     return new Builder(CONSTRUCTOR);
+  }
+  public static Builder CompactConstructorBuilder() {
+    return new Builder(COMPACT_CONSTRUCTOR);
   }
 
   /**
