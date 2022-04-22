@@ -11,6 +11,9 @@ public class RecordExample {
         TypeSpec record = TypeSpec.recordBuilder("Employee")
                 .addModifiers(Modifier.PUBLIC)
                 .addField(int.class, "empToken", Modifier.STATIC)
+                .addRecord(int.class, "id")
+                .addRecord(String.class, "firstName")
+                .addRecord(String.class, "lastName")
                 .addMethod(MethodSpec.CompactConstructorBuilder()
                         .addCode("if (id < 100) {\n" +
                                 "    throw new IllegalArgumentException(" +
@@ -38,17 +41,7 @@ public class RecordExample {
                         .returns(int.class)
                         .addCode("return ++empToken;")
                         .build())
-                .addRecord(int.class, "id")
-                .addRecord(String.class, "firstName")
-                .addRecord(String.class, "lastName")
                 .build();
-        MethodSpec main = MethodSpec.methodBuilder("main")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(void.class)
-                .addParameter(String[].class, "args")
-                .addStatement("Employee e1 = new Employee(1001, \"Derok\", \"Dranf\")")
-                .build();
-
 
         JavaFile javaFile = JavaFile.builder("com.example.record", record)
                 .build();
