@@ -339,7 +339,46 @@ public final class CodeBlockTest {
     CodeBlock joined = codeBlocks.stream().collect(CodeBlock.joining(" || ", "start {", "} end"));
     assertThat(joined.toString()).isEqualTo("start {\"hello\" || world.World || need tacos} end");
   }
+  @Test public void nestCodeBlock1(){
+    CodeBlock inner = CodeBlock.builder()
+            .beginControlFlow("() ->")
+            .addStatement("return 42")
+            .endControlFlow()
+            .build();
+    CodeBlock outer =
+            CodeBlock.builder()
+                    .addStatement(
+                            "$T lambda = $L",
+                            ParameterizedTypeName.get(
+                                    ClassName.get(ArrayList.class), ClassName.get(Integer.class)),
+                            inner)
+                    .build();
+    assertThat(outer.toString()).isEqualTo("java.util.ArrayList<java.lang.Integer> lambda = () -> {\n" +
+            "      return 42;\n" +
+            "    }\n" +
+            "    ;\n");
+  }
+  @Test public void NestCodeBlock2(){
+    CodeBlock inner = CodeBlock.builder()
+            .beginControlFlow("() ->")
+            .addStatement("return 42")
+            .endControlFlow()
+            .build();
 
+    CodeBlock outer =
+            CodeBlock.builder()
+                    .add(
+                            "$T lambda = $L;",
+                            ParameterizedTypeName.get(
+                                    ClassName.get(ArrayList.class), ClassName.get(Integer.class)),
+                            inner)
+                    .build();
+    assertThat(outer.toString()).isEqualTo("java.util.ArrayList<java.lang.Integer> lambda = () -> {\n" +
+            "  return 42;\n" +
+            "}\n" +
+            ";");
+
+  }
   @Test public void clear() {
     CodeBlock block = CodeBlock.builder()
         .addStatement("$S", "Test string")
