@@ -276,6 +276,36 @@ public final class MethodSpec {
     return builder;
   }
 
+  public static Builder overridingWithModifier(ExecutableElement method, List<Integer> locations, Modifier modifier) {
+    Builder builder = overriding(method);
+    int size = method.getParameters().size();
+
+    for (int i : locations) {
+      if (0 <= i && i < size) {
+        ParameterSpec parameter = builder.parameters.get(i);
+        builder.parameters.set(i, parameter.toBuilder().addModifiers(modifier).build());
+      }
+    }
+
+    return builder;
+  }
+
+  public static Builder overriding(
+          ExecutableElement method, DeclaredType enclosing, Types types,
+          List<Integer> locations, Modifier modifier) {
+    Builder builder = overriding(method, enclosing, types);
+    int size = method.getParameters().size();
+
+    for (int i: locations) {
+      if (0 <= i && i < size) {
+        ParameterSpec parameter = builder.parameters.get(i);
+        builder.parameters.set(i, parameter.toBuilder().addModifiers(modifier).build());
+      }
+    }
+
+    return builder;
+  }
+
   public Builder toBuilder() {
     Builder builder = new Builder(name);
     builder.javadoc.add(javadoc);
