@@ -226,7 +226,6 @@ final class CodeWriter {
   }
 
   public CodeWriter emit(CodeBlock codeBlock) throws IOException {
-
     return emit(codeBlock, false);
   }
 
