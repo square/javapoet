@@ -111,7 +111,7 @@ final class LineWrapper {
   }
 
   /** Write the space followed by any buffered text that follows it. */
-  private void flush(FlushType flushType) throws IOException {
+  protected void flush(FlushType flushType) throws IOException {
     switch (flushType) {
       case WRAP:
         out.append('\n');
@@ -134,6 +134,9 @@ final class LineWrapper {
     buffer.delete(0, buffer.length());
     indentLevel = -1;
     nextFlush = null;
+  }
+  protected void unclosedFlush() throws IOException {
+    if (nextFlush != null) flush(nextFlush);
   }
 
   private enum FlushType {
@@ -168,4 +171,6 @@ final class LineWrapper {
       return delegate.append(c);
     }
   }
+
+
 }

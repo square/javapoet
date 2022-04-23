@@ -91,10 +91,13 @@ public final class CodeBlock {
     return toString().hashCode();
   }
 
-  @Override public String toString() {
+  @Override public String
+  toString() {
     StringBuilder out = new StringBuilder();
     try {
-      new CodeWriter(out).emit(this);
+      CodeWriter codeWriter = new CodeWriter(out);
+      codeWriter.emit(this);
+      codeWriter.flush();
       return out.toString();
     } catch (IOException e) {
       throw new AssertionError();

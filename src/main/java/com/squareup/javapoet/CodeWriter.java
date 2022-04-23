@@ -226,6 +226,7 @@ final class CodeWriter {
   }
 
   public CodeWriter emit(CodeBlock codeBlock) throws IOException {
+
     return emit(codeBlock, false);
   }
 
@@ -322,6 +323,9 @@ final class CodeWriter {
       emit("\n");
     }
     return this;
+  }
+  public void flush() throws IOException {
+    out.unclosedFlush();
   }
 
   public CodeWriter emitWrappingSpace() throws IOException {
@@ -504,6 +508,7 @@ final class CodeWriter {
       out.append(line);
       trailingNewline = false;
     }
+
     return this;
   }
 
