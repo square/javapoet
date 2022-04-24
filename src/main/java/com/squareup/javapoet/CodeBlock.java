@@ -15,456 +15,343 @@
  */
 package com.squareup.javapoet;
 
-import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collector;
-import java.util.stream.StreamSupport;
-import javax.lang.model.element.Element;
-import javax.lang.model.type.TypeMirror;
+import org.junit.Test;
 
-import static com.squareup.javapoet.Util.checkArgument;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-/**
- * A fragment of a .java file, potentially containing declarations, statements, and documentation.
- * Code blocks are not necessarily well-formed Java code, and are not validated. This class assumes
- * javac will check correctness later!
- *
- * <p>Code blocks support placeholders like {@link java.text.Format}. Where {@link String#format}
- * uses percent {@code %} to reference target values, this class uses dollar sign {@code $} and has
- * its own set of permitted placeholders:
- *
- * <ul>
- *   <li>{@code $L} emits a <em>literal</em> value with no escaping. Arguments for literals may be
- *       strings, primitives, {@linkplain TypeSpec type declarations}, {@linkplain AnnotationSpec
- *       annotations} and even other code blocks.
- *   <li>{@code $N} emits a <em>name</em>, using name collision avoidance where necessary. Arguments
- *       for names may be strings (actually any {@linkplain CharSequence character sequence}),
- *       {@linkplain ParameterSpec parameters}, {@linkplain FieldSpec fields}, {@linkplain
- *       MethodSpec methods}, and {@linkplain TypeSpec types}.
- *   <li>{@code $S} escapes the value as a <em>string</em>, wraps it with double quotes, and emits
- *       that. For example, {@code 6" sandwich} is emitted {@code "6\" sandwich"}.
- *   <li>{@code $T} emits a <em>type</em> reference. Types will be imported if possible. Arguments
- *       for types may be {@linkplain Class classes}, {@linkplain javax.lang.model.type.TypeMirror
-,*       type mirrors}, and {@linkplain javax.lang.model.element.Element elements}.
- *   <li>{@code $$} emits a dollar sign.
- *   <li>{@code $W} emits a space or a newline, depending on its position on the line. This prefers
- *       to wrap lines before 100 columns.
- *   <li>{@code $Z} acts as a zero-width space. This prefers to wrap lines before 100 columns.
- *   <li>{@code $>} increases the indentation level.
- *   <li>{@code $<} decreases the indentation level.
- *   <li>{@code $[} begins a statement. For multiline statements, every line after the first line
- *       is double-indented.
- *   <li>{@code $]} ends a statement.
- * </ul>
- */
-public final class CodeBlock {
-  private static final Pattern NAMED_ARGUMENT =
-      Pattern.compile("\\$(?<argumentName>[\\w_]+):(?<typeChar>[\\w]).*");
-  private static final Pattern LOWERCASE = Pattern.compile("[a-z]+[\\w_]*");
-
-  /** A heterogeneous list containing string literals and value placeholders. */
-  final List<String> formatParts;
-  final List<Object> args;
-
-  private CodeBlock(Builder builder) {
-    this.formatParts = Util.immutableList(builder.formatParts);
-    this.args = Util.immutableList(builder.args);
+public final class CodeBlockTest {
+  @Test public void equalsAndHashCode() {
+    CodeBlock a = CodeBlock.builder().build();
+    CodeBlock b = CodeBlock.builder().build();
+    assertThat(a.equals(b)).isTrue();
+    assertThat(a.hashCode()).isEqualTo(b.hashCode());
+    a = CodeBlock.builder().add("$L", "taco").build();
+    b = CodeBlock.builder().add("$L", "taco").build();
+    assertThat(a.equals(b)).isTrue();
+    assertThat(a.hashCode()).isEqualTo(b.hashCode());
   }
 
-  public boolean isEmpty() {
-    return formatParts.isEmpty();
+  @Test public void of() {
+    CodeBlock a = CodeBlock.of("$L taco", "delicious");
+    assertThat(a.toString()).isEqualTo("delicious taco");
   }
 
-  @Override public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null) return false;
-    if (getClass() != o.getClass()) return false;
-    return toString().equals(o.toString());
+  @Test public void isEmpty() {
+    assertTrue(CodeBlock.builder().isEmpty());
+    assertTrue(CodeBlock.builder().add("").isEmpty());
+    assertFalse(CodeBlock.builder().add(" ").isEmpty());
   }
 
-  @Override public int hashCode() {
-    return toString().hashCode();
-  }
-
-  @Override public String toString() {
-    StringBuilder out = new StringBuilder();
+  @Test public void indentCannotBeIndexed() {
     try {
-      new CodeWriter(out).emit(this);
-      return out.toString();
-    } catch (IOException e) {
-      throw new AssertionError();
+      CodeBlock.builder().add("$1>", "taco").build();
+      fail();
+    } catch (IllegalArgumentException exp) {
+      assertThat(exp)
+          .hasMessageThat()
+          .isEqualTo("$$, $>, $<, $[, $], $W, and $Z may not have an index");
     }
   }
 
-  public static CodeBlock of(String format, Object... args) {
-    return new Builder().add(format, args).build();
-  }
-
-  /**
-   * Joins {@code codeBlocks} into a single {@link CodeBlock}, each separated by {@code separator}.
-   * For example, joining {@code String s}, {@code Object o} and {@code int i} using {@code ", "}
-   * would produce {@code String s, Object o, int i}.
-   */
-  public static CodeBlock join(Iterable<CodeBlock> codeBlocks, String separator) {
-    return StreamSupport.stream(codeBlocks.spliterator(), false).collect(joining(separator));
-  }
-
-  /**
-   * A {@link Collector} implementation that joins {@link CodeBlock} instances together into one
-   * separated by {@code separator}. For example, joining {@code String s}, {@code Object o} and
-   * {@code int i} using {@code ", "} would produce {@code String s, Object o, int i}.
-   */
-  public static Collector<CodeBlock, ?, CodeBlock> joining(String separator) {
-    return Collector.of(
-        () -> new CodeBlockJoiner(separator, builder()),
-        CodeBlockJoiner::add,
-        CodeBlockJoiner::merge,
-        CodeBlockJoiner::join);
-  }
-
-  /**
-   * A {@link Collector} implementation that joins {@link CodeBlock} instances together into one
-   * separated by {@code separator}. For example, joining {@code String s}, {@code Object o} and
-   * {@code int i} using {@code ", "} would produce {@code String s, Object o, int i}.
-   */
-  public static Collector<CodeBlock, ?, CodeBlock> joining(
-      String separator, String prefix, String suffix) {
-    Builder builder = builder().add("$N", prefix);
-    return Collector.of(
-        () -> new CodeBlockJoiner(separator, builder),
-        CodeBlockJoiner::add,
-        CodeBlockJoiner::merge,
-        joiner -> {
-            builder.add(CodeBlock.of("$N", suffix));
-            return joiner.join();
-        });
-  }
-
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  public Builder toBuilder() {
-    Builder builder = new Builder();
-    builder.formatParts.addAll(formatParts);
-    builder.args.addAll(args);
-    return builder;
-  }
-
-  public static final class Builder {
-    final List<String> formatParts = new ArrayList<>();
-    final List<Object> args = new ArrayList<>();
-
-    private Builder() {
-    }
-
-    public boolean isEmpty() {
-      return formatParts.isEmpty();
-    }
-
-    /**
-     * Adds code using named arguments.
-     *
-     * <p>Named arguments specify their name after the '$' followed by : and the corresponding type
-     * character. Argument names consist of characters in {@code a-z, A-Z, 0-9, and _} and must
-     * start with a lowercase character.
-     *
-     * <p>For example, to refer to the type {@link java.lang.Integer} with the argument name {@code
-     * clazz} use a format string containing {@code $clazz:T} and include the key {@code clazz} with
-     * value {@code java.lang.Integer.class} in the argument map.
-     */
-    public Builder addNamed(String format, Map<String, ?> arguments) {
-      int p = 0;
-
-      for (String argument : arguments.keySet()) {
-        checkArgument(LOWERCASE.matcher(argument).matches(),
-            "argument '%s' must start with a lowercase character", argument);
-      }
-
-      while (p < format.length()) {
-        int nextP = format.indexOf("$", p);
-        if (nextP == -1) {
-          formatParts.add(format.substring(p));
-          break;
-        }
-
-        if (p != nextP) {
-          formatParts.add(format.substring(p, nextP));
-          p = nextP;
-        }
-
-        Matcher matcher = null;
-        int colon = format.indexOf(':', p);
-        if (colon != -1) {
-          int endIndex = Math.min(colon + 2, format.length());
-          matcher = NAMED_ARGUMENT.matcher(format.substring(p, endIndex));
-        }
-        if (matcher != null && matcher.lookingAt()) {
-          String argumentName = matcher.group("argumentName");
-          checkArgument(arguments.containsKey(argumentName), "Missing named argument for $%s",
-              argumentName);
-          char formatChar = matcher.group("typeChar").charAt(0);
-          addArgument(format, formatChar, arguments.get(argumentName));
-          formatParts.add("$" + formatChar);
-          p += matcher.regionEnd();
-        } else {
-          checkArgument(p < format.length() - 1, "dangling $ at end");
-          checkArgument(isNoArgPlaceholder(format.charAt(p + 1)),
-              "unknown format $%s at %s in '%s'", format.charAt(p + 1), p + 1, format);
-          formatParts.add(format.substring(p, p + 2));
-          p += 2;
-        }
-      }
-
-      return this;
-    }
-
-    /**
-     * Add code with positional or relative arguments.
-     *
-     * <p>Relative arguments map 1:1 with the placeholders in the format string.
-     *
-     * <p>Positional arguments use an index after the placeholder to identify which argument index
-     * to use. For example, for a literal to reference the 3rd argument: "$3L" (1 based index)
-     *
-     * <p>Mixing relative and positional arguments in a call to add is invalid and will result in an
-     * error.
-     */
-    public Builder add(String format, Object... args) {
-      boolean hasRelative = false;
-      boolean hasIndexed = false;
-
-      int relativeParameterCount = 0;
-      int[] indexedParameterCount = new int[args.length];
-
-      for (int p = 0; p < format.length(); ) {
-        if (format.charAt(p) != '$') {
-          int nextP = format.indexOf('$', p + 1);
-          if (nextP == -1) nextP = format.length();
-          formatParts.add(format.substring(p, nextP));
-          p = nextP;
-          continue;
-        }
-
-        p++; // '$'.
-
-        // Consume zero or more digits, leaving 'c' as the first non-digit char after the '$'.
-        int indexStart = p;
-        char c;
-        do {
-          checkArgument(p < format.length(), "dangling format characters in '%s'", format);
-          c = format.charAt(p++);
-        } while (c >= '0' && c <= '9');
-        int indexEnd = p - 1;
-
-        // If 'c' doesn't take an argument, we're done.
-        if (isNoArgPlaceholder(c)) {
-          checkArgument(
-              indexStart == indexEnd, "$$, $>, $<, $[, $], $W, and $Z may not have an index");
-          formatParts.add("$" + c);
-          continue;
-        }
-
-        // Find either the indexed argument, or the relative argument. (0-based).
-        int index;
-        if (indexStart < indexEnd) {
-          index = Integer.parseInt(format.substring(indexStart, indexEnd)) - 1;
-          hasIndexed = true;
-          if (args.length > 0) {
-            indexedParameterCount[index % args.length]++; // modulo is needed, checked below anyway
-          }
-        } else {
-          index = relativeParameterCount;
-          hasRelative = true;
-          relativeParameterCount++;
-        }
-
-        checkArgument(index >= 0 && index < args.length,
-            "index %d for '%s' not in range (received %s arguments)",
-            index + 1, format.substring(indexStart - 1, indexEnd + 1), args.length);
-        checkArgument(!hasIndexed || !hasRelative, "cannot mix indexed and positional parameters");
-
-        addArgument(format, c, args[index]);
-
-        formatParts.add("$" + c);
-      }
-
-      if (hasRelative) {
-        checkArgument(relativeParameterCount >= args.length,
-            "unused arguments: expected %s, received %s", relativeParameterCount, args.length);
-      }
-      if (hasIndexed) {
-        List<String> unused = new ArrayList<>();
-        for (int i = 0; i < args.length; i++) {
-          if (indexedParameterCount[i] == 0) {
-            unused.add("$" + (i + 1));
-          }
-        }
-        String s = unused.size() == 1 ? "" : "s";
-        checkArgument(unused.isEmpty(), "unused argument%s: %s", s, String.join(", ", unused));
-      }
-      return this;
-    }
-
-    private boolean isNoArgPlaceholder(char c) {
-      return c == '$' || c == '>' || c == '<' || c == '[' || c == ']' || c == 'W' || c == 'Z';
-    }
-
-    private void addArgument(String format, char c, Object arg) {
-      switch (c) {
-        case 'N':
-          this.args.add(argToName(arg));
-          break;
-        case 'L':
-          this.args.add(argToLiteral(arg));
-          break;
-        case 'S':
-          this.args.add(argToString(arg));
-          break;
-        case 'T':
-          this.args.add(argToType(arg));
-          break;
-        default:
-          throw new IllegalArgumentException(
-              String.format("invalid format string: '%s'", format));
-      }
-    }
-
-    private String argToName(Object o) {
-      if (o instanceof CharSequence) return o.toString();
-      if (o instanceof ParameterSpec) return ((ParameterSpec) o).name;
-      if (o instanceof FieldSpec) return ((FieldSpec) o).name;
-      if (o instanceof MethodSpec) return ((MethodSpec) o).name;
-      if (o instanceof TypeSpec) return ((TypeSpec) o).name;
-      throw new IllegalArgumentException("expected name but was " + o);
-    }
-
-    private Object argToLiteral(Object o) {
-      return o;
-    }
-
-    private String argToString(Object o) {
-      return o != null ? String.valueOf(o) : null;
-    }
-
-    private TypeName argToType(Object o) {
-      if (o instanceof TypeName) return (TypeName) o;
-      if (o instanceof TypeMirror) return TypeName.get((TypeMirror) o);
-      if (o instanceof Element) return TypeName.get(((Element) o).asType());
-      if (o instanceof Type) return TypeName.get((Type) o);
-      throw new IllegalArgumentException("expected type but was " + o);
-    }
-
-    /**
-     * @param controlFlow the control flow construct and its code, such as "if (foo == 5)".
-     * Shouldn't contain braces or newline characters.
-     */
-    public Builder beginControlFlow(String controlFlow, Object... args) {
-      add(controlFlow + " {\n", args);
-      indent();
-      return this;
-    }
-
-    /**
-     * @param controlFlow the control flow construct and its code, such as "else if (foo == 10)".
-     *     Shouldn't contain braces or newline characters.
-     */
-    public Builder nextControlFlow(String controlFlow, Object... args) {
-      unindent();
-      add("} " + controlFlow + " {\n", args);
-      indent();
-      return this;
-    }
-
-    public Builder endControlFlow() {
-      unindent();
-      add("}\n");
-      return this;
-    }
-
-    /**
-     * @param controlFlow the optional control flow construct and its code, such as
-     *     "while(foo == 20)". Only used for "do/while" control flows.
-     */
-    public Builder endControlFlow(String controlFlow, Object... args) {
-      unindent();
-      add("} " + controlFlow + ";\n", args);
-      return this;
-    }
-
-    public Builder addStatement(String format, Object... args) {
-      add("$[");
-      add(format, args);
-      add(";\n$]");
-      return this;
-    }
-
-    public Builder addStatement(CodeBlock codeBlock) {
-      return addStatement("$L", codeBlock);
-    }
-
-    public Builder add(CodeBlock codeBlock) {
-      formatParts.addAll(codeBlock.formatParts);
-      args.addAll(codeBlock.args);
-      return this;
-    }
-
-    public Builder indent() {
-      this.formatParts.add("$>");
-      return this;
-    }
-
-    public Builder unindent() {
-      this.formatParts.add("$<");
-      return this;
-    }
-
-    public Builder clear() {
-      formatParts.clear();
-      args.clear();
-      return this;
-    }
-
-    public CodeBlock build() {
-      return new CodeBlock(this);
+  @Test public void deindentCannotBeIndexed() {
+    try {
+      CodeBlock.builder().add("$1<", "taco").build();
+      fail();
+    } catch (IllegalArgumentException exp) {
+      assertThat(exp)
+          .hasMessageThat()
+          .isEqualTo("$$, $>, $<, $[, $], $W, and $Z may not have an index");
     }
   }
 
-  private static final class CodeBlockJoiner {
-    private final String delimiter;
-    private final Builder builder;
-    private boolean first = true;
-
-    CodeBlockJoiner(String delimiter, Builder builder) {
-      this.delimiter = delimiter;
-      this.builder = builder;
+  @Test public void dollarSignEscapeCannotBeIndexed() {
+    try {
+      CodeBlock.builder().add("$1$", "taco").build();
+      fail();
+    } catch (IllegalArgumentException exp) {
+      assertThat(exp)
+          .hasMessageThat()
+          .isEqualTo("$$, $>, $<, $[, $], $W, and $Z may not have an index");
     }
+  }
 
-    CodeBlockJoiner add(CodeBlock codeBlock) {
-      if (!first) {
-        builder.add(delimiter);
-      }
-      first = false;
-
-      builder.add(codeBlock);
-      return this;
+  @Test public void statementBeginningCannotBeIndexed() {
+    try {
+      CodeBlock.builder().add("$1[", "taco").build();
+      fail();
+    } catch (IllegalArgumentException exp) {
+      assertThat(exp)
+          .hasMessageThat()
+          .isEqualTo("$$, $>, $<, $[, $], $W, and $Z may not have an index");
     }
+  }
 
-    CodeBlockJoiner merge(CodeBlockJoiner other) {
-      CodeBlock otherBlock = other.builder.build();
-      if (!otherBlock.isEmpty()) {
-        add(otherBlock);
-      }
-      return this;
+  @Test public void statementEndingCannotBeIndexed() {
+    try {
+      CodeBlock.builder().add("$1]", "taco").build();
+      fail();
+    } catch (IllegalArgumentException exp) {
+      assertThat(exp)
+          .hasMessageThat()
+          .isEqualTo("$$, $>, $<, $[, $], $W, and $Z may not have an index");
     }
+  }
 
-    CodeBlock join() {
-      return builder.build();
+  @Test public void nameFormatCanBeIndexed() {
+    CodeBlock block = CodeBlock.builder().add("$1N", "taco").build();
+    assertThat(block.toString()).isEqualTo("taco");
+  }
+
+  @Test public void literalFormatCanBeIndexed() {
+    CodeBlock block = CodeBlock.builder().add("$1L", "taco").build();
+    assertThat(block.toString()).isEqualTo("taco");
+  }
+
+  @Test public void stringFormatCanBeIndexed() {
+    CodeBlock block = CodeBlock.builder().add("$1S", "taco").build();
+    assertThat(block.toString()).isEqualTo("\"taco\"");
+  }
+
+  @Test public void typeFormatCanBeIndexed() {
+    CodeBlock block = CodeBlock.builder().add("$1T", String.class).build();
+    assertThat(block.toString()).isEqualTo("java.lang.String");
+  }
+
+  @Test public void simpleNamedArgument() {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("text", "taco");
+    CodeBlock block = CodeBlock.builder().addNamed("$text:S", map).build();
+    assertThat(block.toString()).isEqualTo("\"taco\"");
+  }
+
+  @Test public void repeatedNamedArgument() {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("text", "tacos");
+    CodeBlock block = CodeBlock.builder()
+        .addNamed("\"I like \" + $text:S + \". Do you like \" + $text:S + \"?\"", map)
+        .build();
+    assertThat(block.toString()).isEqualTo(
+        "\"I like \" + \"tacos\" + \". Do you like \" + \"tacos\" + \"?\"");
+  }
+
+  @Test public void namedAndNoArgFormat() {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("text", "tacos");
+    CodeBlock block = CodeBlock.builder()
+        .addNamed("$>\n$text:L for $$3.50", map).build();
+    assertThat(block.toString()).isEqualTo("\n  tacos for $3.50");
+  }
+
+  @Test public void missingNamedArgument() {
+    try {
+      Map<String, Object> map = new LinkedHashMap<>();
+      CodeBlock.builder().addNamed("$text:S", map).build();
+      fail();
+    } catch(IllegalArgumentException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("Missing named argument for $text");
     }
+  }
+
+  @Test public void lowerCaseNamed() {
+    try {
+      Map<String, Object> map = new LinkedHashMap<>();
+      map.put("Text", "tacos");
+      CodeBlock block = CodeBlock.builder().addNamed("$Text:S", map).build();
+      fail();
+    } catch(IllegalArgumentException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("argument 'Text' must start with a lowercase character");
+    }
+  }
+
+  @Test public void multipleNamedArguments() {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("pipe", System.class);
+    map.put("text", "tacos");
+
+    CodeBlock block = CodeBlock.builder()
+        .addNamed("$pipe:T.out.println(\"Let's eat some $text:L\");", map)
+        .build();
+
+    assertThat(block.toString()).isEqualTo(
+        "java.lang.System.out.println(\"Let's eat some tacos\");");
+  }
+
+  @Test public void namedNewline() {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("clazz", Integer.class);
+    CodeBlock block = CodeBlock.builder().addNamed("$clazz:T\n", map).build();
+    assertThat(block.toString()).isEqualTo("java.lang.Integer\n");
+  }
+
+  @Test public void danglingNamed() {
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("clazz", Integer.class);
+    try {
+      CodeBlock.builder().addNamed("$clazz:T$", map).build();
+      fail();
+    } catch(IllegalArgumentException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("dangling $ at end");
+    }
+  }
+
+  @Test public void indexTooHigh() {
+    try {
+      CodeBlock.builder().add("$2T", String.class).build();
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("index 2 for '$2T' not in range (received 1 arguments)");
+    }
+  }
+
+  @Test public void indexIsZero() {
+    try {
+      CodeBlock.builder().add("$0T", String.class).build();
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("index 0 for '$0T' not in range (received 1 arguments)");
+    }
+  }
+
+  @Test public void indexIsNegative() {
+    try {
+      CodeBlock.builder().add("$-1T", String.class).build();
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("invalid format string: '$-1T'");
+    }
+  }
+
+  @Test public void indexWithoutFormatType() {
+    try {
+      CodeBlock.builder().add("$1", String.class).build();
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("dangling format characters in '$1'");
+    }
+  }
+
+  @Test public void indexWithoutFormatTypeNotAtStringEnd() {
+    try {
+      CodeBlock.builder().add("$1 taco", String.class).build();
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("invalid format string: '$1 taco'");
+    }
+  }
+
+  @Test public void indexButNoArguments() {
+    try {
+      CodeBlock.builder().add("$1T").build();
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("index 1 for '$1T' not in range (received 0 arguments)");
+    }
+  }
+
+  @Test public void formatIndicatorAlone() {
+    try {
+      CodeBlock.builder().add("$", String.class).build();
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("dangling format characters in '$'");
+    }
+  }
+
+  @Test public void formatIndicatorWithoutIndexOrFormatType() {
+    try {
+      CodeBlock.builder().add("$ tacoString", String.class).build();
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("invalid format string: '$ tacoString'");
+    }
+  }
+
+  @Test public void sameIndexCanBeUsedWithDifferentFormats() {
+    CodeBlock block = CodeBlock.builder()
+        .add("$1T.out.println($1S)", ClassName.get(System.class))
+        .build();
+    assertThat(block.toString()).isEqualTo("java.lang.System.out.println(\"java.lang.System\")");
+  }
+
+  @Test public void tooManyStatementEnters() {
+    CodeBlock codeBlock = CodeBlock.builder().add("$[$[").build();
+    try {
+      // We can't report this error until rendering type because code blocks might be composed.
+      codeBlock.toString();
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("statement enter $[ followed by statement enter $[");
+    }
+  }
+
+  @Test public void statementExitWithoutStatementEnter() {
+    CodeBlock codeBlock = CodeBlock.builder().add("$]").build();
+    try {
+      // We can't report this error until rendering type because code blocks might be composed.
+      codeBlock.toString();
+      fail();
+    } catch (IllegalStateException expected) {
+      assertThat(expected).hasMessageThat().isEqualTo("statement exit $] has no matching statement enter $[");
+    }
+  }
+
+  @Test public void join() {
+    List<CodeBlock> codeBlocks = new ArrayList<>();
+    codeBlocks.add(CodeBlock.of("$S", "hello"));
+    codeBlocks.add(CodeBlock.of("$T", ClassName.get("world", "World")));
+    codeBlocks.add(CodeBlock.of("need tacos"));
+
+    CodeBlock joined = CodeBlock.join(codeBlocks, " || ");
+    assertThat(joined.toString()).isEqualTo("\"hello\" || world.World || need tacos");
+  }
+
+  @Test public void joining() {
+    List<CodeBlock> codeBlocks = new ArrayList<>();
+    codeBlocks.add(CodeBlock.of("$S", "hello"));
+    codeBlocks.add(CodeBlock.of("$T", ClassName.get("world", "World")));
+    codeBlocks.add(CodeBlock.of("need tacos"));
+
+    CodeBlock joined = codeBlocks.stream().collect(CodeBlock.joining(" || "));
+    assertThat(joined.toString()).isEqualTo("\"hello\" || world.World || need tacos");
+  }
+
+  @Test public void joiningSingle() {
+    List<CodeBlock> codeBlocks = new ArrayList<>();
+    codeBlocks.add(CodeBlock.of("$S", "hello"));
+
+    CodeBlock joined = codeBlocks.stream().collect(CodeBlock.joining(" || "));
+    assertThat(joined.toString()).isEqualTo("\"hello\"");
+  }
+
+  @Test public void joiningWithPrefixAndSuffix() {
+    List<CodeBlock> codeBlocks = new ArrayList<>();
+    codeBlocks.add(CodeBlock.of("$S", "hello"));
+    codeBlocks.add(CodeBlock.of("$T", ClassName.get("world", "World")));
+    codeBlocks.add(CodeBlock.of("need tacos"));
+
+    CodeBlock joined = codeBlocks.stream().collect(CodeBlock.joining(" || ", "start {", "} end"));
+    assertThat(joined.toString()).isEqualTo("start {\"hello\" || world.World || need tacos} end");
+  }
+
+  @Test public void clear() {
+    CodeBlock block = CodeBlock.builder()
+        .addStatement("$S", "Test string")
+        .clear()
+        .build();
+
+    assertThat(block.toString()).isEmpty();
+  }
+  public enum test_enum{A,B};
+  @Test public void enums(){
+    String test_e=test_enum.A.getClass().getCanonicalName();
+    CodeBlock a = CodeBlock.of("$L",test_enum.A);
+    assertThat(a.toString(a)).isEqualTo(test_e);
   }
 }
