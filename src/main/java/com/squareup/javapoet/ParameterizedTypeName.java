@@ -119,6 +119,16 @@ public final class ParameterizedTypeName extends TypeName {
     return new ParameterizedTypeName(null, ClassName.get(rawType), list(typeArguments));
   }
 
+  /** Returns a parameterized type, applying {@code typeArguments} to {@code rawType}. */
+  public static ParameterizedTypeName get(ClassName rawType, List<TypeName> typeArguments) {
+    return new ParameterizedTypeName(null, rawType, typeArguments);
+  }
+
+  /** Returns a parameterized type, applying {@code typeArguments} to {@code rawType}. */
+  public static ParameterizedTypeName get(Class<?> rawType, Iterable<Type> typeArguments) {
+    return new ParameterizedTypeName(null, ClassName.get(rawType), list(typeArguments));
+  }
+
   /** Returns a parameterized type equivalent to {@code type}. */
   public static ParameterizedTypeName get(ParameterizedType type) {
     return get(type, new LinkedHashMap<>());

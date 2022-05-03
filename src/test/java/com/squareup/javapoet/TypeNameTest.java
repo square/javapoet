@@ -137,7 +137,7 @@ public class TypeNameTest {
     assertEqualsHashCodeAndToString(ParameterizedTypeName.get(Object.class),
         ParameterizedTypeName.get(Object.class));
     assertEqualsHashCodeAndToString(ParameterizedTypeName.get(Set.class, UUID.class),
-        ParameterizedTypeName.get(Set.class, UUID.class));
+        ParameterizedTypeName.get(Set.class, Collections.singletonList(UUID.class)));
     assertNotEquals(ClassName.get(List.class), ParameterizedTypeName.get(List.class,
         String.class));
   }
@@ -146,7 +146,8 @@ public class TypeNameTest {
     assertEqualsHashCodeAndToString(TypeVariableName.get(Object.class),
         TypeVariableName.get(Object.class));
     TypeVariableName typeVar1 = TypeVariableName.get("T", Comparator.class, Serializable.class);
-    TypeVariableName typeVar2 = TypeVariableName.get("T", Comparator.class, Serializable.class);
+    TypeVariableName typeVar2 = TypeVariableName.get("T", Arrays.asList(Comparator.class,
+        Serializable.class));
     assertEqualsHashCodeAndToString(typeVar1, typeVar2);
   }
 
