@@ -360,6 +360,7 @@ public final class CodeBlock {
       if (o instanceof TypeMirror) return TypeName.get((TypeMirror) o);
       if (o instanceof Element) return TypeName.get(((Element) o).asType());
       if (o instanceof Type) return TypeName.get((Type) o);
+      if (o instanceof FieldSpec) return TypeName.get((FieldSpec) o);
       throw new IllegalArgumentException("expected type but was " + o);
     }
 
