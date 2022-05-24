@@ -365,7 +365,7 @@ public final class CodeBlock {
      * Shouldn't contain braces or newline characters.
      */
     public Builder beginControlFlow(String controlFlow, Object... args) {
-      add(controlFlow + " {\n", args);
+      add(controlFlow + JavaFile.addLineSeparator(" {"), args);
       indent();
       return this;
     }
@@ -376,14 +376,14 @@ public final class CodeBlock {
      */
     public Builder nextControlFlow(String controlFlow, Object... args) {
       unindent();
-      add("} " + controlFlow + " {\n", args);
+      add("} " + controlFlow + JavaFile.addLineSeparator(" {"), args);
       indent();
       return this;
     }
 
     public Builder endControlFlow() {
       unindent();
-      add("}\n");
+      add(JavaFile.addLineSeparator("}"));
       return this;
     }
 
@@ -393,14 +393,14 @@ public final class CodeBlock {
      */
     public Builder endControlFlow(String controlFlow, Object... args) {
       unindent();
-      add("} " + controlFlow + ";\n", args);
+      add("} " + controlFlow + JavaFile.addLineSeparator(";"), args);
       return this;
     }
 
     public Builder addStatement(String format, Object... args) {
       add("$[");
       add(format, args);
-      add(";\n$]");
+      add(JavaFile.addLineSeparator(";")+"$]");
       return this;
     }
 

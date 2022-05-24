@@ -25,13 +25,7 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
 import javax.tools.JavaFileObject;
@@ -187,15 +181,15 @@ public final class JavaFile {
     }
 
     if (!packageName.isEmpty()) {
-      codeWriter.emit("package $L;\n", packageName);
-      codeWriter.emit("\n");
+      codeWriter.emit(addLineSeparator("package $L;"), packageName);
+      codeWriter.emit(addLineSeparator(""));
     }
 
     if (!staticImports.isEmpty()) {
       for (String signature : staticImports) {
-        codeWriter.emit("import static $L;\n", signature);
+        codeWriter.emit(addLineSeparator("import static $L;"), signature);
       }
-      codeWriter.emit("\n");
+      codeWriter.emit(addLineSeparator(""));
     }
 
     int importedTypesCount = 0;
@@ -206,12 +200,12 @@ public final class JavaFile {
           && !alwaysQualify.contains(className.simpleName)) {
         continue;
       }
-      codeWriter.emit("import $L;\n", className.withoutAnnotations());
+      codeWriter.emit(addLineSeparator("import $L;"), className.withoutAnnotations());
       importedTypesCount++;
     }
 
     if (importedTypesCount > 0) {
-      codeWriter.emit("\n");
+      codeWriter.emit(addLineSeparator(""));
     }
 
     typeSpec.emit(codeWriter, null, Collections.emptySet());
@@ -332,5 +326,23 @@ public final class JavaFile {
     public JavaFile build() {
       return new JavaFile(this);
     }
+  }
+
+  public static String addLineSeparator(String src){
+    Properties props = System.getProperties();
+    String osName = props.getProperty("os.name");
+    String LS;
+    if (osName.contains("Windows")){
+      LS = "\r\n";
+    }else if (osName.contains("Linux")){
+      LS = "\n";
+    }else if (osName.contains("Mac OS")){
+      LS = "\r";
+    }else if (osName.contains("Mac OS X")){
+      LS = "\n";
+    }else{
+      LS = "\n";
+    }
+    return src+LS;
   }
 }

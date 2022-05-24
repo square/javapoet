@@ -144,7 +144,7 @@ final class CodeWriter {
     comment = true;
     try {
       emit(codeBlock);
-      emit("\n");
+      emit(JavaFile.addLineSeparator(""));
     } finally {
       comment = false;
     }
@@ -153,20 +153,20 @@ final class CodeWriter {
   public void emitJavadoc(CodeBlock javadocCodeBlock) throws IOException {
     if (javadocCodeBlock.isEmpty()) return;
 
-    emit("/**\n");
+    emit(JavaFile.addLineSeparator("/**"));
     javadoc = true;
     try {
       emit(javadocCodeBlock, true);
     } finally {
       javadoc = false;
     }
-    emit(" */\n");
+    emit(JavaFile.addLineSeparator(" */"));
   }
 
   public void emitAnnotations(List<AnnotationSpec> annotations, boolean inline) throws IOException {
     for (AnnotationSpec annotationSpec : annotations) {
       annotationSpec.emit(this, inline);
-      emit(inline ? " " : "\n");
+      emit(inline ? " " : JavaFile.addLineSeparator(""));
     }
   }
 
@@ -318,8 +318,8 @@ final class CodeWriter {
           break;
       }
     }
-    if (ensureTrailingNewline && out.lastChar() != '\n') {
-      emit("\n");
+    if (ensureTrailingNewline && out.lastChar() != '\n' && out.lastChar() != '\r') {
+      emit(JavaFile.addLineSeparator(""));
     }
     return this;
   }
@@ -478,7 +478,7 @@ final class CodeWriter {
           emitIndentation();
           out.append(javadoc ? " *" : "//");
         }
-        out.append("\n");
+        out.append(JavaFile.addLineSeparator(""));
         trailingNewline = true;
         if (statementLine != -1) {
           if (statementLine == 0) {

@@ -53,8 +53,8 @@ public final class AnnotationSpec {
   }
 
   void emit(CodeWriter codeWriter, boolean inline) throws IOException {
-    String whitespace = inline ? "" : "\n";
-    String memberSeparator = inline ? ", " : ",\n";
+    String whitespace = inline ? "" : JavaFile.addLineSeparator("");
+    String memberSeparator = inline ? ", " : JavaFile.addLineSeparator(",");
     if (members.isEmpty()) {
       // @Singleton
       codeWriter.emit("@$T", type);

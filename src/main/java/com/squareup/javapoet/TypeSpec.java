@@ -203,12 +203,12 @@ public final class TypeSpec {
         if (fieldSpecs.isEmpty() && methodSpecs.isEmpty() && typeSpecs.isEmpty()) {
           return; // Avoid unnecessary braces "{}".
         }
-        codeWriter.emit(" {\n");
+        codeWriter.emit(JavaFile.addLineSeparator(" {"));
       } else if (anonymousTypeArguments != null) {
         TypeName supertype = !superinterfaces.isEmpty() ? superinterfaces.get(0) : superclass;
         codeWriter.emit("new $T(", supertype);
         codeWriter.emit(anonymousTypeArguments);
-        codeWriter.emit(") {\n");
+        codeWriter.emit(JavaFile.addLineSeparator(") {"));
       } else {
         // Push an empty type (specifically without nested types) for type-resolution.
         codeWriter.pushType(new TypeSpec(this));
@@ -257,7 +257,7 @@ public final class TypeSpec {
 
         codeWriter.popType();
 
-        codeWriter.emit(" {\n");
+        codeWriter.emit(JavaFile.addLineSeparator(" {"));
       }
 
       codeWriter.pushType(this);
@@ -268,28 +268,28 @@ public final class TypeSpec {
       for (Iterator<Map.Entry<String, TypeSpec>> i = enumConstants.entrySet().iterator();
           i.hasNext(); ) {
         Map.Entry<String, TypeSpec> enumConstant = i.next();
-        if (!firstMember) codeWriter.emit("\n");
+        if (!firstMember) codeWriter.emit(JavaFile.addLineSeparator(""));
         enumConstant.getValue().emit(codeWriter, enumConstant.getKey(), Collections.emptySet());
         firstMember = false;
         if (i.hasNext()) {
-          codeWriter.emit(",\n");
+          codeWriter.emit(JavaFile.addLineSeparator(","));
         } else if (!needsSeparator) {
-          codeWriter.emit("\n");
+          codeWriter.emit(JavaFile.addLineSeparator(""));
         }
       }
 
-      if (needsSeparator) codeWriter.emit(";\n");
+      if (needsSeparator) codeWriter.emit(JavaFile.addLineSeparator(";"));
 
       // Static fields.
       for (FieldSpec fieldSpec : fieldSpecs) {
         if (!fieldSpec.hasModifier(Modifier.STATIC)) continue;
-        if (!firstMember) codeWriter.emit("\n");
+        if (!firstMember) codeWriter.emit(JavaFile.addLineSeparator(""));
         fieldSpec.emit(codeWriter, kind.implicitFieldModifiers);
         firstMember = false;
       }
 
       if (!staticBlock.isEmpty()) {
-        if (!firstMember) codeWriter.emit("\n");
+        if (!firstMember) codeWriter.emit(JavaFile.addLineSeparator(""));
         codeWriter.emit(staticBlock);
         firstMember = false;
       }
@@ -297,14 +297,14 @@ public final class TypeSpec {
       // Non-static fields.
       for (FieldSpec fieldSpec : fieldSpecs) {
         if (fieldSpec.hasModifier(Modifier.STATIC)) continue;
-        if (!firstMember) codeWriter.emit("\n");
+        if (!firstMember) codeWriter.emit(JavaFile.addLineSeparator(""));
         fieldSpec.emit(codeWriter, kind.implicitFieldModifiers);
         firstMember = false;
       }
 
       // Initializer block.
       if (!initializerBlock.isEmpty()) {
-        if (!firstMember) codeWriter.emit("\n");
+        if (!firstMember) codeWriter.emit(JavaFile.addLineSeparator(""));
         codeWriter.emit(initializerBlock);
         firstMember = false;
       }
@@ -312,7 +312,7 @@ public final class TypeSpec {
       // Constructors.
       for (MethodSpec methodSpec : methodSpecs) {
         if (!methodSpec.isConstructor()) continue;
-        if (!firstMember) codeWriter.emit("\n");
+        if (!firstMember) codeWriter.emit(JavaFile.addLineSeparator(""));
         methodSpec.emit(codeWriter, name, kind.implicitMethodModifiers);
         firstMember = false;
       }
@@ -320,14 +320,14 @@ public final class TypeSpec {
       // Methods (static and non-static).
       for (MethodSpec methodSpec : methodSpecs) {
         if (methodSpec.isConstructor()) continue;
-        if (!firstMember) codeWriter.emit("\n");
+        if (!firstMember) codeWriter.emit(JavaFile.addLineSeparator(""));
         methodSpec.emit(codeWriter, name, kind.implicitMethodModifiers);
         firstMember = false;
       }
 
       // Types.
       for (TypeSpec typeSpec : typeSpecs) {
-        if (!firstMember) codeWriter.emit("\n");
+        if (!firstMember) codeWriter.emit(JavaFile.addLineSeparator(""));
         typeSpec.emit(codeWriter, null, kind.implicitTypeModifiers);
         firstMember = false;
       }
@@ -338,7 +338,7 @@ public final class TypeSpec {
 
       codeWriter.emit("}");
       if (enumName == null && anonymousTypeArguments == null) {
-        codeWriter.emit("\n"); // If this type isn't also a value, include a trailing newline.
+        codeWriter.emit(JavaFile.addLineSeparator("")); // If this type isn't also a value, include a trailing newline.
       }
     } finally {
       codeWriter.statementLine = previousStatementLine;
@@ -618,11 +618,11 @@ public final class TypeSpec {
       if ((kind != Kind.CLASS && kind != Kind.ENUM)) {
         throw new UnsupportedOperationException(kind + " can't have initializer blocks");
       }
-      initializerBlock.add("{\n")
+      initializerBlock.add(JavaFile.addLineSeparator("{"))
           .indent()
           .add(block)
           .unindent()
-          .add("}\n");
+          .add(JavaFile.addLineSeparator("}"));
       return this;
     }
 

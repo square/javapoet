@@ -61,7 +61,7 @@ public final class FieldSpec {
       codeWriter.emit(" = ");
       codeWriter.emit(initializer);
     }
-    codeWriter.emit(";\n");
+    codeWriter.emit(JavaFile.addLineSeparator(";"));
   }
 
   @Override public boolean equals(Object o) {

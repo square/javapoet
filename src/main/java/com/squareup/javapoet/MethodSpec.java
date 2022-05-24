@@ -123,19 +123,19 @@ public final class MethodSpec {
     }
 
     if (hasModifier(Modifier.ABSTRACT)) {
-      codeWriter.emit(";\n");
+      codeWriter.emit(JavaFile.addLineSeparator(";"));
     } else if (hasModifier(Modifier.NATIVE)) {
       // Code is allowed to support stuff like GWT JSNI.
       codeWriter.emit(code);
-      codeWriter.emit(";\n");
+      codeWriter.emit(JavaFile.addLineSeparator(";"));
     } else {
-      codeWriter.emit(" {\n");
+      codeWriter.emit(JavaFile.addLineSeparator(" {"));
 
       codeWriter.indent();
       codeWriter.emit(code, true);
       codeWriter.unindent();
 
-      codeWriter.emit("}\n");
+      codeWriter.emit(JavaFile.addLineSeparator("}"));
     }
     codeWriter.popTypeVariables(typeVariables);
   }
@@ -146,7 +146,7 @@ public final class MethodSpec {
     for (ParameterSpec parameterSpec : parameters) {
       if (!parameterSpec.javadoc.isEmpty()) {
         // Emit a new line before @param section only if the method javadoc is present.
-        if (emitTagNewline && !javadoc.isEmpty()) builder.add("\n");
+        if (emitTagNewline && !javadoc.isEmpty()) builder.add(JavaFile.addLineSeparator(""));
         emitTagNewline = false;
         builder.add("@param $L $L", parameterSpec.name, parameterSpec.javadoc);
       }
@@ -451,7 +451,7 @@ public final class MethodSpec {
     }
 
     public Builder addComment(String format, Object... args) {
-      code.add("// " + format + "\n", args);
+      code.add("// " + format + JavaFile.addLineSeparator(""), args);
       return this;
     }
 
