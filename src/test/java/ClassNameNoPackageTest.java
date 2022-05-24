@@ -32,11 +32,4 @@ public final class ClassNameNoPackageTest {
     assertThat(className.simpleName()).isEqualTo("ClassNameNoPackageTest");
     assertThat(className.toString()).isEqualTo("ClassNameNoPackageTest");
   }
-
-  @Test public void test1() {
-    //获取当前系统名称
-    Properties props = System.getProperties(); //获得系统属性集
-    System.out.println(props.getProperty("os.name"));
-    System.out.println("a\r\n"=="a\n");
-  }
 }
