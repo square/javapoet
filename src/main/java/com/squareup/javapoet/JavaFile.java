@@ -336,13 +336,22 @@ public final class JavaFile {
       LS = "\r\n";
     }else if (osName.contains("Linux")){
       LS = "\n";
-    }else if (osName.contains("Mac OS")){
-      LS = "\r";
     }else if (osName.contains("Mac OS X")){
       LS = "\n";
+    }else if (osName.contains("Mac OS")){
+      LS = "\r";
     }else{
       LS = "\n";
     }
     return src+LS;
+  }
+
+  public static char getLineSeparator(){
+    Properties props = System.getProperties();
+    String osName = props.getProperty("os.name");
+    if (!osName.contains("Mac OS X") && osName.contains("Mac OS")){
+      return '\r';
+    }
+    return '\n';
   }
 }

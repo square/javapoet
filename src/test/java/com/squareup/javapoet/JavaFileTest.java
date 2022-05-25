@@ -1091,10 +1091,10 @@ public final class JavaFileTest {
       LS = "\r\n";
     }else if (osName.contains("Linux")){
       LS = "\n";
-    }else if (osName.contains("Mac OS")){
-      LS = "\r";
     }else if (osName.contains("Mac OS X")){
       LS = "\n";
+    }else if (osName.contains("Mac OS")){
+      LS = "\r";
     }else{
       LS = "\n";
     }

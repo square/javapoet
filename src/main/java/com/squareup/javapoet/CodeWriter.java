@@ -318,7 +318,7 @@ final class CodeWriter {
           break;
       }
     }
-    if (ensureTrailingNewline && out.lastChar() != '\n' && out.lastChar() != '\r') {
+    if (ensureTrailingNewline && out.lastChar() != JavaFile.getLineSeparator()) {
       emit(JavaFile.addLineSeparator(""));
     }
     return this;

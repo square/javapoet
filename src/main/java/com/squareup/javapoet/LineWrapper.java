@@ -62,7 +62,7 @@ final class LineWrapper {
     if (closed) throw new IllegalStateException("closed");
 
     if (nextFlush != null) {
-      int nextNewline = s.indexOf('\n');
+      int nextNewline = s.indexOf(JavaFile.getLineSeparator());
 
       // If s doesn't cause the current line to cross the limit, buffer it and return. We'll decide
       // whether or not we have to wrap it later.
@@ -78,7 +78,7 @@ final class LineWrapper {
     }
 
     out.append(s);
-    int lastNewline = s.lastIndexOf('\n');
+    int lastNewline = s.lastIndexOf(JavaFile.getLineSeparator());
     column = lastNewline != -1
         ? s.length() - lastNewline - 1
         : column + s.length();
@@ -114,7 +114,7 @@ final class LineWrapper {
   private void flush(FlushType flushType) throws IOException {
     switch (flushType) {
       case WRAP:
-        out.append('\n');
+        out.append(JavaFile.getLineSeparator());
         for (int i = 0; i < indentLevel; i++) {
           out.append(indent);
         }
