@@ -31,6 +31,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.ExecutableType;
 import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -179,6 +180,38 @@ public final class MethodSpecTest {
         + "@java.lang.Override\n"
         + "public java.lang.String toString() {\n"
         + "}\n");
+  }
+
+  @Test public void override1() {
+    TypeElement classElement = getElement(ExtendsIterableWithDefaultMethods.class);
+    DeclaredType classType = (DeclaredType) classElement.asType();
+    List<ExecutableElement> methods = methodsIn(elements.getAllMembers(classElement));
+    ExecutableElement exec = findFirst(methods, "spliterator");
+    ExecutableType executableType = (ExecutableType) types.asMemberOf(classType, exec);
+    MethodSpec method = MethodSpec.overriding(exec, executableType).build();
+    assertThat(method.toString()).isEqualTo(""
+            + "@java.lang.Override\n"
+            + "public java.util.Spliterator<java.lang.Object> spliterator() {\n"
+            + "}\n");
+  }
+
+  @Test public void override2() {
+    TypeElement classElement = getElement(ExtendsOthers.class);
+    DeclaredType classType = (DeclaredType) classElement.asType();
+    List<ExecutableElement> methods = methodsIn(elements.getAllMembers(classElement));
+    ExecutableElement exec = findFirst(methods, "call");
+    MethodSpec method = MethodSpec.overriding(exec, classType, types).build();
+    assertThat(method.toString()).isEqualTo(""
+            + "@java.lang.Override\n"
+            + "public java.lang.Integer call() throws java.lang.Exception {\n"
+            + "}\n");
+    exec = findFirst(methods, "compareTo");
+    ExecutableType executableType = (ExecutableType) types.asMemberOf(classType, exec);
+    method = MethodSpec.overriding(exec, executableType).build();
+    assertThat(method.toString()).isEqualTo(""
+            + "@java.lang.Override\n"
+            + "public int compareTo(" + ExtendsOthers.class.getCanonicalName() + " arg0) {\n"
+            + "}\n");
   }
 
   @Test public void overrideDoesNotCopyDefaultModifier() {

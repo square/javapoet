@@ -276,6 +276,34 @@ public final class MethodSpec {
     return builder;
   }
 
+  /**
+   * Returns a new method spec builder that overrides the method
+   * <p>This will copy its visibility modifiers, type parameters, return type, name, parameters, and
+   * throws declarations. An {@link Override} annotation will be added.
+   * @param method
+   * @param executableType
+   * @return
+   */
+  public static Builder overriding(
+          ExecutableElement method, ExecutableType executableType) {
+    List<? extends TypeMirror> resolvedParameterTypes = executableType.getParameterTypes();
+    List<? extends TypeMirror> resolvedThrownTypes = executableType.getThrownTypes();
+    TypeMirror resolvedReturnType = executableType.getReturnType();
+
+    Builder builder = overriding(method);
+    builder.returns(TypeName.get(resolvedReturnType));
+    for (int i = 0, size = builder.parameters.size(); i < size; i++) {
+      ParameterSpec parameter = builder.parameters.get(i);
+      TypeName type = TypeName.get(resolvedParameterTypes.get(i));
+      builder.parameters.set(i, parameter.toBuilder(type, parameter.name).build());
+    }
+    builder.exceptions.clear();
+    for (int i = 0, size = resolvedThrownTypes.size(); i < size; i++) {
+      builder.addException(TypeName.get(resolvedThrownTypes.get(i)));
+    }
+    return builder;
+  }
+
   public Builder toBuilder() {
     Builder builder = new Builder(name);
     builder.javadoc.add(javadoc);
