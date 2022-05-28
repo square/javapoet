@@ -339,6 +339,15 @@ public final class CodeBlockTest {
     CodeBlock joined = codeBlocks.stream().collect(CodeBlock.joining(" || ", "start {", "} end"));
     assertThat(joined.toString()).isEqualTo("start {\"hello\" || world.World || need tacos} end");
   }
+  @Test public void joiningWithDifferentSeparator() {
+    List<CodeBlock> codeBlocks = new ArrayList<>();
+    codeBlocks.add(CodeBlock.of("$S", "hello"));
+    codeBlocks.add(CodeBlock.of("$T", ClassName.get("world", "World")));
+    codeBlocks.add(CodeBlock.of("need tacos"));
+    CodeBlock info = CodeBlock.join(codeBlocks, new String[]{" || "," | "});
+
+    assertThat(info.toString()).isEqualTo("\"hello\" || world.World | need tacos");
+  }
 
   @Test public void clear() {
     CodeBlock block = CodeBlock.builder()

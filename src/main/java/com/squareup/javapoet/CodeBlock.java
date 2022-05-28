@@ -18,6 +18,7 @@ package com.squareup.javapoet;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -112,6 +113,24 @@ public final class CodeBlock {
    */
   public static CodeBlock join(Iterable<CodeBlock> codeBlocks, String separator) {
     return StreamSupport.stream(codeBlocks.spliterator(), false).collect(joining(separator));
+  }
+  /**
+   * Joins {@code codeBlocks} into a single {@link CodeBlock}, each separated by {@code separators}.
+   * For example, joining {@code String s}, {@code Object o} and {@code int i} using {@code "[, ,\] "}
+   * would produce {@code String s, Object o\ int i}.
+   */
+  public static CodeBlock join(Iterable<CodeBlock> codeBlocks, String[] separators) {
+    List<CodeBlock> list = new ArrayList<>();
+    Iterator<CodeBlock> iter = codeBlocks.iterator();
+    list.add((CodeBlock) iter.next());
+
+    for (String separator : separators) {
+      list.add((CodeBlock) iter.next());
+      list.add(join(list, separator));
+      list.remove(0);
+      list.remove(0);
+    }
+    return list.get(0);
   }
 
   /**
