@@ -399,6 +399,14 @@ public final class CodeBlock {
 
     public Builder addStatement(String format, Object... args) {
       add("$[");
+      StringBuilder sb = new StringBuilder(format);
+      for (int i = 0; i < sb.length(); i++) {
+        if (sb.charAt(i) == '\n') {
+          sb.deleteCharAt(i);
+          i--;
+        }
+      }
+      format = sb.toString();
       add(format, args);
       add(";\n$]");
       return this;
