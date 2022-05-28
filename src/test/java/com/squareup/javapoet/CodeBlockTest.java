@@ -339,26 +339,8 @@ public final class CodeBlockTest {
     CodeBlock joined = codeBlocks.stream().collect(CodeBlock.joining(" || ", "start {", "} end"));
     assertThat(joined.toString()).isEqualTo("start {\"hello\" || world.World || need tacos} end");
   }
-  @Test public void nestCodeBlock1(){
-    CodeBlock inner = CodeBlock.builder()
-            .beginControlFlow("() ->")
-            .addStatement("return 42")
-            .endControlFlow()
-            .build();
-    CodeBlock outer =
-            CodeBlock.builder()
-                    .addStatement(
-                            "$T lambda = $L",
-                            ParameterizedTypeName.get(
-                                    ClassName.get(ArrayList.class), ClassName.get(Integer.class)),
-                            inner)
-                    .build();
-    assertThat(outer.toString()).isEqualTo("java.util.ArrayList<java.lang.Integer> lambda = () -> {\n" +
-            "      return 42;\n" +
-            "    }\n" +
-            "    ;\n");
-  }
-  @Test public void NestCodeBlock2(){
+
+  @Test public void NestCodeBlock(){
     CodeBlock inner = CodeBlock.builder()
             .beginControlFlow("() ->")
             .addStatement("return 42")
@@ -378,6 +360,15 @@ public final class CodeBlockTest {
             "}\n" +
             ";");
 
+  }
+  @Test public void joiningWithDifferentSeparator() {
+    List<CodeBlock> codeBlocks = new ArrayList<>();
+    codeBlocks.add(CodeBlock.of("$S", "hello"));
+    codeBlocks.add(CodeBlock.of("$T", ClassName.get("world", "World")));
+    codeBlocks.add(CodeBlock.of("need tacos"));
+    CodeBlock info = CodeBlock.join(codeBlocks, new String[]{" || "," | "});
+
+    assertThat(info.toString()).isEqualTo("\"hello\" || world.World | need tacos");
   }
   @Test public void clear() {
     CodeBlock block = CodeBlock.builder()
