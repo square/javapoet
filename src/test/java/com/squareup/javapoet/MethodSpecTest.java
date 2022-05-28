@@ -481,6 +481,18 @@ public final class MethodSpecTest {
         "}\n");
   }
 
+  @Test public void blockWithNewline() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+            .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+            .returns(void.class)
+            .addStatement("i++\n")
+            .build();
+    assertThat(methodSpec.toString()).isEqualTo(""
+        + "public static void method() {\n" +
+        "  i++;\n" +
+        "}\n");
+  }
+
   private static CodeBlock named(String format, Map<String, ?> args){
     return CodeBlock.builder().addNamed(format, args).build();
   }
