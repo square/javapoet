@@ -313,7 +313,7 @@ public final class AnnotationSpecTest {
         + "    a = 5,\n"
         + "    b = 6,\n"
         + "    c = 7,\n"
-        + "    d = 8,\n"
+        + "    d = 8L,\n"
         + "    e = 9.0f,\n"
         + "    f = 11.1,\n"
         + "    g = {\n"

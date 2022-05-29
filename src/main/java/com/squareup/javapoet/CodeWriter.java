@@ -363,6 +363,10 @@ final class CodeWriter {
     } else if (o instanceof CodeBlock) {
       CodeBlock codeBlock = (CodeBlock) o;
       emit(codeBlock);
+    } else if (o instanceof Long) {
+      emitAndIndent(String.valueOf(o) + "L");
+    } else if (o instanceof Float) {
+      emitAndIndent(String.valueOf(o) + "f");
     } else {
       emitAndIndent(String.valueOf(o));
     }
