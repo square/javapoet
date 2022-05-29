@@ -1999,7 +1999,7 @@ public final class TypeSpecTest {
           .isEqualTo("modifiers contain null");
     }
   }
-
+//CS304 (manually written) Issue link: https://github.com/square/javapoet/issues/841
   @Test public void ModifiersListAdditions(){
     Modifier[] modifiers = {Modifier.PUBLIC, Modifier.FINAL};
     TypeSpec.Builder builder =
@@ -2007,14 +2007,14 @@ public final class TypeSpecTest {
 
     assertThat(builder.build().modifiers).containsExactly(Modifier.PUBLIC, Modifier.FINAL);
   }
-
+//CS304 (manually written) Issue link: https://github.com/square/javapoet/issues/841
   @Test public void nullModifiersListAdditions(){
     try {
-      TypeSpec.classBuilder("Taco").addModifiers((Modifier[]) null).build();
+      TypeSpec.classBuilder("Taco")
+              .addModifiers((Iterable<Modifier>) null).build();
       fail();
-    } catch(IllegalArgumentException expected) {
-      assertThat(expected.getMessage())
-              .isEqualTo("modifiers contain null");
+    } catch (NullPointerException e) {
+      assertThat(e.getMessage()).isEqualTo("modifiers == null");
     }
   }
 
