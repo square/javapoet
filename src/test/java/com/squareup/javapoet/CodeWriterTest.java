@@ -28,8 +28,6 @@ public class CodeWriterTest {
         float b = 8.0f;
         FieldSpec fieldSpec = FieldSpec.builder(Float[].class, "floatArray", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).
                 initializer("new Float[] { $L, $L }", a, b).build();
-
-        System.out.print(fieldSpec.toString());
         assertThat(fieldSpec.toString()).isEqualTo(
                 "public static final java.lang.Float[] floatArray = new Float[] { 7.0f, 8.0f };\n"
         );
@@ -41,8 +39,6 @@ public class CodeWriterTest {
         Long b = 22222222222L;
         FieldSpec fieldSpec = FieldSpec.builder(Long[].class, "longArray", Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL).
                 initializer("new Long[] { $L, $L }", a, b).build();
-
-        System.out.print(fieldSpec.toString());
         assertThat(fieldSpec.toString()).isEqualTo(
                 "public static final java.lang.Long[] longArray = new Long[] { 11111111111L, 22222222222L };\n"
         );
