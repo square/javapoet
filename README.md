@@ -1,6 +1,6 @@
 JavaPoet
 ========
- [![Maven Central](https://maven-badges.herokuapp.com/maven-central/cz.jirutka.rsql/rsql-parser/badge.svg)](https://maven-badges.herokuapp.com/maven-central/cz.jirutka.rsql/rsql-parser)
+ [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.squareup/javapoet/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.squareup/javapoet)
 
 `JavaPoet` is a Java API for generating `.java` source files.
 
