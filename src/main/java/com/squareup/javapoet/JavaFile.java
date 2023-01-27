@@ -57,6 +57,7 @@ public final class JavaFile {
   };
 
   public final CodeBlock fileComment;
+  public final CodeBlock typeComment;
   public final String packageName;
   public final TypeSpec typeSpec;
   public final boolean skipJavaLangImports;
@@ -66,6 +67,7 @@ public final class JavaFile {
 
   private JavaFile(Builder builder) {
     this.fileComment = builder.fileComment.build();
+    this.typeComment = builder.typeComment.build();
     this.packageName = builder.packageName;
     this.typeSpec = builder.typeSpec;
     this.skipJavaLangImports = builder.skipJavaLangImports;
@@ -210,6 +212,10 @@ public final class JavaFile {
       importedTypesCount++;
     }
 
+    if (!typeComment.isEmpty()) {
+        codeWriter.emitComment(typeComment);
+    }
+
     if (importedTypesCount > 0) {
       codeWriter.emit("\n");
     }
@@ -277,6 +283,7 @@ public final class JavaFile {
     private final String packageName;
     private final TypeSpec typeSpec;
     private final CodeBlock.Builder fileComment = CodeBlock.builder();
+    private final CodeBlock.Builder typeComment = CodeBlock.builder();
     private boolean skipJavaLangImports;
     private String indent = "  ";
 
@@ -289,6 +296,11 @@ public final class JavaFile {
 
     public Builder addFileComment(String format, Object... args) {
       this.fileComment.add(format, args);
+      return this;
+    }
+
+    public Builder addTypeComment(String format, Object... args) {
+      this.typeComment.add(format, args);
       return this;
     }
 

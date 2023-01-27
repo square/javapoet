@@ -256,6 +256,21 @@ public final class JavaFileTest {
     return TypeSpec.classBuilder(name).addMethod(method).build();
 
   }
+
+  @Test public void addTypeComment() {
+    JavaFile source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco")
+            .build())
+            .addTypeComment("This is a taco.")
+        .build();
+    assertThat(source.toString()).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "// This is a taco.\n"
+        + "class Taco {\n"
+        + "}\n");
+  }
+
   @Test public void noImports() throws Exception {
     String source = JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("Taco").build())
