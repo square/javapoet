@@ -300,7 +300,9 @@ public final class JavaFile {
     }
 
     public Builder addTypeComment(String format, Object... args) {
-      this.typeComment.add(format + "\n", args);
+      if (typeComment.isEmpty()) typeComment.add("\n");
+
+      this.typeComment.add(format, args);
       return this;
     }
 
