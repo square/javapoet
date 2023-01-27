@@ -258,15 +258,19 @@ public final class JavaFileTest {
   }
 
   @Test public void addTypeComment() {
-    JavaFile source = JavaFile.builder("com.squareup.tacos",
-        TypeSpec.classBuilder("Taco")
-            .build())
-            .addTypeComment("This is a taco.")
+    TypeSpec taco = TypeSpec.classBuilder("Taco")
         .build();
+
+    JavaFile source = JavaFile.builder("com.squareup.tacos", taco)
+        .addTypeComment("This is a taco.")
+        .addTypeComment("This is a second line.")
+        .build();
+
     assertThat(source.toString()).isEqualTo(""
         + "package com.squareup.tacos;\n"
         + "\n"
         + "// This is a taco.\n"
+        + "// This is a second line.\n"
         + "class Taco {\n"
         + "}\n");
   }
