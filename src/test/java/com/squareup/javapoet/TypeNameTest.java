@@ -46,23 +46,23 @@ public class TypeNameTest {
     }
 
     protected static TestGeneric<String>.Inner testGenericStringInner() {
-        return null;
+        return getDefaultOption();
     }
 
     protected static TestGeneric<Integer>.Inner testGenericIntInner() {
-        return null;
+        return getDefaultOption();
     }
 
     protected static TestGeneric<Short>.InnerGeneric<Long> testGenericInnerLong() {
-        return null;
+        return getDefaultOption();
     }
 
     protected static TestGeneric<Short>.InnerGeneric<Integer> testGenericInnerInt() {
-        return null;
+        return getDefaultOption();
     }
 
     protected static TestGeneric.NestedNonGeneric testNestedNonGeneric() {
-        return null;
+        return getDefaultOption();
     }
 
     @Test
@@ -176,5 +176,9 @@ public class TypeNameTest {
         assertThat(a.equals(b)).isTrue();
         assertThat(a.hashCode()).isEqualTo(b.hashCode());
         assertFalse(a.equals(null));
+    }
+
+    static private TestGeneric<String>.Inner getDefaultOption() {
+        return null;
     }
 }
