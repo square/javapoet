@@ -120,10 +120,8 @@ public final class AnnotationSpec {
             Arrays.sort(methods, Comparator.comparing(Method::getName));
             for (Method method : methods) {
                 Object value = method.invoke(annotation);
-                if (!includeDefaultValues) {
-                    if (Objects.deepEquals(value, method.getDefaultValue())) {
-                        continue;
-                    }
+                if (!includeDefaultValues && Objects.deepEquals(value, method.getDefaultValue())) {
+                    continue;
                 }
                 if (value.getClass().isArray()) {
                     for (int i = 0; i < Array.getLength(value); i++) {

@@ -265,14 +265,12 @@ final class CodeWriter {
                 case "$T":
                     TypeName typeName = (TypeName) codeBlock.args.get(a++);
                     // defer "typeName.emit(this)" if next format part will be handled by the default case
-                    if (typeName instanceof ClassName && partIterator.hasNext()) {
-                        if (!codeBlock.formatParts.get(partIterator.nextIndex()).startsWith("$")) {
-                            ClassName candidate = (ClassName) typeName;
-                            if (staticImportClassNames.contains(candidate.canonicalName)) {
-                                checkState(deferredTypeName == null, "pending type for static import?!");
-                                deferredTypeName = candidate;
-                                break;
-                            }
+                    if (typeName instanceof ClassName && partIterator.hasNext() && !codeBlock.formatParts.get(partIterator.nextIndex()).startsWith("$")) {
+                        ClassName candidate = (ClassName) typeName;
+                        if (staticImportClassNames.contains(candidate.canonicalName)) {
+                            checkState(deferredTypeName == null, "pending type for static import?!");
+                            deferredTypeName = candidate;
+                            break;
                         }
                     }
                     typeName.emit(this);
@@ -307,12 +305,10 @@ final class CodeWriter {
                 default:
                     // handle deferred type
                     if (deferredTypeName != null) {
-                        if (part.startsWith(".")) {
-                            if (emitStaticImportMember(deferredTypeName.canonicalName, part)) {
-                                // okay, static import hit and all was emitted, so clean-up and jump to next part
-                                deferredTypeName = null;
-                                break;
-                            }
+                        if (part.startsWith(".") && emitStaticImportMember(deferredTypeName.canonicalName, part)) {
+                            // okay, static import hit and all was emitted, so clean-up and jump to next part
+                            deferredTypeName = null;
+                            break;
                         }
                         deferredTypeName.emit(this);
                         deferredTypeName = null;
