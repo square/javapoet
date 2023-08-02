@@ -1,3 +1,9 @@
+### About the fork
+Due to lack of maintence at square/javapoet I created the fork to support new features and to fit generated code to my point of view
+List of changes:
+* merged record support from [#840 - Record support](https://github.com/square/javapoet/pull/840)
+
+
 JavaPoet
 ========
 
