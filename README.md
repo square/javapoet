@@ -1,7 +1,39 @@
 ### About the fork
 Due to lack of maintence at square/javapoet I created the fork to support new features and to fit generated code to my point of view
+
 List of changes:
-* merged record support from [#840 - Record support](https://github.com/square/javapoet/pull/840)
+* merged record support from [square/javapoet #840 - Record support](https://github.com/square/javapoet/pull/840)
+* Support records with one-per-line components, i.e.
+<table>
+<tr>
+<th> Inline </th>
+<th> Multi Line </th>
+</tr>
+<tr>
+<td>
+
+```java
+record Taco(String shell, int weight) {
+}
+```
+</td>
+<td>
+
+```java
+record Taco(
+        String shell,
+        int weight
+) {
+}
+```
+</td>
+</tr>
+</table>
+
+Usage: extra builder parameter `TypeSpec.recordBuilder(String name, boolean multiLineRecord)`
+
+Example: `TypeSpec.recordBuilder("Taco", true)`
+
 
 
 JavaPoet

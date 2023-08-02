@@ -1337,6 +1337,37 @@ public final class TypeSpecTest {
   }
 
   @Test
+  public void multiLineRecordTest()  {
+    TypeSpec inlineTaco = TypeSpec.recordBuilder("Taco")
+              .addRecordComponent(ParameterSpec.builder(ClassName.get(String.class), "shell").build())
+              .addRecordComponent(ParameterSpec.builder(TypeName.INT, "weight").build())
+              .build();
+    assertThat(toString(inlineTaco)).isEqualTo("" +
+            "package com.squareup.tacos;\n" +
+            "\n" +
+            "import java.lang.String;\n" +
+            "\n" +
+            "record Taco(String shell, int weight) {\n" +
+            "}\n"
+    );
+    TypeSpec multilineTaco = TypeSpec.recordBuilder("Taco", true)
+              .addRecordComponent(ParameterSpec.builder(ClassName.get(String.class), "shell").build())
+              .addRecordComponent(ParameterSpec.builder(TypeName.INT, "weight").build())
+              .build();
+    assertThat(toString(multilineTaco)).isEqualTo("" +
+            "package com.squareup.tacos;\n" +
+            "\n" +
+            "import java.lang.String;\n" +
+            "\n" +
+            "record Taco(\n" +
+            "  String shell,\n" +
+            "  int weight\n" +
+            ") {\n" +
+            "}\n"
+    );
+  }
+
+  @Test
   public void recordComponentJavadoc() throws Exception {
     TypeSpec taco = TypeSpec.recordBuilder("Taco")
         .addJavadoc("Wants a cat to be a tacocat.\n")

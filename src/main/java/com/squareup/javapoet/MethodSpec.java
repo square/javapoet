@@ -101,7 +101,7 @@ public final class MethodSpec {
         codeWriter.emit("$T $L", returnType, name);
       }
 
-      emitParameters(codeWriter, parameters, varargs);
+      emitParameters(codeWriter, parameters, varargs, false);
     }
 
     if (defaultValue != null && !defaultValue.isEmpty()) {
@@ -157,18 +157,25 @@ public final class MethodSpec {
   }
 
   static void emitParameters(CodeWriter codeWriter, Iterable<ParameterSpec> parameters,
-      boolean varargs) throws IOException {
+      boolean varargs, boolean separateLines) throws IOException {
     codeWriter.emit(CodeBlock.of("($Z"));
 
+    if (separateLines)
+      codeWriter.indent();
     boolean firstParameter = true;
     for (Iterator<ParameterSpec> i = parameters.iterator(); i.hasNext(); ) {
       ParameterSpec parameter = i.next();
-      if (!firstParameter)
-        codeWriter.emit(",").emitWrappingSpace();
+      if (!firstParameter) {
+        codeWriter.emit(",");
+        if (!separateLines) codeWriter.emitWrappingSpace();
+      }
+      if (separateLines)
+        codeWriter.emit("\n");
       parameter.emit(codeWriter, !i.hasNext() && varargs);
       firstParameter = false;
     }
-
+    if (separateLines)
+      codeWriter.emit("\n").unindent();
     codeWriter.emit(")");
   }
 

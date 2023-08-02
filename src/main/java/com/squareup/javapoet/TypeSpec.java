@@ -56,6 +56,7 @@ public final class TypeSpec {
   public final TypeName superclass;
   public final List<TypeName> superinterfaces;
   public final List<ParameterSpec> recordComponents;
+  public final boolean multiLineRecord;
   public final boolean varargs;
   public final Map<String, TypeSpec> enumConstants;
   public final List<FieldSpec> fieldSpecs;
@@ -79,6 +80,7 @@ public final class TypeSpec {
     this.superclass = builder.superclass;
     this.superinterfaces = Util.immutableList(builder.superinterfaces);
     this.recordComponents = Util.immutableList(builder.recordComponents);
+    this.multiLineRecord = builder.multiLineRecord;
     this.varargs = builder.varargs;
     this.enumConstants = Util.immutableMap(builder.enumConstants);
     this.fieldSpecs = Util.immutableList(builder.fieldSpecs);
@@ -116,6 +118,7 @@ public final class TypeSpec {
     this.superclass = null;
     this.superinterfaces = Collections.emptyList();
     this.recordComponents = Collections.emptyList();
+    this.multiLineRecord = false;
     this.varargs = false;
     this.enumConstants = Collections.emptyMap();
     this.fieldSpecs = Collections.emptyList();
@@ -165,6 +168,14 @@ public final class TypeSpec {
     return recordBuilder(checkNotNull(className, "className == null").simpleName());
   }
 
+  public static Builder recordBuilder(String name, boolean multiLineRecord) {
+    return recordBuilder(name).multiLineRecord(multiLineRecord);
+  }
+
+  public static Builder recordBuilder(ClassName className, boolean multiLineRecord) {
+    return recordBuilder(className).multiLineRecord(multiLineRecord);
+  }
+
   public static Builder anonymousClassBuilder(String typeArgumentsFormat, Object... args) {
     return anonymousClassBuilder(CodeBlock.of(typeArgumentsFormat, args));
   }
@@ -191,6 +202,7 @@ public final class TypeSpec {
     builder.superinterfaces.addAll(superinterfaces);
     builder.recordComponents.addAll(recordComponents);
     builder.varargs = varargs;
+    builder.multiLineRecord = multiLineRecord;
     builder.enumConstants.putAll(enumConstants);
     builder.compactConstructor = compactConstructor;
     builder.fieldSpecs.addAll(fieldSpecs);
@@ -243,7 +255,7 @@ public final class TypeSpec {
 
       // Record components.
       if (kind == Kind.RECORD) {
-        MethodSpec.emitParameters(codeWriter, recordComponents, varargs);
+        MethodSpec.emitParameters(codeWriter, recordComponents, varargs, multiLineRecord);
       }
 
       List<TypeName> extendsTypes;
@@ -473,6 +485,7 @@ public final class TypeSpec {
 
     public final Map<String, TypeSpec> enumConstants = new LinkedHashMap<>();
     public final List<ParameterSpec> recordComponents = new ArrayList<>();
+    public boolean multiLineRecord;
     public boolean varargs;
     public final List<AnnotationSpec> annotations = new ArrayList<>();
     public final List<Modifier> modifiers = new ArrayList<>();
@@ -653,6 +666,15 @@ public final class TypeSpec {
 
     public Builder varargs(boolean varargs) {
       this.varargs = varargs;
+      return this;
+    }
+
+    private Builder multiLineRecord() {
+      return multiLineRecord(true);
+    }
+
+    private Builder multiLineRecord(boolean multiLineRecord) {
+      this.multiLineRecord = multiLineRecord;
       return this;
     }
 
