@@ -285,6 +285,26 @@ public final class JavaFileTest {
         + "}\n");
   }
 
+  @Test
+  public void recordNoField() {
+      String source = JavaFile.builder("com.squareup.tacos", TypeSpec.recordBuilder("Taco").build())
+              .skipJavaLangImports(true).build().toString();
+      assertThat(source).isEqualTo(
+              "" + "package com.squareup.tacos;\n" + "\n" + "record Taco() {\n" + "}\n" + "");
+  }
+
+  @Test
+  public void recordTwoField() {
+      String source = JavaFile
+              .builder("com.squareup.tacos",
+                      TypeSpec.recordBuilder("Taco")
+                              .addField(FieldSpec.builder(String.class, "name").build())
+                              .addField(FieldSpec.builder(Integer.class, "code").build()).build())
+              .skipJavaLangImports(true).build().toString();
+      assertThat(source).isEqualTo("" + "package com.squareup.tacos;\n" + "\n"
+              + "record Taco(String name, Integer code) {\n" + "}\n" + "");
+  }
+
   @Test public void conflictingImports() throws Exception {
     String source = JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("Taco")
