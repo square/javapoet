@@ -262,7 +262,7 @@ public abstract class AbstractTypesTest {
     assertThat(TypeName.VOID.box()).isEqualTo(ClassName.get(Void.class));
     assertThat(ClassName.get(Integer.class).box()).isEqualTo(ClassName.get(Integer.class));
     assertThat(ClassName.get(Void.class).box()).isEqualTo(ClassName.get(Void.class));
-    assertThat(TypeName.OBJECT.box()).isEqualTo(TypeName.OBJECT);
+    assertThat(ClassName.OBJECT.box()).isEqualTo(ClassName.OBJECT);
     assertThat(ClassName.get(String.class).box()).isEqualTo(ClassName.get(String.class));
   }
 
@@ -272,7 +272,7 @@ public abstract class AbstractTypesTest {
     assertThat(ClassName.get(Integer.class).unbox()).isEqualTo(TypeName.INT.unbox());
     assertThat(ClassName.get(Void.class).unbox()).isEqualTo(TypeName.VOID.unbox());
     try {
-      TypeName.OBJECT.unbox();
+      ClassName.OBJECT.unbox();
       fail();
     } catch (UnsupportedOperationException expected) {
     }
