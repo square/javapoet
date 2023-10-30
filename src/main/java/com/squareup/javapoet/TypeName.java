@@ -189,15 +189,15 @@ public class TypeName {
     TypeName thisWithoutAnnotations = withoutAnnotations();
     TypeName unboxed = null;
     if (thisWithoutAnnotations.equals(BOXED_VOID)) unboxed = VOID;
-    if (thisWithoutAnnotations.equals(BOXED_BOOLEAN)) unboxed = BOOLEAN;
-    if (thisWithoutAnnotations.equals(BOXED_BYTE)) unboxed = BYTE;
-    if (thisWithoutAnnotations.equals(BOXED_SHORT)) unboxed = SHORT;
-    if (thisWithoutAnnotations.equals(BOXED_INT)) unboxed = INT;
-    if (thisWithoutAnnotations.equals(BOXED_LONG)) unboxed = LONG;
-    if (thisWithoutAnnotations.equals(BOXED_CHAR)) unboxed = CHAR;
-    if (thisWithoutAnnotations.equals(BOXED_FLOAT)) unboxed = FLOAT;
-    if (thisWithoutAnnotations.equals(BOXED_DOUBLE)) unboxed = DOUBLE;
-    if (unboxed == null) throw new UnsupportedOperationException("cannot unbox " + this);
+    else if (thisWithoutAnnotations.equals(BOXED_BOOLEAN)) unboxed = BOOLEAN;
+    else if (thisWithoutAnnotations.equals(BOXED_BYTE)) unboxed = BYTE;
+    else if (thisWithoutAnnotations.equals(BOXED_SHORT)) unboxed = SHORT;
+    else if (thisWithoutAnnotations.equals(BOXED_INT)) unboxed = INT;
+    else if (thisWithoutAnnotations.equals(BOXED_LONG)) unboxed = LONG;
+    else if (thisWithoutAnnotations.equals(BOXED_CHAR)) unboxed = CHAR;
+    else if (thisWithoutAnnotations.equals(BOXED_FLOAT)) unboxed = FLOAT;
+    else if (thisWithoutAnnotations.equals(BOXED_DOUBLE)) unboxed = DOUBLE;
+    else throw new UnsupportedOperationException("cannot unbox " + this);
     return annotations.isEmpty() ? unboxed : unboxed.annotated(annotations);
   }
 
