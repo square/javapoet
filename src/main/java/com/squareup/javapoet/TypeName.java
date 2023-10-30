@@ -118,6 +118,9 @@ public class TypeName {
   }
 
   public TypeName withoutAnnotations() {
+    if (annotations.isEmpty()) {
+      return this;
+    }
     return new TypeName(keyword);
   }
 
@@ -144,14 +147,15 @@ public class TypeName {
    * other types types including unboxed primitives and {@code java.lang.Void}.
    */
   public boolean isBoxedPrimitive() {
-    return this.equals(BOXED_BOOLEAN)
-        || this.equals(BOXED_BYTE)
-        || this.equals(BOXED_SHORT)
-        || this.equals(BOXED_INT)
-        || this.equals(BOXED_LONG)
-        || this.equals(BOXED_CHAR)
-        || this.equals(BOXED_FLOAT)
-        || this.equals(BOXED_DOUBLE);
+    TypeName thisWithoutAnnotations = withoutAnnotations();
+    return thisWithoutAnnotations.equals(BOXED_BOOLEAN)
+        || thisWithoutAnnotations.equals(BOXED_BYTE)
+        || thisWithoutAnnotations.equals(BOXED_SHORT)
+        || thisWithoutAnnotations.equals(BOXED_INT)
+        || thisWithoutAnnotations.equals(BOXED_LONG)
+        || thisWithoutAnnotations.equals(BOXED_CHAR)
+        || thisWithoutAnnotations.equals(BOXED_FLOAT)
+        || thisWithoutAnnotations.equals(BOXED_DOUBLE);
   }
 
   /**
@@ -160,16 +164,18 @@ public class TypeName {
    */
   public TypeName box() {
     if (keyword == null) return this; // Doesn't need boxing.
-    if (this == VOID) return BOXED_VOID;
-    if (this == BOOLEAN) return BOXED_BOOLEAN;
-    if (this == BYTE) return BOXED_BYTE;
-    if (this == SHORT) return BOXED_SHORT;
-    if (this == INT) return BOXED_INT;
-    if (this == LONG) return BOXED_LONG;
-    if (this == CHAR) return BOXED_CHAR;
-    if (this == FLOAT) return BOXED_FLOAT;
-    if (this == DOUBLE) return BOXED_DOUBLE;
-    throw new AssertionError(keyword);
+    TypeName boxed = null;
+    if (keyword.equals(VOID.keyword)) boxed = BOXED_VOID;
+    else if (keyword.equals(BOOLEAN.keyword)) boxed = BOXED_BOOLEAN;
+    else if (keyword.equals(BYTE.keyword)) boxed = BOXED_BYTE;
+    else if (keyword.equals(SHORT.keyword)) boxed = BOXED_SHORT;
+    else if (keyword.equals(INT.keyword)) boxed = BOXED_INT;
+    else if (keyword.equals(LONG.keyword)) boxed = BOXED_LONG;
+    else if (keyword.equals(CHAR.keyword)) boxed = BOXED_CHAR;
+    else if (keyword.equals(FLOAT.keyword)) boxed = BOXED_FLOAT;
+    else if (keyword.equals(DOUBLE.keyword)) boxed = BOXED_DOUBLE;
+    else throw new AssertionError(keyword);
+    return annotations.isEmpty() ? boxed : boxed.annotated(annotations);
   }
 
   /**
@@ -180,16 +186,19 @@ public class TypeName {
    */
   public TypeName unbox() {
     if (keyword != null) return this; // Already unboxed.
-    if (this.equals(BOXED_VOID)) return VOID;
-    if (this.equals(BOXED_BOOLEAN)) return BOOLEAN;
-    if (this.equals(BOXED_BYTE)) return BYTE;
-    if (this.equals(BOXED_SHORT)) return SHORT;
-    if (this.equals(BOXED_INT)) return INT;
-    if (this.equals(BOXED_LONG)) return LONG;
-    if (this.equals(BOXED_CHAR)) return CHAR;
-    if (this.equals(BOXED_FLOAT)) return FLOAT;
-    if (this.equals(BOXED_DOUBLE)) return DOUBLE;
-    throw new UnsupportedOperationException("cannot unbox " + this);
+    TypeName thisWithoutAnnotations = withoutAnnotations();
+    TypeName unboxed = null;
+    if (thisWithoutAnnotations.equals(BOXED_VOID)) unboxed = VOID;
+    else if (thisWithoutAnnotations.equals(BOXED_BOOLEAN)) unboxed = BOOLEAN;
+    else if (thisWithoutAnnotations.equals(BOXED_BYTE)) unboxed = BYTE;
+    else if (thisWithoutAnnotations.equals(BOXED_SHORT)) unboxed = SHORT;
+    else if (thisWithoutAnnotations.equals(BOXED_INT)) unboxed = INT;
+    else if (thisWithoutAnnotations.equals(BOXED_LONG)) unboxed = LONG;
+    else if (thisWithoutAnnotations.equals(BOXED_CHAR)) unboxed = CHAR;
+    else if (thisWithoutAnnotations.equals(BOXED_FLOAT)) unboxed = FLOAT;
+    else if (thisWithoutAnnotations.equals(BOXED_DOUBLE)) unboxed = DOUBLE;
+    else throw new UnsupportedOperationException("cannot unbox " + this);
+    return annotations.isEmpty() ? unboxed : unboxed.annotated(annotations);
   }
 
   @Override public final boolean equals(Object o) {
