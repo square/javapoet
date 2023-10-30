@@ -166,15 +166,15 @@ public class TypeName {
     if (keyword == null) return this; // Doesn't need boxing.
     TypeName boxed = null;
     if (keyword.equals(VOID.keyword)) boxed = BOXED_VOID;
-    if (keyword.equals(BOOLEAN.keyword)) boxed = BOXED_BOOLEAN;
-    if (keyword.equals(BYTE.keyword)) boxed = BOXED_BYTE;
-    if (keyword.equals(SHORT.keyword)) boxed = BOXED_SHORT;
-    if (keyword.equals(INT.keyword)) boxed = BOXED_INT;
-    if (keyword.equals(LONG.keyword)) boxed = BOXED_LONG;
-    if (keyword.equals(CHAR.keyword)) boxed = BOXED_CHAR;
-    if (keyword.equals(FLOAT.keyword)) boxed = BOXED_FLOAT;
-    if (keyword.equals(DOUBLE.keyword)) boxed = BOXED_DOUBLE;
-    if (boxed == null) throw new AssertionError("cannot box " + keyword);
+    else if (keyword.equals(BOOLEAN.keyword)) boxed = BOXED_BOOLEAN;
+    else if (keyword.equals(BYTE.keyword)) boxed = BOXED_BYTE;
+    else if (keyword.equals(SHORT.keyword)) boxed = BOXED_SHORT;
+    else if (keyword.equals(INT.keyword)) boxed = BOXED_INT;
+    else if (keyword.equals(LONG.keyword)) boxed = BOXED_LONG;
+    else if (keyword.equals(CHAR.keyword)) boxed = BOXED_CHAR;
+    else if (keyword.equals(FLOAT.keyword)) boxed = BOXED_FLOAT;
+    else if (keyword.equals(DOUBLE.keyword)) boxed = BOXED_DOUBLE;
+    else throw new AssertionError(keyword);
     return annotations.isEmpty() ? boxed : boxed.annotated(annotations);
   }
 
