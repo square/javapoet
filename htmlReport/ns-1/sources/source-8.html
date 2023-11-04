@@ -1,0 +1,348 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > LineWrapper</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.squareup.javapoet</a>
+</div>
+
+<h1>Coverage Summary for Class: LineWrapper (com.squareup.javapoet)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">LineWrapper</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (7/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    87.9%
+  </span>
+  <span class="absValue">
+    (29/33)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    98%
+  </span>
+  <span class="absValue">
+    (48/49)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">LineWrapper$FlushType</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">LineWrapper$RecordingAppendable</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (3/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    81.8%
+  </span>
+  <span class="absValue">
+    (9/11)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    92.3%
+  </span>
+  <span class="absValue">
+    (12/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    88.6%
+  </span>
+  <span class="absValue">
+    (31/35)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    95.2%
+  </span>
+  <span class="absValue">
+    (59/62)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (C) 2016 Square, Inc.
+&nbsp; *
+&nbsp; * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+&nbsp; * you may not use this file except in compliance with the License.
+&nbsp; * You may obtain a copy of the License at
+&nbsp; *
+&nbsp; * http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; * Unless required by applicable law or agreed to in writing, software
+&nbsp; * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; * See the License for the specific language governing permissions and
+&nbsp; * limitations under the License.
+&nbsp; */
+&nbsp;package com.squareup.javapoet;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;
+&nbsp;import static com.squareup.javapoet.Util.checkNotNull;
+&nbsp;
+&nbsp;/**
+&nbsp; * Implements soft line wrapping on an appendable. To use, append characters using {@link #append}
+&nbsp; * or soft-wrapping spaces using {@link #wrappingSpace}.
+&nbsp; */
+&nbsp;final class LineWrapper {
+&nbsp;  private final RecordingAppendable out;
+&nbsp;  private final String indent;
+&nbsp;  private final int columnLimit;
+&nbsp;  private boolean closed;
+&nbsp;
+&nbsp;  /** Characters written since the last wrapping space that haven&#39;t yet been flushed. */
+<b class="fc">&nbsp;  private final StringBuilder buffer = new StringBuilder();</b>
+&nbsp;
+&nbsp;  /** The number of characters since the most recent newline. Includes both out and the buffer. */
+<b class="fc">&nbsp;  private int column = 0;</b>
+&nbsp;
+&nbsp;  /**
+&nbsp;   * -1 if we have no buffering; otherwise the number of {@code indent}s to write after wrapping.
+&nbsp;   */
+<b class="fc">&nbsp;  private int indentLevel = -1;</b>
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Null if we have no buffering; otherwise the type to pass to the next call to {@link #flush}.
+&nbsp;   */
+&nbsp;  private FlushType nextFlush;
+&nbsp;
+<b class="fc">&nbsp;  LineWrapper(Appendable out, String indent, int columnLimit) {</b>
+<b class="fc">&nbsp;    checkNotNull(out, &quot;out == null&quot;);</b>
+<b class="fc">&nbsp;    this.out = new RecordingAppendable(out);</b>
+<b class="fc">&nbsp;    this.indent = indent;</b>
+<b class="fc">&nbsp;    this.columnLimit = columnLimit;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** @return the last emitted char or {@link Character#MIN_VALUE} if nothing emitted yet. */
+&nbsp;  char lastChar() {
+<b class="fc">&nbsp;    return out.lastChar;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Emit {@code s}. This may be buffered to permit line wraps to be inserted. */
+&nbsp;  void append(String s) throws IOException {
+<b class="pc">&nbsp;    if (closed) throw new IllegalStateException(&quot;closed&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;    if (nextFlush != null) {</b>
+<b class="fc">&nbsp;      int nextNewline = s.indexOf(&#39;\n&#39;);</b>
+&nbsp;
+&nbsp;      // If s doesn&#39;t cause the current line to cross the limit, buffer it and return. We&#39;ll decide
+&nbsp;      // whether or not we have to wrap it later.
+<b class="fc">&nbsp;      if (nextNewline == -1 &amp;&amp; column + s.length() &lt;= columnLimit) {</b>
+<b class="fc">&nbsp;        buffer.append(s);</b>
+<b class="fc">&nbsp;        column += s.length();</b>
+&nbsp;        return;
+&nbsp;      }
+&nbsp;
+&nbsp;      // Wrap if appending s would overflow the current line.
+<b class="fc">&nbsp;      boolean wrap = nextNewline == -1 || column + nextNewline &gt; columnLimit;</b>
+<b class="fc">&nbsp;      flush(wrap ? FlushType.WRAP : nextFlush);</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    out.append(s);</b>
+<b class="fc">&nbsp;    int lastNewline = s.lastIndexOf(&#39;\n&#39;);</b>
+<b class="fc">&nbsp;    column = lastNewline != -1</b>
+<b class="fc">&nbsp;        ? s.length() - lastNewline - 1</b>
+<b class="fc">&nbsp;        : column + s.length();</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Emit either a space or a newline character. */
+&nbsp;  void wrappingSpace(int indentLevel) throws IOException {
+<b class="pc">&nbsp;    if (closed) throw new IllegalStateException(&quot;closed&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;    if (this.nextFlush != null) flush(nextFlush);</b>
+<b class="fc">&nbsp;    column++; // Increment the column even though the space is deferred to next call to flush().</b>
+<b class="fc">&nbsp;    this.nextFlush = FlushType.SPACE;</b>
+<b class="fc">&nbsp;    this.indentLevel = indentLevel;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Emit a newline character if the line will exceed it&#39;s limit, otherwise do nothing. */
+&nbsp;  void zeroWidthSpace(int indentLevel) throws IOException {
+<b class="pc">&nbsp;    if (closed) throw new IllegalStateException(&quot;closed&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;    if (column == 0) return;</b>
+<b class="pc">&nbsp;    if (this.nextFlush != null) flush(nextFlush);</b>
+<b class="fc">&nbsp;    this.nextFlush = FlushType.EMPTY;</b>
+<b class="fc">&nbsp;    this.indentLevel = indentLevel;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Flush any outstanding text and forbid future writes to this line wrapper. */
+&nbsp;  void close() throws IOException {
+<b class="fc">&nbsp;    if (nextFlush != null) flush(nextFlush);</b>
+<b class="fc">&nbsp;    closed = true;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Write the space followed by any buffered text that follows it. */
+&nbsp;  private void flush(FlushType flushType) throws IOException {
+<b class="pc">&nbsp;    switch (flushType) {</b>
+&nbsp;      case WRAP:
+<b class="fc">&nbsp;        out.append(&#39;\n&#39;);</b>
+<b class="fc">&nbsp;        for (int i = 0; i &lt; indentLevel; i++) {</b>
+<b class="fc">&nbsp;          out.append(indent);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        column = indentLevel * indent.length();</b>
+<b class="fc">&nbsp;        column += buffer.length();</b>
+<b class="fc">&nbsp;        break;</b>
+&nbsp;      case SPACE:
+<b class="fc">&nbsp;        out.append(&#39; &#39;);</b>
+<b class="fc">&nbsp;        break;</b>
+&nbsp;      case EMPTY:
+<b class="fc">&nbsp;        break;</b>
+&nbsp;      default:
+<b class="nc">&nbsp;        throw new IllegalArgumentException(&quot;Unknown FlushType: &quot; + flushType);</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    out.append(buffer);</b>
+<b class="fc">&nbsp;    buffer.delete(0, buffer.length());</b>
+<b class="fc">&nbsp;    indentLevel = -1;</b>
+<b class="fc">&nbsp;    nextFlush = null;</b>
+&nbsp;  }
+&nbsp;
+<b class="fc">&nbsp;  private enum FlushType {</b>
+<b class="fc">&nbsp;    WRAP, SPACE, EMPTY;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** A delegating {@link Appendable} that records info about the chars passing through it. */
+&nbsp;  static final class RecordingAppendable implements Appendable {
+&nbsp;    private final Appendable delegate;
+&nbsp;
+<b class="fc">&nbsp;    char lastChar = Character.MIN_VALUE;</b>
+&nbsp;
+<b class="fc">&nbsp;    RecordingAppendable(Appendable delegate) {</b>
+<b class="fc">&nbsp;      this.delegate = delegate;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override public Appendable append(CharSequence csq) throws IOException {
+<b class="fc">&nbsp;      int length = csq.length();</b>
+<b class="fc">&nbsp;      if (length != 0) {</b>
+<b class="fc">&nbsp;        lastChar = csq.charAt(length - 1);</b>
+&nbsp;      }
+<b class="fc">&nbsp;      return delegate.append(csq);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override public Appendable append(CharSequence csq, int start, int end) throws IOException {
+<b class="nc">&nbsp;      CharSequence sub = csq.subSequence(start, end);</b>
+<b class="nc">&nbsp;      return append(sub);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override public Appendable append(char c) throws IOException {
+<b class="fc">&nbsp;      lastChar = c;</b>
+<b class="fc">&nbsp;      return delegate.append(c);</b>
+&nbsp;    }
+&nbsp;  }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-11-04 13:59</div>
+</div>
+</body>
+</html>

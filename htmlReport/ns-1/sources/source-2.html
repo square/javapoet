@@ -1,0 +1,225 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > ArrayTypeName</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.squareup.javapoet</a>
+</div>
+
+<h1>Coverage Summary for Class: ArrayTypeName (com.squareup.javapoet)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ArrayTypeName</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    85.7%
+  </span>
+  <span class="absValue">
+    (12/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (8/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    91.7%
+  </span>
+  <span class="absValue">
+    (22/24)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (C) 2015 Square, Inc.
+&nbsp; *
+&nbsp; * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+&nbsp; * you may not use this file except in compliance with the License.
+&nbsp; * You may obtain a copy of the License at
+&nbsp; *
+&nbsp; * http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; * Unless required by applicable law or agreed to in writing, software
+&nbsp; * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; * See the License for the specific language governing permissions and
+&nbsp; * limitations under the License.
+&nbsp; */
+&nbsp;package com.squareup.javapoet;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.lang.reflect.GenericArrayType;
+&nbsp;import java.lang.reflect.Type;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.LinkedHashMap;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;import javax.lang.model.element.TypeParameterElement;
+&nbsp;import javax.lang.model.type.ArrayType;
+&nbsp;
+&nbsp;import static com.squareup.javapoet.Util.checkNotNull;
+&nbsp;
+&nbsp;public final class ArrayTypeName extends TypeName {
+&nbsp;  public final TypeName componentType;
+&nbsp;
+&nbsp;  private ArrayTypeName(TypeName componentType) {
+<b class="fc">&nbsp;    this(componentType, new ArrayList&lt;&gt;());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  private ArrayTypeName(TypeName componentType, List&lt;AnnotationSpec&gt; annotations) {
+<b class="fc">&nbsp;    super(annotations);</b>
+<b class="fc">&nbsp;    this.componentType = checkNotNull(componentType, &quot;rawType == null&quot;);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public ArrayTypeName annotated(List&lt;AnnotationSpec&gt; annotations) {
+<b class="fc">&nbsp;    return new ArrayTypeName(componentType, concatAnnotations(annotations));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public TypeName withoutAnnotations() {
+<b class="fc">&nbsp;    return new ArrayTypeName(componentType);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override CodeWriter emit(CodeWriter out) throws IOException {
+<b class="fc">&nbsp;    return emit(out, false);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  CodeWriter emit(CodeWriter out, boolean varargs) throws IOException {
+<b class="fc">&nbsp;    emitLeafType(out);</b>
+<b class="fc">&nbsp;    return emitBrackets(out, varargs);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  private CodeWriter emitLeafType(CodeWriter out) throws IOException {
+<b class="fc">&nbsp;    if (TypeName.asArray(componentType) != null) {</b>
+<b class="fc">&nbsp;      return TypeName.asArray(componentType).emitLeafType(out);</b>
+&nbsp;    }
+<b class="fc">&nbsp;    return componentType.emit(out);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  private CodeWriter emitBrackets(CodeWriter out, boolean varargs) throws IOException {
+<b class="fc">&nbsp;    if (isAnnotated()) {</b>
+<b class="fc">&nbsp;      out.emit(&quot; &quot;);</b>
+<b class="fc">&nbsp;      emitAnnotations(out);</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    if (TypeName.asArray(componentType) == null) {</b>
+&nbsp;      // Last bracket.
+<b class="fc">&nbsp;      return out.emit(varargs ? &quot;...&quot; : &quot;[]&quot;);</b>
+&nbsp;    }
+<b class="fc">&nbsp;    out.emit(&quot;[]&quot;);</b>
+<b class="fc">&nbsp;    return TypeName.asArray(componentType) .emitBrackets(out, varargs);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;
+&nbsp;  /** Returns an array type whose elements are all instances of {@code componentType}. */
+&nbsp;  public static ArrayTypeName of(TypeName componentType) {
+<b class="fc">&nbsp;    return new ArrayTypeName(componentType);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Returns an array type whose elements are all instances of {@code componentType}. */
+&nbsp;  public static ArrayTypeName of(Type componentType) {
+<b class="fc">&nbsp;    return of(TypeName.get(componentType));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Returns an array type equivalent to {@code mirror}. */
+&nbsp;  public static ArrayTypeName get(ArrayType mirror) {
+<b class="nc">&nbsp;    return get(mirror, new LinkedHashMap&lt;&gt;());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  static ArrayTypeName get(
+&nbsp;      ArrayType mirror, Map&lt;TypeParameterElement, TypeVariableName&gt; typeVariables) {
+<b class="fc">&nbsp;    return new ArrayTypeName(get(mirror.getComponentType(), typeVariables));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Returns an array type equivalent to {@code type}. */
+&nbsp;  public static ArrayTypeName get(GenericArrayType type) {
+<b class="nc">&nbsp;    return get(type, new LinkedHashMap&lt;&gt;());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  static ArrayTypeName get(GenericArrayType type, Map&lt;Type, TypeVariableName&gt; map) {
+<b class="fc">&nbsp;    return ArrayTypeName.of(get(type.getGenericComponentType(), map));</b>
+&nbsp;  }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-11-04 13:59</div>
+</div>
+</body>
+</html>

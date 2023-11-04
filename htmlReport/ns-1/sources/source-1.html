@@ -1,0 +1,472 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > AnnotationSpec</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.squareup.javapoet</a>
+</div>
+
+<h1>Coverage Summary for Class: AnnotationSpec (com.squareup.javapoet)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AnnotationSpec</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (13/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    95.2%
+  </span>
+  <span class="absValue">
+    (40/42)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    95.3%
+  </span>
+  <span class="absValue">
+    (82/86)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">AnnotationSpec$1</td>
+  </tr>
+  <tr>
+    <td class="name">AnnotationSpec$Builder</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (12/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (27/27)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">AnnotationSpec$Visitor</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (6/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (10/10)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (25/25)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    96.4%
+  </span>
+  <span class="absValue">
+    (54/56)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    96.7%
+  </span>
+  <span class="absValue">
+    (119/123)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (C) 2015 Square, Inc.
+&nbsp; *
+&nbsp; * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+&nbsp; * you may not use this file except in compliance with the License.
+&nbsp; * You may obtain a copy of the License at
+&nbsp; *
+&nbsp; * http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; * Unless required by applicable law or agreed to in writing, software
+&nbsp; * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; * See the License for the specific language governing permissions and
+&nbsp; * limitations under the License.
+&nbsp; */
+&nbsp;package com.squareup.javapoet;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.lang.annotation.Annotation;
+&nbsp;import java.lang.reflect.Array;
+&nbsp;import java.lang.reflect.Method;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Arrays;
+&nbsp;import java.util.Comparator;
+&nbsp;import java.util.Iterator;
+&nbsp;import java.util.LinkedHashMap;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Objects;
+&nbsp;import javax.lang.model.SourceVersion;
+&nbsp;import javax.lang.model.element.AnnotationMirror;
+&nbsp;import javax.lang.model.element.AnnotationValue;
+&nbsp;import javax.lang.model.element.ExecutableElement;
+&nbsp;import javax.lang.model.element.TypeElement;
+&nbsp;import javax.lang.model.element.VariableElement;
+&nbsp;import javax.lang.model.type.TypeMirror;
+&nbsp;import javax.lang.model.util.SimpleAnnotationValueVisitor8;
+&nbsp;
+&nbsp;import static com.squareup.javapoet.Util.characterLiteralWithoutSingleQuotes;
+&nbsp;import static com.squareup.javapoet.Util.checkArgument;
+&nbsp;import static com.squareup.javapoet.Util.checkNotNull;
+&nbsp;
+&nbsp;/** A generated annotation on a declaration. */
+<b class="fc">&nbsp;public final class AnnotationSpec {</b>
+&nbsp;  public static final String VALUE = &quot;value&quot;;
+&nbsp;
+&nbsp;  public final TypeName type;
+&nbsp;  public final Map&lt;String, List&lt;CodeBlock&gt;&gt; members;
+&nbsp;
+<b class="fc">&nbsp;  private AnnotationSpec(Builder builder) {</b>
+<b class="fc">&nbsp;    this.type = builder.type;</b>
+<b class="fc">&nbsp;    this.members = Util.immutableMultimap(builder.members);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  void emit(CodeWriter codeWriter, boolean inline) throws IOException {
+<b class="fc">&nbsp;    String whitespace = inline ? &quot;&quot; : &quot;\n&quot;;</b>
+<b class="fc">&nbsp;    String memberSeparator = inline ? &quot;, &quot; : &quot;,\n&quot;;</b>
+<b class="fc">&nbsp;    if (members.isEmpty()) {</b>
+&nbsp;      // @Singleton
+<b class="fc">&nbsp;      codeWriter.emit(&quot;@$T&quot;, type);</b>
+<b class="fc">&nbsp;    } else if (members.size() == 1 &amp;&amp; members.containsKey(&quot;value&quot;)) {</b>
+&nbsp;      // @Named(&quot;foo&quot;)
+<b class="fc">&nbsp;      codeWriter.emit(&quot;@$T(&quot;, type);</b>
+<b class="fc">&nbsp;      emitAnnotationValues(codeWriter, whitespace, memberSeparator, members.get(&quot;value&quot;));</b>
+<b class="fc">&nbsp;      codeWriter.emit(&quot;)&quot;);</b>
+&nbsp;    } else {
+&nbsp;      // Inline:
+&nbsp;      //   @Column(name = &quot;updated_at&quot;, nullable = false)
+&nbsp;      //
+&nbsp;      // Not inline:
+&nbsp;      //   @Column(
+&nbsp;      //       name = &quot;updated_at&quot;,
+&nbsp;      //       nullable = false
+&nbsp;      //   )
+<b class="fc">&nbsp;      codeWriter.emit(&quot;@$T(&quot; + whitespace, type);</b>
+<b class="fc">&nbsp;      codeWriter.indent(2);</b>
+<b class="fc">&nbsp;      for (Iterator&lt;Map.Entry&lt;String, List&lt;CodeBlock&gt;&gt;&gt; i</b>
+<b class="fc">&nbsp;          = members.entrySet().iterator(); i.hasNext(); ) {</b>
+<b class="fc">&nbsp;        Map.Entry&lt;String, List&lt;CodeBlock&gt;&gt; entry = i.next();</b>
+<b class="fc">&nbsp;        codeWriter.emit(&quot;$L = &quot;, entry.getKey());</b>
+<b class="fc">&nbsp;        emitAnnotationValues(codeWriter, whitespace, memberSeparator, entry.getValue());</b>
+<b class="fc">&nbsp;        if (i.hasNext()) codeWriter.emit(memberSeparator);</b>
+<b class="fc">&nbsp;      }</b>
+<b class="fc">&nbsp;      codeWriter.unindent(2);</b>
+<b class="fc">&nbsp;      codeWriter.emit(whitespace + &quot;)&quot;);</b>
+&nbsp;    }
+&nbsp;  }
+&nbsp;
+&nbsp;  private void emitAnnotationValues(CodeWriter codeWriter, String whitespace,
+&nbsp;      String memberSeparator, List&lt;CodeBlock&gt; values) throws IOException {
+<b class="fc">&nbsp;    if (values.size() == 1) {</b>
+<b class="fc">&nbsp;      codeWriter.indent(2);</b>
+<b class="fc">&nbsp;      codeWriter.emit(values.get(0));</b>
+<b class="fc">&nbsp;      codeWriter.unindent(2);</b>
+&nbsp;      return;
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    codeWriter.emit(&quot;{&quot; + whitespace);</b>
+<b class="fc">&nbsp;    codeWriter.indent(2);</b>
+<b class="fc">&nbsp;    boolean first = true;</b>
+<b class="fc">&nbsp;    for (CodeBlock codeBlock : values) {</b>
+<b class="fc">&nbsp;      if (!first) codeWriter.emit(memberSeparator);</b>
+<b class="fc">&nbsp;      codeWriter.emit(codeBlock);</b>
+<b class="fc">&nbsp;      first = false;</b>
+<b class="fc">&nbsp;    }</b>
+<b class="fc">&nbsp;    codeWriter.unindent(2);</b>
+<b class="fc">&nbsp;    codeWriter.emit(whitespace + &quot;}&quot;);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public static AnnotationSpec get(Annotation annotation) {
+<b class="fc">&nbsp;    return get(annotation, false);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public static AnnotationSpec get(Annotation annotation, boolean includeDefaultValues) {
+<b class="fc">&nbsp;    Builder builder = builder(annotation.annotationType());</b>
+&nbsp;    try {
+<b class="fc">&nbsp;      Method[] methods = annotation.annotationType().getDeclaredMethods();</b>
+<b class="fc">&nbsp;      Arrays.sort(methods, Comparator.comparing(Method::getName));</b>
+<b class="fc">&nbsp;      for (Method method : methods) {</b>
+<b class="fc">&nbsp;        Object value = method.invoke(annotation);</b>
+<b class="fc">&nbsp;        if (!includeDefaultValues) {</b>
+<b class="fc">&nbsp;          if (Objects.deepEquals(value, method.getDefaultValue())) {</b>
+<b class="fc">&nbsp;            continue;</b>
+&nbsp;          }
+&nbsp;        }
+<b class="fc">&nbsp;        if (value.getClass().isArray()) {</b>
+<b class="fc">&nbsp;          for (int i = 0; i &lt; Array.getLength(value); i++) {</b>
+<b class="fc">&nbsp;            builder.addMemberForValue(method.getName(), Array.get(value, i));</b>
+&nbsp;          }
+<b class="fc">&nbsp;          continue;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (value instanceof Annotation) {</b>
+<b class="fc">&nbsp;          builder.addMember(method.getName(), &quot;$L&quot;, get((Annotation) value));</b>
+<b class="fc">&nbsp;          continue;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        builder.addMemberForValue(method.getName(), value);</b>
+&nbsp;      }
+<b class="nc">&nbsp;    } catch (Exception e) {</b>
+<b class="nc">&nbsp;      throw new RuntimeException(&quot;Reflecting &quot; + annotation + &quot; failed!&quot;, e);</b>
+<b class="fc">&nbsp;    }</b>
+<b class="fc">&nbsp;    return builder.build();</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public static AnnotationSpec get(AnnotationMirror annotation) {
+<b class="fc">&nbsp;    TypeElement element = (TypeElement) annotation.getAnnotationType().asElement();</b>
+<b class="fc">&nbsp;    AnnotationSpec.Builder builder = AnnotationSpec.builder(ClassName.get(element));</b>
+<b class="fc">&nbsp;    Visitor visitor = new Visitor(builder);</b>
+<b class="fc">&nbsp;    for (ExecutableElement executableElement : annotation.getElementValues().keySet()) {</b>
+<b class="fc">&nbsp;      String name = executableElement.getSimpleName().toString();</b>
+<b class="fc">&nbsp;      AnnotationValue value = annotation.getElementValues().get(executableElement);</b>
+<b class="fc">&nbsp;      value.accept(visitor, name);</b>
+<b class="fc">&nbsp;    }</b>
+<b class="fc">&nbsp;    return builder.build();</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public static Builder builder(ClassName type) {
+<b class="fc">&nbsp;    checkNotNull(type, &quot;type == null&quot;);</b>
+<b class="fc">&nbsp;    return new Builder(type);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public static Builder builder(Class&lt;?&gt; type) {
+<b class="fc">&nbsp;    return builder(ClassName.get(type));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public Builder toBuilder() {
+<b class="fc">&nbsp;    Builder builder = new Builder(type);</b>
+<b class="fc">&nbsp;    for (Map.Entry&lt;String, List&lt;CodeBlock&gt;&gt; entry : members.entrySet()) {</b>
+<b class="fc">&nbsp;      builder.members.put(entry.getKey(), new ArrayList&lt;&gt;(entry.getValue()));</b>
+<b class="fc">&nbsp;    }</b>
+<b class="fc">&nbsp;    return builder;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public boolean equals(Object o) {
+<b class="fc">&nbsp;    if (this == o) return true;</b>
+<b class="pc">&nbsp;    if (o == null) return false;</b>
+<b class="pc">&nbsp;    if (getClass() != o.getClass()) return false;</b>
+<b class="fc">&nbsp;    return toString().equals(o.toString());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public int hashCode() {
+<b class="fc">&nbsp;    return toString().hashCode();</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public String toString() {
+<b class="fc">&nbsp;    StringBuilder out = new StringBuilder();</b>
+&nbsp;    try {
+<b class="fc">&nbsp;      CodeWriter codeWriter = new CodeWriter(out);</b>
+<b class="fc">&nbsp;      codeWriter.emit(&quot;$L&quot;, this);</b>
+<b class="fc">&nbsp;      return out.toString();</b>
+<b class="nc">&nbsp;    } catch (IOException e) {</b>
+<b class="nc">&nbsp;      throw new AssertionError();</b>
+&nbsp;    }
+&nbsp;  }
+&nbsp;
+<b class="fc">&nbsp;  public static final class Builder {</b>
+&nbsp;    private final TypeName type;
+&nbsp;
+<b class="fc">&nbsp;    public final Map&lt;String, List&lt;CodeBlock&gt;&gt; members = new LinkedHashMap&lt;&gt;();</b>
+&nbsp;
+<b class="fc">&nbsp;    private Builder(TypeName type) {</b>
+<b class="fc">&nbsp;      this.type = type;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addMember(String name, String format, Object... args) {
+<b class="fc">&nbsp;      return addMember(name, CodeBlock.of(format, args));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addMember(String name, CodeBlock codeBlock) {
+<b class="fc">&nbsp;      List&lt;CodeBlock&gt; values = members.computeIfAbsent(name, k -&gt; new ArrayList&lt;&gt;());</b>
+<b class="fc">&nbsp;      values.add(codeBlock);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Delegates to {@link #addMember(String, String, Object...)}, with parameter {@code format}
+&nbsp;     * depending on the given {@code value} object. Falls back to {@code &quot;$L&quot;} literal format if
+&nbsp;     * the class of the given {@code value} object is not supported.
+&nbsp;     */
+&nbsp;    Builder addMemberForValue(String memberName, Object value) {
+<b class="fc">&nbsp;      checkNotNull(memberName, &quot;memberName == null&quot;);</b>
+<b class="fc">&nbsp;      checkNotNull(value, &quot;value == null, constant non-null value expected for %s&quot;, memberName);</b>
+<b class="fc">&nbsp;      checkArgument(SourceVersion.isName(memberName), &quot;not a valid name: %s&quot;, memberName);</b>
+<b class="fc">&nbsp;      if (value instanceof Class&lt;?&gt;) {</b>
+<b class="fc">&nbsp;        return addMember(memberName, &quot;$T.class&quot;, value);</b>
+&nbsp;      }
+<b class="fc">&nbsp;      if (value instanceof Enum) {</b>
+<b class="fc">&nbsp;        return addMember(memberName, &quot;$T.$L&quot;, value.getClass(), ((Enum&lt;?&gt;) value).name());</b>
+&nbsp;      }
+<b class="fc">&nbsp;      if (value instanceof String) {</b>
+<b class="fc">&nbsp;        return addMember(memberName, &quot;$S&quot;, value);</b>
+&nbsp;      }
+<b class="fc">&nbsp;      if (value instanceof Float) {</b>
+<b class="fc">&nbsp;        return addMember(memberName, &quot;$Lf&quot;, value);</b>
+&nbsp;      }
+<b class="fc">&nbsp;      if (value instanceof Character) {</b>
+<b class="fc">&nbsp;        return addMember(memberName, &quot;&#39;$L&#39;&quot;, characterLiteralWithoutSingleQuotes((char) value));</b>
+&nbsp;      }
+<b class="fc">&nbsp;      return addMember(memberName, &quot;$L&quot;, value);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public AnnotationSpec build() {
+<b class="fc">&nbsp;      for (String name : members.keySet()) {</b>
+<b class="fc">&nbsp;        checkNotNull(name, &quot;name == null&quot;);</b>
+<b class="fc">&nbsp;        checkArgument(SourceVersion.isName(name), &quot;not a valid name: %s&quot;, name);</b>
+<b class="fc">&nbsp;      }</b>
+<b class="fc">&nbsp;      return new AnnotationSpec(this);</b>
+&nbsp;    }
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Annotation value visitor adding members to the given builder instance.
+&nbsp;   */
+&nbsp;  private static class Visitor extends SimpleAnnotationValueVisitor8&lt;Builder, String&gt; {
+&nbsp;    final Builder builder;
+&nbsp;
+&nbsp;    Visitor(Builder builder) {
+<b class="fc">&nbsp;      super(builder);</b>
+<b class="fc">&nbsp;      this.builder = builder;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override protected Builder defaultAction(Object o, String name) {
+<b class="fc">&nbsp;      return builder.addMemberForValue(name, o);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override public Builder visitAnnotation(AnnotationMirror a, String name) {
+<b class="fc">&nbsp;      return builder.addMember(name, &quot;$L&quot;, get(a));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override public Builder visitEnumConstant(VariableElement c, String name) {
+<b class="fc">&nbsp;      return builder.addMember(name, &quot;$T.$L&quot;, c.asType(), c.getSimpleName());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override public Builder visitType(TypeMirror t, String name) {
+<b class="fc">&nbsp;      return builder.addMember(name, &quot;$T.class&quot;, t);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override public Builder visitArray(List&lt;? extends AnnotationValue&gt; values, String name) {
+<b class="fc">&nbsp;      for (AnnotationValue value : values) {</b>
+<b class="fc">&nbsp;        value.accept(this, name);</b>
+<b class="fc">&nbsp;      }</b>
+<b class="fc">&nbsp;      return builder;</b>
+&nbsp;    }
+&nbsp;  }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-11-04 13:59</div>
+</div>
+</body>
+</html>

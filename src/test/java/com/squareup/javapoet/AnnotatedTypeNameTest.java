@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 package com.squareup.javapoet;
+import org.junit.Test;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.Type;
+import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 import java.util.List;
-import java.util.Map;
-import org.junit.Test;
-
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
@@ -213,5 +214,35 @@ public class AnnotatedTypeNameTest {
     assertThat(varargsMethod.toString()).isEqualTo(""
         + "void m(java.lang.Object[] @" + TUA + " ... p) {\n"
         + "}\n");
+  }
+  @Test
+  public void testWithoutAnnotations() {
+    TypeName componentType = ArrayTypeName.of(TypeName.INT);
+    TypeName arrayType = ArrayTypeName.of(TypeName.INT);
+    TypeName result = arrayType.withoutAnnotations();
+    assertEquals(componentType, result);
+  }
+  @Test
+  public void testGet() {
+    Type elementType = int.class;
+    GenericArrayType genericArrayType = new MockGenericArrayType(elementType); // Mock GenericArrayType implementation
+    TypeName componentType = TypeName.INT;
+    ArrayTypeName expectedArrayTypeName = ArrayTypeName.of(componentType);
+    ArrayTypeName result = AnnotatedTypeNameTest.get(genericArrayType);
+    assertEquals("Expected ArrayTypeName does not match the actual result", expectedArrayTypeName, result);
+  }
+  static class MockGenericArrayType implements GenericArrayType {
+    private final Type elementType;
+    MockGenericArrayType(Type elementType) {
+      this.elementType = elementType;
+    }
+    @Override
+    public Type getGenericComponentType() {
+      return elementType;
+    }
+  }
+  public static ArrayTypeName get(GenericArrayType type) {
+    TypeName componentType = TypeName.get(type.getGenericComponentType());
+    return ArrayTypeName.of(componentType);
   }
 }

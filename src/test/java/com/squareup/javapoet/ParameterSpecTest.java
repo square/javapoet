@@ -32,6 +32,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.squareup.javapoet.TestUtil.findFirst;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.fail;
 
 public class ParameterSpecTest {
@@ -118,7 +120,7 @@ public class ParameterSpecTest {
     VariableElement parameterElement = element.getParameters().get(0);
 
     assertThat(ParameterSpec.get(parameterElement).toString())
-        .isEqualTo("java.lang.String arg0");
+        .isEqualTo("java.lang.String bar");
   }
 
   @Test public void addNonFinalModifier() {
@@ -150,5 +152,23 @@ public class ParameterSpecTest {
 
     builder.modifiers.remove(1);
     assertThat(builder.build().modifiers).containsExactly(Modifier.PUBLIC);
+  }
+
+  @Test
+  public void testNestedClass() {
+    ClassName enclosingClass = ClassName.get("com.example", "EnclosingClass");
+    ClassName innerClass = ClassName.get("com.example", "InnerClass");
+    ParameterizedTypeName enclosingType = ParameterizedTypeName.get(enclosingClass, ClassName.get("java.lang", "String"));
+    ParameterizedTypeName nestedType = enclosingType.nestedClass("InnerClass");
+    assertEquals(enclosingClass.nestedClass("InnerClass"), nestedType.rawType);
+    assertTrue(nestedType.typeArguments.isEmpty());
+    assertTrue(nestedType.annotations.isEmpty());
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void testNestedClassWithNullName() {
+    ClassName enclosingClass = ClassName.get("com.example", "EnclosingClass");
+    ParameterizedTypeName enclosingType = ParameterizedTypeName.get(enclosingClass, ClassName.get("java.lang", "String"));
+    enclosingType.nestedClass(null);
   }
 }

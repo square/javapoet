@@ -1,0 +1,699 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > MethodSpec</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.squareup.javapoet</a>
+</div>
+
+<h1>Coverage Summary for Class: MethodSpec (com.squareup.javapoet)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">MethodSpec</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (15/15)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    88.2%
+  </span>
+  <span class="absValue">
+    (60/68)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    98.5%
+  </span>
+  <span class="absValue">
+    (134/136)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">MethodSpec$1</td>
+  </tr>
+  <tr>
+    <td class="name">MethodSpec$Builder</td>
+<td class="coverageStat">
+  <span class="percent">
+    97.5%
+  </span>
+  <span class="absValue">
+    (39/40)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    92.3%
+  </span>
+  <span class="absValue">
+    (24/26)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    97.9%
+  </span>
+  <span class="absValue">
+    (94/96)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    98.2%
+  </span>
+  <span class="absValue">
+    (54/55)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    89.4%
+  </span>
+  <span class="absValue">
+    (84/94)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    98.3%
+  </span>
+  <span class="absValue">
+    (228/232)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (C) 2015 Square, Inc.
+&nbsp; *
+&nbsp; * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+&nbsp; * you may not use this file except in compliance with the License.
+&nbsp; * You may obtain a copy of the License at
+&nbsp; *
+&nbsp; * http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; * Unless required by applicable law or agreed to in writing, software
+&nbsp; * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; * See the License for the specific language governing permissions and
+&nbsp; * limitations under the License.
+&nbsp; */
+&nbsp;package com.squareup.javapoet;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.lang.reflect.Type;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.Iterator;
+&nbsp;import java.util.LinkedHashSet;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Set;
+&nbsp;import javax.lang.model.SourceVersion;
+&nbsp;import javax.lang.model.element.Element;
+&nbsp;import javax.lang.model.element.ExecutableElement;
+&nbsp;import javax.lang.model.element.Modifier;
+&nbsp;import javax.lang.model.element.TypeParameterElement;
+&nbsp;import javax.lang.model.type.DeclaredType;
+&nbsp;import javax.lang.model.type.ExecutableType;
+&nbsp;import javax.lang.model.type.TypeMirror;
+&nbsp;import javax.lang.model.type.TypeVariable;
+&nbsp;import javax.lang.model.util.Types;
+&nbsp;
+&nbsp;import static com.squareup.javapoet.Util.checkArgument;
+&nbsp;import static com.squareup.javapoet.Util.checkNotNull;
+&nbsp;import static com.squareup.javapoet.Util.checkState;
+&nbsp;
+&nbsp;/** A generated constructor or method declaration. */
+<b class="fc">&nbsp;public final class MethodSpec {</b>
+&nbsp;  static final String CONSTRUCTOR = &quot;&lt;init&gt;&quot;;
+&nbsp;
+&nbsp;  public final String name;
+&nbsp;  public final CodeBlock javadoc;
+&nbsp;  public final List&lt;AnnotationSpec&gt; annotations;
+&nbsp;  public final Set&lt;Modifier&gt; modifiers;
+&nbsp;  public final List&lt;TypeVariableName&gt; typeVariables;
+&nbsp;  public final TypeName returnType;
+&nbsp;  public final List&lt;ParameterSpec&gt; parameters;
+&nbsp;  public final boolean varargs;
+&nbsp;  public final List&lt;TypeName&gt; exceptions;
+&nbsp;  public final CodeBlock code;
+&nbsp;  public final CodeBlock defaultValue;
+&nbsp;
+<b class="fc">&nbsp;  private MethodSpec(Builder builder) {</b>
+<b class="fc">&nbsp;    CodeBlock code = builder.code.build();</b>
+<b class="pc">&nbsp;    checkArgument(code.isEmpty() || !builder.modifiers.contains(Modifier.ABSTRACT),</b>
+<b class="fc">&nbsp;        &quot;abstract method %s cannot have code&quot;, builder.name);</b>
+<b class="pc">&nbsp;    checkArgument(!builder.varargs || lastParameterIsArray(builder.parameters),</b>
+<b class="fc">&nbsp;        &quot;last parameter of varargs method %s must be an array&quot;, builder.name);</b>
+&nbsp;
+<b class="fc">&nbsp;    this.name = checkNotNull(builder.name, &quot;name == null&quot;);</b>
+<b class="fc">&nbsp;    this.javadoc = builder.javadoc.build();</b>
+<b class="fc">&nbsp;    this.annotations = Util.immutableList(builder.annotations);</b>
+<b class="fc">&nbsp;    this.modifiers = Util.immutableSet(builder.modifiers);</b>
+<b class="fc">&nbsp;    this.typeVariables = Util.immutableList(builder.typeVariables);</b>
+<b class="fc">&nbsp;    this.returnType = builder.returnType;</b>
+<b class="fc">&nbsp;    this.parameters = Util.immutableList(builder.parameters);</b>
+<b class="fc">&nbsp;    this.varargs = builder.varargs;</b>
+<b class="fc">&nbsp;    this.exceptions = Util.immutableList(builder.exceptions);</b>
+<b class="fc">&nbsp;    this.defaultValue = builder.defaultValue;</b>
+<b class="fc">&nbsp;    this.code = code;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  private boolean lastParameterIsArray(List&lt;ParameterSpec&gt; parameters) {
+<b class="pc">&nbsp;    return !parameters.isEmpty()</b>
+<b class="pc">&nbsp;        &amp;&amp; TypeName.asArray((parameters.get(parameters.size() - 1).type)) != null;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  void emit(CodeWriter codeWriter, String enclosingName, Set&lt;Modifier&gt; implicitModifiers)
+&nbsp;      throws IOException {
+<b class="fc">&nbsp;    codeWriter.emitJavadoc(javadocWithParameters());</b>
+<b class="fc">&nbsp;    codeWriter.emitAnnotations(annotations, false);</b>
+<b class="fc">&nbsp;    codeWriter.emitModifiers(modifiers, implicitModifiers);</b>
+&nbsp;
+<b class="fc">&nbsp;    if (!typeVariables.isEmpty()) {</b>
+<b class="fc">&nbsp;      codeWriter.emitTypeVariables(typeVariables);</b>
+<b class="fc">&nbsp;      codeWriter.emit(&quot; &quot;);</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    if (isConstructor()) {</b>
+<b class="fc">&nbsp;      codeWriter.emit(&quot;$L($Z&quot;, enclosingName);</b>
+&nbsp;    } else {
+<b class="fc">&nbsp;      codeWriter.emit(&quot;$T $L($Z&quot;, returnType, name);</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    boolean firstParameter = true;</b>
+<b class="fc">&nbsp;    for (Iterator&lt;ParameterSpec&gt; i = parameters.iterator(); i.hasNext(); ) {</b>
+<b class="fc">&nbsp;      ParameterSpec parameter = i.next();</b>
+<b class="fc">&nbsp;      if (!firstParameter) codeWriter.emit(&quot;,&quot;).emitWrappingSpace();</b>
+<b class="fc">&nbsp;      parameter.emit(codeWriter, !i.hasNext() &amp;&amp; varargs);</b>
+<b class="fc">&nbsp;      firstParameter = false;</b>
+<b class="fc">&nbsp;    }</b>
+&nbsp;
+<b class="fc">&nbsp;    codeWriter.emit(&quot;)&quot;);</b>
+&nbsp;
+<b class="pc">&nbsp;    if (defaultValue != null &amp;&amp; !defaultValue.isEmpty()) {</b>
+<b class="fc">&nbsp;      codeWriter.emit(&quot; default &quot;);</b>
+<b class="fc">&nbsp;      codeWriter.emit(defaultValue);</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    if (!exceptions.isEmpty()) {</b>
+<b class="fc">&nbsp;      codeWriter.emitWrappingSpace().emit(&quot;throws&quot;);</b>
+<b class="fc">&nbsp;      boolean firstException = true;</b>
+<b class="fc">&nbsp;      for (TypeName exception : exceptions) {</b>
+<b class="fc">&nbsp;        if (!firstException) codeWriter.emit(&quot;,&quot;);</b>
+<b class="fc">&nbsp;        codeWriter.emitWrappingSpace().emit(&quot;$T&quot;, exception);</b>
+<b class="fc">&nbsp;        firstException = false;</b>
+<b class="fc">&nbsp;      }</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    if (hasModifier(Modifier.ABSTRACT)) {</b>
+<b class="fc">&nbsp;      codeWriter.emit(&quot;;\n&quot;);</b>
+<b class="fc">&nbsp;    } else if (hasModifier(Modifier.NATIVE)) {</b>
+&nbsp;      // Code is allowed to support stuff like GWT JSNI.
+<b class="fc">&nbsp;      codeWriter.emit(code);</b>
+<b class="fc">&nbsp;      codeWriter.emit(&quot;;\n&quot;);</b>
+&nbsp;    } else {
+<b class="fc">&nbsp;      codeWriter.emit(&quot; {\n&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;      codeWriter.indent();</b>
+<b class="fc">&nbsp;      codeWriter.emit(code, true);</b>
+<b class="fc">&nbsp;      codeWriter.unindent();</b>
+&nbsp;
+<b class="fc">&nbsp;      codeWriter.emit(&quot;}\n&quot;);</b>
+&nbsp;    }
+<b class="fc">&nbsp;    codeWriter.popTypeVariables(typeVariables);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  private CodeBlock javadocWithParameters() {
+<b class="fc">&nbsp;    CodeBlock.Builder builder = javadoc.toBuilder();</b>
+<b class="fc">&nbsp;    boolean emitTagNewline = true;</b>
+<b class="fc">&nbsp;    for (ParameterSpec parameterSpec : parameters) {</b>
+<b class="fc">&nbsp;      if (!parameterSpec.javadoc.isEmpty()) {</b>
+&nbsp;        // Emit a new line before @param section only if the method javadoc is present.
+<b class="fc">&nbsp;        if (emitTagNewline &amp;&amp; !javadoc.isEmpty()) builder.add(&quot;\n&quot;);</b>
+<b class="fc">&nbsp;        emitTagNewline = false;</b>
+<b class="fc">&nbsp;        builder.add(&quot;@param $L $L&quot;, parameterSpec.name, parameterSpec.javadoc);</b>
+&nbsp;      }
+<b class="fc">&nbsp;    }</b>
+<b class="fc">&nbsp;    return builder.build();</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public boolean hasModifier(Modifier modifier) {
+<b class="fc">&nbsp;    return modifiers.contains(modifier);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public boolean isConstructor() {
+<b class="fc">&nbsp;    return name.equals(CONSTRUCTOR);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public boolean equals(Object o) {
+<b class="pc">&nbsp;    if (this == o) return true;</b>
+<b class="pc">&nbsp;    if (o == null) return false;</b>
+<b class="pc">&nbsp;    if (getClass() != o.getClass()) return false;</b>
+<b class="fc">&nbsp;    return toString().equals(o.toString());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public int hashCode() {
+<b class="fc">&nbsp;    return toString().hashCode();</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public String toString() {
+<b class="fc">&nbsp;    StringBuilder out = new StringBuilder();</b>
+&nbsp;    try {
+<b class="fc">&nbsp;      CodeWriter codeWriter = new CodeWriter(out);</b>
+<b class="fc">&nbsp;      emit(codeWriter, &quot;Constructor&quot;, Collections.emptySet());</b>
+<b class="fc">&nbsp;      return out.toString();</b>
+<b class="nc">&nbsp;    } catch (IOException e) {</b>
+<b class="nc">&nbsp;      throw new AssertionError();</b>
+&nbsp;    }
+&nbsp;  }
+&nbsp;
+&nbsp;  public static Builder methodBuilder(String name) {
+<b class="fc">&nbsp;    return new Builder(name);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public static Builder constructorBuilder() {
+<b class="fc">&nbsp;    return new Builder(CONSTRUCTOR);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Returns a new method spec builder that overrides {@code method}.
+&nbsp;   *
+&nbsp;   * &lt;p&gt;This will copy its visibility modifiers, type parameters, return type, name, parameters, and
+&nbsp;   * throws declarations. An {@link Override} annotation will be added.
+&nbsp;   *
+&nbsp;   * &lt;p&gt;Note that in JavaPoet 1.2 through 1.7 this method retained annotations from the method and
+&nbsp;   * parameters of the overridden method. Since JavaPoet 1.8 annotations must be added separately.
+&nbsp;   */
+&nbsp;  public static Builder overriding(ExecutableElement method) {
+<b class="fc">&nbsp;    checkNotNull(method, &quot;method == null&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;    Element enclosingClass = method.getEnclosingElement();</b>
+<b class="fc">&nbsp;    if (enclosingClass.getModifiers().contains(Modifier.FINAL)) {</b>
+<b class="fc">&nbsp;      throw new IllegalArgumentException(&quot;Cannot override method on final class &quot; + enclosingClass);</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    Set&lt;Modifier&gt; modifiers = method.getModifiers();</b>
+<b class="fc">&nbsp;    if (modifiers.contains(Modifier.PRIVATE)</b>
+<b class="fc">&nbsp;        || modifiers.contains(Modifier.FINAL)</b>
+<b class="fc">&nbsp;        || modifiers.contains(Modifier.STATIC)) {</b>
+<b class="fc">&nbsp;      throw new IllegalArgumentException(&quot;cannot override method with modifiers: &quot; + modifiers);</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    String methodName = method.getSimpleName().toString();</b>
+<b class="fc">&nbsp;    MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName);</b>
+&nbsp;
+<b class="fc">&nbsp;    methodBuilder.addAnnotation(Override.class);</b>
+&nbsp;
+<b class="fc">&nbsp;    modifiers = new LinkedHashSet&lt;&gt;(modifiers);</b>
+<b class="fc">&nbsp;    modifiers.remove(Modifier.ABSTRACT);</b>
+<b class="fc">&nbsp;    modifiers.remove(Modifier.DEFAULT);</b>
+<b class="fc">&nbsp;    methodBuilder.addModifiers(modifiers);</b>
+&nbsp;
+<b class="fc">&nbsp;    for (TypeParameterElement typeParameterElement : method.getTypeParameters()) {</b>
+<b class="fc">&nbsp;      TypeVariable var = (TypeVariable) typeParameterElement.asType();</b>
+<b class="fc">&nbsp;      methodBuilder.addTypeVariable(TypeVariableName.get(var));</b>
+<b class="fc">&nbsp;    }</b>
+&nbsp;
+<b class="fc">&nbsp;    methodBuilder.returns(TypeName.get(method.getReturnType()));</b>
+<b class="fc">&nbsp;    methodBuilder.addParameters(ParameterSpec.parametersOf(method));</b>
+<b class="fc">&nbsp;    methodBuilder.varargs(method.isVarArgs());</b>
+&nbsp;
+<b class="fc">&nbsp;    for (TypeMirror thrownType : method.getThrownTypes()) {</b>
+<b class="fc">&nbsp;      methodBuilder.addException(TypeName.get(thrownType));</b>
+<b class="fc">&nbsp;    }</b>
+&nbsp;
+<b class="fc">&nbsp;    return methodBuilder;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Returns a new method spec builder that overrides {@code method} as a member of {@code
+&nbsp;   * enclosing}. This will resolve type parameters: for example overriding {@link
+&nbsp;   * Comparable#compareTo} in a type that implements {@code Comparable&lt;Movie&gt;}, the {@code T}
+&nbsp;   * parameter will be resolved to {@code Movie}.
+&nbsp;   *
+&nbsp;   * &lt;p&gt;This will copy its visibility modifiers, type parameters, return type, name, parameters, and
+&nbsp;   * throws declarations. An {@link Override} annotation will be added.
+&nbsp;   *
+&nbsp;   * &lt;p&gt;Note that in JavaPoet 1.2 through 1.7 this method retained annotations from the method and
+&nbsp;   * parameters of the overridden method. Since JavaPoet 1.8 annotations must be added separately.
+&nbsp;   */
+&nbsp;  public static Builder overriding(
+&nbsp;      ExecutableElement method, DeclaredType enclosing, Types types) {
+<b class="fc">&nbsp;    ExecutableType executableType = (ExecutableType) types.asMemberOf(enclosing, method);</b>
+<b class="fc">&nbsp;    List&lt;? extends TypeMirror&gt; resolvedParameterTypes = executableType.getParameterTypes();</b>
+<b class="fc">&nbsp;    List&lt;? extends TypeMirror&gt; resolvedThrownTypes = executableType.getThrownTypes();</b>
+<b class="fc">&nbsp;    TypeMirror resolvedReturnType = executableType.getReturnType();</b>
+&nbsp;
+<b class="fc">&nbsp;    Builder builder = overriding(method);</b>
+<b class="fc">&nbsp;    builder.returns(TypeName.get(resolvedReturnType));</b>
+<b class="fc">&nbsp;    for (int i = 0, size = builder.parameters.size(); i &lt; size; i++) {</b>
+<b class="fc">&nbsp;      ParameterSpec parameter = builder.parameters.get(i);</b>
+<b class="fc">&nbsp;      TypeName type = TypeName.get(resolvedParameterTypes.get(i));</b>
+<b class="fc">&nbsp;      builder.parameters.set(i, parameter.toBuilder(type, parameter.name).build());</b>
+&nbsp;    }
+<b class="fc">&nbsp;    builder.exceptions.clear();</b>
+<b class="fc">&nbsp;    for (int i = 0, size = resolvedThrownTypes.size(); i &lt; size; i++) {</b>
+<b class="fc">&nbsp;      builder.addException(TypeName.get(resolvedThrownTypes.get(i)));</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    return builder;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public Builder toBuilder() {
+<b class="fc">&nbsp;    Builder builder = new Builder(name);</b>
+<b class="fc">&nbsp;    builder.javadoc.add(javadoc);</b>
+<b class="fc">&nbsp;    builder.annotations.addAll(annotations);</b>
+<b class="fc">&nbsp;    builder.modifiers.addAll(modifiers);</b>
+<b class="fc">&nbsp;    builder.typeVariables.addAll(typeVariables);</b>
+<b class="fc">&nbsp;    builder.returnType = returnType;</b>
+<b class="fc">&nbsp;    builder.parameters.addAll(parameters);</b>
+<b class="fc">&nbsp;    builder.exceptions.addAll(exceptions);</b>
+<b class="fc">&nbsp;    builder.code.add(code);</b>
+<b class="fc">&nbsp;    builder.varargs = varargs;</b>
+<b class="fc">&nbsp;    builder.defaultValue = defaultValue;</b>
+<b class="fc">&nbsp;    return builder;</b>
+&nbsp;  }
+&nbsp;
+<b class="fc">&nbsp;  public static final class Builder {</b>
+&nbsp;    private String name;
+&nbsp;
+<b class="fc">&nbsp;    private final CodeBlock.Builder javadoc = CodeBlock.builder();</b>
+&nbsp;    private TypeName returnType;
+<b class="fc">&nbsp;    private final Set&lt;TypeName&gt; exceptions = new LinkedHashSet&lt;&gt;();</b>
+<b class="fc">&nbsp;    private final CodeBlock.Builder code = CodeBlock.builder();</b>
+&nbsp;    private boolean varargs;
+&nbsp;    private CodeBlock defaultValue;
+&nbsp;
+<b class="fc">&nbsp;    public final List&lt;TypeVariableName&gt; typeVariables = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    public final List&lt;AnnotationSpec&gt; annotations = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    public final List&lt;Modifier&gt; modifiers = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    public final List&lt;ParameterSpec&gt; parameters = new ArrayList&lt;&gt;();</b>
+&nbsp;
+<b class="fc">&nbsp;    private Builder(String name) {</b>
+<b class="fc">&nbsp;      setName(name);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder setName(String name) {
+<b class="fc">&nbsp;      checkNotNull(name, &quot;name == null&quot;);</b>
+<b class="pc">&nbsp;      checkArgument(name.equals(CONSTRUCTOR) || SourceVersion.isName(name),</b>
+&nbsp;          &quot;not a valid name: %s&quot;, name);
+<b class="fc">&nbsp;      this.name = name;</b>
+<b class="fc">&nbsp;      this.returnType = name.equals(CONSTRUCTOR) ? null : TypeName.VOID;</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addJavadoc(String format, Object... args) {
+<b class="fc">&nbsp;      javadoc.add(format, args);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addJavadoc(CodeBlock block) {
+<b class="fc">&nbsp;      javadoc.add(block);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addAnnotations(Iterable&lt;AnnotationSpec&gt; annotationSpecs) {
+<b class="fc">&nbsp;      checkArgument(annotationSpecs != null, &quot;annotationSpecs == null&quot;);</b>
+<b class="fc">&nbsp;      for (AnnotationSpec annotationSpec : annotationSpecs) {</b>
+<b class="fc">&nbsp;        this.annotations.add(annotationSpec);</b>
+<b class="fc">&nbsp;      }</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addAnnotation(AnnotationSpec annotationSpec) {
+<b class="fc">&nbsp;      this.annotations.add(annotationSpec);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addAnnotation(ClassName annotation) {
+<b class="fc">&nbsp;      this.annotations.add(AnnotationSpec.builder(annotation).build());</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addAnnotation(Class&lt;?&gt; annotation) {
+<b class="fc">&nbsp;      return addAnnotation(ClassName.get(annotation));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addModifiers(Modifier... modifiers) {
+<b class="fc">&nbsp;      checkNotNull(modifiers, &quot;modifiers == null&quot;);</b>
+<b class="fc">&nbsp;      Collections.addAll(this.modifiers, modifiers);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addModifiers(Iterable&lt;Modifier&gt; modifiers) {
+<b class="fc">&nbsp;      checkNotNull(modifiers, &quot;modifiers == null&quot;);</b>
+<b class="fc">&nbsp;      for (Modifier modifier : modifiers) {</b>
+<b class="fc">&nbsp;        this.modifiers.add(modifier);</b>
+<b class="fc">&nbsp;      }</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addTypeVariables(Iterable&lt;TypeVariableName&gt; typeVariables) {
+<b class="fc">&nbsp;      checkArgument(typeVariables != null, &quot;typeVariables == null&quot;);</b>
+<b class="fc">&nbsp;      for (TypeVariableName typeVariable : typeVariables) {</b>
+<b class="fc">&nbsp;        this.typeVariables.add(typeVariable);</b>
+<b class="fc">&nbsp;      }</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addTypeVariable(TypeVariableName typeVariable) {
+<b class="fc">&nbsp;      typeVariables.add(typeVariable);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder returns(TypeName returnType) {
+<b class="fc">&nbsp;      checkState(!name.equals(CONSTRUCTOR), &quot;constructor cannot have return type.&quot;);</b>
+<b class="fc">&nbsp;      this.returnType = returnType;</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder returns(Type returnType) {
+<b class="fc">&nbsp;      return returns(TypeName.get(returnType));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addParameters(Iterable&lt;ParameterSpec&gt; parameterSpecs) {
+<b class="fc">&nbsp;      checkArgument(parameterSpecs != null, &quot;parameterSpecs == null&quot;);</b>
+<b class="fc">&nbsp;      for (ParameterSpec parameterSpec : parameterSpecs) {</b>
+<b class="fc">&nbsp;        this.parameters.add(parameterSpec);</b>
+<b class="fc">&nbsp;      }</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addParameter(ParameterSpec parameterSpec) {
+<b class="fc">&nbsp;      this.parameters.add(parameterSpec);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addParameter(TypeName type, String name, Modifier... modifiers) {
+<b class="fc">&nbsp;      return addParameter(ParameterSpec.builder(type, name, modifiers).build());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addParameter(Type type, String name, Modifier... modifiers) {
+<b class="fc">&nbsp;      return addParameter(TypeName.get(type), name, modifiers);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder varargs() {
+<b class="fc">&nbsp;      return varargs(true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder varargs(boolean varargs) {
+<b class="fc">&nbsp;      this.varargs = varargs;</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addExceptions(Iterable&lt;? extends TypeName&gt; exceptions) {
+<b class="fc">&nbsp;      checkArgument(exceptions != null, &quot;exceptions == null&quot;);</b>
+<b class="fc">&nbsp;      for (TypeName exception : exceptions) {</b>
+<b class="fc">&nbsp;        this.exceptions.add(exception);</b>
+<b class="fc">&nbsp;      }</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addException(TypeName exception) {
+<b class="fc">&nbsp;      this.exceptions.add(exception);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addException(Type exception) {
+<b class="fc">&nbsp;      return addException(TypeName.get(exception));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addCode(String format, Object... args) {
+<b class="fc">&nbsp;      code.add(format, args);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addNamedCode(String format, Map&lt;String, ?&gt; args) {
+<b class="nc">&nbsp;      code.addNamed(format, args);</b>
+<b class="nc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addCode(CodeBlock codeBlock) {
+<b class="fc">&nbsp;      code.add(codeBlock);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addComment(String format, Object... args) {
+<b class="fc">&nbsp;      code.add(&quot;// &quot; + format + &quot;\n&quot;, args);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder defaultValue(String format, Object... args) {
+<b class="fc">&nbsp;      return defaultValue(CodeBlock.of(format, args));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder defaultValue(CodeBlock codeBlock) {
+<b class="pc">&nbsp;      checkState(this.defaultValue == null, &quot;defaultValue was already set&quot;);</b>
+<b class="fc">&nbsp;      this.defaultValue = checkNotNull(codeBlock, &quot;codeBlock == null&quot;);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param controlFlow the control flow construct and its code, such as &quot;if (foo == 5)&quot;.
+&nbsp;     * Shouldn&#39;t contain braces or newline characters.
+&nbsp;     */
+&nbsp;    public Builder beginControlFlow(String controlFlow, Object... args) {
+<b class="fc">&nbsp;      code.beginControlFlow(controlFlow, args);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param codeBlock the control flow construct and its code, such as &quot;if (foo == 5)&quot;.
+&nbsp;     * Shouldn&#39;t contain braces or newline characters.
+&nbsp;     */
+&nbsp;    public Builder beginControlFlow(CodeBlock codeBlock) {
+<b class="fc">&nbsp;      return beginControlFlow(&quot;$L&quot;, codeBlock);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param controlFlow the control flow construct and its code, such as &quot;else if (foo == 10)&quot;.
+&nbsp;     *     Shouldn&#39;t contain braces or newline characters.
+&nbsp;     */
+&nbsp;    public Builder nextControlFlow(String controlFlow, Object... args) {
+<b class="fc">&nbsp;      code.nextControlFlow(controlFlow, args);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param codeBlock the control flow construct and its code, such as &quot;else if (foo == 10)&quot;.
+&nbsp;     *     Shouldn&#39;t contain braces or newline characters.
+&nbsp;     */
+&nbsp;    public Builder nextControlFlow(CodeBlock codeBlock) {
+<b class="fc">&nbsp;      return nextControlFlow(&quot;$L&quot;, codeBlock);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder endControlFlow() {
+<b class="fc">&nbsp;      code.endControlFlow();</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param controlFlow the optional control flow construct and its code, such as
+&nbsp;     *     &quot;while(foo == 20)&quot;. Only used for &quot;do/while&quot; control flows.
+&nbsp;     */
+&nbsp;    public Builder endControlFlow(String controlFlow, Object... args) {
+<b class="fc">&nbsp;      code.endControlFlow(controlFlow, args);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * @param codeBlock the optional control flow construct and its code, such as
+&nbsp;     *     &quot;while(foo == 20)&quot;. Only used for &quot;do/while&quot; control flows.
+&nbsp;     */
+&nbsp;    public Builder endControlFlow(CodeBlock codeBlock) {
+<b class="fc">&nbsp;      return endControlFlow(&quot;$L&quot;, codeBlock);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addStatement(String format, Object... args) {
+<b class="fc">&nbsp;      code.addStatement(format, args);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addStatement(CodeBlock codeBlock) {
+<b class="fc">&nbsp;      code.addStatement(codeBlock);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public MethodSpec build() {
+<b class="fc">&nbsp;      return new MethodSpec(this);</b>
+&nbsp;    }
+&nbsp;  }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-11-04 13:59</div>
+</div>
+</body>
+</html>

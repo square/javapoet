@@ -1,0 +1,1023 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > TypeSpec</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.squareup.javapoet</a>
+</div>
+
+<h1>Coverage Summary for Class: TypeSpec (com.squareup.javapoet)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TypeSpec</td>
+<td class="coverageStat">
+  <span class="percent">
+    94.7%
+  </span>
+  <span class="absValue">
+    (18/19)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    91.2%
+  </span>
+  <span class="absValue">
+    (93/102)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    98.5%
+  </span>
+  <span class="absValue">
+    (194/197)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">TypeSpec$1</td>
+  </tr>
+  <tr>
+    <td class="name">TypeSpec$Builder</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (40/40)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    82.2%
+  </span>
+  <span class="absValue">
+    (125/152)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    98.1%
+  </span>
+  <span class="absValue">
+    (207/211)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">TypeSpec$Kind</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (26/26)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    98.4%
+  </span>
+  <span class="absValue">
+    (61/62)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    85.8%
+  </span>
+  <span class="absValue">
+    (218/254)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    98.4%
+  </span>
+  <span class="absValue">
+    (427/434)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (C) 2015 Square, Inc.
+&nbsp; *
+&nbsp; * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+&nbsp; * you may not use this file except in compliance with the License.
+&nbsp; * You may obtain a copy of the License at
+&nbsp; *
+&nbsp; * http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; * Unless required by applicable law or agreed to in writing, software
+&nbsp; * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; * See the License for the specific language governing permissions and
+&nbsp; * limitations under the License.
+&nbsp; */
+&nbsp;package com.squareup.javapoet;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.lang.reflect.ParameterizedType;
+&nbsp;import java.lang.reflect.Type;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Arrays;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.EnumSet;
+&nbsp;import java.util.HashSet;
+&nbsp;import java.util.Iterator;
+&nbsp;import java.util.LinkedHashMap;
+&nbsp;import java.util.LinkedHashSet;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Locale;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Set;
+&nbsp;import javax.lang.model.SourceVersion;
+&nbsp;import javax.lang.model.element.Element;
+&nbsp;import javax.lang.model.element.Modifier;
+&nbsp;import javax.lang.model.element.TypeElement;
+&nbsp;import javax.lang.model.type.DeclaredType;
+&nbsp;import javax.lang.model.type.NoType;
+&nbsp;import javax.lang.model.type.TypeMirror;
+&nbsp;import javax.lang.model.util.ElementFilter;
+&nbsp;
+&nbsp;import static com.squareup.javapoet.Util.checkArgument;
+&nbsp;import static com.squareup.javapoet.Util.checkNotNull;
+&nbsp;import static com.squareup.javapoet.Util.checkState;
+&nbsp;import static com.squareup.javapoet.Util.requireExactlyOneOf;
+&nbsp;
+&nbsp;/** A generated class, interface, or enum declaration. */
+<b class="fc">&nbsp;public final class TypeSpec {</b>
+&nbsp;  public final Kind kind;
+&nbsp;  public final String name;
+&nbsp;  public final CodeBlock anonymousTypeArguments;
+&nbsp;  public final CodeBlock javadoc;
+&nbsp;  public final List&lt;AnnotationSpec&gt; annotations;
+&nbsp;  public final Set&lt;Modifier&gt; modifiers;
+&nbsp;  public final List&lt;TypeVariableName&gt; typeVariables;
+&nbsp;  public final TypeName superclass;
+&nbsp;  public final List&lt;TypeName&gt; superinterfaces;
+&nbsp;  public final Map&lt;String, TypeSpec&gt; enumConstants;
+&nbsp;  public final List&lt;FieldSpec&gt; fieldSpecs;
+&nbsp;  public final CodeBlock staticBlock;
+&nbsp;  public final CodeBlock initializerBlock;
+&nbsp;  public final List&lt;MethodSpec&gt; methodSpecs;
+&nbsp;  public final List&lt;TypeSpec&gt; typeSpecs;
+&nbsp;  final Set&lt;String&gt; nestedTypesSimpleNames;
+&nbsp;  public final List&lt;Element&gt; originatingElements;
+&nbsp;  public final Set&lt;String&gt; alwaysQualifiedNames;
+&nbsp;
+<b class="fc">&nbsp;  private TypeSpec(Builder builder) {</b>
+<b class="fc">&nbsp;    this.kind = builder.kind;</b>
+<b class="fc">&nbsp;    this.name = builder.name;</b>
+<b class="fc">&nbsp;    this.anonymousTypeArguments = builder.anonymousTypeArguments;</b>
+<b class="fc">&nbsp;    this.javadoc = builder.javadoc.build();</b>
+<b class="fc">&nbsp;    this.annotations = Util.immutableList(builder.annotations);</b>
+<b class="fc">&nbsp;    this.modifiers = Util.immutableSet(builder.modifiers);</b>
+<b class="fc">&nbsp;    this.typeVariables = Util.immutableList(builder.typeVariables);</b>
+<b class="fc">&nbsp;    this.superclass = builder.superclass;</b>
+<b class="fc">&nbsp;    this.superinterfaces = Util.immutableList(builder.superinterfaces);</b>
+<b class="fc">&nbsp;    this.enumConstants = Util.immutableMap(builder.enumConstants);</b>
+<b class="fc">&nbsp;    this.fieldSpecs = Util.immutableList(builder.fieldSpecs);</b>
+<b class="fc">&nbsp;    this.staticBlock = builder.staticBlock.build();</b>
+<b class="fc">&nbsp;    this.initializerBlock = builder.initializerBlock.build();</b>
+<b class="fc">&nbsp;    this.methodSpecs = Util.immutableList(builder.methodSpecs);</b>
+<b class="fc">&nbsp;    this.typeSpecs = Util.immutableList(builder.typeSpecs);</b>
+<b class="fc">&nbsp;    this.alwaysQualifiedNames = Util.immutableSet(builder.alwaysQualifiedNames);</b>
+&nbsp;
+<b class="fc">&nbsp;    nestedTypesSimpleNames = new HashSet&lt;&gt;(builder.typeSpecs.size());</b>
+<b class="fc">&nbsp;    List&lt;Element&gt; originatingElementsMutable = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    originatingElementsMutable.addAll(builder.originatingElements);</b>
+<b class="fc">&nbsp;    for (TypeSpec typeSpec : builder.typeSpecs) {</b>
+<b class="fc">&nbsp;      nestedTypesSimpleNames.add(typeSpec.name);</b>
+<b class="fc">&nbsp;      originatingElementsMutable.addAll(typeSpec.originatingElements);</b>
+<b class="fc">&nbsp;    }</b>
+&nbsp;
+<b class="fc">&nbsp;    this.originatingElements = Util.immutableList(originatingElementsMutable);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Creates a dummy type spec for type-resolution only (in CodeWriter)
+&nbsp;   * while emitting the type declaration but before entering the type body.
+&nbsp;   */
+<b class="fc">&nbsp;  private TypeSpec(TypeSpec type) {</b>
+<b class="pc">&nbsp;    assert type.anonymousTypeArguments == null;</b>
+<b class="fc">&nbsp;    this.kind = type.kind;</b>
+<b class="fc">&nbsp;    this.name = type.name;</b>
+<b class="fc">&nbsp;    this.anonymousTypeArguments = null;</b>
+<b class="fc">&nbsp;    this.javadoc = type.javadoc;</b>
+<b class="fc">&nbsp;    this.annotations = Collections.emptyList();</b>
+<b class="fc">&nbsp;    this.modifiers = Collections.emptySet();</b>
+<b class="fc">&nbsp;    this.typeVariables = Collections.emptyList();</b>
+<b class="fc">&nbsp;    this.superclass = null;</b>
+<b class="fc">&nbsp;    this.superinterfaces = Collections.emptyList();</b>
+<b class="fc">&nbsp;    this.enumConstants = Collections.emptyMap();</b>
+<b class="fc">&nbsp;    this.fieldSpecs = Collections.emptyList();</b>
+<b class="fc">&nbsp;    this.staticBlock = type.staticBlock;</b>
+<b class="fc">&nbsp;    this.initializerBlock = type.initializerBlock;</b>
+<b class="fc">&nbsp;    this.methodSpecs = Collections.emptyList();</b>
+<b class="fc">&nbsp;    this.typeSpecs = Collections.emptyList();</b>
+<b class="fc">&nbsp;    this.originatingElements = Collections.emptyList();</b>
+<b class="fc">&nbsp;    this.nestedTypesSimpleNames = Collections.emptySet();</b>
+<b class="fc">&nbsp;    this.alwaysQualifiedNames = Collections.emptySet();</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public boolean hasModifier(Modifier modifier) {
+<b class="nc">&nbsp;    return modifiers.contains(modifier);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public static Builder classBuilder(String name) {
+<b class="fc">&nbsp;    return new Builder(Kind.CLASS, checkNotNull(name, &quot;name == null&quot;), null);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public static Builder classBuilder(ClassName className) {
+<b class="fc">&nbsp;    return classBuilder(checkNotNull(className, &quot;className == null&quot;).simpleName());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public static Builder interfaceBuilder(String name) {
+<b class="fc">&nbsp;    return new Builder(Kind.INTERFACE, checkNotNull(name, &quot;name == null&quot;), null);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public static Builder interfaceBuilder(ClassName className) {
+<b class="fc">&nbsp;    return interfaceBuilder(checkNotNull(className, &quot;className == null&quot;).simpleName());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public static Builder enumBuilder(String name) {
+<b class="fc">&nbsp;    return new Builder(Kind.ENUM, checkNotNull(name, &quot;name == null&quot;), null);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public static Builder enumBuilder(ClassName className) {
+<b class="fc">&nbsp;    return enumBuilder(checkNotNull(className, &quot;className == null&quot;).simpleName());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public static Builder anonymousClassBuilder(String typeArgumentsFormat, Object... args) {
+<b class="fc">&nbsp;    return anonymousClassBuilder(CodeBlock.of(typeArgumentsFormat, args));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public static Builder anonymousClassBuilder(CodeBlock typeArguments) {
+<b class="fc">&nbsp;    return new Builder(Kind.CLASS, null, typeArguments);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public static Builder annotationBuilder(String name) {
+<b class="fc">&nbsp;    return new Builder(Kind.ANNOTATION, checkNotNull(name, &quot;name == null&quot;), null);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public static Builder annotationBuilder(ClassName className) {
+<b class="fc">&nbsp;    return annotationBuilder(checkNotNull(className, &quot;className == null&quot;).simpleName());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public Builder toBuilder() {
+<b class="fc">&nbsp;    Builder builder = new Builder(kind, name, anonymousTypeArguments);</b>
+<b class="fc">&nbsp;    builder.javadoc.add(javadoc);</b>
+<b class="fc">&nbsp;    builder.annotations.addAll(annotations);</b>
+<b class="fc">&nbsp;    builder.modifiers.addAll(modifiers);</b>
+<b class="fc">&nbsp;    builder.typeVariables.addAll(typeVariables);</b>
+<b class="fc">&nbsp;    builder.superclass = superclass;</b>
+<b class="fc">&nbsp;    builder.superinterfaces.addAll(superinterfaces);</b>
+<b class="fc">&nbsp;    builder.enumConstants.putAll(enumConstants);</b>
+<b class="fc">&nbsp;    builder.fieldSpecs.addAll(fieldSpecs);</b>
+<b class="fc">&nbsp;    builder.methodSpecs.addAll(methodSpecs);</b>
+<b class="fc">&nbsp;    builder.typeSpecs.addAll(typeSpecs);</b>
+<b class="fc">&nbsp;    builder.initializerBlock.add(initializerBlock);</b>
+<b class="fc">&nbsp;    builder.staticBlock.add(staticBlock);</b>
+<b class="fc">&nbsp;    builder.originatingElements.addAll(originatingElements);</b>
+<b class="fc">&nbsp;    builder.alwaysQualifiedNames.addAll(alwaysQualifiedNames);</b>
+<b class="fc">&nbsp;    return builder;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  void emit(CodeWriter codeWriter, String enumName, Set&lt;Modifier&gt; implicitModifiers)
+&nbsp;      throws IOException {
+&nbsp;    // Nested classes interrupt wrapped line indentation. Stash the current wrapping state and put
+&nbsp;    // it back afterwards when this type is complete.
+<b class="fc">&nbsp;    int previousStatementLine = codeWriter.statementLine;</b>
+<b class="fc">&nbsp;    codeWriter.statementLine = -1;</b>
+&nbsp;
+&nbsp;    try {
+<b class="fc">&nbsp;      if (enumName != null) {</b>
+<b class="fc">&nbsp;        codeWriter.emitJavadoc(javadoc);</b>
+<b class="fc">&nbsp;        codeWriter.emitAnnotations(annotations, false);</b>
+<b class="fc">&nbsp;        codeWriter.emit(&quot;$L&quot;, enumName);</b>
+<b class="fc">&nbsp;        if (!anonymousTypeArguments.formatParts.isEmpty()) {</b>
+<b class="fc">&nbsp;          codeWriter.emit(&quot;(&quot;);</b>
+<b class="fc">&nbsp;          codeWriter.emit(anonymousTypeArguments);</b>
+<b class="fc">&nbsp;          codeWriter.emit(&quot;)&quot;);</b>
+&nbsp;        }
+<b class="pc">&nbsp;        if (fieldSpecs.isEmpty() &amp;&amp; methodSpecs.isEmpty() &amp;&amp; typeSpecs.isEmpty()) {</b>
+&nbsp;          return; // Avoid unnecessary braces &quot;{}&quot;.
+&nbsp;        }
+<b class="fc">&nbsp;        codeWriter.emit(&quot; {\n&quot;);</b>
+<b class="fc">&nbsp;      } else if (anonymousTypeArguments != null) {</b>
+<b class="fc">&nbsp;        TypeName supertype = !superinterfaces.isEmpty() ? superinterfaces.get(0) : superclass;</b>
+<b class="fc">&nbsp;        codeWriter.emit(&quot;new $T(&quot;, supertype);</b>
+<b class="fc">&nbsp;        codeWriter.emit(anonymousTypeArguments);</b>
+<b class="fc">&nbsp;        codeWriter.emit(&quot;) {\n&quot;);</b>
+<b class="fc">&nbsp;      } else {</b>
+&nbsp;        // Push an empty type (specifically without nested types) for type-resolution.
+<b class="fc">&nbsp;        codeWriter.pushType(new TypeSpec(this));</b>
+&nbsp;
+<b class="fc">&nbsp;        codeWriter.emitJavadoc(javadoc);</b>
+<b class="fc">&nbsp;        codeWriter.emitAnnotations(annotations, false);</b>
+<b class="fc">&nbsp;        codeWriter.emitModifiers(modifiers, Util.union(implicitModifiers, kind.asMemberModifiers));</b>
+<b class="fc">&nbsp;        if (kind == Kind.ANNOTATION) {</b>
+<b class="fc">&nbsp;          codeWriter.emit(&quot;$L $L&quot;, &quot;@interface&quot;, name);</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;          codeWriter.emit(&quot;$L $L&quot;, kind.name().toLowerCase(Locale.US), name);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        codeWriter.emitTypeVariables(typeVariables);</b>
+&nbsp;
+&nbsp;        List&lt;TypeName&gt; extendsTypes;
+&nbsp;        List&lt;TypeName&gt; implementsTypes;
+<b class="fc">&nbsp;        if (kind == Kind.INTERFACE) {</b>
+<b class="fc">&nbsp;          extendsTypes = superinterfaces;</b>
+<b class="fc">&nbsp;          implementsTypes = Collections.emptyList();</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;          extendsTypes = superclass.equals(ClassName.OBJECT)</b>
+<b class="fc">&nbsp;              ? Collections.emptyList()</b>
+<b class="fc">&nbsp;              : Collections.singletonList(superclass);</b>
+<b class="fc">&nbsp;          implementsTypes = superinterfaces;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (!extendsTypes.isEmpty()) {</b>
+<b class="fc">&nbsp;          codeWriter.emit(&quot; extends&quot;);</b>
+<b class="fc">&nbsp;          boolean firstType = true;</b>
+<b class="fc">&nbsp;          for (TypeName type : extendsTypes) {</b>
+<b class="fc">&nbsp;            if (!firstType) codeWriter.emit(&quot;,&quot;);</b>
+<b class="fc">&nbsp;            codeWriter.emit(&quot; $T&quot;, type);</b>
+<b class="fc">&nbsp;            firstType = false;</b>
+<b class="fc">&nbsp;          }</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        if (!implementsTypes.isEmpty()) {</b>
+<b class="fc">&nbsp;          codeWriter.emit(&quot; implements&quot;);</b>
+<b class="fc">&nbsp;          boolean firstType = true;</b>
+<b class="fc">&nbsp;          for (TypeName type : implementsTypes) {</b>
+<b class="fc">&nbsp;            if (!firstType) codeWriter.emit(&quot;,&quot;);</b>
+<b class="fc">&nbsp;            codeWriter.emit(&quot; $T&quot;, type);</b>
+<b class="fc">&nbsp;            firstType = false;</b>
+<b class="fc">&nbsp;          }</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        codeWriter.popType();</b>
+&nbsp;
+<b class="fc">&nbsp;        codeWriter.emit(&quot; {\n&quot;);</b>
+&nbsp;      }
+&nbsp;
+<b class="fc">&nbsp;      codeWriter.pushType(this);</b>
+<b class="fc">&nbsp;      codeWriter.indent();</b>
+<b class="fc">&nbsp;      boolean firstMember = true;</b>
+<b class="fc">&nbsp;      boolean needsSeparator = kind == Kind.ENUM</b>
+<b class="pc">&nbsp;              &amp;&amp; (!fieldSpecs.isEmpty() || !methodSpecs.isEmpty() || !typeSpecs.isEmpty());</b>
+<b class="fc">&nbsp;      for (Iterator&lt;Map.Entry&lt;String, TypeSpec&gt;&gt; i = enumConstants.entrySet().iterator();</b>
+<b class="fc">&nbsp;          i.hasNext(); ) {</b>
+<b class="fc">&nbsp;        Map.Entry&lt;String, TypeSpec&gt; enumConstant = i.next();</b>
+<b class="fc">&nbsp;        if (!firstMember) codeWriter.emit(&quot;\n&quot;);</b>
+<b class="fc">&nbsp;        enumConstant.getValue().emit(codeWriter, enumConstant.getKey(), Collections.emptySet());</b>
+<b class="fc">&nbsp;        firstMember = false;</b>
+<b class="fc">&nbsp;        if (i.hasNext()) {</b>
+<b class="fc">&nbsp;          codeWriter.emit(&quot;,\n&quot;);</b>
+<b class="fc">&nbsp;        } else if (!needsSeparator) {</b>
+<b class="fc">&nbsp;          codeWriter.emit(&quot;\n&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;      }</b>
+&nbsp;
+<b class="fc">&nbsp;      if (needsSeparator) codeWriter.emit(&quot;;\n&quot;);</b>
+&nbsp;
+&nbsp;      // Static fields.
+<b class="fc">&nbsp;      for (FieldSpec fieldSpec : fieldSpecs) {</b>
+<b class="fc">&nbsp;        if (!fieldSpec.hasModifier(Modifier.STATIC)) continue;</b>
+<b class="fc">&nbsp;        if (!firstMember) codeWriter.emit(&quot;\n&quot;);</b>
+<b class="fc">&nbsp;        fieldSpec.emit(codeWriter, kind.implicitFieldModifiers);</b>
+<b class="fc">&nbsp;        firstMember = false;</b>
+<b class="fc">&nbsp;      }</b>
+&nbsp;
+<b class="fc">&nbsp;      if (!staticBlock.isEmpty()) {</b>
+<b class="fc">&nbsp;        if (!firstMember) codeWriter.emit(&quot;\n&quot;);</b>
+<b class="fc">&nbsp;        codeWriter.emit(staticBlock);</b>
+<b class="fc">&nbsp;        firstMember = false;</b>
+&nbsp;      }
+&nbsp;
+&nbsp;      // Non-static fields.
+<b class="fc">&nbsp;      for (FieldSpec fieldSpec : fieldSpecs) {</b>
+<b class="fc">&nbsp;        if (fieldSpec.hasModifier(Modifier.STATIC)) continue;</b>
+<b class="fc">&nbsp;        if (!firstMember) codeWriter.emit(&quot;\n&quot;);</b>
+<b class="fc">&nbsp;        fieldSpec.emit(codeWriter, kind.implicitFieldModifiers);</b>
+<b class="fc">&nbsp;        firstMember = false;</b>
+<b class="fc">&nbsp;      }</b>
+&nbsp;
+&nbsp;      // Initializer block.
+<b class="fc">&nbsp;      if (!initializerBlock.isEmpty()) {</b>
+<b class="pc">&nbsp;        if (!firstMember) codeWriter.emit(&quot;\n&quot;);</b>
+<b class="fc">&nbsp;        codeWriter.emit(initializerBlock);</b>
+<b class="fc">&nbsp;        firstMember = false;</b>
+&nbsp;      }
+&nbsp;
+&nbsp;      // Constructors.
+<b class="fc">&nbsp;      for (MethodSpec methodSpec : methodSpecs) {</b>
+<b class="fc">&nbsp;        if (!methodSpec.isConstructor()) continue;</b>
+<b class="fc">&nbsp;        if (!firstMember) codeWriter.emit(&quot;\n&quot;);</b>
+<b class="fc">&nbsp;        methodSpec.emit(codeWriter, name, kind.implicitMethodModifiers);</b>
+<b class="fc">&nbsp;        firstMember = false;</b>
+<b class="fc">&nbsp;      }</b>
+&nbsp;
+&nbsp;      // Methods (static and non-static).
+<b class="fc">&nbsp;      for (MethodSpec methodSpec : methodSpecs) {</b>
+<b class="fc">&nbsp;        if (methodSpec.isConstructor()) continue;</b>
+<b class="fc">&nbsp;        if (!firstMember) codeWriter.emit(&quot;\n&quot;);</b>
+<b class="fc">&nbsp;        methodSpec.emit(codeWriter, name, kind.implicitMethodModifiers);</b>
+<b class="fc">&nbsp;        firstMember = false;</b>
+<b class="fc">&nbsp;      }</b>
+&nbsp;
+&nbsp;      // Types.
+<b class="fc">&nbsp;      for (TypeSpec typeSpec : typeSpecs) {</b>
+<b class="fc">&nbsp;        if (!firstMember) codeWriter.emit(&quot;\n&quot;);</b>
+<b class="fc">&nbsp;        typeSpec.emit(codeWriter, null, kind.implicitTypeModifiers);</b>
+<b class="fc">&nbsp;        firstMember = false;</b>
+<b class="fc">&nbsp;      }</b>
+&nbsp;
+<b class="fc">&nbsp;      codeWriter.unindent();</b>
+<b class="fc">&nbsp;      codeWriter.popType();</b>
+<b class="fc">&nbsp;      codeWriter.popTypeVariables(typeVariables);</b>
+&nbsp;
+<b class="fc">&nbsp;      codeWriter.emit(&quot;}&quot;);</b>
+<b class="fc">&nbsp;      if (enumName == null &amp;&amp; anonymousTypeArguments == null) {</b>
+<b class="fc">&nbsp;        codeWriter.emit(&quot;\n&quot;); // If this type isn&#39;t also a value, include a trailing newline.</b>
+&nbsp;      }
+&nbsp;    } finally {
+<b class="fc">&nbsp;      codeWriter.statementLine = previousStatementLine;</b>
+<b class="fc">&nbsp;    }</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public boolean equals(Object o) {
+<b class="pc">&nbsp;    if (this == o) return true;</b>
+<b class="pc">&nbsp;    if (o == null) return false;</b>
+<b class="pc">&nbsp;    if (getClass() != o.getClass()) return false;</b>
+<b class="fc">&nbsp;    return toString().equals(o.toString());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public int hashCode() {
+<b class="fc">&nbsp;    return toString().hashCode();</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public String toString() {
+<b class="fc">&nbsp;    StringBuilder out = new StringBuilder();</b>
+&nbsp;    try {
+<b class="fc">&nbsp;      CodeWriter codeWriter = new CodeWriter(out);</b>
+<b class="fc">&nbsp;      emit(codeWriter, null, Collections.emptySet());</b>
+<b class="fc">&nbsp;      return out.toString();</b>
+<b class="nc">&nbsp;    } catch (IOException e) {</b>
+<b class="nc">&nbsp;      throw new AssertionError();</b>
+&nbsp;    }
+&nbsp;  }
+&nbsp;
+<b class="fc">&nbsp;  public enum Kind {</b>
+<b class="fc">&nbsp;    CLASS(</b>
+<b class="fc">&nbsp;        Collections.emptySet(),</b>
+<b class="fc">&nbsp;        Collections.emptySet(),</b>
+<b class="fc">&nbsp;        Collections.emptySet(),</b>
+<b class="fc">&nbsp;        Collections.emptySet()),</b>
+&nbsp;
+<b class="fc">&nbsp;    INTERFACE(</b>
+<b class="fc">&nbsp;        Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)),</b>
+<b class="fc">&nbsp;        Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.ABSTRACT)),</b>
+<b class="fc">&nbsp;        Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC)),</b>
+<b class="fc">&nbsp;        Util.immutableSet(Collections.singletonList(Modifier.STATIC))),</b>
+&nbsp;
+<b class="fc">&nbsp;    ENUM(</b>
+<b class="fc">&nbsp;        Collections.emptySet(),</b>
+<b class="fc">&nbsp;        Collections.emptySet(),</b>
+<b class="fc">&nbsp;        Collections.emptySet(),</b>
+<b class="fc">&nbsp;        Collections.singleton(Modifier.STATIC)),</b>
+&nbsp;
+<b class="fc">&nbsp;    ANNOTATION(</b>
+<b class="fc">&nbsp;        Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)),</b>
+<b class="fc">&nbsp;        Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.ABSTRACT)),</b>
+<b class="fc">&nbsp;        Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC)),</b>
+<b class="fc">&nbsp;        Util.immutableSet(Collections.singletonList(Modifier.STATIC)));</b>
+&nbsp;
+&nbsp;    private final Set&lt;Modifier&gt; implicitFieldModifiers;
+&nbsp;    private final Set&lt;Modifier&gt; implicitMethodModifiers;
+&nbsp;    private final Set&lt;Modifier&gt; implicitTypeModifiers;
+&nbsp;    private final Set&lt;Modifier&gt; asMemberModifiers;
+&nbsp;
+&nbsp;    Kind(Set&lt;Modifier&gt; implicitFieldModifiers,
+&nbsp;        Set&lt;Modifier&gt; implicitMethodModifiers,
+&nbsp;        Set&lt;Modifier&gt; implicitTypeModifiers,
+<b class="fc">&nbsp;        Set&lt;Modifier&gt; asMemberModifiers) {</b>
+<b class="fc">&nbsp;      this.implicitFieldModifiers = implicitFieldModifiers;</b>
+<b class="fc">&nbsp;      this.implicitMethodModifiers = implicitMethodModifiers;</b>
+<b class="fc">&nbsp;      this.implicitTypeModifiers = implicitTypeModifiers;</b>
+<b class="fc">&nbsp;      this.asMemberModifiers = asMemberModifiers;</b>
+&nbsp;    }
+&nbsp;  }
+&nbsp;
+<b class="fc">&nbsp;  public static final class Builder {</b>
+&nbsp;    private final Kind kind;
+&nbsp;    private final String name;
+&nbsp;    private final CodeBlock anonymousTypeArguments;
+&nbsp;
+<b class="fc">&nbsp;    private final CodeBlock.Builder javadoc = CodeBlock.builder();</b>
+<b class="fc">&nbsp;    private TypeName superclass = ClassName.OBJECT;</b>
+<b class="fc">&nbsp;    private final CodeBlock.Builder staticBlock = CodeBlock.builder();</b>
+<b class="fc">&nbsp;    private final CodeBlock.Builder initializerBlock = CodeBlock.builder();</b>
+&nbsp;
+<b class="fc">&nbsp;    public final Map&lt;String, TypeSpec&gt; enumConstants = new LinkedHashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;    public final List&lt;AnnotationSpec&gt; annotations = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    public final List&lt;Modifier&gt; modifiers = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    public final List&lt;TypeVariableName&gt; typeVariables = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    public final List&lt;TypeName&gt; superinterfaces = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    public final List&lt;FieldSpec&gt; fieldSpecs = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    public final List&lt;MethodSpec&gt; methodSpecs = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    public final List&lt;TypeSpec&gt; typeSpecs = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    public final List&lt;Element&gt; originatingElements = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    public final Set&lt;String&gt; alwaysQualifiedNames = new LinkedHashSet&lt;&gt;();</b>
+&nbsp;
+&nbsp;    private Builder(Kind kind, String name,
+<b class="fc">&nbsp;        CodeBlock anonymousTypeArguments) {</b>
+<b class="pc">&nbsp;      checkArgument(name == null || SourceVersion.isName(name), &quot;not a valid name: %s&quot;, name);</b>
+<b class="fc">&nbsp;      this.kind = kind;</b>
+<b class="fc">&nbsp;      this.name = name;</b>
+<b class="fc">&nbsp;      this.anonymousTypeArguments = anonymousTypeArguments;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addJavadoc(String format, Object... args) {
+<b class="fc">&nbsp;      javadoc.add(format, args);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addJavadoc(CodeBlock block) {
+<b class="fc">&nbsp;      javadoc.add(block);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addAnnotations(Iterable&lt;AnnotationSpec&gt; annotationSpecs) {
+<b class="fc">&nbsp;      checkArgument(annotationSpecs != null, &quot;annotationSpecs == null&quot;);</b>
+<b class="fc">&nbsp;      for (AnnotationSpec annotationSpec : annotationSpecs) {</b>
+<b class="fc">&nbsp;        this.annotations.add(annotationSpec);</b>
+<b class="fc">&nbsp;      }</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addAnnotation(AnnotationSpec annotationSpec) {
+<b class="fc">&nbsp;      checkNotNull(annotationSpec, &quot;annotationSpec == null&quot;);</b>
+<b class="fc">&nbsp;      this.annotations.add(annotationSpec);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addAnnotation(ClassName annotation) {
+<b class="fc">&nbsp;      return addAnnotation(AnnotationSpec.builder(annotation).build());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addAnnotation(Class&lt;?&gt; annotation) {
+<b class="fc">&nbsp;      return addAnnotation(ClassName.get(annotation));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addModifiers(Modifier... modifiers) {
+<b class="fc">&nbsp;      Collections.addAll(this.modifiers, modifiers);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addTypeVariables(Iterable&lt;TypeVariableName&gt; typeVariables) {
+<b class="fc">&nbsp;      checkArgument(typeVariables != null, &quot;typeVariables == null&quot;);</b>
+<b class="fc">&nbsp;      for (TypeVariableName typeVariable : typeVariables) {</b>
+<b class="fc">&nbsp;        this.typeVariables.add(typeVariable);</b>
+<b class="fc">&nbsp;      }</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addTypeVariable(TypeVariableName typeVariable) {
+<b class="fc">&nbsp;      typeVariables.add(typeVariable);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder superclass(TypeName superclass) {
+<b class="fc">&nbsp;      checkState(this.kind == Kind.CLASS, &quot;only classes have super classes, not &quot; + this.kind);</b>
+<b class="fc">&nbsp;      checkState(this.superclass == ClassName.OBJECT,</b>
+&nbsp;          &quot;superclass already set to &quot; + this.superclass);
+<b class="fc">&nbsp;      checkArgument(!superclass.isPrimitive(), &quot;superclass may not be a primitive&quot;);</b>
+<b class="fc">&nbsp;      this.superclass = superclass;</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder superclass(Type superclass) {
+<b class="fc">&nbsp;      return superclass(superclass, true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder superclass(Type superclass, boolean avoidNestedTypeNameClashes) {
+<b class="fc">&nbsp;      superclass(TypeName.get(superclass));</b>
+<b class="pc">&nbsp;      if (avoidNestedTypeNameClashes) {</b>
+<b class="fc">&nbsp;        Class&lt;?&gt; clazz = getRawType(superclass);</b>
+<b class="pc">&nbsp;        if (clazz != null) {</b>
+<b class="fc">&nbsp;          avoidClashesWithNestedClasses(clazz);</b>
+&nbsp;        }
+&nbsp;      }
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder superclass(TypeMirror superclass) {
+<b class="fc">&nbsp;      return superclass(superclass, true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder superclass(TypeMirror superclass, boolean avoidNestedTypeNameClashes) {
+<b class="fc">&nbsp;      superclass(TypeName.get(superclass));</b>
+<b class="pc">&nbsp;      if (avoidNestedTypeNameClashes &amp;&amp; superclass instanceof DeclaredType) {</b>
+<b class="fc">&nbsp;        TypeElement superInterfaceElement =</b>
+<b class="fc">&nbsp;            (TypeElement) ((DeclaredType) superclass).asElement();</b>
+<b class="fc">&nbsp;        avoidClashesWithNestedClasses(superInterfaceElement);</b>
+&nbsp;      }
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addSuperinterfaces(Iterable&lt;? extends TypeName&gt; superinterfaces) {
+<b class="fc">&nbsp;      checkArgument(superinterfaces != null, &quot;superinterfaces == null&quot;);</b>
+<b class="fc">&nbsp;      for (TypeName superinterface : superinterfaces) {</b>
+<b class="fc">&nbsp;        addSuperinterface(superinterface);</b>
+<b class="fc">&nbsp;      }</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addSuperinterface(TypeName superinterface) {
+<b class="fc">&nbsp;      checkArgument(superinterface != null, &quot;superinterface == null&quot;);</b>
+<b class="fc">&nbsp;      this.superinterfaces.add(superinterface);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addSuperinterface(Type superinterface) {
+<b class="fc">&nbsp;      return addSuperinterface(superinterface, true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addSuperinterface(Type superinterface, boolean avoidNestedTypeNameClashes) {
+<b class="fc">&nbsp;      addSuperinterface(TypeName.get(superinterface));</b>
+<b class="pc">&nbsp;      if (avoidNestedTypeNameClashes) {</b>
+<b class="fc">&nbsp;        Class&lt;?&gt; clazz = getRawType(superinterface);</b>
+<b class="pc">&nbsp;        if (clazz != null) {</b>
+<b class="fc">&nbsp;          avoidClashesWithNestedClasses(clazz);</b>
+&nbsp;        }
+&nbsp;      }
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Class&lt;?&gt; getRawType(Type type) {
+<b class="pc">&nbsp;      if (type instanceof Class&lt;?&gt;) {</b>
+<b class="fc">&nbsp;        return (Class&lt;?&gt;) type;</b>
+<b class="nc">&nbsp;      } else if (type instanceof ParameterizedType) {</b>
+<b class="nc">&nbsp;        return getRawType(((ParameterizedType) type).getRawType());</b>
+&nbsp;      } else {
+<b class="nc">&nbsp;        return null;</b>
+&nbsp;      }
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addSuperinterface(TypeMirror superinterface) {
+<b class="fc">&nbsp;      return addSuperinterface(superinterface, true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addSuperinterface(TypeMirror superinterface,
+&nbsp;        boolean avoidNestedTypeNameClashes) {
+<b class="fc">&nbsp;      addSuperinterface(TypeName.get(superinterface));</b>
+<b class="pc">&nbsp;      if (avoidNestedTypeNameClashes &amp;&amp; superinterface instanceof DeclaredType) {</b>
+<b class="fc">&nbsp;        TypeElement superInterfaceElement =</b>
+<b class="fc">&nbsp;            (TypeElement) ((DeclaredType) superinterface).asElement();</b>
+<b class="fc">&nbsp;        avoidClashesWithNestedClasses(superInterfaceElement);</b>
+&nbsp;      }
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addEnumConstant(String name) {
+<b class="fc">&nbsp;      return addEnumConstant(name, anonymousClassBuilder(&quot;&quot;).build());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addEnumConstant(String name, TypeSpec typeSpec) {
+<b class="fc">&nbsp;      enumConstants.put(name, typeSpec);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addFields(Iterable&lt;FieldSpec&gt; fieldSpecs) {
+<b class="fc">&nbsp;      checkArgument(fieldSpecs != null, &quot;fieldSpecs == null&quot;);</b>
+<b class="fc">&nbsp;      for (FieldSpec fieldSpec : fieldSpecs) {</b>
+<b class="fc">&nbsp;        addField(fieldSpec);</b>
+<b class="fc">&nbsp;      }</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addField(FieldSpec fieldSpec) {
+<b class="fc">&nbsp;      fieldSpecs.add(fieldSpec);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addField(TypeName type, String name, Modifier... modifiers) {
+<b class="fc">&nbsp;      return addField(FieldSpec.builder(type, name, modifiers).build());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addField(Type type, String name, Modifier... modifiers) {
+<b class="fc">&nbsp;      return addField(TypeName.get(type), name, modifiers);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addStaticBlock(CodeBlock block) {
+<b class="fc">&nbsp;      staticBlock.beginControlFlow(&quot;static&quot;).add(block).endControlFlow();</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addInitializerBlock(CodeBlock block) {
+<b class="pc">&nbsp;      if ((kind != Kind.CLASS &amp;&amp; kind != Kind.ENUM)) {</b>
+<b class="fc">&nbsp;        throw new UnsupportedOperationException(kind + &quot; can&#39;t have initializer blocks&quot;);</b>
+&nbsp;      }
+<b class="fc">&nbsp;      initializerBlock.add(&quot;{\n&quot;)</b>
+<b class="fc">&nbsp;          .indent()</b>
+<b class="fc">&nbsp;          .add(block)</b>
+<b class="fc">&nbsp;          .unindent()</b>
+<b class="fc">&nbsp;          .add(&quot;}\n&quot;);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addMethods(Iterable&lt;MethodSpec&gt; methodSpecs) {
+<b class="fc">&nbsp;      checkArgument(methodSpecs != null, &quot;methodSpecs == null&quot;);</b>
+<b class="fc">&nbsp;      for (MethodSpec methodSpec : methodSpecs) {</b>
+<b class="fc">&nbsp;        addMethod(methodSpec);</b>
+<b class="fc">&nbsp;      }</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addMethod(MethodSpec methodSpec) {
+<b class="fc">&nbsp;      methodSpecs.add(methodSpec);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addTypes(Iterable&lt;TypeSpec&gt; typeSpecs) {
+<b class="fc">&nbsp;      checkArgument(typeSpecs != null, &quot;typeSpecs == null&quot;);</b>
+<b class="fc">&nbsp;      for (TypeSpec typeSpec : typeSpecs) {</b>
+<b class="fc">&nbsp;        addType(typeSpec);</b>
+<b class="fc">&nbsp;      }</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addType(TypeSpec typeSpec) {
+<b class="fc">&nbsp;      typeSpecs.add(typeSpec);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addOriginatingElement(Element originatingElement) {
+<b class="fc">&nbsp;      originatingElements.add(originatingElement);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder alwaysQualify(String... simpleNames) {
+<b class="pc">&nbsp;      checkArgument(simpleNames != null, &quot;simpleNames == null&quot;);</b>
+<b class="fc">&nbsp;      for (String name : simpleNames) {</b>
+<b class="pc">&nbsp;        checkArgument(</b>
+&nbsp;            name != null,
+&nbsp;            &quot;null entry in simpleNames array: %s&quot;,
+<b class="fc">&nbsp;            Arrays.toString(simpleNames)</b>
+&nbsp;        );
+<b class="fc">&nbsp;        alwaysQualifiedNames.add(name);</b>
+&nbsp;      }
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Call this to always fully qualify any types that would conflict with possibly nested types of
+&nbsp;     * this {@code typeElement}. For example - if the following type was passed in as the
+&nbsp;     * typeElement:
+&nbsp;     *
+&nbsp;     * &lt;pre&gt;&lt;code&gt;
+&nbsp;     *   class Foo {
+&nbsp;     *     class NestedTypeA {
+&nbsp;     *
+&nbsp;     *     }
+&nbsp;     *     class NestedTypeB {
+&nbsp;     *
+&nbsp;     *     }
+&nbsp;     *   }
+&nbsp;     * &lt;/code&gt;&lt;/pre&gt;
+&nbsp;     *
+&nbsp;     * &lt;p&gt;
+&nbsp;     * Then this would add {@code &quot;NestedTypeA&quot;} and {@code &quot;NestedTypeB&quot;} as names that should
+&nbsp;     * always be qualified via {@link #alwaysQualify(String...)}. This way they would avoid
+&nbsp;     * possible import conflicts when this JavaFile is written.
+&nbsp;     *
+&nbsp;     * @param typeElement the {@link TypeElement} with nested types to avoid clashes with.
+&nbsp;     * @return this builder instance.
+&nbsp;     */
+&nbsp;    public Builder avoidClashesWithNestedClasses(TypeElement typeElement) {
+<b class="pc">&nbsp;      checkArgument(typeElement != null, &quot;typeElement == null&quot;);</b>
+<b class="fc">&nbsp;      for (TypeElement nestedType : ElementFilter.typesIn(typeElement.getEnclosedElements())) {</b>
+<b class="fc">&nbsp;        alwaysQualify(nestedType.getSimpleName().toString());</b>
+<b class="fc">&nbsp;      }</b>
+<b class="fc">&nbsp;      TypeMirror superclass = typeElement.getSuperclass();</b>
+<b class="pc">&nbsp;      if (!(superclass instanceof NoType) &amp;&amp; superclass instanceof DeclaredType) {</b>
+<b class="fc">&nbsp;        TypeElement superclassElement = (TypeElement) ((DeclaredType) superclass).asElement();</b>
+<b class="fc">&nbsp;        avoidClashesWithNestedClasses(superclassElement);</b>
+&nbsp;      }
+<b class="fc">&nbsp;      for (TypeMirror superinterface : typeElement.getInterfaces()) {</b>
+<b class="pc">&nbsp;        if (superinterface instanceof DeclaredType) {</b>
+<b class="fc">&nbsp;          TypeElement superinterfaceElement</b>
+<b class="fc">&nbsp;              = (TypeElement) ((DeclaredType) superinterface).asElement();</b>
+<b class="fc">&nbsp;          avoidClashesWithNestedClasses(superinterfaceElement);</b>
+&nbsp;        }
+<b class="fc">&nbsp;      }</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Call this to always fully qualify any types that would conflict with possibly nested types of
+&nbsp;     * this {@code typeElement}. For example - if the following type was passed in as the
+&nbsp;     * typeElement:
+&nbsp;     *
+&nbsp;     * &lt;pre&gt;&lt;code&gt;
+&nbsp;     *   class Foo {
+&nbsp;     *     class NestedTypeA {
+&nbsp;     *
+&nbsp;     *     }
+&nbsp;     *     class NestedTypeB {
+&nbsp;     *
+&nbsp;     *     }
+&nbsp;     *   }
+&nbsp;     * &lt;/code&gt;&lt;/pre&gt;
+&nbsp;     *
+&nbsp;     * &lt;p&gt;
+&nbsp;     * Then this would add {@code &quot;NestedTypeA&quot;} and {@code &quot;NestedTypeB&quot;} as names that should
+&nbsp;     * always be qualified via {@link #alwaysQualify(String...)}. This way they would avoid
+&nbsp;     * possible import conflicts when this JavaFile is written.
+&nbsp;     *
+&nbsp;     * @param clazz the {@link Class} with nested types to avoid clashes with.
+&nbsp;     * @return this builder instance.
+&nbsp;     */
+&nbsp;    public Builder avoidClashesWithNestedClasses(Class&lt;?&gt; clazz) {
+<b class="pc">&nbsp;      checkArgument(clazz != null, &quot;clazz == null&quot;);</b>
+<b class="fc">&nbsp;      for (Class&lt;?&gt; nestedType : clazz.getDeclaredClasses()) {</b>
+<b class="fc">&nbsp;        alwaysQualify(nestedType.getSimpleName());</b>
+&nbsp;      }
+<b class="fc">&nbsp;      Class&lt;?&gt; superclass = clazz.getSuperclass();</b>
+<b class="pc">&nbsp;      if (superclass != null &amp;&amp; !Object.class.equals(superclass)) {</b>
+<b class="nc">&nbsp;        avoidClashesWithNestedClasses(superclass);</b>
+&nbsp;      }
+<b class="fc">&nbsp;      for (Class&lt;?&gt; superinterface : clazz.getInterfaces()) {</b>
+<b class="fc">&nbsp;        avoidClashesWithNestedClasses(superinterface);</b>
+&nbsp;      }
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public TypeSpec build() {
+<b class="fc">&nbsp;      for (AnnotationSpec annotationSpec : annotations) {</b>
+<b class="fc">&nbsp;        checkNotNull(annotationSpec, &quot;annotationSpec == null&quot;);</b>
+<b class="fc">&nbsp;      }</b>
+&nbsp;
+<b class="fc">&nbsp;      if (!modifiers.isEmpty()) {</b>
+<b class="pc">&nbsp;        checkState(anonymousTypeArguments == null, &quot;forbidden on anonymous types.&quot;);</b>
+<b class="fc">&nbsp;        for (Modifier modifier : modifiers) {</b>
+<b class="fc">&nbsp;          checkArgument(modifier != null, &quot;modifiers contain null&quot;);</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;      }
+&nbsp;
+<b class="fc">&nbsp;      for (TypeName superinterface : superinterfaces) {</b>
+<b class="pc">&nbsp;        checkArgument(superinterface != null, &quot;superinterfaces contains null&quot;);</b>
+<b class="fc">&nbsp;      }</b>
+&nbsp;
+<b class="fc">&nbsp;      if (!typeVariables.isEmpty()) {</b>
+<b class="pc">&nbsp;        checkState(anonymousTypeArguments == null,</b>
+&nbsp;            &quot;typevariables are forbidden on anonymous types.&quot;);
+<b class="fc">&nbsp;        for (TypeVariableName typeVariableName : typeVariables) {</b>
+<b class="pc">&nbsp;          checkArgument(typeVariableName != null, &quot;typeVariables contain null&quot;);</b>
+<b class="fc">&nbsp;        }</b>
+&nbsp;      }
+&nbsp;
+<b class="fc">&nbsp;      for (Map.Entry&lt;String, TypeSpec&gt; enumConstant : enumConstants.entrySet()) {</b>
+<b class="fc">&nbsp;        checkState(kind == Kind.ENUM, &quot;%s is not enum&quot;, this.name);</b>
+<b class="pc">&nbsp;        checkArgument(enumConstant.getValue().anonymousTypeArguments != null,</b>
+&nbsp;            &quot;enum constants must have anonymous type arguments&quot;);
+<b class="fc">&nbsp;        checkArgument(SourceVersion.isName(name), &quot;not a valid enum constant: %s&quot;, name);</b>
+<b class="fc">&nbsp;      }</b>
+&nbsp;
+<b class="fc">&nbsp;      for (FieldSpec fieldSpec : fieldSpecs) {</b>
+<b class="fc">&nbsp;        if (kind == Kind.INTERFACE || kind == Kind.ANNOTATION) {</b>
+<b class="fc">&nbsp;          requireExactlyOneOf(fieldSpec.modifiers, Modifier.PUBLIC, Modifier.PRIVATE);</b>
+<b class="fc">&nbsp;          Set&lt;Modifier&gt; check = EnumSet.of(Modifier.STATIC, Modifier.FINAL);</b>
+<b class="fc">&nbsp;          checkState(fieldSpec.modifiers.containsAll(check), &quot;%s %s.%s requires modifiers %s&quot;,</b>
+&nbsp;              kind, name, fieldSpec.name, check);
+&nbsp;        }
+<b class="fc">&nbsp;      }</b>
+&nbsp;
+<b class="fc">&nbsp;      for (MethodSpec methodSpec : methodSpecs) {</b>
+<b class="fc">&nbsp;        if (kind == Kind.INTERFACE) {</b>
+<b class="fc">&nbsp;          requireExactlyOneOf(methodSpec.modifiers, Modifier.PUBLIC, Modifier.PRIVATE);</b>
+<b class="fc">&nbsp;          if (methodSpec.modifiers.contains(Modifier.PRIVATE)) {</b>
+<b class="fc">&nbsp;            checkState(!methodSpec.hasModifier(Modifier.DEFAULT),</b>
+&nbsp;                &quot;%s %s.%s cannot be private and default&quot;, kind, name, methodSpec.name);
+<b class="fc">&nbsp;            checkState(!methodSpec.hasModifier(Modifier.ABSTRACT),</b>
+&nbsp;                &quot;%s %s.%s cannot be private and abstract&quot;, kind, name, methodSpec.name);
+&nbsp;          } else {
+<b class="fc">&nbsp;            requireExactlyOneOf(methodSpec.modifiers, Modifier.ABSTRACT, Modifier.STATIC,</b>
+&nbsp;                Modifier.DEFAULT);
+&nbsp;          }
+<b class="fc">&nbsp;        } else if (kind == Kind.ANNOTATION) {</b>
+<b class="fc">&nbsp;          checkState(methodSpec.modifiers.equals(kind.implicitMethodModifiers),</b>
+&nbsp;              &quot;%s %s.%s requires modifiers %s&quot;,
+<b class="fc">&nbsp;              kind, name, methodSpec.name, kind.implicitMethodModifiers);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        if (kind != Kind.ANNOTATION) {</b>
+<b class="fc">&nbsp;          checkState(methodSpec.defaultValue == null, &quot;%s %s.%s cannot have a default value&quot;,</b>
+&nbsp;              kind, name, methodSpec.name);
+&nbsp;        }
+<b class="fc">&nbsp;        if (kind != Kind.INTERFACE) {</b>
+<b class="fc">&nbsp;          checkState(!methodSpec.hasModifier(Modifier.DEFAULT), &quot;%s %s.%s cannot be default&quot;,</b>
+&nbsp;              kind, name, methodSpec.name);
+&nbsp;        }
+<b class="fc">&nbsp;      }</b>
+&nbsp;
+<b class="fc">&nbsp;      for (TypeSpec typeSpec : typeSpecs) {</b>
+<b class="fc">&nbsp;        checkArgument(typeSpec.modifiers.containsAll(kind.implicitTypeModifiers),</b>
+&nbsp;            &quot;%s %s.%s requires modifiers %s&quot;, kind, name, typeSpec.name,
+<b class="fc">&nbsp;            kind.implicitTypeModifiers);</b>
+<b class="fc">&nbsp;      }</b>
+&nbsp;
+<b class="fc">&nbsp;      boolean isAbstract = modifiers.contains(Modifier.ABSTRACT) || kind != Kind.CLASS;</b>
+<b class="fc">&nbsp;      for (MethodSpec methodSpec : methodSpecs) {</b>
+<b class="pc">&nbsp;        checkArgument(isAbstract || !methodSpec.hasModifier(Modifier.ABSTRACT),</b>
+&nbsp;            &quot;non-abstract type %s cannot declare abstract method %s&quot;, name, methodSpec.name);
+<b class="fc">&nbsp;      }</b>
+&nbsp;
+<b class="fc">&nbsp;      boolean superclassIsObject = superclass.equals(ClassName.OBJECT);</b>
+<b class="fc">&nbsp;      int interestingSupertypeCount = (superclassIsObject ? 0 : 1) + superinterfaces.size();</b>
+<b class="pc">&nbsp;      checkArgument(anonymousTypeArguments == null || interestingSupertypeCount &lt;= 1,</b>
+&nbsp;          &quot;anonymous type has too many supertypes&quot;);
+&nbsp;
+<b class="fc">&nbsp;      return new TypeSpec(this);</b>
+&nbsp;    }
+&nbsp;  }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-11-04 13:59</div>
+</div>
+</body>
+</html>

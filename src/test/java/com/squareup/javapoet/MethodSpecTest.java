@@ -46,6 +46,8 @@ import static com.google.testing.compile.CompilationSubject.assertThat;
 import static com.google.testing.compile.Compiler.javac;
 import static com.squareup.javapoet.TestUtil.findFirst;
 import static javax.lang.model.util.ElementFilter.methodsIn;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.fail;
 
 public final class MethodSpecTest {
@@ -485,4 +487,69 @@ public final class MethodSpecTest {
     return CodeBlock.builder().addNamed(format, args).build();
   }
 
+  @Test
+  public void testAddAnnotations() {
+    MethodSpec.Builder builder = MethodSpec.methodBuilder("testMethod");
+    AnnotationSpec annotation1 = AnnotationSpec.builder(Override.class).build();
+    AnnotationSpec annotation2 = AnnotationSpec.builder(Deprecated.class).build();
+    builder.addAnnotations(Arrays.asList(annotation1, annotation2));
+    assertEquals(2, builder.annotations.size());
+    assertTrue(builder.annotations.contains(annotation1));
+    assertTrue(builder.annotations.contains(annotation2));
+  }
+
+  @Test
+  public void testAddTypeVariables() {
+    MethodSpec.Builder builder = MethodSpec.methodBuilder("testMethod");
+    TypeVariableName typeVariable1 = TypeVariableName.get("T");
+    TypeVariableName typeVariable2 = TypeVariableName.get("E");
+    List<TypeVariableName> typeVariablesList = Arrays.asList(typeVariable1, typeVariable2);
+    builder.addTypeVariables(typeVariablesList);
+    assertEquals(2, builder.typeVariables.size());
+    assertTrue(builder.typeVariables.contains(typeVariable1));
+    assertTrue(builder.typeVariables.contains(typeVariable2));
+  }
+
+  @Test
+  public void testAddJavadocWithCodeBlock() {
+    MethodSpec.Builder builder = MethodSpec.methodBuilder("testMethod");
+    CodeBlock codeBlock = CodeBlock.of("This is a test javadoc with $L.", "CodeBlock");
+    builder.addJavadoc(codeBlock);
+    String expectedJavadoc = "This is a test javadoc with CodeBlock.";
+    assertEquals(expectedJavadoc, builder.build().javadoc.toString());
+  }
+  @Test
+  public void testAddExceptions() {
+    MethodSpec.Builder builder = MethodSpec.methodBuilder("testMethod");
+    TypeName exception1 = TypeName.get(Exception.class);
+    TypeName exception2 = TypeName.get(RuntimeException.class);
+    List<TypeName> exceptions = Arrays.asList(exception1, exception2);
+    builder.addExceptions(exceptions);
+    List<TypeName> expectedExceptions = Arrays.asList(exception1, exception2);
+    assertEquals(expectedExceptions, builder.build().exceptions);
+  }
+
+  @Test
+  public void testAddNamedCode() {
+    MethodSpec.Builder builder = MethodSpec.methodBuilder("testMethod");
+    String format = "int result = $1L + $2S;";
+    builder.addCode(format, 42, "value");
+    CodeBlock expectedCodeBlock = CodeBlock.builder()
+            .add(format, 42, "value")
+            .build();
+    assertEquals(expectedCodeBlock, builder.build().code);
+  }
+
+  @Test
+  public void testAddComment() {
+    MethodSpec.Builder builder = MethodSpec.methodBuilder("testMethod")
+            .addComment("This is a comment with args: %s, %d")
+            .returns(void.class)
+            .addModifiers(Modifier.PUBLIC);
+    String expectedCode = "" +
+            "public void testMethod() {\n" +
+            "  // This is a comment with args: %s, %d\n" +
+            "}\n";
+    assertEquals(expectedCode.trim(), builder.build().toString().trim());
+  }
 }

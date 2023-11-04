@@ -1,0 +1,451 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > ClassName</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.squareup.javapoet</a>
+</div>
+
+<h1>Coverage Summary for Class: ClassName (com.squareup.javapoet)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ClassName</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (23/23)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (62/62)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (96/96)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">ClassName$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    80%
+  </span>
+  <span class="absValue">
+    (4/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    80%
+  </span>
+  <span class="absValue">
+    (4/5)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    96.4%
+  </span>
+  <span class="absValue">
+    (27/28)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (62/62)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    99%
+  </span>
+  <span class="absValue">
+    (100/101)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (C) 2014 Google, Inc.
+&nbsp; *
+&nbsp; * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+&nbsp; * you may not use this file except in compliance with the License.
+&nbsp; * You may obtain a copy of the License at
+&nbsp; *
+&nbsp; * http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; * Unless required by applicable law or agreed to in writing, software
+&nbsp; * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; * See the License for the specific language governing permissions and
+&nbsp; * limitations under the License.
+&nbsp; */
+&nbsp;package com.squareup.javapoet;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Objects;
+&nbsp;import javax.lang.model.element.Element;
+&nbsp;import javax.lang.model.element.PackageElement;
+&nbsp;import javax.lang.model.element.TypeElement;
+&nbsp;import javax.lang.model.util.SimpleElementVisitor8;
+&nbsp;
+&nbsp;import static com.squareup.javapoet.Util.checkArgument;
+&nbsp;import static com.squareup.javapoet.Util.checkNotNull;
+&nbsp;
+&nbsp;/** A fully-qualified class name for top-level and member classes. */
+<b class="fc">&nbsp;public final class ClassName extends TypeName implements Comparable&lt;ClassName&gt; {</b>
+<b class="fc">&nbsp;  public static final ClassName OBJECT = ClassName.get(Object.class);</b>
+&nbsp;
+&nbsp;  /** The name representing the default Java package. */
+&nbsp;  private static final String NO_PACKAGE = &quot;&quot;;
+&nbsp;
+&nbsp;  /** The package name of this class, or &quot;&quot; if this is in the default package. */
+&nbsp;  final String packageName;
+&nbsp;
+&nbsp;  /** The enclosing class, or null if this is not enclosed in another class. */
+&nbsp;  final ClassName enclosingClassName;
+&nbsp;
+&nbsp;  /** This class name, like &quot;Entry&quot; for java.util.Map.Entry. */
+&nbsp;  final String simpleName;
+&nbsp;
+&nbsp;  private List&lt;String&gt; simpleNames;
+&nbsp;
+&nbsp;  /** The full class name like &quot;java.util.Map.Entry&quot;. */
+&nbsp;  final String canonicalName;
+&nbsp;
+&nbsp;  private ClassName(String packageName, ClassName enclosingClassName, String simpleName) {
+<b class="fc">&nbsp;    this(packageName, enclosingClassName, simpleName, Collections.emptyList());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  private ClassName(String packageName, ClassName enclosingClassName, String simpleName,
+&nbsp;      List&lt;AnnotationSpec&gt; annotations) {
+<b class="fc">&nbsp;    super(annotations);</b>
+<b class="fc">&nbsp;    this.packageName = Objects.requireNonNull(packageName, &quot;packageName == null&quot;);</b>
+<b class="fc">&nbsp;    this.enclosingClassName = enclosingClassName;</b>
+<b class="fc">&nbsp;    this.simpleName = simpleName;</b>
+<b class="fc">&nbsp;    this.canonicalName = enclosingClassName != null</b>
+<b class="fc">&nbsp;        ? (enclosingClassName.canonicalName + &#39;.&#39; + simpleName)</b>
+<b class="fc">&nbsp;        : (packageName.isEmpty() ? simpleName : packageName + &#39;.&#39; + simpleName);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public ClassName annotated(List&lt;AnnotationSpec&gt; annotations) {
+<b class="fc">&nbsp;    return new ClassName(packageName, enclosingClassName, simpleName,</b>
+<b class="fc">&nbsp;        concatAnnotations(annotations));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public ClassName withoutAnnotations() {
+<b class="fc">&nbsp;    if (!isAnnotated()) return this;</b>
+<b class="fc">&nbsp;    ClassName resultEnclosingClassName = enclosingClassName != null</b>
+<b class="fc">&nbsp;        ? enclosingClassName.withoutAnnotations()</b>
+<b class="fc">&nbsp;        : null;</b>
+<b class="fc">&nbsp;    return new ClassName(packageName, resultEnclosingClassName, simpleName);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public boolean isAnnotated() {
+<b class="fc">&nbsp;    return super.isAnnotated() || (enclosingClassName != null &amp;&amp; enclosingClassName.isAnnotated());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Returns the package name, like {@code &quot;java.util&quot;} for {@code Map.Entry}. Returns the empty
+&nbsp;   * string for the default package.
+&nbsp;   */
+&nbsp;  public String packageName() {
+<b class="fc">&nbsp;    return packageName;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Returns the enclosing class, like {@link Map} for {@code Map.Entry}. Returns null if this class
+&nbsp;   * is not nested in another class.
+&nbsp;   */
+&nbsp;  public ClassName enclosingClassName() {
+<b class="fc">&nbsp;    return enclosingClassName;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Returns the top class in this nesting group. Equivalent to chained calls to {@link
+&nbsp;   * #enclosingClassName()} until the result&#39;s enclosing class is null.
+&nbsp;   */
+&nbsp;  public ClassName topLevelClassName() {
+<b class="fc">&nbsp;    return enclosingClassName != null ? enclosingClassName.topLevelClassName() : this;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Return the binary name of a class. */
+&nbsp;  public String reflectionName() {
+<b class="fc">&nbsp;    return enclosingClassName != null</b>
+<b class="fc">&nbsp;        ? (enclosingClassName.reflectionName() + &#39;$&#39; + simpleName)</b>
+<b class="fc">&nbsp;        : (packageName.isEmpty() ? simpleName : packageName + &#39;.&#39; + simpleName);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public List&lt;String&gt; simpleNames() {
+<b class="fc">&nbsp;    if (simpleNames != null) {</b>
+<b class="fc">&nbsp;      return simpleNames;</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    if (enclosingClassName == null) {</b>
+<b class="fc">&nbsp;      simpleNames = Collections.singletonList(simpleName);</b>
+&nbsp;    } else {
+<b class="fc">&nbsp;      List&lt;String&gt; mutableNames = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;      mutableNames.addAll(enclosingClassName().simpleNames());</b>
+<b class="fc">&nbsp;      mutableNames.add(simpleName);</b>
+<b class="fc">&nbsp;      simpleNames = Collections.unmodifiableList(mutableNames);</b>
+&nbsp;    }
+<b class="fc">&nbsp;    return simpleNames;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Returns a class that shares the same enclosing package or class. If this class is enclosed by
+&nbsp;   * another class, this is equivalent to {@code enclosingClassName().nestedClass(name)}. Otherwise
+&nbsp;   * it is equivalent to {@code get(packageName(), name)}.
+&nbsp;   */
+&nbsp;  public ClassName peerClass(String name) {
+<b class="fc">&nbsp;    return new ClassName(packageName, enclosingClassName, name);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Returns a new {@link ClassName} instance for the specified {@code name} as nested inside this
+&nbsp;   * class.
+&nbsp;   */
+&nbsp;  public ClassName nestedClass(String name) {
+<b class="fc">&nbsp;    return new ClassName(packageName, this, name);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Returns the simple name of this class, like {@code &quot;Entry&quot;} for {@link Map.Entry}. */
+&nbsp;  public String simpleName() {
+<b class="fc">&nbsp;    return simpleName;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Returns the full class name of this class.
+&nbsp;   * Like {@code &quot;java.util.Map.Entry&quot;} for {@link Map.Entry}.
+&nbsp;   * */
+&nbsp;  public String canonicalName() {
+<b class="fc">&nbsp;    return canonicalName;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public static ClassName get(Class&lt;?&gt; clazz) {
+<b class="fc">&nbsp;    checkNotNull(clazz, &quot;clazz == null&quot;);</b>
+<b class="fc">&nbsp;    checkArgument(!clazz.isPrimitive(), &quot;primitive types cannot be represented as a ClassName&quot;);</b>
+<b class="fc">&nbsp;    checkArgument(!void.class.equals(clazz), &quot;&#39;void&#39; type cannot be represented as a ClassName&quot;);</b>
+<b class="fc">&nbsp;    checkArgument(!clazz.isArray(), &quot;array types cannot be represented as a ClassName&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;    String anonymousSuffix = &quot;&quot;;</b>
+<b class="fc">&nbsp;    while (clazz.isAnonymousClass()) {</b>
+<b class="fc">&nbsp;      int lastDollar = clazz.getName().lastIndexOf(&#39;$&#39;);</b>
+<b class="fc">&nbsp;      anonymousSuffix = clazz.getName().substring(lastDollar) + anonymousSuffix;</b>
+<b class="fc">&nbsp;      clazz = clazz.getEnclosingClass();</b>
+<b class="fc">&nbsp;    }</b>
+<b class="fc">&nbsp;    String name = clazz.getSimpleName() + anonymousSuffix;</b>
+&nbsp;
+<b class="fc">&nbsp;    if (clazz.getEnclosingClass() == null) {</b>
+&nbsp;      // Avoid unreliable Class.getPackage(). https://github.com/square/javapoet/issues/295
+<b class="fc">&nbsp;      int lastDot = clazz.getName().lastIndexOf(&#39;.&#39;);</b>
+<b class="fc">&nbsp;      String packageName = (lastDot != -1) ? clazz.getName().substring(0, lastDot) : NO_PACKAGE;</b>
+<b class="fc">&nbsp;      return new ClassName(packageName, null, name);</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    return ClassName.get(clazz.getEnclosingClass()).nestedClass(name);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Returns a new {@link ClassName} instance for the given fully-qualified class name string. This
+&nbsp;   * method assumes that the input is ASCII and follows typical Java style (lowercase package
+&nbsp;   * names, UpperCamelCase class names) and may produce incorrect results or throw
+&nbsp;   * {@link IllegalArgumentException} otherwise. For that reason, {@link #get(Class)} and
+&nbsp;   * {@link #get(Class)} should be preferred as they can correctly create {@link ClassName}
+&nbsp;   * instances without such restrictions.
+&nbsp;   */
+&nbsp;  public static ClassName bestGuess(String classNameString) {
+&nbsp;    // Add the package name, like &quot;java.util.concurrent&quot;, or &quot;&quot; for no package.
+<b class="fc">&nbsp;    int p = 0;</b>
+<b class="fc">&nbsp;    while (p &lt; classNameString.length() &amp;&amp; Character.isLowerCase(classNameString.codePointAt(p))) {</b>
+<b class="fc">&nbsp;      p = classNameString.indexOf(&#39;.&#39;, p) + 1;</b>
+<b class="fc">&nbsp;      checkArgument(p != 0, &quot;couldn&#39;t make a guess for %s&quot;, classNameString);</b>
+&nbsp;    }
+<b class="fc">&nbsp;    String packageName = p == 0 ? NO_PACKAGE : classNameString.substring(0, p - 1);</b>
+&nbsp;
+&nbsp;    // Add class names like &quot;Map&quot; and &quot;Entry&quot;.
+<b class="fc">&nbsp;    ClassName className = null;</b>
+<b class="fc">&nbsp;    for (String simpleName : classNameString.substring(p).split(&quot;\\.&quot;, -1)) {</b>
+<b class="fc">&nbsp;      checkArgument(!simpleName.isEmpty() &amp;&amp; Character.isUpperCase(simpleName.codePointAt(0)),</b>
+&nbsp;          &quot;couldn&#39;t make a guess for %s&quot;, classNameString);
+<b class="fc">&nbsp;      className = new ClassName(packageName, className, simpleName);</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    return className;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Returns a class name created from the given parts. For example, calling this with package name
+&nbsp;   * {@code &quot;java.util&quot;} and simple names {@code &quot;Map&quot;}, {@code &quot;Entry&quot;} yields {@link Map.Entry}.
+&nbsp;   */
+&nbsp;  public static ClassName get(String packageName, String simpleName, String... simpleNames) {
+<b class="fc">&nbsp;    ClassName className = new ClassName(packageName, null, simpleName);</b>
+<b class="fc">&nbsp;    for (String name : simpleNames) {</b>
+<b class="fc">&nbsp;      className = className.nestedClass(name);</b>
+&nbsp;    }
+<b class="fc">&nbsp;    return className;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Returns the class name for {@code element}. */
+&nbsp;  public static ClassName get(TypeElement element) {
+<b class="fc">&nbsp;    checkNotNull(element, &quot;element == null&quot;);</b>
+<b class="fc">&nbsp;    String simpleName = element.getSimpleName().toString();</b>
+&nbsp;
+<b class="fc">&nbsp;    return element.getEnclosingElement().accept(new SimpleElementVisitor8&lt;ClassName, Void&gt;() {</b>
+&nbsp;      @Override public ClassName visitPackage(PackageElement packageElement, Void p) {
+<b class="fc">&nbsp;        return new ClassName(packageElement.getQualifiedName().toString(), null, simpleName);</b>
+&nbsp;      }
+&nbsp;
+&nbsp;      @Override public ClassName visitType(TypeElement enclosingClass, Void p) {
+<b class="fc">&nbsp;        return ClassName.get(enclosingClass).nestedClass(simpleName);</b>
+&nbsp;      }
+&nbsp;
+&nbsp;      @Override public ClassName visitUnknown(Element unknown, Void p) {
+<b class="fc">&nbsp;        return get(&quot;&quot;, simpleName);</b>
+&nbsp;      }
+&nbsp;
+&nbsp;      @Override public ClassName defaultAction(Element enclosingElement, Void p) {
+<b class="nc">&nbsp;        throw new IllegalArgumentException(&quot;Unexpected type nesting: &quot; + element);</b>
+&nbsp;      }
+&nbsp;    }, null);
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public int compareTo(ClassName o) {
+<b class="fc">&nbsp;    return canonicalName.compareTo(o.canonicalName);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override CodeWriter emit(CodeWriter out) throws IOException {
+<b class="fc">&nbsp;    boolean charsEmitted = false;</b>
+<b class="fc">&nbsp;    for (ClassName className : enclosingClasses()) {</b>
+&nbsp;      String simpleName;
+<b class="fc">&nbsp;      if (charsEmitted) {</b>
+&nbsp;        // We&#39;ve already emitted an enclosing class. Emit as we go.
+<b class="fc">&nbsp;        out.emit(&quot;.&quot;);</b>
+<b class="fc">&nbsp;        simpleName = className.simpleName;</b>
+&nbsp;
+<b class="fc">&nbsp;      } else if (className.isAnnotated() || className == this) {</b>
+&nbsp;        // We encountered the first enclosing class that must be emitted.
+<b class="fc">&nbsp;        String qualifiedName = out.lookupName(className);</b>
+<b class="fc">&nbsp;        int dot = qualifiedName.lastIndexOf(&#39;.&#39;);</b>
+<b class="fc">&nbsp;        if (dot != -1) {</b>
+<b class="fc">&nbsp;          out.emitAndIndent(qualifiedName.substring(0, dot + 1));</b>
+<b class="fc">&nbsp;          simpleName = qualifiedName.substring(dot + 1);</b>
+<b class="fc">&nbsp;          charsEmitted = true;</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;          simpleName = qualifiedName;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;      } else {
+&nbsp;        // Don&#39;t emit this enclosing type. Keep going so we can be more precise.
+&nbsp;        continue;
+&nbsp;      }
+&nbsp;
+<b class="fc">&nbsp;      if (className.isAnnotated()) {</b>
+<b class="fc">&nbsp;        if (charsEmitted) out.emit(&quot; &quot;);</b>
+<b class="fc">&nbsp;        className.emitAnnotations(out);</b>
+&nbsp;      }
+&nbsp;
+<b class="fc">&nbsp;      out.emit(simpleName);</b>
+<b class="fc">&nbsp;      charsEmitted = true;</b>
+<b class="fc">&nbsp;    }</b>
+&nbsp;
+<b class="fc">&nbsp;    return out;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Returns all enclosing classes in this, outermost first. */
+&nbsp;  private List&lt;ClassName&gt; enclosingClasses() {
+<b class="fc">&nbsp;    List&lt;ClassName&gt; result = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    for (ClassName c = this; c != null; c = c.enclosingClassName) {</b>
+<b class="fc">&nbsp;      result.add(c);</b>
+&nbsp;    }
+<b class="fc">&nbsp;    Collections.reverse(result);</b>
+<b class="fc">&nbsp;    return result;</b>
+&nbsp;  }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-11-04 13:59</div>
+</div>
+</body>
+</html>

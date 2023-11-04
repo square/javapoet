@@ -15,13 +15,12 @@
  */
 package com.squareup.javapoet;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
+import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -347,5 +346,66 @@ public final class CodeBlockTest {
         .build();
 
     assertThat(block.toString()).isEmpty();
+  }
+  @Test
+  public void testJoining() {
+    List<CodeBlock> codeBlocks = Arrays.asList(
+            CodeBlock.of("String"),
+            CodeBlock.of("name"),
+            CodeBlock.of("="),
+            CodeBlock.of("\"John\"")
+    );
+
+    CodeBlock joinedCodeBlock = CodeBlock.join(codeBlocks, " ");
+    assertEquals("String name = \"John\"", joinedCodeBlock.toString());
+  }
+  @Test
+  public void testCodeBlockJoinerMerge() {
+    CodeBlock.Builder builder1 = CodeBlock.builder();
+    builder1.add("$L", "first");
+    CodeBlock.Builder builder2 = CodeBlock.builder();
+    builder2.add("$L", "second");
+    CodeBlock codeBlock1 = builder1.build();
+    CodeBlock codeBlock2 = builder2.build();
+    CodeBlockJoiner joiner1 = new CodeBlockJoiner(", ", CodeBlock.builder().add(codeBlock1));
+    CodeBlockJoiner joiner2 = new CodeBlockJoiner(", ", CodeBlock.builder().add(codeBlock2));
+    CodeBlockJoiner mergedJoiner = new CodeBlockJoiner(", ", CodeBlock.builder())
+            .merge(joiner1)
+            .merge(joiner2);
+    CodeBlock mergedCodeBlock = mergedJoiner.join();
+    String expected = "first, second";
+    assertEquals(expected, mergedCodeBlock.toString());
+  }
+
+  public class CodeBlockJoiner {
+    private final String delimiter;
+    private final CodeBlock.Builder builder;
+    private boolean first = true;
+
+    public CodeBlockJoiner(String delimiter, CodeBlock.Builder builder) {
+      this.delimiter = delimiter;
+      this.builder = builder;
+    }
+    public CodeBlockJoiner add(CodeBlock codeBlock) {
+      if (!first) {
+        builder.add(delimiter); // Add delimiter only if not the first block
+      }
+      first = false;
+      builder.add(codeBlock);
+      return this;
+    }
+    public CodeBlockJoiner merge(CodeBlockJoiner other) {
+      CodeBlock otherBlock = other.builder.build();
+      if (!otherBlock.isEmpty()) {
+        if (!builder.isEmpty()) {
+          builder.add(delimiter); // Add delimiter only if the builder is not empty
+        }
+        builder.add(otherBlock);
+      }
+      return this;
+    }
+    public CodeBlock join() {
+      return builder.build();
+    }
   }
 }

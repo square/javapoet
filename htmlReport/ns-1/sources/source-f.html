@@ -1,0 +1,284 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > TypeVariableName</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.squareup.javapoet</a>
+</div>
+
+<h1>Coverage Summary for Class: TypeVariableName (com.squareup.javapoet)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TypeVariableName</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    82.4%
+  </span>
+  <span class="absValue">
+    (14/17)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    87.5%
+  </span>
+  <span class="absValue">
+    (14/16)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    94.4%
+  </span>
+  <span class="absValue">
+    (51/54)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (C) 2015 Square, Inc.
+&nbsp; *
+&nbsp; * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+&nbsp; * you may not use this file except in compliance with the License.
+&nbsp; * You may obtain a copy of the License at
+&nbsp; *
+&nbsp; * http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; * Unless required by applicable law or agreed to in writing, software
+&nbsp; * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; * See the License for the specific language governing permissions and
+&nbsp; * limitations under the License.
+&nbsp; */
+&nbsp;package com.squareup.javapoet;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.lang.reflect.Type;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Arrays;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.LinkedHashMap;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;
+&nbsp;import javax.lang.model.element.TypeParameterElement;
+&nbsp;import javax.lang.model.type.TypeMirror;
+&nbsp;import javax.lang.model.type.TypeVariable;
+&nbsp;
+&nbsp;import static com.squareup.javapoet.Util.checkArgument;
+&nbsp;import static com.squareup.javapoet.Util.checkNotNull;
+&nbsp;
+&nbsp;public final class TypeVariableName extends TypeName {
+&nbsp;  public final String name;
+&nbsp;  public final List&lt;TypeName&gt; bounds;
+&nbsp;
+&nbsp;  private TypeVariableName(String name, List&lt;TypeName&gt; bounds) {
+<b class="fc">&nbsp;    this(name, bounds, new ArrayList&lt;&gt;());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  private TypeVariableName(String name, List&lt;TypeName&gt; bounds, List&lt;AnnotationSpec&gt; annotations) {
+<b class="fc">&nbsp;    super(annotations);</b>
+<b class="fc">&nbsp;    this.name = checkNotNull(name, &quot;name == null&quot;);</b>
+<b class="fc">&nbsp;    this.bounds = bounds;</b>
+&nbsp;
+<b class="fc">&nbsp;    for (TypeName bound : this.bounds) {</b>
+<b class="pc">&nbsp;      checkArgument(!bound.isPrimitive() &amp;&amp; bound != VOID, &quot;invalid bound: %s&quot;, bound);</b>
+<b class="fc">&nbsp;    }</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public TypeVariableName annotated(List&lt;AnnotationSpec&gt; annotations) {
+<b class="fc">&nbsp;    return new TypeVariableName(name, bounds, annotations);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public TypeName withoutAnnotations() {
+<b class="nc">&nbsp;    return new TypeVariableName(name, bounds);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public TypeVariableName withBounds(Type... bounds) {
+<b class="fc">&nbsp;    return withBounds(TypeName.list(bounds));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public TypeVariableName withBounds(TypeName... bounds) {
+<b class="nc">&nbsp;    return withBounds(Arrays.asList(bounds));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public TypeVariableName withBounds(List&lt;? extends TypeName&gt; bounds) {
+<b class="fc">&nbsp;    ArrayList&lt;TypeName&gt; newBounds = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    newBounds.addAll(this.bounds);</b>
+<b class="fc">&nbsp;    newBounds.addAll(bounds);</b>
+<b class="fc">&nbsp;    return new TypeVariableName(name, newBounds, annotations);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  private static TypeVariableName of(String name, List&lt;TypeName&gt; bounds) {
+&nbsp;    // Strip java.lang.Object from bounds if it is present.
+<b class="fc">&nbsp;    List&lt;TypeName&gt; boundsNoObject = new ArrayList&lt;&gt;(bounds);</b>
+<b class="fc">&nbsp;    boundsNoObject.remove(OBJECT);</b>
+<b class="fc">&nbsp;    return new TypeVariableName(name, Collections.unmodifiableList(boundsNoObject));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override CodeWriter emit(CodeWriter out) throws IOException {
+<b class="fc">&nbsp;    emitAnnotations(out);</b>
+<b class="fc">&nbsp;    return out.emitAndIndent(name);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Returns type variable named {@code name} without bounds. */
+&nbsp;  public static TypeVariableName get(String name) {
+<b class="fc">&nbsp;    return TypeVariableName.of(name, Collections.emptyList());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Returns type variable named {@code name} with {@code bounds}. */
+&nbsp;  public static TypeVariableName get(String name, TypeName... bounds) {
+<b class="fc">&nbsp;    return TypeVariableName.of(name, Arrays.asList(bounds));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Returns type variable named {@code name} with {@code bounds}. */
+&nbsp;  public static TypeVariableName get(String name, Type... bounds) {
+<b class="fc">&nbsp;    return TypeVariableName.of(name, TypeName.list(bounds));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Returns type variable equivalent to {@code mirror}. */
+&nbsp;  public static TypeVariableName get(TypeVariable mirror) {
+<b class="fc">&nbsp;    return get((TypeParameterElement) mirror.asElement());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Make a TypeVariableName for the given TypeMirror. This form is used internally to avoid
+&nbsp;   * infinite recursion in cases like {@code Enum&lt;E extends Enum&lt;E&gt;&gt;}. When we encounter such a
+&nbsp;   * thing, we will make a TypeVariableName without bounds and add that to the {@code typeVariables}
+&nbsp;   * map before looking up the bounds. Then if we encounter this TypeVariable again while
+&nbsp;   * constructing the bounds, we can just return it from the map. And, the code that put the entry
+&nbsp;   * in {@code variables} will make sure that the bounds are filled in before returning.
+&nbsp;   */
+&nbsp;  static TypeVariableName get(
+&nbsp;      TypeVariable mirror, Map&lt;TypeParameterElement, TypeVariableName&gt; typeVariables) {
+<b class="fc">&nbsp;    TypeParameterElement element = (TypeParameterElement) mirror.asElement();</b>
+<b class="fc">&nbsp;    TypeVariableName typeVariableName = typeVariables.get(element);</b>
+<b class="fc">&nbsp;    if (typeVariableName == null) {</b>
+&nbsp;      // Since the bounds field is public, we need to make it an unmodifiableList. But we control
+&nbsp;      // the List that that wraps, which means we can change it before returning.
+<b class="fc">&nbsp;      List&lt;TypeName&gt; bounds = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;      List&lt;TypeName&gt; visibleBounds = Collections.unmodifiableList(bounds);</b>
+<b class="fc">&nbsp;      typeVariableName = new TypeVariableName(element.getSimpleName().toString(), visibleBounds);</b>
+<b class="fc">&nbsp;      typeVariables.put(element, typeVariableName);</b>
+<b class="fc">&nbsp;      for (TypeMirror typeMirror : element.getBounds()) {</b>
+<b class="fc">&nbsp;        bounds.add(TypeName.get(typeMirror, typeVariables));</b>
+<b class="fc">&nbsp;      }</b>
+<b class="fc">&nbsp;      bounds.remove(OBJECT);</b>
+&nbsp;    }
+<b class="fc">&nbsp;    return typeVariableName;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Returns type variable equivalent to {@code element}. */
+&nbsp;  public static TypeVariableName get(TypeParameterElement element) {
+<b class="fc">&nbsp;    String name = element.getSimpleName().toString();</b>
+<b class="fc">&nbsp;    List&lt;? extends TypeMirror&gt; boundsMirrors = element.getBounds();</b>
+&nbsp;
+<b class="fc">&nbsp;    List&lt;TypeName&gt; boundsTypeNames = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    for (TypeMirror typeMirror : boundsMirrors) {</b>
+<b class="fc">&nbsp;      boundsTypeNames.add(TypeName.get(typeMirror));</b>
+<b class="fc">&nbsp;    }</b>
+&nbsp;
+<b class="fc">&nbsp;    return TypeVariableName.of(name, boundsTypeNames);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Returns type variable equivalent to {@code type}. */
+&nbsp;  public static TypeVariableName get(java.lang.reflect.TypeVariable&lt;?&gt; type) {
+<b class="nc">&nbsp;    return get(type, new LinkedHashMap&lt;&gt;());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** @see #get(java.lang.reflect.TypeVariable, Map) */
+&nbsp;  static TypeVariableName get(java.lang.reflect.TypeVariable&lt;?&gt; type,
+&nbsp;      Map&lt;Type, TypeVariableName&gt; map) {
+<b class="fc">&nbsp;    TypeVariableName result = map.get(type);</b>
+<b class="fc">&nbsp;    if (result == null) {</b>
+<b class="fc">&nbsp;      List&lt;TypeName&gt; bounds = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;      List&lt;TypeName&gt; visibleBounds = Collections.unmodifiableList(bounds);</b>
+<b class="fc">&nbsp;      result = new TypeVariableName(type.getName(), visibleBounds);</b>
+<b class="fc">&nbsp;      map.put(type, result);</b>
+<b class="fc">&nbsp;      for (Type bound : type.getBounds()) {</b>
+<b class="fc">&nbsp;        bounds.add(TypeName.get(bound, map));</b>
+&nbsp;      }
+<b class="fc">&nbsp;      bounds.remove(OBJECT);</b>
+&nbsp;    }
+<b class="fc">&nbsp;    return result;</b>
+&nbsp;  }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-11-04 13:59</div>
+</div>
+</body>
+</html>

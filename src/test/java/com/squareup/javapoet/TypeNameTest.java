@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 package com.squareup.javapoet;
+import com.squareup.javapoet.TypeName;
+import org.junit.Test;
 
+import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import org.junit.Test;
-
 import static com.google.common.truth.Truth.assertThat;
+import static junit.framework.TestCase.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -180,5 +183,68 @@ public class TypeNameTest {
     assertThat(a.equals(b)).isTrue();
     assertThat(a.hashCode()).isEqualTo(b.hashCode());
     assertFalse(a.equals(null));
+  }
+
+  @Test
+  public void testWithoutAnnotations() {
+    TypeName typeName = TypeName.INT.annotated(AnnotationSpec.builder(Deprecated.class).build());
+    TypeName result = typeName.withoutAnnotations();
+    assertEquals("int", result.toString());
+  }
+
+  @Test
+  public void testArrayComponentForArrayTypeName() {
+    TypeName arrayType = ArrayTypeName.of(TypeName.INT);
+    TypeName componentType = TypeName.arrayComponent(arrayType);
+    assertEquals(TypeName.INT, componentType);
+  }
+
+  @Test
+  public void testArrayComponentForNonArrayType() {
+    TypeName nonArrayType = TypeName.INT;
+    TypeName componentType = TypeName.arrayComponent(nonArrayType);
+    assertNull(componentType);
+  }
+
+  @Test
+  public void testArrayComponentForNestedArrayTypeName() {
+    TypeName nestedArrayType = ArrayTypeName.of(ArrayTypeName.of(TypeName.INT));
+    TypeName componentType = TypeName.arrayComponent(nestedArrayType);
+    assertEquals(ArrayTypeName.of(TypeName.INT), componentType);
+  }
+
+  @Test
+  public void testGetWithWildcardType() {
+    WildcardType wildcardType = new MockWildcardType();
+    TypeName result = WildcardTypeName.get(wildcardType);
+    WildcardTypeName expectedTypeName = WildcardTypeName.subtypeOf(TypeName.get(Object.class));
+    assertEquals(expectedTypeName, result);
+  }
+
+  private static class MockWildcardType implements WildcardType {
+    @Override
+    public Type[] getUpperBounds() {
+      return new Type[]{Object.class};
+    }
+
+    @Override
+    public Type[] getLowerBounds() {
+      return new Type[0];
+    }
+  }
+
+  @Test
+  public void testBox() throws Exception {
+    Method boxMethod = TypeName.class.getDeclaredMethod("box");
+    boxMethod.setAccessible(true);
+    TypeName intType = TypeName.INT;
+    TypeName boxedIntType = (TypeName) boxMethod.invoke(intType);
+    assertEquals("java.lang.Integer", boxedIntType.toString());
+    TypeName voidType = TypeName.VOID;
+    TypeName boxedVoidType = (TypeName) boxMethod.invoke(voidType);
+    assertEquals("java.lang.Void", boxedVoidType.toString());
+    TypeName stringType = ClassName.get("java.lang", "String");
+    TypeName boxedStringType = (TypeName) boxMethod.invoke(stringType);
+    assertEquals("java.lang.String", boxedStringType.toString());
   }
 }

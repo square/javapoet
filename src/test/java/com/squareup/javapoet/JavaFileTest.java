@@ -14,8 +14,16 @@
  * limitations under the License.
  */
 package com.squareup.javapoet;
-
+import java.io.IOException;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import static org.junit.Assert.assertTrue;
 import java.io.File;
+import static junit.framework.TestCase.*;
 import com.google.testing.compile.CompilationRule;
 import java.util.Collections;
 import java.util.Date;
@@ -1010,5 +1018,60 @@ public final class JavaFileTest {
         + "    return null;\n"
         + "  }\n"
         + "}\n");
+  }
+
+  @Test
+  public void testEquals() {
+    JavaFile javaFile1 = createJavaFile();
+    JavaFile javaFile2 = createJavaFile();
+    assertTrue(javaFile1.equals(javaFile2));
+  }
+
+  @Test
+  public void testNotEquals() {
+    JavaFile javaFile1 = createJavaFile();
+    JavaFile javaFile2 = createDifferentJavaFile();
+    assertFalse(javaFile1.equals(javaFile2));
+  }
+
+  private JavaFile createJavaFile() {
+    TypeSpec typeSpec = TypeSpec.classBuilder("ExampleClass")
+            .addModifiers(Modifier.PUBLIC)
+            .build();
+    return JavaFile.builder("com.example", typeSpec).build();
+  }
+
+  private JavaFile createDifferentJavaFile() {
+    TypeSpec typeSpec = TypeSpec.classBuilder("DifferentClass")
+            .addModifiers(Modifier.PUBLIC)
+            .build();
+    return JavaFile.builder("com.example", typeSpec).build();
+  }
+
+
+  @Test
+  public void testWriteToFile() throws IOException {
+    Path tempDir = Paths.get(System.getProperty("java.io.tmpdir"));
+    TypeSpec typeSpec = TypeSpec.classBuilder("ExampleClass").build();
+    JavaFile javaFile = JavaFile.builder("com.example", typeSpec).build();
+    File outputFile = javaFile.writeToFile(tempDir.toFile());
+    assertTrue(outputFile.exists());
+    assertTrue(outputFile.delete());
+  }
+  @Test
+  public void testWriteToWithCharset() throws IOException {
+    JavaFile.Builder javaFileBuilder = JavaFile.builder("com.example", TypeSpec.classBuilder("ExampleClass").build());
+    JavaFile javaFile = javaFileBuilder.build();
+    Path tempDirectory = Files.createTempDirectory("javapoet_test");
+    javaFile.writeTo(tempDirectory, StandardCharsets.UTF_8);
+    Path filePath = tempDirectory.resolve(Paths.get("com", "example", "ExampleClass.java"));
+    assertTrue(Files.exists(filePath));
+    deleteDirectory(tempDirectory);
+  }
+  private static void deleteDirectory(Path directory) throws IOException {
+    Files.walk(directory)
+            .sorted(java.util.Collections.reverseOrder())
+            .map(Path::toFile)
+            .forEach(File::delete);
   }
 }

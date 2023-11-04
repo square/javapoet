@@ -82,33 +82,34 @@ public class FileReadingTest {
     // JavaPoet always uses UTF-8.
     assertThat(bytes).isEqualTo(javaFile.toString().getBytes(UTF_8));
   }
-  
-  @Test public void compileJavaFile() throws Exception {
+
+  @Test
+  public void compileJavaFile() throws Exception {
     final String value = "Hello World!";
     TypeSpec type = TypeSpec.classBuilder("Test")
-        .addModifiers(Modifier.PUBLIC)
-        .addSuperinterface(ParameterizedTypeName.get(Callable.class, String.class))
-        .addMethod(MethodSpec.methodBuilder("call")
-            .returns(String.class)
             .addModifiers(Modifier.PUBLIC)
-            .addStatement("return $S", value)
-            .build())
-        .build();
+            .addSuperinterface(ParameterizedTypeName.get(Callable.class, String.class))
+            .addMethod(MethodSpec.methodBuilder("call")
+                    .returns(String.class)
+                    .addModifiers(Modifier.PUBLIC)
+                    .addStatement("return $S", value)
+                    .build())
+            .build();
     JavaFile javaFile = JavaFile.builder("foo", type).build();
 
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     DiagnosticCollector<JavaFileObject> diagnosticCollector = new DiagnosticCollector<>();
-    StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnosticCollector, 
-        Locale.getDefault(), UTF_8);
+    StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnosticCollector,
+            Locale.getDefault(), UTF_8);
     fileManager.setLocation(StandardLocation.CLASS_OUTPUT,
-        Collections.singleton(temporaryFolder.newFolder()));
-    CompilationTask task = compiler.getTask(null, 
-        fileManager,
-        diagnosticCollector,
-        Collections.emptySet(),
-        Collections.emptySet(),
-        Collections.singleton(javaFile.toJavaFileObject()));
-    
+            Collections.singleton(temporaryFolder.newFolder()));
+    CompilationTask task = compiler.getTask(null,
+            fileManager,
+            diagnosticCollector,
+            Collections.singletonList("-proc:none"), // Disable annotation processing
+            null,
+            Collections.singleton(javaFile.toJavaFileObject()));
+
     assertThat(task.call()).isTrue();
     assertThat(diagnosticCollector.getDiagnostics()).isEmpty();
 

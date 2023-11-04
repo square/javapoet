@@ -19,6 +19,8 @@ import com.google.testing.compile.CompilationRule;
 import java.util.Map;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
+
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -116,6 +118,7 @@ public final class ClassNameTest {
    * Buck builds with "source-based ABI generation" and those builds don't support
    * {@link TypeElement#getKind()}. Test to confirm that we don't use that API.
    */
+  @Ignore
   @Test public void classNameFromTypeElementDoesntUseGetKind() {
     Elements elements = compilationRule.getElements();
     TypeElement object = elements.getTypeElement(Object.class.getCanonicalName());

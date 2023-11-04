@@ -1,0 +1,708 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > CodeWriter</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.squareup.javapoet</a>
+</div>
+
+<h1>Coverage Summary for Class: CodeWriter (com.squareup.javapoet)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">CodeWriter</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (35/35)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    91.2%
+  </span>
+  <span class="absValue">
+    (166/182)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (234/234)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">CodeWriter$1</td>
+  </tr>
+  <tr>
+    <td class="name">CodeWriter$Multiset</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (3/4)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    88.9%
+  </span>
+  <span class="absValue">
+    (8/9)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (39/39)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    90.9%
+  </span>
+  <span class="absValue">
+    (169/186)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    99.6%
+  </span>
+  <span class="absValue">
+    (242/243)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (C) 2015 Square, Inc.
+&nbsp; *
+&nbsp; * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+&nbsp; * you may not use this file except in compliance with the License.
+&nbsp; * You may obtain a copy of the License at
+&nbsp; *
+&nbsp; * http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; * Unless required by applicable law or agreed to in writing, software
+&nbsp; * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; * See the License for the specific language governing permissions and
+&nbsp; * limitations under the License.
+&nbsp; */
+&nbsp;package com.squareup.javapoet;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.EnumSet;
+&nbsp;import java.util.LinkedHashMap;
+&nbsp;import java.util.LinkedHashSet;
+&nbsp;import java.util.List;
+&nbsp;import java.util.ListIterator;
+&nbsp;import java.util.Locale;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Objects;
+&nbsp;import java.util.Set;
+&nbsp;import java.util.regex.Pattern;
+&nbsp;import javax.lang.model.SourceVersion;
+&nbsp;import javax.lang.model.element.Modifier;
+&nbsp;
+&nbsp;import static com.squareup.javapoet.Util.checkArgument;
+&nbsp;import static com.squareup.javapoet.Util.checkNotNull;
+&nbsp;import static com.squareup.javapoet.Util.checkState;
+&nbsp;import static com.squareup.javapoet.Util.stringLiteralWithDoubleQuotes;
+&nbsp;import static java.lang.String.join;
+&nbsp;
+&nbsp;/**
+&nbsp; * Converts a {@link JavaFile} to a string suitable to both human- and javac-consumption. This
+&nbsp; * honors imports, indentation, and deferred variable names.
+&nbsp; */
+&nbsp;final class CodeWriter {
+&nbsp;  /** Sentinel value that indicates that no user-provided package has been set. */
+<b class="fc">&nbsp;  private static final String NO_PACKAGE = new String();</b>
+<b class="fc">&nbsp;  private static final Pattern LINE_BREAKING_PATTERN = Pattern.compile(&quot;\\R&quot;);</b>
+&nbsp;
+&nbsp;  private final String indent;
+&nbsp;  private final LineWrapper out;
+&nbsp;  private int indentLevel;
+&nbsp;
+<b class="fc">&nbsp;  private boolean javadoc = false;</b>
+<b class="fc">&nbsp;  private boolean comment = false;</b>
+<b class="fc">&nbsp;  private String packageName = NO_PACKAGE;</b>
+<b class="fc">&nbsp;  private final List&lt;TypeSpec&gt; typeSpecStack = new ArrayList&lt;&gt;();</b>
+&nbsp;  private final Set&lt;String&gt; staticImportClassNames;
+&nbsp;  private final Set&lt;String&gt; staticImports;
+&nbsp;  private final Set&lt;String&gt; alwaysQualify;
+&nbsp;  private final Map&lt;String, ClassName&gt; importedTypes;
+<b class="fc">&nbsp;  private final Map&lt;String, ClassName&gt; importableTypes = new LinkedHashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;  private final Set&lt;String&gt; referencedNames = new LinkedHashSet&lt;&gt;();</b>
+<b class="fc">&nbsp;  private final Multiset&lt;String&gt; currentTypeVariables = new Multiset&lt;&gt;();</b>
+&nbsp;  private boolean trailingNewline;
+&nbsp;
+&nbsp;  /**
+&nbsp;   * When emitting a statement, this is the line of the statement currently being written. The first
+&nbsp;   * line of a statement is indented normally and subsequent wrapped lines are double-indented. This
+&nbsp;   * is -1 when the currently-written line isn&#39;t part of a statement.
+&nbsp;   */
+<b class="fc">&nbsp;  int statementLine = -1;</b>
+&nbsp;
+&nbsp;  CodeWriter(Appendable out) {
+<b class="fc">&nbsp;    this(out, &quot;  &quot;, Collections.emptySet(), Collections.emptySet());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  CodeWriter(Appendable out, String indent, Set&lt;String&gt; staticImports, Set&lt;String&gt; alwaysQualify) {
+<b class="fc">&nbsp;    this(out, indent, Collections.emptyMap(), staticImports, alwaysQualify);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  CodeWriter(Appendable out,
+&nbsp;      String indent,
+&nbsp;      Map&lt;String, ClassName&gt; importedTypes,
+&nbsp;      Set&lt;String&gt; staticImports,
+<b class="fc">&nbsp;      Set&lt;String&gt; alwaysQualify) {</b>
+<b class="fc">&nbsp;    this.out = new LineWrapper(out, indent, 100);</b>
+<b class="fc">&nbsp;    this.indent = checkNotNull(indent, &quot;indent == null&quot;);</b>
+<b class="fc">&nbsp;    this.importedTypes = checkNotNull(importedTypes, &quot;importedTypes == null&quot;);</b>
+<b class="fc">&nbsp;    this.staticImports = checkNotNull(staticImports, &quot;staticImports == null&quot;);</b>
+<b class="fc">&nbsp;    this.alwaysQualify = checkNotNull(alwaysQualify, &quot;alwaysQualify == null&quot;);</b>
+<b class="fc">&nbsp;    this.staticImportClassNames = new LinkedHashSet&lt;&gt;();</b>
+<b class="fc">&nbsp;    for (String signature : staticImports) {</b>
+<b class="fc">&nbsp;      staticImportClassNames.add(signature.substring(0, signature.lastIndexOf(&#39;.&#39;)));</b>
+<b class="fc">&nbsp;    }</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public Map&lt;String, ClassName&gt; importedTypes() {
+<b class="fc">&nbsp;    return importedTypes;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public CodeWriter indent() {
+<b class="fc">&nbsp;    return indent(1);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public CodeWriter indent(int levels) {
+<b class="fc">&nbsp;    indentLevel += levels;</b>
+<b class="fc">&nbsp;    return this;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public CodeWriter unindent() {
+<b class="fc">&nbsp;    return unindent(1);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public CodeWriter unindent(int levels) {
+<b class="pc">&nbsp;    checkArgument(indentLevel - levels &gt;= 0, &quot;cannot unindent %s from %s&quot;, levels, indentLevel);</b>
+<b class="fc">&nbsp;    indentLevel -= levels;</b>
+<b class="fc">&nbsp;    return this;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public CodeWriter pushPackage(String packageName) {
+<b class="pc">&nbsp;    checkState(this.packageName == NO_PACKAGE, &quot;package already set: %s&quot;, this.packageName);</b>
+<b class="fc">&nbsp;    this.packageName = checkNotNull(packageName, &quot;packageName == null&quot;);</b>
+<b class="fc">&nbsp;    return this;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public CodeWriter popPackage() {
+<b class="pc">&nbsp;    checkState(this.packageName != NO_PACKAGE, &quot;package not set&quot;);</b>
+<b class="fc">&nbsp;    this.packageName = NO_PACKAGE;</b>
+<b class="fc">&nbsp;    return this;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public CodeWriter pushType(TypeSpec type) {
+<b class="fc">&nbsp;    this.typeSpecStack.add(type);</b>
+<b class="fc">&nbsp;    return this;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public CodeWriter popType() {
+<b class="fc">&nbsp;    this.typeSpecStack.remove(typeSpecStack.size() - 1);</b>
+<b class="fc">&nbsp;    return this;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public void emitComment(CodeBlock codeBlock) throws IOException {
+<b class="fc">&nbsp;    trailingNewline = true; // Force the &#39;//&#39; prefix for the comment.</b>
+<b class="fc">&nbsp;    comment = true;</b>
+&nbsp;    try {
+<b class="fc">&nbsp;      emit(codeBlock);</b>
+<b class="fc">&nbsp;      emit(&quot;\n&quot;);</b>
+&nbsp;    } finally {
+<b class="fc">&nbsp;      comment = false;</b>
+<b class="fc">&nbsp;    }</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public void emitJavadoc(CodeBlock javadocCodeBlock) throws IOException {
+<b class="fc">&nbsp;    if (javadocCodeBlock.isEmpty()) return;</b>
+&nbsp;
+<b class="fc">&nbsp;    emit(&quot;/**\n&quot;);</b>
+<b class="fc">&nbsp;    javadoc = true;</b>
+&nbsp;    try {
+<b class="fc">&nbsp;      emit(javadocCodeBlock, true);</b>
+&nbsp;    } finally {
+<b class="fc">&nbsp;      javadoc = false;</b>
+<b class="fc">&nbsp;    }</b>
+<b class="fc">&nbsp;    emit(&quot; */\n&quot;);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public void emitAnnotations(List&lt;AnnotationSpec&gt; annotations, boolean inline) throws IOException {
+<b class="fc">&nbsp;    for (AnnotationSpec annotationSpec : annotations) {</b>
+<b class="fc">&nbsp;      annotationSpec.emit(this, inline);</b>
+<b class="fc">&nbsp;      emit(inline ? &quot; &quot; : &quot;\n&quot;);</b>
+<b class="fc">&nbsp;    }</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Emits {@code modifiers} in the standard order. Modifiers in {@code implicitModifiers} will not
+&nbsp;   * be emitted.
+&nbsp;   */
+&nbsp;  public void emitModifiers(Set&lt;Modifier&gt; modifiers, Set&lt;Modifier&gt; implicitModifiers)
+&nbsp;      throws IOException {
+<b class="fc">&nbsp;    if (modifiers.isEmpty()) return;</b>
+<b class="fc">&nbsp;    for (Modifier modifier : EnumSet.copyOf(modifiers)) {</b>
+<b class="fc">&nbsp;      if (implicitModifiers.contains(modifier)) continue;</b>
+<b class="fc">&nbsp;      emitAndIndent(modifier.name().toLowerCase(Locale.US));</b>
+<b class="fc">&nbsp;      emitAndIndent(&quot; &quot;);</b>
+<b class="fc">&nbsp;    }</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public void emitModifiers(Set&lt;Modifier&gt; modifiers) throws IOException {
+<b class="fc">&nbsp;    emitModifiers(modifiers, Collections.emptySet());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Emit type variables with their bounds. This should only be used when declaring type variables;
+&nbsp;   * everywhere else bounds are omitted.
+&nbsp;   */
+&nbsp;  public void emitTypeVariables(List&lt;TypeVariableName&gt; typeVariables) throws IOException {
+<b class="fc">&nbsp;    if (typeVariables.isEmpty()) return;</b>
+&nbsp;
+<b class="fc">&nbsp;    typeVariables.forEach(typeVariable -&gt; currentTypeVariables.add(typeVariable.name));</b>
+&nbsp;
+<b class="fc">&nbsp;    emit(&quot;&lt;&quot;);</b>
+<b class="fc">&nbsp;    boolean firstTypeVariable = true;</b>
+<b class="fc">&nbsp;    for (TypeVariableName typeVariable : typeVariables) {</b>
+<b class="fc">&nbsp;      if (!firstTypeVariable) emit(&quot;, &quot;);</b>
+<b class="fc">&nbsp;      emitAnnotations(typeVariable.annotations, true);</b>
+<b class="fc">&nbsp;      emit(&quot;$L&quot;, typeVariable.name);</b>
+<b class="fc">&nbsp;      boolean firstBound = true;</b>
+<b class="fc">&nbsp;      for (TypeName bound : typeVariable.bounds) {</b>
+<b class="fc">&nbsp;        emit(firstBound ? &quot; extends $T&quot; : &quot; &amp; $T&quot;, bound);</b>
+<b class="fc">&nbsp;        firstBound = false;</b>
+<b class="fc">&nbsp;      }</b>
+<b class="fc">&nbsp;      firstTypeVariable = false;</b>
+<b class="fc">&nbsp;    }</b>
+<b class="fc">&nbsp;    emit(&quot;&gt;&quot;);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public void popTypeVariables(List&lt;TypeVariableName&gt; typeVariables) throws IOException {
+<b class="fc">&nbsp;    typeVariables.forEach(typeVariable -&gt; currentTypeVariables.remove(typeVariable.name));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public CodeWriter emit(String s) throws IOException {
+<b class="fc">&nbsp;    return emitAndIndent(s);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public CodeWriter emit(String format, Object... args) throws IOException {
+<b class="fc">&nbsp;    return emit(CodeBlock.of(format, args));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public CodeWriter emit(CodeBlock codeBlock) throws IOException {
+<b class="fc">&nbsp;    return emit(codeBlock, false);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public CodeWriter emit(CodeBlock codeBlock, boolean ensureTrailingNewline) throws IOException {
+<b class="fc">&nbsp;    int a = 0;</b>
+<b class="fc">&nbsp;    ClassName deferredTypeName = null; // used by &quot;import static&quot; logic</b>
+<b class="fc">&nbsp;    ListIterator&lt;String&gt; partIterator = codeBlock.formatParts.listIterator();</b>
+<b class="fc">&nbsp;    while (partIterator.hasNext()) {</b>
+<b class="fc">&nbsp;      String part = partIterator.next();</b>
+<b class="pc">&nbsp;      switch (part) {</b>
+&nbsp;        case &quot;$L&quot;:
+<b class="fc">&nbsp;          emitLiteral(codeBlock.args.get(a++));</b>
+<b class="fc">&nbsp;          break;</b>
+&nbsp;
+&nbsp;        case &quot;$N&quot;:
+<b class="fc">&nbsp;          emitAndIndent((String) codeBlock.args.get(a++));</b>
+<b class="fc">&nbsp;          break;</b>
+&nbsp;
+&nbsp;        case &quot;$S&quot;:
+<b class="fc">&nbsp;          String string = (String) codeBlock.args.get(a++);</b>
+&nbsp;          // Emit null as a literal null: no quotes.
+<b class="fc">&nbsp;          emitAndIndent(string != null</b>
+<b class="fc">&nbsp;              ? stringLiteralWithDoubleQuotes(string, indent)</b>
+<b class="fc">&nbsp;              : &quot;null&quot;);</b>
+<b class="fc">&nbsp;          break;</b>
+&nbsp;
+&nbsp;        case &quot;$T&quot;:
+<b class="fc">&nbsp;          TypeName typeName = (TypeName) codeBlock.args.get(a++);</b>
+&nbsp;          // defer &quot;typeName.emit(this)&quot; if next format part will be handled by the default case
+<b class="fc">&nbsp;          if (typeName instanceof ClassName &amp;&amp; partIterator.hasNext()) {</b>
+<b class="fc">&nbsp;            if (!codeBlock.formatParts.get(partIterator.nextIndex()).startsWith(&quot;$&quot;)) {</b>
+<b class="fc">&nbsp;              ClassName candidate = (ClassName) typeName;</b>
+<b class="fc">&nbsp;              if (staticImportClassNames.contains(candidate.canonicalName)) {</b>
+<b class="pc">&nbsp;                checkState(deferredTypeName == null, &quot;pending type for static import?!&quot;);</b>
+<b class="fc">&nbsp;                deferredTypeName = candidate;</b>
+<b class="fc">&nbsp;                break;</b>
+&nbsp;              }
+&nbsp;            }
+&nbsp;          }
+<b class="fc">&nbsp;          typeName.emit(this);</b>
+<b class="fc">&nbsp;          break;</b>
+&nbsp;
+&nbsp;        case &quot;$$&quot;:
+<b class="fc">&nbsp;          emitAndIndent(&quot;$&quot;);</b>
+<b class="fc">&nbsp;          break;</b>
+&nbsp;
+&nbsp;        case &quot;$&gt;&quot;:
+<b class="fc">&nbsp;          indent();</b>
+<b class="fc">&nbsp;          break;</b>
+&nbsp;
+&nbsp;        case &quot;$&lt;&quot;:
+<b class="fc">&nbsp;          unindent();</b>
+<b class="fc">&nbsp;          break;</b>
+&nbsp;
+&nbsp;        case &quot;$[&quot;:
+<b class="fc">&nbsp;          checkState(statementLine == -1, &quot;statement enter $[ followed by statement enter $[&quot;);</b>
+<b class="fc">&nbsp;          statementLine = 0;</b>
+<b class="fc">&nbsp;          break;</b>
+&nbsp;
+&nbsp;        case &quot;$]&quot;:
+<b class="fc">&nbsp;          checkState(statementLine != -1, &quot;statement exit $] has no matching statement enter $[&quot;);</b>
+<b class="fc">&nbsp;          if (statementLine &gt; 0) {</b>
+<b class="fc">&nbsp;            unindent(2); // End a multi-line statement. Decrease the indentation level.</b>
+&nbsp;          }
+<b class="fc">&nbsp;          statementLine = -1;</b>
+<b class="fc">&nbsp;          break;</b>
+&nbsp;
+&nbsp;        case &quot;$W&quot;:
+<b class="fc">&nbsp;          out.wrappingSpace(indentLevel + 2);</b>
+<b class="fc">&nbsp;          break;</b>
+&nbsp;
+&nbsp;        case &quot;$Z&quot;:
+<b class="fc">&nbsp;          out.zeroWidthSpace(indentLevel + 2);</b>
+<b class="fc">&nbsp;          break;</b>
+&nbsp;
+&nbsp;        default:
+&nbsp;          // handle deferred type
+<b class="fc">&nbsp;          if (deferredTypeName != null) {</b>
+<b class="fc">&nbsp;            if (part.startsWith(&quot;.&quot;)) {</b>
+<b class="fc">&nbsp;              if (emitStaticImportMember(deferredTypeName.canonicalName, part)) {</b>
+&nbsp;                // okay, static import hit and all was emitted, so clean-up and jump to next part
+<b class="fc">&nbsp;                deferredTypeName = null;</b>
+<b class="fc">&nbsp;                break;</b>
+&nbsp;              }
+&nbsp;            }
+<b class="fc">&nbsp;            deferredTypeName.emit(this);</b>
+<b class="fc">&nbsp;            deferredTypeName = null;</b>
+&nbsp;          }
+<b class="fc">&nbsp;          emitAndIndent(part);</b>
+&nbsp;          break;
+&nbsp;      }
+<b class="fc">&nbsp;    }</b>
+<b class="fc">&nbsp;    if (ensureTrailingNewline &amp;&amp; out.lastChar() != &#39;\n&#39;) {</b>
+<b class="fc">&nbsp;      emit(&quot;\n&quot;);</b>
+&nbsp;    }
+<b class="fc">&nbsp;    return this;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public CodeWriter emitWrappingSpace() throws IOException {
+<b class="fc">&nbsp;    out.wrappingSpace(indentLevel + 2);</b>
+<b class="fc">&nbsp;    return this;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  private static String extractMemberName(String part) {
+<b class="fc">&nbsp;    checkArgument(Character.isJavaIdentifierStart(part.charAt(0)), &quot;not an identifier: %s&quot;, part);</b>
+<b class="fc">&nbsp;    for (int i = 1; i &lt;= part.length(); i++) {</b>
+<b class="fc">&nbsp;      if (!SourceVersion.isIdentifier(part.substring(0, i))) {</b>
+<b class="fc">&nbsp;        return part.substring(0, i - 1);</b>
+&nbsp;      }
+&nbsp;    }
+<b class="fc">&nbsp;    return part;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  private boolean emitStaticImportMember(String canonical, String part) throws IOException {
+<b class="fc">&nbsp;    String partWithoutLeadingDot = part.substring(1);</b>
+<b class="fc">&nbsp;    if (partWithoutLeadingDot.isEmpty()) return false;</b>
+<b class="fc">&nbsp;    char first = partWithoutLeadingDot.charAt(0);</b>
+<b class="pc">&nbsp;    if (!Character.isJavaIdentifierStart(first)) return false;</b>
+<b class="fc">&nbsp;    String explicit = canonical + &quot;.&quot; + extractMemberName(partWithoutLeadingDot);</b>
+<b class="fc">&nbsp;    String wildcard = canonical + &quot;.*&quot;;</b>
+<b class="fc">&nbsp;    if (staticImports.contains(explicit) || staticImports.contains(wildcard)) {</b>
+<b class="fc">&nbsp;      emitAndIndent(partWithoutLeadingDot);</b>
+<b class="fc">&nbsp;      return true;</b>
+&nbsp;    }
+<b class="fc">&nbsp;    return false;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  private void emitLiteral(Object o) throws IOException {
+<b class="fc">&nbsp;    if (o instanceof TypeSpec) {</b>
+<b class="fc">&nbsp;      TypeSpec typeSpec = (TypeSpec) o;</b>
+<b class="fc">&nbsp;      typeSpec.emit(this, null, Collections.emptySet());</b>
+<b class="fc">&nbsp;    } else if (o instanceof AnnotationSpec) {</b>
+<b class="fc">&nbsp;      AnnotationSpec annotationSpec = (AnnotationSpec) o;</b>
+<b class="fc">&nbsp;      annotationSpec.emit(this, true);</b>
+<b class="fc">&nbsp;    } else if (o instanceof CodeBlock) {</b>
+<b class="fc">&nbsp;      CodeBlock codeBlock = (CodeBlock) o;</b>
+<b class="fc">&nbsp;      emit(codeBlock);</b>
+<b class="fc">&nbsp;    } else {</b>
+<b class="fc">&nbsp;      emitAndIndent(String.valueOf(o));</b>
+&nbsp;    }
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Returns the best name to identify {@code className} with in the current context. This uses the
+&nbsp;   * available imports and the current scope to find the shortest name available. It does not honor
+&nbsp;   * names visible due to inheritance.
+&nbsp;   */
+&nbsp;  String lookupName(ClassName className) {
+&nbsp;    // If the top level simple name is masked by a current type variable, use the canonical name.
+<b class="fc">&nbsp;    String topLevelSimpleName = className.topLevelClassName().simpleName();</b>
+<b class="fc">&nbsp;    if (currentTypeVariables.contains(topLevelSimpleName)) {</b>
+<b class="fc">&nbsp;      return className.canonicalName;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Find the shortest suffix of className that resolves to className. This uses both local type
+&nbsp;    // names (so `Entry` in `Map` refers to `Map.Entry`). Also uses imports.
+<b class="fc">&nbsp;    boolean nameResolved = false;</b>
+<b class="fc">&nbsp;    for (ClassName c = className; c != null; c = c.enclosingClassName()) {</b>
+<b class="fc">&nbsp;      ClassName resolved = resolve(c.simpleName());</b>
+<b class="fc">&nbsp;      nameResolved = resolved != null;</b>
+&nbsp;
+<b class="fc">&nbsp;      if (resolved != null &amp;&amp; Objects.equals(resolved.canonicalName, c.canonicalName)) {</b>
+<b class="fc">&nbsp;        int suffixOffset = c.simpleNames().size() - 1;</b>
+<b class="fc">&nbsp;        return join(&quot;.&quot;, className.simpleNames().subList(</b>
+<b class="fc">&nbsp;            suffixOffset, className.simpleNames().size()));</b>
+&nbsp;      }
+&nbsp;    }
+&nbsp;
+&nbsp;    // If the name resolved but wasn&#39;t a match, we&#39;re stuck with the fully qualified name.
+<b class="fc">&nbsp;    if (nameResolved) {</b>
+<b class="fc">&nbsp;      return className.canonicalName;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // If the class is in the same package, we&#39;re done.
+<b class="fc">&nbsp;    if (Objects.equals(packageName, className.packageName())) {</b>
+<b class="fc">&nbsp;      referencedNames.add(topLevelSimpleName);</b>
+<b class="fc">&nbsp;      return join(&quot;.&quot;, className.simpleNames());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // We&#39;ll have to use the fully-qualified name. Mark the type as importable for a future pass.
+<b class="fc">&nbsp;    if (!javadoc) {</b>
+<b class="fc">&nbsp;      importableType(className);</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    return className.canonicalName;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  private void importableType(ClassName className) {
+<b class="fc">&nbsp;    if (className.packageName().isEmpty()) {</b>
+&nbsp;      return;
+<b class="fc">&nbsp;    } else if (alwaysQualify.contains(className.simpleName)) {</b>
+&nbsp;      // TODO what about nested types like java.util.Map.Entry?
+&nbsp;      return;
+&nbsp;    }
+<b class="fc">&nbsp;    ClassName topLevelClassName = className.topLevelClassName();</b>
+<b class="fc">&nbsp;    String simpleName = topLevelClassName.simpleName();</b>
+<b class="fc">&nbsp;    ClassName replaced = importableTypes.put(simpleName, topLevelClassName);</b>
+<b class="fc">&nbsp;    if (replaced != null) {</b>
+<b class="fc">&nbsp;      importableTypes.put(simpleName, replaced); // On collision, prefer the first inserted.</b>
+&nbsp;    }
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Returns the class referenced by {@code simpleName}, using the current nesting context and
+&nbsp;   * imports.
+&nbsp;   */
+&nbsp;  // TODO(jwilson): also honor superclass members when resolving names.
+&nbsp;  private ClassName resolve(String simpleName) {
+&nbsp;    // Match a child of the current (potentially nested) class.
+<b class="fc">&nbsp;    for (int i = typeSpecStack.size() - 1; i &gt;= 0; i--) {</b>
+<b class="fc">&nbsp;      TypeSpec typeSpec = typeSpecStack.get(i);</b>
+<b class="fc">&nbsp;      if (typeSpec.nestedTypesSimpleNames.contains(simpleName)) {</b>
+<b class="fc">&nbsp;        return stackClassName(i, simpleName);</b>
+&nbsp;      }
+&nbsp;    }
+&nbsp;
+&nbsp;    // Match the top-level class.
+<b class="fc">&nbsp;    if (typeSpecStack.size() &gt; 0 &amp;&amp; Objects.equals(typeSpecStack.get(0).name, simpleName)) {</b>
+<b class="fc">&nbsp;      return ClassName.get(packageName, simpleName);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Match an imported type.
+<b class="fc">&nbsp;    ClassName importedType = importedTypes.get(simpleName);</b>
+<b class="fc">&nbsp;    if (importedType != null) return importedType;</b>
+&nbsp;
+&nbsp;    // No match.
+<b class="fc">&nbsp;    return null;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Returns the class named {@code simpleName} when nested in the class at {@code stackDepth}. */
+&nbsp;  private ClassName stackClassName(int stackDepth, String simpleName) {
+<b class="fc">&nbsp;    ClassName className = ClassName.get(packageName, typeSpecStack.get(0).name);</b>
+<b class="fc">&nbsp;    for (int i = 1; i &lt;= stackDepth; i++) {</b>
+<b class="fc">&nbsp;      className = className.nestedClass(typeSpecStack.get(i).name);</b>
+&nbsp;    }
+<b class="fc">&nbsp;    return className.nestedClass(simpleName);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Emits {@code s} with indentation as required. It&#39;s important that all code that writes to
+&nbsp;   * {@link #out} does it through here, since we emit indentation lazily in order to avoid
+&nbsp;   * unnecessary trailing whitespace.
+&nbsp;   */
+&nbsp;  CodeWriter emitAndIndent(String s) throws IOException {
+<b class="fc">&nbsp;    boolean first = true;</b>
+<b class="fc">&nbsp;    for (String line : LINE_BREAKING_PATTERN.split(s, -1)) {</b>
+&nbsp;      // Emit a newline character. Make sure blank lines in Javadoc &amp; comments look good.
+<b class="fc">&nbsp;      if (!first) {</b>
+<b class="fc">&nbsp;        if ((javadoc || comment) &amp;&amp; trailingNewline) {</b>
+<b class="fc">&nbsp;          emitIndentation();</b>
+<b class="fc">&nbsp;          out.append(javadoc ? &quot; *&quot; : &quot;//&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        out.append(&quot;\n&quot;);</b>
+<b class="fc">&nbsp;        trailingNewline = true;</b>
+<b class="fc">&nbsp;        if (statementLine != -1) {</b>
+<b class="fc">&nbsp;          if (statementLine == 0) {</b>
+<b class="fc">&nbsp;            indent(2); // Begin multiple-line statement. Increase the indentation level.</b>
+&nbsp;          }
+<b class="fc">&nbsp;          statementLine++;</b>
+&nbsp;        }
+&nbsp;      }
+&nbsp;
+<b class="fc">&nbsp;      first = false;</b>
+<b class="fc">&nbsp;      if (line.isEmpty()) continue; // Don&#39;t indent empty lines.</b>
+&nbsp;
+&nbsp;      // Emit indentation and comment prefix if necessary.
+<b class="fc">&nbsp;      if (trailingNewline) {</b>
+<b class="fc">&nbsp;        emitIndentation();</b>
+<b class="fc">&nbsp;        if (javadoc) {</b>
+<b class="fc">&nbsp;          out.append(&quot; * &quot;);</b>
+<b class="fc">&nbsp;        } else if (comment) {</b>
+<b class="fc">&nbsp;          out.append(&quot;// &quot;);</b>
+&nbsp;        }
+&nbsp;      }
+&nbsp;
+<b class="fc">&nbsp;      out.append(line);</b>
+<b class="fc">&nbsp;      trailingNewline = false;</b>
+&nbsp;    }
+<b class="fc">&nbsp;    return this;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  private void emitIndentation() throws IOException {
+<b class="fc">&nbsp;    for (int j = 0; j &lt; indentLevel; j++) {</b>
+<b class="fc">&nbsp;      out.append(indent);</b>
+&nbsp;    }
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Returns the types that should have been imported for this code. If there were any simple name
+&nbsp;   * collisions, that type&#39;s first use is imported.
+&nbsp;   */
+&nbsp;  Map&lt;String, ClassName&gt; suggestedImports() {
+<b class="fc">&nbsp;    Map&lt;String, ClassName&gt; result = new LinkedHashMap&lt;&gt;(importableTypes);</b>
+<b class="fc">&nbsp;    result.keySet().removeAll(referencedNames);</b>
+<b class="fc">&nbsp;    return result;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  // A makeshift multi-set implementation
+<b class="fc">&nbsp;  private static final class Multiset&lt;T&gt; {</b>
+<b class="fc">&nbsp;    private final Map&lt;T, Integer&gt; map = new LinkedHashMap&lt;&gt;();</b>
+&nbsp;
+&nbsp;    void add(T t) {
+<b class="fc">&nbsp;      int count = map.getOrDefault(t, 0);</b>
+<b class="fc">&nbsp;      map.put(t, count + 1);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    void remove(T t) {
+<b class="fc">&nbsp;      int count = map.getOrDefault(t, 0);</b>
+<b class="pc">&nbsp;      if (count == 0) {</b>
+<b class="nc">&nbsp;        throw new IllegalStateException(t + &quot; is not in the multiset&quot;);</b>
+&nbsp;      }
+<b class="fc">&nbsp;      map.put(t, count - 1);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    boolean contains(T t) {
+<b class="fc">&nbsp;      return map.getOrDefault(t, 0) &gt; 0;</b>
+&nbsp;    }
+&nbsp;  }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-11-04 13:59</div>
+</div>
+</body>
+</html>

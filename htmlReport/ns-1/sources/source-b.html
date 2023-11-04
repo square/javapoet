@@ -1,0 +1,363 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > ParameterSpec</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.squareup.javapoet</a>
+</div>
+
+<h1>Coverage Summary for Class: ParameterSpec (com.squareup.javapoet)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ParameterSpec</td>
+<td class="coverageStat">
+  <span class="percent">
+    85.7%
+  </span>
+  <span class="absValue">
+    (12/14)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    81.2%
+  </span>
+  <span class="absValue">
+    (13/16)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    91.8%
+  </span>
+  <span class="absValue">
+    (45/49)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">ParameterSpec$1</td>
+  </tr>
+  <tr>
+    <td class="name">ParameterSpec$Builder</td>
+<td class="coverageStat">
+  <span class="percent">
+    90.9%
+  </span>
+  <span class="absValue">
+    (10/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    62.5%
+  </span>
+  <span class="absValue">
+    (5/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    80.6%
+  </span>
+  <span class="absValue">
+    (25/31)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    88%
+  </span>
+  <span class="absValue">
+    (22/25)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (18/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    87.5%
+  </span>
+  <span class="absValue">
+    (70/80)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (C) 2015 Square, Inc.
+&nbsp; *
+&nbsp; * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+&nbsp; * you may not use this file except in compliance with the License.
+&nbsp; * You may obtain a copy of the License at
+&nbsp; *
+&nbsp; * http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; * Unless required by applicable law or agreed to in writing, software
+&nbsp; * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; * See the License for the specific language governing permissions and
+&nbsp; * limitations under the License.
+&nbsp; */
+&nbsp;package com.squareup.javapoet;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.lang.reflect.Type;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Set;
+&nbsp;import javax.lang.model.SourceVersion;
+&nbsp;import javax.lang.model.element.ElementKind;
+&nbsp;import javax.lang.model.element.ExecutableElement;
+&nbsp;import javax.lang.model.element.Modifier;
+&nbsp;import javax.lang.model.element.VariableElement;
+&nbsp;
+&nbsp;import static com.squareup.javapoet.Util.checkArgument;
+&nbsp;import static com.squareup.javapoet.Util.checkNotNull;
+&nbsp;
+&nbsp;/** A generated parameter declaration. */
+<b class="fc">&nbsp;public final class ParameterSpec {</b>
+&nbsp;  public final String name;
+&nbsp;  public final List&lt;AnnotationSpec&gt; annotations;
+&nbsp;  public final Set&lt;Modifier&gt; modifiers;
+&nbsp;  public final TypeName type;
+&nbsp;  public final CodeBlock javadoc;
+&nbsp;
+<b class="fc">&nbsp;  private ParameterSpec(Builder builder) {</b>
+<b class="fc">&nbsp;    this.name = checkNotNull(builder.name, &quot;name == null&quot;);</b>
+<b class="fc">&nbsp;    this.annotations = Util.immutableList(builder.annotations);</b>
+<b class="fc">&nbsp;    this.modifiers = Util.immutableSet(builder.modifiers);</b>
+<b class="fc">&nbsp;    this.type = checkNotNull(builder.type, &quot;type == null&quot;);</b>
+<b class="fc">&nbsp;    this.javadoc = builder.javadoc.build();</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public boolean hasModifier(Modifier modifier) {
+<b class="nc">&nbsp;    return modifiers.contains(modifier);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  void emit(CodeWriter codeWriter, boolean varargs) throws IOException {
+<b class="fc">&nbsp;    codeWriter.emitAnnotations(annotations, true);</b>
+<b class="fc">&nbsp;    codeWriter.emitModifiers(modifiers);</b>
+<b class="fc">&nbsp;    if (varargs) {</b>
+<b class="fc">&nbsp;      TypeName.asArray(type).emit(codeWriter, true);</b>
+&nbsp;    } else {
+<b class="fc">&nbsp;      type.emit(codeWriter);</b>
+&nbsp;    }
+<b class="fc">&nbsp;    codeWriter.emit(&quot; $L&quot;, name);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public boolean equals(Object o) {
+<b class="pc">&nbsp;    if (this == o) return true;</b>
+<b class="pc">&nbsp;    if (o == null) return false;</b>
+<b class="pc">&nbsp;    if (getClass() != o.getClass()) return false;</b>
+<b class="fc">&nbsp;    return toString().equals(o.toString());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public int hashCode() {
+<b class="fc">&nbsp;    return toString().hashCode();</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public String toString() {
+<b class="fc">&nbsp;    StringBuilder out = new StringBuilder();</b>
+&nbsp;    try {
+<b class="fc">&nbsp;      CodeWriter codeWriter = new CodeWriter(out);</b>
+<b class="fc">&nbsp;      emit(codeWriter, false);</b>
+<b class="fc">&nbsp;      return out.toString();</b>
+<b class="nc">&nbsp;    } catch (IOException e) {</b>
+<b class="nc">&nbsp;      throw new AssertionError();</b>
+&nbsp;    }
+&nbsp;  }
+&nbsp;
+&nbsp;  public static ParameterSpec get(VariableElement element) {
+<b class="fc">&nbsp;    checkArgument(element.getKind().equals(ElementKind.PARAMETER), &quot;element is not a parameter&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;    TypeName type = TypeName.get(element.asType());</b>
+<b class="fc">&nbsp;    String name = element.getSimpleName().toString();</b>
+&nbsp;    // Copying parameter annotations can be incorrect so we&#39;re deliberately not including them.
+&nbsp;    // See https://github.com/square/javapoet/issues/482.
+<b class="fc">&nbsp;    return ParameterSpec.builder(type, name)</b>
+<b class="fc">&nbsp;        .addModifiers(element.getModifiers())</b>
+<b class="fc">&nbsp;        .build();</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  static List&lt;ParameterSpec&gt; parametersOf(ExecutableElement method) {
+<b class="fc">&nbsp;    List&lt;ParameterSpec&gt; result = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    for (VariableElement parameter : method.getParameters()) {</b>
+<b class="fc">&nbsp;      result.add(ParameterSpec.get(parameter));</b>
+<b class="fc">&nbsp;    }</b>
+<b class="fc">&nbsp;    return result;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  private static boolean isValidParameterName(String name) {
+&nbsp;    // Allow &quot;this&quot; for explicit receiver parameters
+&nbsp;    // See https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.4.1.
+<b class="fc">&nbsp;    if (name.endsWith(&quot;.this&quot;)) {</b>
+<b class="fc">&nbsp;      return SourceVersion.isIdentifier(name.substring(0, name.length() - &quot;.this&quot;.length()));</b>
+&nbsp;    }
+<b class="fc">&nbsp;    return name.equals(&quot;this&quot;) || SourceVersion.isName(name);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public static Builder builder(TypeName type, String name, Modifier... modifiers) {
+<b class="fc">&nbsp;    checkNotNull(type, &quot;type == null&quot;);</b>
+<b class="fc">&nbsp;    checkArgument(isValidParameterName(name), &quot;not a valid name: %s&quot;, name);</b>
+<b class="fc">&nbsp;    return new Builder(type, name)</b>
+<b class="fc">&nbsp;        .addModifiers(modifiers);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public static Builder builder(Type type, String name, Modifier... modifiers) {
+<b class="fc">&nbsp;    return builder(TypeName.get(type), name, modifiers);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public Builder toBuilder() {
+<b class="nc">&nbsp;    return toBuilder(type, name);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  Builder toBuilder(TypeName type, String name) {
+<b class="fc">&nbsp;    Builder builder = new Builder(type, name);</b>
+<b class="fc">&nbsp;    builder.annotations.addAll(annotations);</b>
+<b class="fc">&nbsp;    builder.modifiers.addAll(modifiers);</b>
+<b class="fc">&nbsp;    return builder;</b>
+&nbsp;  }
+&nbsp;
+<b class="fc">&nbsp;  public static final class Builder {</b>
+&nbsp;    private final TypeName type;
+&nbsp;    private final String name;
+<b class="fc">&nbsp;    private final CodeBlock.Builder javadoc = CodeBlock.builder();</b>
+&nbsp;
+<b class="fc">&nbsp;    public final List&lt;AnnotationSpec&gt; annotations = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    public final List&lt;Modifier&gt; modifiers = new ArrayList&lt;&gt;();</b>
+&nbsp;
+<b class="fc">&nbsp;    private Builder(TypeName type, String name) {</b>
+<b class="fc">&nbsp;      this.type = type;</b>
+<b class="fc">&nbsp;      this.name = name;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addJavadoc(String format, Object... args) {
+<b class="fc">&nbsp;      javadoc.add(format, args);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addJavadoc(CodeBlock block) {
+<b class="nc">&nbsp;      javadoc.add(block);</b>
+<b class="nc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addAnnotations(Iterable&lt;AnnotationSpec&gt; annotationSpecs) {
+<b class="pc">&nbsp;      checkArgument(annotationSpecs != null, &quot;annotationSpecs == null&quot;);</b>
+<b class="nc">&nbsp;      for (AnnotationSpec annotationSpec : annotationSpecs) {</b>
+<b class="nc">&nbsp;        this.annotations.add(annotationSpec);</b>
+<b class="nc">&nbsp;      }</b>
+<b class="nc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addAnnotation(AnnotationSpec annotationSpec) {
+<b class="fc">&nbsp;      this.annotations.add(annotationSpec);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addAnnotation(ClassName annotation) {
+<b class="fc">&nbsp;      this.annotations.add(AnnotationSpec.builder(annotation).build());</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addAnnotation(Class&lt;?&gt; annotation) {
+<b class="fc">&nbsp;      return addAnnotation(ClassName.get(annotation));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addModifiers(Modifier... modifiers) {
+<b class="fc">&nbsp;      Collections.addAll(this.modifiers, modifiers);</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public Builder addModifiers(Iterable&lt;Modifier&gt; modifiers) {
+<b class="fc">&nbsp;      checkNotNull(modifiers, &quot;modifiers == null&quot;);</b>
+<b class="fc">&nbsp;      for (Modifier modifier : modifiers) {</b>
+<b class="fc">&nbsp;        if (!modifier.equals(Modifier.FINAL)) {</b>
+<b class="fc">&nbsp;          throw new IllegalStateException(&quot;unexpected parameter modifier: &quot; + modifier);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        this.modifiers.add(modifier);</b>
+<b class="fc">&nbsp;      }</b>
+<b class="fc">&nbsp;      return this;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public ParameterSpec build() {
+<b class="fc">&nbsp;      return new ParameterSpec(this);</b>
+&nbsp;    }
+&nbsp;  }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-11-04 13:59</div>
+</div>
+</body>
+</html>

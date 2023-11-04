@@ -87,6 +87,11 @@
       <version>4.6.1</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>30.1-jre</version> <!-- Use the appropriate version -->
+    </dependency>
   </dependencies>
 
   <build>
@@ -153,6 +158,7 @@
           </archive>
         </configuration>
       </plugin>
+
 
     </plugins>
   </build>
