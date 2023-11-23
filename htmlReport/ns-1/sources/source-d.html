@@ -1,0 +1,562 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > TypeName</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.squareup.javapoet</a>
+</div>
+
+<h1>Coverage Summary for Class: TypeName (com.squareup.javapoet)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TypeName</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (26/26)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    69.1%
+  </span>
+  <span class="absValue">
+    (76/110)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    92.8%
+  </span>
+  <span class="absValue">
+    (116/125)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">TypeName$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (9/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    72.7%
+  </span>
+  <span class="absValue">
+    (16/22)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    85.3%
+  </span>
+  <span class="absValue">
+    (29/34)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">TypeName$2</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (36/36)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    69.7%
+  </span>
+  <span class="absValue">
+    (92/132)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    91.2%
+  </span>
+  <span class="absValue">
+    (146/160)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (C) 2015 Square, Inc.
+&nbsp; *
+&nbsp; * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+&nbsp; * you may not use this file except in compliance with the License.
+&nbsp; * You may obtain a copy of the License at
+&nbsp; *
+&nbsp; * http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; * Unless required by applicable law or agreed to in writing, software
+&nbsp; * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; * See the License for the specific language governing permissions and
+&nbsp; * limitations under the License.
+&nbsp; */
+&nbsp;package com.squareup.javapoet;
+&nbsp;
+&nbsp;import java.io.IOException;
+&nbsp;import java.lang.reflect.GenericArrayType;
+&nbsp;import java.lang.reflect.ParameterizedType;
+&nbsp;import java.lang.reflect.Type;
+&nbsp;import java.lang.reflect.TypeVariable;
+&nbsp;import java.lang.reflect.WildcardType;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Arrays;
+&nbsp;import java.util.LinkedHashMap;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;import javax.lang.model.element.Modifier;
+&nbsp;import javax.lang.model.element.TypeElement;
+&nbsp;import javax.lang.model.element.TypeParameterElement;
+&nbsp;import javax.lang.model.type.ArrayType;
+&nbsp;import javax.lang.model.type.DeclaredType;
+&nbsp;import javax.lang.model.type.ErrorType;
+&nbsp;import javax.lang.model.type.NoType;
+&nbsp;import javax.lang.model.type.PrimitiveType;
+&nbsp;import javax.lang.model.type.TypeKind;
+&nbsp;import javax.lang.model.type.TypeMirror;
+&nbsp;import javax.lang.model.util.SimpleTypeVisitor8;
+&nbsp;
+&nbsp;/**
+&nbsp; * Any type in Java&#39;s type system, plus {@code void}. This class is an identifier for primitive
+&nbsp; * types like {@code int} and raw reference types like {@code String} and {@code List}. It also
+&nbsp; * identifies composite types like {@code char[]} and {@code Set&lt;Long&gt;}.
+&nbsp; *
+&nbsp; * &lt;p&gt;Type names are dumb identifiers only and do not model the values they name. For example, the
+&nbsp; * type name for {@code java.util.List} doesn&#39;t know about the {@code size()} method, the fact that
+&nbsp; * lists are collections, or even that it accepts a single type parameter.
+&nbsp; *
+&nbsp; * &lt;p&gt;Instances of this class are immutable value objects that implement {@code equals()} and {@code
+&nbsp; * hashCode()} properly.
+&nbsp; *
+&nbsp; * &lt;h3&gt;Referencing existing types&lt;/h3&gt;
+&nbsp; *
+&nbsp; * &lt;p&gt;Primitives and void are constants that you can reference directly: see {@link #INT}, {@link
+&nbsp; * #DOUBLE}, and {@link #VOID}.
+&nbsp; *
+&nbsp; * &lt;p&gt;In an annotation processor you can get a type name instance for a type mirror by calling
+&nbsp; * {@link #get(TypeMirror)}. In reflection code, you can use {@link #get(Type)}.
+&nbsp; *
+&nbsp; * &lt;h3&gt;Defining new types&lt;/h3&gt;
+&nbsp; *
+&nbsp; * &lt;p&gt;Create new reference types like {@code com.example.HelloWorld} with {@link
+&nbsp; * ClassName#get(String, String, String...)}. To build composite types like {@code char[]} and
+&nbsp; * {@code Set&lt;Long&gt;}, use the factory methods on {@link ArrayTypeName}, {@link
+&nbsp; * ParameterizedTypeName}, {@link TypeVariableName}, and {@link WildcardTypeName}.
+&nbsp; */
+&nbsp;public class TypeName {
+<b class="fc">&nbsp;  public static final TypeName VOID = new TypeName(&quot;void&quot;);</b>
+<b class="fc">&nbsp;  public static final TypeName BOOLEAN = new TypeName(&quot;boolean&quot;);</b>
+<b class="fc">&nbsp;  public static final TypeName BYTE = new TypeName(&quot;byte&quot;);</b>
+<b class="fc">&nbsp;  public static final TypeName SHORT = new TypeName(&quot;short&quot;);</b>
+<b class="fc">&nbsp;  public static final TypeName INT = new TypeName(&quot;int&quot;);</b>
+<b class="fc">&nbsp;  public static final TypeName LONG = new TypeName(&quot;long&quot;);</b>
+<b class="fc">&nbsp;  public static final TypeName CHAR = new TypeName(&quot;char&quot;);</b>
+<b class="fc">&nbsp;  public static final TypeName FLOAT = new TypeName(&quot;float&quot;);</b>
+<b class="fc">&nbsp;  public static final TypeName DOUBLE = new TypeName(&quot;double&quot;);</b>
+<b class="fc">&nbsp;  public static final ClassName OBJECT = ClassName.get(&quot;java.lang&quot;, &quot;Object&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;  private static final ClassName BOXED_VOID = ClassName.get(&quot;java.lang&quot;, &quot;Void&quot;);</b>
+<b class="fc">&nbsp;  private static final ClassName BOXED_BOOLEAN = ClassName.get(&quot;java.lang&quot;, &quot;Boolean&quot;);</b>
+<b class="fc">&nbsp;  private static final ClassName BOXED_BYTE = ClassName.get(&quot;java.lang&quot;, &quot;Byte&quot;);</b>
+<b class="fc">&nbsp;  private static final ClassName BOXED_SHORT = ClassName.get(&quot;java.lang&quot;, &quot;Short&quot;);</b>
+<b class="fc">&nbsp;  private static final ClassName BOXED_INT = ClassName.get(&quot;java.lang&quot;, &quot;Integer&quot;);</b>
+<b class="fc">&nbsp;  private static final ClassName BOXED_LONG = ClassName.get(&quot;java.lang&quot;, &quot;Long&quot;);</b>
+<b class="fc">&nbsp;  private static final ClassName BOXED_CHAR = ClassName.get(&quot;java.lang&quot;, &quot;Character&quot;);</b>
+<b class="fc">&nbsp;  private static final ClassName BOXED_FLOAT = ClassName.get(&quot;java.lang&quot;, &quot;Float&quot;);</b>
+<b class="fc">&nbsp;  private static final ClassName BOXED_DOUBLE = ClassName.get(&quot;java.lang&quot;, &quot;Double&quot;);</b>
+&nbsp;
+&nbsp;  /** The name of this type if it is a keyword, or null. */
+&nbsp;  private final String keyword;
+&nbsp;  public final List&lt;AnnotationSpec&gt; annotations;
+&nbsp;
+&nbsp;  /** Lazily-initialized toString of this type name. */
+&nbsp;  private String cachedString;
+&nbsp;
+&nbsp;  private TypeName(String keyword) {
+<b class="fc">&nbsp;    this(keyword, new ArrayList&lt;&gt;());</b>
+&nbsp;  }
+&nbsp;
+<b class="fc">&nbsp;  private TypeName(String keyword, List&lt;AnnotationSpec&gt; annotations) {</b>
+<b class="fc">&nbsp;    this.keyword = keyword;</b>
+<b class="fc">&nbsp;    this.annotations = Util.immutableList(annotations);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  // Package-private constructor to prevent third-party subclasses.
+&nbsp;  TypeName(List&lt;AnnotationSpec&gt; annotations) {
+<b class="fc">&nbsp;    this(null, annotations);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public final TypeName annotated(AnnotationSpec... annotations) {
+<b class="fc">&nbsp;    return annotated(Arrays.asList(annotations));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public TypeName annotated(List&lt;AnnotationSpec&gt; annotations) {
+<b class="fc">&nbsp;    Util.checkNotNull(annotations, &quot;annotations == null&quot;);</b>
+<b class="fc">&nbsp;    return new TypeName(keyword, concatAnnotations(annotations));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public TypeName withoutAnnotations() {
+<b class="fc">&nbsp;    return new TypeName(keyword);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  protected final List&lt;AnnotationSpec&gt; concatAnnotations(List&lt;AnnotationSpec&gt; annotations) {
+<b class="fc">&nbsp;    List&lt;AnnotationSpec&gt; allAnnotations = new ArrayList&lt;&gt;(this.annotations);</b>
+<b class="fc">&nbsp;    allAnnotations.addAll(annotations);</b>
+<b class="fc">&nbsp;    return allAnnotations;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  public boolean isAnnotated() {
+<b class="fc">&nbsp;    return !annotations.isEmpty();</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Returns true if this is a primitive type like {@code int}. Returns false for all other types
+&nbsp;   * types including boxed primitives and {@code void}.
+&nbsp;   */
+&nbsp;  public boolean isPrimitive() {
+<b class="fc">&nbsp;    return keyword != null &amp;&amp; this != VOID;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Returns true if this is a boxed primitive type like {@code Integer}. Returns false for all
+&nbsp;   * other types types including unboxed primitives and {@code java.lang.Void}.
+&nbsp;   */
+&nbsp;  public boolean isBoxedPrimitive() {
+<b class="pc">&nbsp;    return this.equals(BOXED_BOOLEAN)</b>
+<b class="pc">&nbsp;        || this.equals(BOXED_BYTE)</b>
+<b class="pc">&nbsp;        || this.equals(BOXED_SHORT)</b>
+<b class="fc">&nbsp;        || this.equals(BOXED_INT)</b>
+<b class="pc">&nbsp;        || this.equals(BOXED_LONG)</b>
+<b class="pc">&nbsp;        || this.equals(BOXED_CHAR)</b>
+<b class="pc">&nbsp;        || this.equals(BOXED_FLOAT)</b>
+<b class="pc">&nbsp;        || this.equals(BOXED_DOUBLE);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Returns a boxed type if this is a primitive type (like {@code Integer} for {@code int}) or
+&nbsp;   * {@code void}. Returns this type if boxing doesn&#39;t apply.
+&nbsp;   */
+&nbsp;  public TypeName box() {
+<b class="fc">&nbsp;    if (keyword == null) return this; // Doesn&#39;t need boxing.</b>
+<b class="fc">&nbsp;    if (this == VOID) return BOXED_VOID;</b>
+<b class="pc">&nbsp;    if (this == BOOLEAN) return BOXED_BOOLEAN;</b>
+<b class="pc">&nbsp;    if (this == BYTE) return BOXED_BYTE;</b>
+<b class="pc">&nbsp;    if (this == SHORT) return BOXED_SHORT;</b>
+<b class="pc">&nbsp;    if (this == INT) return BOXED_INT;</b>
+<b class="nc">&nbsp;    if (this == LONG) return BOXED_LONG;</b>
+<b class="nc">&nbsp;    if (this == CHAR) return BOXED_CHAR;</b>
+<b class="nc">&nbsp;    if (this == FLOAT) return BOXED_FLOAT;</b>
+<b class="nc">&nbsp;    if (this == DOUBLE) return BOXED_DOUBLE;</b>
+<b class="nc">&nbsp;    throw new AssertionError(keyword);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /**
+&nbsp;   * Returns an unboxed type if this is a boxed primitive type (like {@code int} for {@code
+&nbsp;   * Integer}) or {@code Void}. Returns this type if it is already unboxed.
+&nbsp;   *
+&nbsp;   * @throws UnsupportedOperationException if this type isn&#39;t eligible for unboxing.
+&nbsp;   */
+&nbsp;  public TypeName unbox() {
+<b class="fc">&nbsp;    if (keyword != null) return this; // Already unboxed.</b>
+<b class="fc">&nbsp;    if (this.equals(BOXED_VOID)) return VOID;</b>
+<b class="pc">&nbsp;    if (this.equals(BOXED_BOOLEAN)) return BOOLEAN;</b>
+<b class="pc">&nbsp;    if (this.equals(BOXED_BYTE)) return BYTE;</b>
+<b class="pc">&nbsp;    if (this.equals(BOXED_SHORT)) return SHORT;</b>
+<b class="fc">&nbsp;    if (this.equals(BOXED_INT)) return INT;</b>
+<b class="pc">&nbsp;    if (this.equals(BOXED_LONG)) return LONG;</b>
+<b class="pc">&nbsp;    if (this.equals(BOXED_CHAR)) return CHAR;</b>
+<b class="pc">&nbsp;    if (this.equals(BOXED_FLOAT)) return FLOAT;</b>
+<b class="pc">&nbsp;    if (this.equals(BOXED_DOUBLE)) return DOUBLE;</b>
+<b class="fc">&nbsp;    throw new UnsupportedOperationException(&quot;cannot unbox &quot; + this);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public final boolean equals(Object o) {
+<b class="fc">&nbsp;    if (this == o) return true;</b>
+<b class="fc">&nbsp;    if (o == null) return false;</b>
+<b class="fc">&nbsp;    if (getClass() != o.getClass()) return false;</b>
+<b class="fc">&nbsp;    return toString().equals(o.toString());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public final int hashCode() {
+<b class="fc">&nbsp;    return toString().hashCode();</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  @Override public final String toString() {
+<b class="fc">&nbsp;    String result = cachedString;</b>
+<b class="fc">&nbsp;    if (result == null) {</b>
+&nbsp;      try {
+<b class="fc">&nbsp;        StringBuilder resultBuilder = new StringBuilder();</b>
+<b class="fc">&nbsp;        CodeWriter codeWriter = new CodeWriter(resultBuilder);</b>
+<b class="fc">&nbsp;        emit(codeWriter);</b>
+<b class="fc">&nbsp;        result = resultBuilder.toString();</b>
+<b class="fc">&nbsp;        cachedString = result;</b>
+<b class="nc">&nbsp;      } catch (IOException e) {</b>
+<b class="nc">&nbsp;        throw new AssertionError();</b>
+<b class="fc">&nbsp;      }</b>
+&nbsp;    }
+<b class="fc">&nbsp;    return result;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  CodeWriter emit(CodeWriter out) throws IOException {
+<b class="pc">&nbsp;    if (keyword == null) throw new AssertionError();</b>
+&nbsp;
+<b class="fc">&nbsp;    if (isAnnotated()) {</b>
+<b class="fc">&nbsp;      out.emit(&quot;&quot;);</b>
+<b class="fc">&nbsp;      emitAnnotations(out);</b>
+&nbsp;    }
+<b class="fc">&nbsp;    return out.emitAndIndent(keyword);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  CodeWriter emitAnnotations(CodeWriter out) throws IOException {
+<b class="fc">&nbsp;    for (AnnotationSpec annotation : annotations) {</b>
+<b class="fc">&nbsp;      annotation.emit(out, true);</b>
+<b class="fc">&nbsp;      out.emit(&quot; &quot;);</b>
+<b class="fc">&nbsp;    }</b>
+<b class="fc">&nbsp;    return out;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;
+&nbsp;  /** Returns a type name equivalent to {@code mirror}. */
+&nbsp;  public static TypeName get(TypeMirror mirror) {
+<b class="fc">&nbsp;    return get(mirror, new LinkedHashMap&lt;&gt;());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  static TypeName get(TypeMirror mirror,
+&nbsp;      final Map&lt;TypeParameterElement, TypeVariableName&gt; typeVariables) {
+<b class="fc">&nbsp;    return mirror.accept(new SimpleTypeVisitor8&lt;TypeName, Void&gt;() {</b>
+&nbsp;      @Override public TypeName visitPrimitive(PrimitiveType t, Void p) {
+<b class="pc">&nbsp;        switch (t.getKind()) {</b>
+&nbsp;          case BOOLEAN:
+<b class="fc">&nbsp;            return TypeName.BOOLEAN;</b>
+&nbsp;          case BYTE:
+<b class="fc">&nbsp;            return TypeName.BYTE;</b>
+&nbsp;          case SHORT:
+<b class="fc">&nbsp;            return TypeName.SHORT;</b>
+&nbsp;          case INT:
+<b class="fc">&nbsp;            return TypeName.INT;</b>
+&nbsp;          case LONG:
+<b class="fc">&nbsp;            return TypeName.LONG;</b>
+&nbsp;          case CHAR:
+<b class="fc">&nbsp;            return TypeName.CHAR;</b>
+&nbsp;          case FLOAT:
+<b class="fc">&nbsp;            return TypeName.FLOAT;</b>
+&nbsp;          case DOUBLE:
+<b class="fc">&nbsp;            return TypeName.DOUBLE;</b>
+&nbsp;          default:
+<b class="nc">&nbsp;            throw new AssertionError();</b>
+&nbsp;        }
+&nbsp;      }
+&nbsp;
+&nbsp;      @Override public TypeName visitDeclared(DeclaredType t, Void p) {
+<b class="fc">&nbsp;        ClassName rawType = ClassName.get((TypeElement) t.asElement());</b>
+<b class="fc">&nbsp;        TypeMirror enclosingType = t.getEnclosingType();</b>
+&nbsp;        TypeName enclosing =
+<b class="pc">&nbsp;            (enclosingType.getKind() != TypeKind.NONE)</b>
+<b class="pc">&nbsp;                    &amp;&amp; !t.asElement().getModifiers().contains(Modifier.STATIC)</b>
+<b class="nc">&nbsp;                ? enclosingType.accept(this, null)</b>
+<b class="fc">&nbsp;                : null;</b>
+<b class="pc">&nbsp;        if (t.getTypeArguments().isEmpty() &amp;&amp; !(enclosing instanceof ParameterizedTypeName)) {</b>
+<b class="fc">&nbsp;          return rawType;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        List&lt;TypeName&gt; typeArgumentNames = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        for (TypeMirror mirror : t.getTypeArguments()) {</b>
+<b class="fc">&nbsp;          typeArgumentNames.add(get(mirror, typeVariables));</b>
+<b class="fc">&nbsp;        }</b>
+<b class="pc">&nbsp;        return enclosing instanceof ParameterizedTypeName</b>
+<b class="nc">&nbsp;            ? ((ParameterizedTypeName) enclosing).nestedClass(</b>
+<b class="nc">&nbsp;            rawType.simpleName(), typeArgumentNames)</b>
+<b class="fc">&nbsp;            : new ParameterizedTypeName(null, rawType, typeArgumentNames);</b>
+&nbsp;      }
+&nbsp;
+&nbsp;      @Override public TypeName visitError(ErrorType t, Void p) {
+<b class="fc">&nbsp;        return visitDeclared(t, p);</b>
+&nbsp;      }
+&nbsp;
+&nbsp;      @Override public ArrayTypeName visitArray(ArrayType t, Void p) {
+<b class="fc">&nbsp;        return ArrayTypeName.get(t, typeVariables);</b>
+&nbsp;      }
+&nbsp;
+&nbsp;      @Override public TypeName visitTypeVariable(javax.lang.model.type.TypeVariable t, Void p) {
+<b class="fc">&nbsp;        return TypeVariableName.get(t, typeVariables);</b>
+&nbsp;      }
+&nbsp;
+&nbsp;      @Override public TypeName visitWildcard(javax.lang.model.type.WildcardType t, Void p) {
+<b class="fc">&nbsp;        return WildcardTypeName.get(t, typeVariables);</b>
+&nbsp;      }
+&nbsp;
+&nbsp;      @Override public TypeName visitNoType(NoType t, Void p) {
+<b class="pc">&nbsp;        if (t.getKind() == TypeKind.VOID) return TypeName.VOID;</b>
+<b class="nc">&nbsp;        return super.visitUnknown(t, p);</b>
+&nbsp;      }
+&nbsp;
+&nbsp;      @Override protected TypeName defaultAction(TypeMirror e, Void p) {
+<b class="fc">&nbsp;        throw new IllegalArgumentException(&quot;Unexpected type mirror: &quot; + e);</b>
+&nbsp;      }
+&nbsp;    }, null);
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Returns a type name equivalent to {@code type}. */
+&nbsp;  public static TypeName get(Type type) {
+<b class="fc">&nbsp;    return get(type, new LinkedHashMap&lt;&gt;());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  static TypeName get(Type type, Map&lt;Type, TypeVariableName&gt; map) {
+<b class="fc">&nbsp;    if (type instanceof Class&lt;?&gt;) {</b>
+<b class="fc">&nbsp;      Class&lt;?&gt; classType = (Class&lt;?&gt;) type;</b>
+<b class="fc">&nbsp;      if (type == void.class) return VOID;</b>
+<b class="fc">&nbsp;      if (type == boolean.class) return BOOLEAN;</b>
+<b class="pc">&nbsp;      if (type == byte.class) return BYTE;</b>
+<b class="pc">&nbsp;      if (type == short.class) return SHORT;</b>
+<b class="fc">&nbsp;      if (type == int.class) return INT;</b>
+<b class="fc">&nbsp;      if (type == long.class) return LONG;</b>
+<b class="pc">&nbsp;      if (type == char.class) return CHAR;</b>
+<b class="pc">&nbsp;      if (type == float.class) return FLOAT;</b>
+<b class="pc">&nbsp;      if (type == double.class) return DOUBLE;</b>
+<b class="fc">&nbsp;      if (classType.isArray()) return ArrayTypeName.of(get(classType.getComponentType(), map));</b>
+<b class="fc">&nbsp;      return ClassName.get(classType);</b>
+&nbsp;
+<b class="fc">&nbsp;    } else if (type instanceof ParameterizedType) {</b>
+<b class="fc">&nbsp;      return ParameterizedTypeName.get((ParameterizedType) type, map);</b>
+&nbsp;
+<b class="pc">&nbsp;    } else if (type instanceof WildcardType) {</b>
+<b class="nc">&nbsp;      return WildcardTypeName.get((WildcardType) type, map);</b>
+&nbsp;
+<b class="fc">&nbsp;    } else if (type instanceof TypeVariable&lt;?&gt;) {</b>
+<b class="fc">&nbsp;      return TypeVariableName.get((TypeVariable&lt;?&gt;) type, map);</b>
+&nbsp;
+<b class="pc">&nbsp;    } else if (type instanceof GenericArrayType) {</b>
+<b class="fc">&nbsp;      return ArrayTypeName.get((GenericArrayType) type, map);</b>
+&nbsp;
+&nbsp;    } else {
+<b class="nc">&nbsp;      throw new IllegalArgumentException(&quot;unexpected type: &quot; + type);</b>
+&nbsp;    }
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Converts an array of types to a list of type names. */
+&nbsp;  static List&lt;TypeName&gt; list(Type[] types) {
+<b class="fc">&nbsp;    return list(types, new LinkedHashMap&lt;&gt;());</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  static List&lt;TypeName&gt; list(Type[] types, Map&lt;Type, TypeVariableName&gt; map) {
+<b class="fc">&nbsp;    List&lt;TypeName&gt; result = new ArrayList&lt;&gt;(types.length);</b>
+<b class="fc">&nbsp;    for (Type type : types) {</b>
+<b class="fc">&nbsp;      result.add(get(type, map));</b>
+&nbsp;    }
+<b class="fc">&nbsp;    return result;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Returns the array component of {@code type}, or null if {@code type} is not an array. */
+&nbsp;  static TypeName arrayComponent(TypeName type) {
+<b class="fc">&nbsp;    return type instanceof ArrayTypeName</b>
+<b class="fc">&nbsp;        ? ((ArrayTypeName) type).componentType</b>
+<b class="fc">&nbsp;        : null;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Returns {@code type} as an array, or null if {@code type} is not an array. */
+&nbsp;  static ArrayTypeName asArray(TypeName type) {
+<b class="fc">&nbsp;    return type instanceof ArrayTypeName</b>
+<b class="fc">&nbsp;        ? ((ArrayTypeName) type)</b>
+<b class="fc">&nbsp;        : null;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-11-04 17:09</div>
+</div>
+</body>
+</html>

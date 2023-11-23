@@ -1,0 +1,16 @@
+Project Name,Package Name,Type Name,Testability Smell,Cause of the Smell
+javapoet,com.squareup.javapoet,AnnotationSpec.Builder,Global State,The tool detected the smell in this class because the class can be accessed as a `global` state.
+javapoet,com.squareup.javapoet,ClassName,Law of Demeter violation,The tool detected the smell in this method (simpleNames) because the method voilates the law of Demeter. The long chain of method invocations is : com.squareup.javapoet.ClassName.simpleNames; com.squareup.javapoet.ClassName.enclosingClassName
+javapoet,com.squareup.javapoet,ClassName,Law of Demeter violation,The tool detected the smell in this method (get) because the method voilates the law of Demeter. The long chain of method invocations is : com.squareup.javapoet.ClassName.nestedClass; com.squareup.javapoet.ClassName.get
+javapoet,com.squareup.javapoet,CodeBlock.Builder,Global State,The tool detected the smell in this class because the class can be accessed as a `global` state.
+javapoet,com.squareup.javapoet,FieldSpec.Builder,Global State,The tool detected the smell in this class because the class can be accessed as a `global` state.
+javapoet,com.squareup.javapoet,JavaFile.Builder,Global State,The tool detected the smell in this class because the class can be accessed as a `global` state.
+javapoet,com.squareup.javapoet,MethodSpec.Builder,Global State,The tool detected the smell in this class because the class can be accessed as a `global` state.
+javapoet,com.squareup.javapoet,ParameterSpec.Builder,Global State,The tool detected the smell in this class because the class can be accessed as a `global` state.
+javapoet,com.squareup.javapoet,TypeName,Excessive Dependency,The tool detected the smell in this class because the class depends on too many dependencies. The total number of dependencies is: 8
+javapoet,com.squareup.javapoet,TypeSpec.Builder,Global State,The tool detected the smell in this class because the class can be accessed as a `global` state.
+javapoet,com.squareup.javapoet,AnnotatedTypeNameTest,Excessive Dependency,The tool detected the smell in this class because the class depends on too many dependencies. The total number of dependencies is: 9
+javapoet,com.squareup.javapoet,JavaFileTest,Excessive Dependency,The tool detected the smell in this class because the class depends on too many dependencies. The total number of dependencies is: 9
+javapoet,com.squareup.javapoet,MethodSpecTest,Excessive Dependency,The tool detected the smell in this class because the class depends on too many dependencies. The total number of dependencies is: 9
+javapoet,com.squareup.javapoet,TypesEclipseTest.CompilationRule,Global State,The tool detected the smell in this class because the class can be accessed as a `global` state.
+javapoet,com.squareup.javapoet,TypeSpecTest,Excessive Dependency,The tool detected the smell in this class because the class depends on too many dependencies. The total number of dependencies is: 12

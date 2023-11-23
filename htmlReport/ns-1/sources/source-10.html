@@ -1,0 +1,247 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=windows-1252"> 
+  <title>Coverage Report > Util</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.squareup.javapoet</a>
+</div>
+
+<h1>Coverage Summary for Class: Util (com.squareup.javapoet)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Util</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (11/11)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    97.2%
+  </span>
+  <span class="absValue">
+    (35/36)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (47/47)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;/*
+&nbsp; * Copyright (C) 2015 Square, Inc.
+&nbsp; *
+&nbsp; * Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+&nbsp; * you may not use this file except in compliance with the License.
+&nbsp; * You may obtain a copy of the License at
+&nbsp; *
+&nbsp; * http://www.apache.org/licenses/LICENSE-2.0
+&nbsp; *
+&nbsp; * Unless required by applicable law or agreed to in writing, software
+&nbsp; * distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+&nbsp; * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+&nbsp; * See the License for the specific language governing permissions and
+&nbsp; * limitations under the License.
+&nbsp; */
+&nbsp;package com.squareup.javapoet;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Arrays;
+&nbsp;import java.util.Collection;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.LinkedHashMap;
+&nbsp;import java.util.LinkedHashSet;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Map;
+&nbsp;import java.util.Set;
+&nbsp;import javax.lang.model.element.Modifier;
+&nbsp;
+&nbsp;import static java.lang.Character.isISOControl;
+&nbsp;
+&nbsp;/**
+&nbsp; * Like Guava, but worse and standalone. This makes it easier to mix JavaPoet with libraries that
+&nbsp; * bring their own version of Guava.
+&nbsp; */
+&nbsp;final class Util {
+&nbsp;  private Util() {
+&nbsp;  }
+&nbsp;
+&nbsp;  static &lt;K, V&gt; Map&lt;K, List&lt;V&gt;&gt; immutableMultimap(Map&lt;K, List&lt;V&gt;&gt; multimap) {
+<b class="fc">&nbsp;    LinkedHashMap&lt;K, List&lt;V&gt;&gt; result = new LinkedHashMap&lt;&gt;();</b>
+<b class="fc">&nbsp;    for (Map.Entry&lt;K, List&lt;V&gt;&gt; entry : multimap.entrySet()) {</b>
+<b class="pc">&nbsp;      if (entry.getValue().isEmpty()) continue;</b>
+<b class="fc">&nbsp;      result.put(entry.getKey(), immutableList(entry.getValue()));</b>
+<b class="fc">&nbsp;    }</b>
+<b class="fc">&nbsp;    return Collections.unmodifiableMap(result);</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  static &lt;K, V&gt; Map&lt;K, V&gt; immutableMap(Map&lt;K, V&gt; map) {
+<b class="fc">&nbsp;    return Collections.unmodifiableMap(new LinkedHashMap&lt;&gt;(map));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  static void checkArgument(boolean condition, String format, Object... args) {
+<b class="fc">&nbsp;    if (!condition) throw new IllegalArgumentException(String.format(format, args));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  static &lt;T&gt; T checkNotNull(T reference, String format, Object... args) {
+<b class="fc">&nbsp;    if (reference == null) throw new NullPointerException(String.format(format, args));</b>
+<b class="fc">&nbsp;    return reference;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  static void checkState(boolean condition, String format, Object... args) {
+<b class="fc">&nbsp;    if (!condition) throw new IllegalStateException(String.format(format, args));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  static &lt;T&gt; List&lt;T&gt; immutableList(Collection&lt;T&gt; collection) {
+<b class="fc">&nbsp;    return Collections.unmodifiableList(new ArrayList&lt;&gt;(collection));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  static &lt;T&gt; Set&lt;T&gt; immutableSet(Collection&lt;T&gt; set) {
+<b class="fc">&nbsp;    return Collections.unmodifiableSet(new LinkedHashSet&lt;&gt;(set));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  static &lt;T&gt; Set&lt;T&gt; union(Set&lt;T&gt; a, Set&lt;T&gt; b) {
+<b class="fc">&nbsp;    Set&lt;T&gt; result = new LinkedHashSet&lt;&gt;();</b>
+<b class="fc">&nbsp;    result.addAll(a);</b>
+<b class="fc">&nbsp;    result.addAll(b);</b>
+<b class="fc">&nbsp;    return result;</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  static void requireExactlyOneOf(Set&lt;Modifier&gt; modifiers, Modifier... mutuallyExclusive) {
+<b class="fc">&nbsp;    int count = 0;</b>
+<b class="fc">&nbsp;    for (Modifier modifier : mutuallyExclusive) {</b>
+<b class="fc">&nbsp;      if (modifiers.contains(modifier)) count++;</b>
+&nbsp;    }
+<b class="fc">&nbsp;    checkArgument(count == 1, &quot;modifiers %s must contain one of %s&quot;,</b>
+<b class="fc">&nbsp;        modifiers, Arrays.toString(mutuallyExclusive));</b>
+&nbsp;  }
+&nbsp;
+&nbsp;  static String characterLiteralWithoutSingleQuotes(char c) {
+&nbsp;    // see https://docs.oracle.com/javase/specs/jls/se7/html/jls-3.html#jls-3.10.6
+<b class="fc">&nbsp;    switch (c) {</b>
+<b class="fc">&nbsp;      case &#39;\b&#39;: return &quot;\\b&quot;; /* \u0008: backspace (BS) */</b>
+<b class="fc">&nbsp;      case &#39;\t&#39;: return &quot;\\t&quot;; /* \u0009: horizontal tab (HT) */</b>
+<b class="fc">&nbsp;      case &#39;\n&#39;: return &quot;\\n&quot;; /* \u000a: linefeed (LF) */</b>
+<b class="fc">&nbsp;      case &#39;\f&#39;: return &quot;\\f&quot;; /* \u000c: form feed (FF) */</b>
+<b class="fc">&nbsp;      case &#39;\r&#39;: return &quot;\\r&quot;; /* \u000d: carriage return (CR) */</b>
+<b class="fc">&nbsp;      case &#39;\&quot;&#39;: return &quot;\&quot;&quot;;  /* \u0022: double quote (&quot;) */</b>
+<b class="fc">&nbsp;      case &#39;\&#39;&#39;: return &quot;\\&#39;&quot;; /* \u0027: single quote (&#39;) */</b>
+<b class="fc">&nbsp;      case &#39;\\&#39;: return &quot;\\\\&quot;;  /* \u005c: backslash (\) */</b>
+&nbsp;      default:
+<b class="fc">&nbsp;        return isISOControl(c) ? String.format(&quot;\\u%04x&quot;, (int) c) : Character.toString(c);</b>
+&nbsp;    }
+&nbsp;  }
+&nbsp;
+&nbsp;  /** Returns the string literal representing {@code value}, including wrapping double quotes. */
+&nbsp;  static String stringLiteralWithDoubleQuotes(String value, String indent) {
+<b class="fc">&nbsp;    StringBuilder result = new StringBuilder(value.length() + 2);</b>
+<b class="fc">&nbsp;    result.append(&#39;&quot;&#39;);</b>
+<b class="fc">&nbsp;    for (int i = 0; i &lt; value.length(); i++) {</b>
+<b class="fc">&nbsp;      char c = value.charAt(i);</b>
+&nbsp;      // trivial case: single quote must not be escaped
+<b class="fc">&nbsp;      if (c == &#39;\&#39;&#39;) {</b>
+<b class="fc">&nbsp;        result.append(&quot;&#39;&quot;);</b>
+<b class="fc">&nbsp;        continue;</b>
+&nbsp;      }
+&nbsp;      // trivial case: double quotes must be escaped
+<b class="fc">&nbsp;      if (c == &#39;\&quot;&#39;) {</b>
+<b class="fc">&nbsp;        result.append(&quot;\\\&quot;&quot;);</b>
+<b class="fc">&nbsp;        continue;</b>
+&nbsp;      }
+&nbsp;      // default case: just let character literal do its work
+<b class="fc">&nbsp;      result.append(characterLiteralWithoutSingleQuotes(c));</b>
+&nbsp;      // need to append indent after linefeed?
+<b class="fc">&nbsp;      if (c == &#39;\n&#39; &amp;&amp; i + 1 &lt; value.length()) {</b>
+<b class="fc">&nbsp;        result.append(&quot;\&quot;\n&quot;).append(indent).append(indent).append(&quot;+ \&quot;&quot;);</b>
+&nbsp;      }
+&nbsp;    }
+<b class="fc">&nbsp;    result.append(&#39;&quot;&#39;);</b>
+<b class="fc">&nbsp;    return result.toString();</b>
+&nbsp;  }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2023-11-04 17:09</div>
+</div>
+</body>
+</html>
