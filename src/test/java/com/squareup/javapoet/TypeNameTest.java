@@ -21,6 +21,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +33,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 
 public class TypeNameTest {
+
+  private static final AnnotationSpec ANNOTATION_SPEC = AnnotationSpec.builder(ClassName.OBJECT).build();
 
   protected <E extends Enum<E>> E generic(E[] values) {
     return values[0];
@@ -176,6 +179,18 @@ public class TypeNameTest {
     assertThat(ClassName.get("java.lang", "String").isBoxedPrimitive()).isFalse();
     assertThat(TypeName.VOID.isBoxedPrimitive()).isFalse();
     assertThat(ClassName.get("java.lang", "Void").isBoxedPrimitive()).isFalse();
+    assertThat(ClassName.get("java.lang", "Integer")
+            .annotated(ANNOTATION_SPEC).isBoxedPrimitive()).isTrue();
+  }
+
+  @Test public void canBoxAnnotatedPrimitive() throws Exception {
+    assertThat(TypeName.BOOLEAN.annotated(ANNOTATION_SPEC).box()).isEqualTo(
+            ClassName.get("java.lang", "Boolean").annotated(ANNOTATION_SPEC));
+  }
+
+  @Test public void canUnboxAnnotatedPrimitive() throws Exception {
+    assertThat(ClassName.get("java.lang", "Boolean").annotated(ANNOTATION_SPEC)
+            .unbox()).isEqualTo(TypeName.BOOLEAN.annotated(ANNOTATION_SPEC));
   }
 
   private void assertEqualsHashCodeAndToString(TypeName a, TypeName b) {
