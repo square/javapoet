@@ -53,9 +53,9 @@ public final class FieldSpec {
   }
 
   void emit(CodeWriter codeWriter, Set<Modifier> implicitModifiers) throws IOException {
-    codeWriter.emitJavadoc(javadoc);
-    codeWriter.emitAnnotations(annotations, false);
-    codeWriter.emitModifiers(modifiers, implicitModifiers);
+    Emit.emitJavadoc(codeWriter , javadoc);
+    Emit.emitAnnotations(codeWriter , annotations, false);
+    Emit.emitModifiers(codeWriter , modifiers, implicitModifiers);
     codeWriter.emit("$T $L", type, name);
     if (!initializer.isEmpty()) {
       codeWriter.emit(" = ");

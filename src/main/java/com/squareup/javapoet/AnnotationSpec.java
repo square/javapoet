@@ -41,7 +41,7 @@ import static com.squareup.javapoet.Util.checkArgument;
 import static com.squareup.javapoet.Util.checkNotNull;
 
 /** A generated annotation on a declaration. */
-public final class AnnotationSpec {
+public final class AnnotationSpec implements Emitter {
   public static final String VALUE = "value";
 
   public final TypeName type;
@@ -190,6 +190,11 @@ public final class AnnotationSpec {
     } catch (IOException e) {
       throw new AssertionError();
     }
+  }
+
+  @Override
+  public void emit(CodeWriter codeWriter) throws IOException {
+    emit(codeWriter, true);
   }
 
   public static final class Builder {

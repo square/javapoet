@@ -46,22 +46,22 @@ final class CodeWriter {
   private static final String NO_PACKAGE = new String();
   private static final Pattern LINE_BREAKING_PATTERN = Pattern.compile("\\R");
 
-  private final String indent;
-  private final LineWrapper out;
-  private int indentLevel;
+  protected final String indent;
+  protected final LineWrapper out;
+  protected int indentLevel;
 
-  private boolean javadoc = false;
-  private boolean comment = false;
+  protected boolean javadoc = false;
+  protected boolean comment = false;
   private String packageName = NO_PACKAGE;
   private final List<TypeSpec> typeSpecStack = new ArrayList<>();
-  private final Set<String> staticImportClassNames;
+  protected final Set<String> staticImportClassNames;
   private final Set<String> staticImports;
   private final Set<String> alwaysQualify;
   private final Map<String, ClassName> importedTypes;
   private final Map<String, ClassName> importableTypes = new LinkedHashMap<>();
   private final Set<String> referencedNames = new LinkedHashSet<>();
-  private final Multiset<String> currentTypeVariables = new Multiset<>();
-  private boolean trailingNewline;
+  protected final Multiset<String> currentTypeVariables = new Multiset<>();
+  protected boolean trailingNewline;
 
   /**
    * When emitting a statement, this is the line of the statement currently being written. The first
@@ -150,44 +150,10 @@ final class CodeWriter {
     }
   }
 
-  public void emitJavadoc(CodeBlock javadocCodeBlock) throws IOException {
-    if (javadocCodeBlock.isEmpty()) return;
-
-    emit("/**\n");
-    javadoc = true;
-    try {
-      emit(javadocCodeBlock, true);
-    } finally {
-      javadoc = false;
-    }
-    emit(" */\n");
-  }
-
-  public void emitAnnotations(List<AnnotationSpec> annotations, boolean inline) throws IOException {
-    for (AnnotationSpec annotationSpec : annotations) {
-      annotationSpec.emit(this, inline);
-      emit(inline ? " " : "\n");
-    }
-  }
-
   /**
    * Emits {@code modifiers} in the standard order. Modifiers in {@code implicitModifiers} will not
    * be emitted.
    */
-  public void emitModifiers(Set<Modifier> modifiers, Set<Modifier> implicitModifiers)
-      throws IOException {
-    if (modifiers.isEmpty()) return;
-    for (Modifier modifier : EnumSet.copyOf(modifiers)) {
-      if (implicitModifiers.contains(modifier)) continue;
-      emitAndIndent(modifier.name().toLowerCase(Locale.US));
-      emitAndIndent(" ");
-    }
-  }
-
-  public void emitModifiers(Set<Modifier> modifiers) throws IOException {
-    emitModifiers(modifiers, Collections.emptySet());
-  }
-
   /**
    * Emit type variables with their bounds. This should only be used when declaring type variables;
    * everywhere else bounds are omitted.
@@ -201,7 +167,7 @@ final class CodeWriter {
     boolean firstTypeVariable = true;
     for (TypeVariableName typeVariable : typeVariables) {
       if (!firstTypeVariable) emit(", ");
-      emitAnnotations(typeVariable.annotations, true);
+      Emit.emitAnnotations(this , typeVariable.annotations, true);
       emit("$L", typeVariable.name);
       boolean firstBound = true;
       for (TypeName bound : typeVariable.bounds) {
@@ -229,99 +195,218 @@ final class CodeWriter {
     return emit(codeBlock, false);
   }
 
+//  public CodeWriter emit(CodeBlock codeBlock, boolean ensureTrailingNewline) throws IOException {
+//    int a = 0;
+//    ClassName deferredTypeName = null; // used by "import static" logic
+//    ListIterator<String> partIterator = codeBlock.formatParts.listIterator();
+//    while (partIterator.hasNext()) {
+//      String part = partIterator.next();
+//      switch (part) {
+//        case "$L":
+//          emitLiteral(codeBlock.args.get(a++));
+//          break;
+//
+//        case "$N":
+//          emitAndIndent((String) codeBlock.args.get(a++));
+//          break;
+//
+//        case "$S":
+//          String string = (String) codeBlock.args.get(a++);
+//          // Emit null as a literal null: no quotes.
+//          emitAndIndent(string != null
+//              ? stringLiteralWithDoubleQuotes(string, indent)
+//              : "null");
+//          break;
+//
+//        case "$T":
+//          TypeName typeName = (TypeName) codeBlock.args.get(a++);
+//          // defer "typeName.emit(this)" if next format part will be handled by the default case
+//          if (typeName instanceof ClassName && partIterator.hasNext()) {
+//            if (!codeBlock.formatParts.get(partIterator.nextIndex()).startsWith("$")) {
+//              ClassName candidate = (ClassName) typeName;
+//              if (staticImportClassNames.contains(candidate.canonicalName)) {
+//                checkState(deferredTypeName == null, "pending type for static import?!");
+//                deferredTypeName = candidate;
+//                break;
+//              }
+//            }
+//          }
+//          typeName.emit(this);
+//          break;
+//
+//        case "$$":
+//          emitAndIndent("$");
+//          break;
+//
+//        case "$>":
+//          indent();
+//          break;
+//
+//        case "$<":
+//          unindent();
+//          break;
+//
+//        case "$[":
+//          checkState(statementLine == -1, "statement enter $[ followed by statement enter $[");
+//          statementLine = 0;
+//          break;
+//
+//        case "$]":
+//          checkState(statementLine != -1, "statement exit $] has no matching statement enter $[");
+//          if (statementLine > 0) {
+//            unindent(2); // End a multi-line statement. Decrease the indentation level.
+//          }
+//          statementLine = -1;
+//          break;
+//
+//        case "$W":
+//          out.wrappingSpace(indentLevel + 2);
+//          break;
+//
+//        case "$Z":
+//          out.zeroWidthSpace(indentLevel + 2);
+//          break;
+//
+//        default:
+//          // handle deferred type
+//          if (deferredTypeName != null) {
+//            if (part.startsWith(".")) {
+//              if (emitStaticImportMember(deferredTypeName.canonicalName, part)) {
+//                // okay, static import hit and all was emitted, so clean-up and jump to next part
+//                deferredTypeName = null;
+//                break;
+//              }
+//            }
+//            deferredTypeName.emit(this);
+//            deferredTypeName = null;
+//          }
+//          emitAndIndent(part);
+//          break;
+//      }
+//    }
+//    if (ensureTrailingNewline && out.lastChar() != '\n') {
+//      emit("\n");
+//    }
+//    return this;
+//  }
+
+  //EXTRACT METHOD
   public CodeWriter emit(CodeBlock codeBlock, boolean ensureTrailingNewline) throws IOException {
-    int a = 0;
-    ClassName deferredTypeName = null; // used by "import static" logic
-    ListIterator<String> partIterator = codeBlock.formatParts.listIterator();
-    while (partIterator.hasNext()) {
-      String part = partIterator.next();
-      switch (part) {
-        case "$L":
-          emitLiteral(codeBlock.args.get(a++));
-          break;
+  int a = 0;
+  ClassName deferredTypeName = null; // used by "import static" logic
+  ListIterator<String> partIterator = codeBlock.formatParts.listIterator();
 
-        case "$N":
-          emitAndIndent((String) codeBlock.args.get(a++));
-          break;
+  while (partIterator.hasNext()) {
+    String part = partIterator.next();
+    switch (part) {
+      case "$L":
+        emitLiteral(codeBlock.args.get(a++));
+        break;
 
-        case "$S":
-          String string = (String) codeBlock.args.get(a++);
-          // Emit null as a literal null: no quotes.
-          emitAndIndent(string != null
-              ? stringLiteralWithDoubleQuotes(string, indent)
-              : "null");
-          break;
+      case "$N":
+        emitAndIndent((String) codeBlock.args.get(a++));
+        break;
 
-        case "$T":
-          TypeName typeName = (TypeName) codeBlock.args.get(a++);
-          // defer "typeName.emit(this)" if next format part will be handled by the default case
-          if (typeName instanceof ClassName && partIterator.hasNext()) {
-            if (!codeBlock.formatParts.get(partIterator.nextIndex()).startsWith("$")) {
-              ClassName candidate = (ClassName) typeName;
-              if (staticImportClassNames.contains(candidate.canonicalName)) {
-                checkState(deferredTypeName == null, "pending type for static import?!");
-                deferredTypeName = candidate;
-                break;
-              }
-            }
+      case "$S":
+        emitStringLiteral(codeBlock.args.get(a++));
+        break;
+
+      case "$T":
+        emitTypeName(codeBlock.args.get(a++), partIterator);
+        break;
+
+      case "$$":
+        emitAndIndent("$");
+        break;
+
+      case "$>":
+        indent();
+        break;
+
+      case "$<":
+        unindent();
+        break;
+
+      case "$[":
+        handleStatementEnter();
+        break;
+
+      case "$]":
+        handleStatementExit();
+        break;
+
+      case "$W":
+        out.wrappingSpace(indentLevel + 2);
+        break;
+
+      case "$Z":
+        out.zeroWidthSpace(indentLevel + 2);
+        break;
+
+      default:
+        handleDefault(deferredTypeName, part);
+        break;
+    }
+  }
+
+  if (ensureTrailingNewline && out.lastChar() != '\n') {
+    emit("\n");
+  }
+  return this;
+}
+
+  protected void emitStringLiteral(Object arg) throws IOException {
+    String string = (String) arg;
+    // Emit null as a literal null: no quotes.
+    emitAndIndent(string != null ? stringLiteralWithDoubleQuotes(string, indent) : "null");
+  }
+
+  protected void emitTypeName(Object arg, ListIterator<String> partIterator) throws IOException {
+    TypeName typeName = (TypeName) arg;
+    // defer "typeName.emit(this)" if the next format part will be handled by the default case
+    if (typeName instanceof ClassName && partIterator.hasNext()) {
+      handleDeferredTypeName((ClassName) typeName, partIterator);
+    } else {
+      typeName.emit(this);
+    }
+  }
+
+  protected void handleDeferredTypeName(ClassName typeName, ListIterator<String> partIterator) throws IOException {
+    if (partIterator.hasNext()) {
+      String nextPart = partIterator.next();
+      if (!nextPart.startsWith("$")) {
+        ClassName candidate = typeName;
+        if (staticImportClassNames.contains(candidate.canonicalName) && nextPart.startsWith(".")) {
+          if (emitStaticImportMember(candidate.canonicalName, nextPart)) {
+            return;
           }
-          typeName.emit(this);
-          break;
-
-        case "$$":
-          emitAndIndent("$");
-          break;
-
-        case "$>":
-          indent();
-          break;
-
-        case "$<":
-          unindent();
-          break;
-
-        case "$[":
-          checkState(statementLine == -1, "statement enter $[ followed by statement enter $[");
-          statementLine = 0;
-          break;
-
-        case "$]":
-          checkState(statementLine != -1, "statement exit $] has no matching statement enter $[");
-          if (statementLine > 0) {
-            unindent(2); // End a multi-line statement. Decrease the indentation level.
-          }
-          statementLine = -1;
-          break;
-
-        case "$W":
-          out.wrappingSpace(indentLevel + 2);
-          break;
-
-        case "$Z":
-          out.zeroWidthSpace(indentLevel + 2);
-          break;
-
-        default:
-          // handle deferred type
-          if (deferredTypeName != null) {
-            if (part.startsWith(".")) {
-              if (emitStaticImportMember(deferredTypeName.canonicalName, part)) {
-                // okay, static import hit and all was emitted, so clean-up and jump to next part
-                deferredTypeName = null;
-                break;
-              }
-            }
-            deferredTypeName.emit(this);
-            deferredTypeName = null;
-          }
-          emitAndIndent(part);
-          break;
+        }
       }
+      partIterator.previous();
     }
-    if (ensureTrailingNewline && out.lastChar() != '\n') {
-      emit("\n");
+    typeName.emit(this);
+  }
+
+  protected void handleDefault(ClassName deferredTypeName, String part) throws IOException {
+    // handle deferred type
+    if (deferredTypeName != null) {
+      handleDeferredTypeName(deferredTypeName, Collections.<String>emptyList().listIterator());
+      deferredTypeName = null;
     }
-    return this;
+    emitAndIndent(part);
+  }
+
+  protected void handleStatementEnter() {
+    checkState(statementLine == -1, "statement enter $[ followed by statement enter $[");
+    statementLine = 0;
+  }
+
+  protected void handleStatementExit() throws IOException {
+    checkState(statementLine != -1, "statement exit $] has no matching statement enter $[");
+    if (statementLine > 0) {
+      unindent(2); // End a multi-line statement. Decrease the indentation level.
+    }
+    statementLine = -1;
   }
 
   public CodeWriter emitWrappingSpace() throws IOException {
@@ -339,7 +424,7 @@ final class CodeWriter {
     return part;
   }
 
-  private boolean emitStaticImportMember(String canonical, String part) throws IOException {
+  protected boolean emitStaticImportMember(String canonical, String part) throws IOException {
     String partWithoutLeadingDot = part.substring(1);
     if (partWithoutLeadingDot.isEmpty()) return false;
     char first = partWithoutLeadingDot.charAt(0);
@@ -353,13 +438,10 @@ final class CodeWriter {
     return false;
   }
 
-  private void emitLiteral(Object o) throws IOException {
-    if (o instanceof TypeSpec) {
-      TypeSpec typeSpec = (TypeSpec) o;
-      typeSpec.emit(this, null, Collections.emptySet());
-    } else if (o instanceof AnnotationSpec) {
-      AnnotationSpec annotationSpec = (AnnotationSpec) o;
-      annotationSpec.emit(this, true);
+  //Replace Conditional with polymor
+  protected void emitLiteral(Object o) throws IOException {
+    if (o instanceof Emitter) {
+      ((Emitter) o).emit(this);
     } else if (o instanceof CodeBlock) {
       CodeBlock codeBlock = (CodeBlock) o;
       emit(codeBlock);
@@ -388,9 +470,9 @@ final class CodeWriter {
       nameResolved = resolved != null;
 
       if (resolved != null && Objects.equals(resolved.canonicalName, c.canonicalName)) {
-        int suffixOffset = c.simpleNames().size() - 1;
-        return join(".", className.simpleNames().subList(
-            suffixOffset, className.simpleNames().size()));
+        int suffixOffset = c.nestedClassNames().size() - 1;
+        return join(".", className.nestedClassNames().subList(
+            suffixOffset, className.nestedClassNames().size()));
       }
     }
 
@@ -402,7 +484,7 @@ final class CodeWriter {
     // If the class is in the same package, we're done.
     if (Objects.equals(packageName, className.packageName())) {
       referencedNames.add(topLevelSimpleName);
-      return join(".", className.simpleNames());
+      return join(".", className.nestedClassNames());
     }
 
     // We'll have to use the fully-qualified name. Mark the type as importable for a future pass.
@@ -527,7 +609,7 @@ final class CodeWriter {
   private static final class Multiset<T> {
     private final Map<T, Integer> map = new LinkedHashMap<>();
 
-    void add(T t) {
+   public void add(T t) {
       int count = map.getOrDefault(t, 0);
       map.put(t, count + 1);
     }

@@ -45,7 +45,7 @@ import static com.squareup.javapoet.Util.checkState;
 import static com.squareup.javapoet.Util.requireExactlyOneOf;
 
 /** A generated class, interface, or enum declaration. */
-public final class TypeSpec {
+public final class TypeSpec implements Emitter {
   public final Kind kind;
   public final String name;
   public final CodeBlock anonymousTypeArguments;
@@ -192,8 +192,8 @@ public final class TypeSpec {
 
     try {
       if (enumName != null) {
-        codeWriter.emitJavadoc(javadoc);
-        codeWriter.emitAnnotations(annotations, false);
+        Emit.emitJavadoc(codeWriter , javadoc);
+        Emit.emitAnnotations(codeWriter ,annotations, false);
         codeWriter.emit("$L", enumName);
         if (!anonymousTypeArguments.formatParts.isEmpty()) {
           codeWriter.emit("(");
@@ -213,9 +213,9 @@ public final class TypeSpec {
         // Push an empty type (specifically without nested types) for type-resolution.
         codeWriter.pushType(new TypeSpec(this));
 
-        codeWriter.emitJavadoc(javadoc);
-        codeWriter.emitAnnotations(annotations, false);
-        codeWriter.emitModifiers(modifiers, Util.union(implicitModifiers, kind.asMemberModifiers));
+        Emit.emitJavadoc(codeWriter ,javadoc);
+        Emit.emitAnnotations(codeWriter ,annotations, false);
+        Emit.emitModifiers(codeWriter ,modifiers, Util.union(implicitModifiers, kind.asMemberModifiers));
         if (kind == Kind.ANNOTATION) {
           codeWriter.emit("$L $L", "@interface", name);
         } else {
@@ -365,6 +365,11 @@ public final class TypeSpec {
     } catch (IOException e) {
       throw new AssertionError();
     }
+  }
+
+  @Override
+  public void emit(CodeWriter codeWriter) throws IOException {
+    emit(codeWriter, null, Collections.emptySet());
   }
 
   public enum Kind {

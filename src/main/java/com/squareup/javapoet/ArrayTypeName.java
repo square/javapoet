@@ -52,15 +52,8 @@ public final class ArrayTypeName extends TypeName {
   }
 
   CodeWriter emit(CodeWriter out, boolean varargs) throws IOException {
-    emitLeafType(out);
+    componentType.emitLeafType(out);
     return emitBrackets(out, varargs);
-  }
-
-  private CodeWriter emitLeafType(CodeWriter out) throws IOException {
-    if (TypeName.asArray(componentType) != null) {
-      return TypeName.asArray(componentType).emitLeafType(out);
-    }
-    return componentType.emit(out);
   }
 
   private CodeWriter emitBrackets(CodeWriter out, boolean varargs) throws IOException {

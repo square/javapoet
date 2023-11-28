@@ -245,4 +245,5 @@ public class AnnotatedTypeNameTest {
     TypeName componentType = TypeName.get(type.getGenericComponentType());
     return ArrayTypeName.of(componentType);
   }
+
 }

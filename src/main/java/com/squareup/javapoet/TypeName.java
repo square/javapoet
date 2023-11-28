@@ -382,4 +382,19 @@ public class TypeName {
         : null;
   }
 
+  // Move Method
+  CodeWriter emitLeafType(CodeWriter out) throws IOException {
+    ArrayTypeName thisAsArray = TypeName.asArray(this);
+    if (thisAsArray != null) {
+      TypeName componentType = thisAsArray.componentType;
+      if (componentType != null) {
+        // Handle varargs parameter by emitting the component type without array
+        return componentType.emitLeafType(out);
+      }
+    }
+    return emit(out);
+  }
+
+
+
 }

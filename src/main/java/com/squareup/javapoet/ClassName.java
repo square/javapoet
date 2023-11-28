@@ -45,7 +45,8 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
   /** This class name, like "Entry" for java.util.Map.Entry. */
   final String simpleName;
 
-  private List<String> simpleNames;
+  //Renaming the variable according to how it is used
+  private List<String> nestedClassNames;
 
   /** The full class name like "java.util.Map.Entry". */
   final String canonicalName;
@@ -113,20 +114,20 @@ public final class ClassName extends TypeName implements Comparable<ClassName> {
         : (packageName.isEmpty() ? simpleName : packageName + '.' + simpleName);
   }
 
-  public List<String> simpleNames() {
-    if (simpleNames != null) {
-      return simpleNames;
+  public List<String> nestedClassNames() {
+    if (nestedClassNames != null) {
+      return nestedClassNames;
     }
 
     if (enclosingClassName == null) {
-      simpleNames = Collections.singletonList(simpleName);
+      nestedClassNames = Collections.singletonList(simpleName);
     } else {
       List<String> mutableNames = new ArrayList<>();
-      mutableNames.addAll(enclosingClassName().simpleNames());
+      mutableNames.addAll(enclosingClassName().nestedClassNames());
       mutableNames.add(simpleName);
-      simpleNames = Collections.unmodifiableList(mutableNames);
+      nestedClassNames = Collections.unmodifiableList(mutableNames);
     }
-    return simpleNames;
+    return nestedClassNames;
   }
 
   /**
