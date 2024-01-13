@@ -59,7 +59,7 @@ public final class AnnotationSpecTest {
 
     int c() default 7;
 
-    long d() default 8;
+    long d() default 12345678910L;
 
     float e() default 9.0f;
 
@@ -313,7 +313,7 @@ public final class AnnotationSpecTest {
         + "    a = 5,\n"
         + "    b = 6,\n"
         + "    c = 7,\n"
-        + "    d = 8,\n"
+        + "    d = 12345678910L,\n"
         + "    e = 9.0f,\n"
         + "    f = 11.1,\n"
         + "    g = {\n"
