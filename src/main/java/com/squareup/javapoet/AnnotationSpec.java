@@ -232,6 +232,9 @@ public final class AnnotationSpec {
       if (value instanceof Float) {
         return addMember(memberName, "$Lf", value);
       }
+      if (value instanceof Long) {
+        return addMember(memberName, "$LL", value);
+      }
       if (value instanceof Character) {
         return addMember(memberName, "'$L'", characterLiteralWithoutSingleQuotes((char) value));
       }
