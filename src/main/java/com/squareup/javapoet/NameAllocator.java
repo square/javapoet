@@ -86,8 +86,8 @@ public final class NameAllocator implements Cloneable {
     this(new LinkedHashSet<>(), new LinkedHashMap<>());
   }
 
-  private NameAllocator(LinkedHashSet<String> allocatedNames,
-                        LinkedHashMap<Object, String> tagToName) {
+  NameAllocator(Set<String> allocatedNames,
+                Map<Object, String> tagToName) {
     this.allocatedNames = allocatedNames;
     this.tagToName = tagToName;
   }
