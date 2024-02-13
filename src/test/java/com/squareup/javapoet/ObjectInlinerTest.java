@@ -86,7 +86,7 @@ public class ObjectInlinerTest {
         ObjectInliner inliner = new ObjectInliner();
         adapter.accept(inliner);
         try {
-            inliner.emit(codeWriter, object);
+            inliner.inlined(object).emit(codeWriter);
         } catch (IOException e) {
             throw new AssertionError("IOFailure", e);
         }
@@ -96,7 +96,7 @@ public class ObjectInlinerTest {
     private String expectedResult(Class<?> type, String lambdaBody) {
         StringBuilder out = new StringBuilder();
         out.append("((");
-        out.append(ObjectInliner.getSerializedType(type).getCanonicalName());
+        out.append(ObjectEmitter.getSerializedType(type).getCanonicalName());
         out.append(")((");
         out.append(Supplier.class.getCanonicalName());
         out.append(")(()->{");
@@ -136,7 +136,7 @@ public class ObjectInlinerTest {
     private void assertCompiles(Class<?> type, String value) {
         JavaFile javaFile = JavaFile.builder("", TypeSpec
                 .classBuilder("TestClass")
-                        .addField(ObjectInliner.getSerializedType(type), "field", Modifier.STATIC)
+                        .addField(ObjectEmitter.getSerializedType(type), "field", Modifier.STATIC)
                 .addStaticBlock(CodeBlock.of("field = $L;", value))
                 .build()).build();
         Compilation compilation = javac().compile(javaFile.toJavaFileObject());
@@ -429,17 +429,17 @@ public class ObjectInlinerTest {
     public void testUntrustedObjectThrows() {
         TrustedPojo pojo = new TrustedPojo("a", 1);
         pojo.setNext(pojo);
-        assertThrows("Cannot serialize instance of (" + TrustedPojo.class +
+        assertThrows("Cannot serialize instance of (" + TrustedPojo.class.getCanonicalName() +
                 ") because it is not an instance of a trusted type.", pojo);
     }
 
     @Test
     public void testUntrustedCollectionThrows() {
-        assertThrows("Cannot serialize instance of (" + ArrayList.class +
+        assertThrows("Cannot serialize instance of (" + ArrayList.class.getCanonicalName() +
                 ") because it is not an instance of a trusted type.", new ArrayList<>());
-        assertThrows("Cannot serialize instance of (" + LinkedHashSet.class +
+        assertThrows("Cannot serialize instance of (" + LinkedHashSet.class.getCanonicalName() +
                 ") because it is not an instance of a trusted type.", new LinkedHashSet<>());
-        assertThrows("Cannot serialize instance of (" + LinkedHashMap.class +
+        assertThrows("Cannot serialize instance of (" + LinkedHashMap.class.getCanonicalName() +
                 ") because it is not an instance of a trusted type.", new LinkedHashMap<>());
     }
 
@@ -450,7 +450,7 @@ public class ObjectInlinerTest {
     @Test
     public void testPrivatePojoThrows() {
         PrivatePojo pojo = new PrivatePojo();
-        assertThrows("Cannot serialize type (" + PrivatePojo.class +
+        assertThrows("Cannot serialize type (" + PrivatePojo.class.getCanonicalName() +
                 ") because it is not public.", pojo,
                 inliner -> inliner.trustExactTypes(PrivatePojo.class));
     }
@@ -511,7 +511,7 @@ public class ObjectInlinerTest {
     @Test
     public void testMissingConstructorPojoThrows() {
         MissingConstructorPojo pojo = new MissingConstructorPojo("a");
-        assertThrows("Cannot serialize type (" + MissingConstructorPojo.class +
+        assertThrows("Cannot serialize type (" + MissingConstructorPojo.class.getCanonicalName() +
                         ") because it does not have a public no-args constructor.", pojo,
                 inliner -> inliner.trustExactTypes(MissingConstructorPojo.class));
     }
@@ -524,7 +524,7 @@ public class ObjectInlinerTest {
     @Test
     public void testPrivateConstructorPojoThrows() {
         PrivateConstructorPojo pojo = new PrivateConstructorPojo();
-        assertThrows("Cannot serialize type (" + PrivateConstructorPojo.class +
+        assertThrows("Cannot serialize type (" + PrivateConstructorPojo.class.getCanonicalName() +
                         ") because it does not have a public no-args constructor.", pojo,
                 inliner -> inliner.trustExactTypes(PrivateConstructorPojo.class));
     }
@@ -558,7 +558,7 @@ public class ObjectInlinerTest {
     @Test
     public void testRawTypePojoWithUntrustedFieldThrows() {
         RawTypePojo pojo = new RawTypePojo(new ArrayList<>());
-        assertThrows("Cannot serialize instance of (" + ArrayList.class
+        assertThrows("Cannot serialize instance of (" + ArrayList.class.getCanonicalName()
                         + ") because it is not an instance of a trusted type.",
                 pojo,
                 inliner -> inliner.trustExactTypes(RawTypePojo.class));
@@ -567,15 +567,15 @@ public class ObjectInlinerTest {
     private static class DurationInliner implements TypeInliner {
 
         @Override
-        public boolean canInline(Class<?> type) {
-            return type.equals(Duration.class);
+        public boolean canInline(Object object) {
+            return object instanceof Duration;
         }
 
         @Override
-        public String inline(ObjectInliner inliner, Object instance) {
+        public String inline(ObjectEmitter emitter, Object instance) {
             Duration duration = (Duration) instance;
             return CodeBlock.of("$T.ofNanos($V)", Duration.class,
-                    duration.toNanos()).toString();
+                    emitter.inlined(duration.toNanos())).toString();
         }
     }
 
@@ -583,12 +583,19 @@ public class ObjectInlinerTest {
     public void testCustomInliner() {
         Duration duration = Duration.ofSeconds(1L);
         String inlinedNanos = CodeBlock.of("$V", duration.toNanos()).toString();
-        assertResult(new StringBuilder("return ")
-                        .append(Duration.class.getCanonicalName())
-                        .append(".ofNanos(")
-                        .append(inlinedNanos)
-                        .append(");")
-                        .toString(),
+        assertResult(new StringBuilder()
+                .append(Duration.class.getCanonicalName())
+                .append(" ")
+                .append("$$javapoet$")
+                .append(Duration.class.getSimpleName())
+                .append(" = ")
+                .append(Duration.class.getCanonicalName())
+                .append(".ofNanos(")
+                .append(inlinedNanos)
+                .append(");")
+                .append("return $$javapoet$")
+                        .append(Duration.class.getSimpleName()).append(";")
+                .toString(),
                 duration,
                 inliner -> inliner
                         .trustExactTypes(Duration.class)
@@ -598,7 +605,7 @@ public class ObjectInlinerTest {
     @Test
     public void testCustomInlinerNotCalledOnUntrustedTypes() {
         Duration duration = Duration.ofSeconds(1L);
-        assertThrows("Cannot serialize instance of (" + Duration.class + ") because it is not an instance of a trusted type.",
+        assertThrows("Cannot serialize instance of (" + Duration.class.getCanonicalName() + ") because it is not an instance of a trusted type.",
                 duration,
                 inliner -> inliner
                         .addTypeInliner(new DurationInliner()));
@@ -628,5 +635,161 @@ public class ObjectInlinerTest {
                 inliner -> inliner
                         .useNamePrefix("test$")
                         .trustExactTypes(TrustedPojo.class));
+    }
+
+    private static class RecursiveInliner implements TypeInliner {
+
+        @Override
+        public boolean canInline(Object object) {
+            return object instanceof TrustedPojo;
+        }
+
+        @Override
+        public String inline(ObjectEmitter emitter, Object instance) throws IOException {
+            TrustedPojo pojo = (TrustedPojo) instance;
+            emitter.newName(pojo.name, pojo);
+            emitter.emit("$T $N = new $T();", TrustedPojo.class, emitter.getName(pojo), TrustedPojo.class);
+            emitter.emit("$N.name = $S + $V;", emitter.getName(pojo), "Taco ", emitter.inlined(pojo.name));
+            emitter.emit("$N.setValue($V);", emitter.getName(pojo), emitter.inlined(pojo.value));
+            emitter.emit("$N.setNext($V);", emitter.getName(pojo), emitter.inlined(pojo.next));
+            return emitter.getName(pojo);
+        }
+    }
+
+    private String expectedCustomInlinedTrustedPojo(TrustedPojo trustedPojo, String prefix, String suffix) {
+        StringBuilder out = new StringBuilder()
+                .append(TrustedPojo.TYPE).append(prefix).append(trustedPojo.name)
+                .append(" = new ")
+                .append(TrustedPojo.TYPE).append("();")
+                .append(prefix).append(trustedPojo.name).append(".name = \"")
+                .append("Taco\" + ").append(CodeBlock.of("$V", trustedPojo.name)).append(";")
+                .append(prefix).append(trustedPojo.name).append(".setValue(")
+                .append(CodeBlock.of("$V", trustedPojo.value)).append(");");
+
+        if (trustedPojo.next == null) {
+            out.append(prefix).append(trustedPojo.name).append(".setNext(null);");
+        } else {
+            out.append(prefix).append(trustedPojo.name).append(".setNext(")
+                    .append("((").append(TrustedPojo.class.getCanonicalName()).append(")((")
+                    .append(Supplier.class.getCanonicalName()).append(")(()->{")
+                    .append(expectedCustomInlinedTrustedPojo(trustedPojo.next, prefix, suffix + "_"))
+                    .append("return ").append(prefix).append(TrustedPojo.class.getSimpleName()).append(suffix).append("_").append(";")
+                    .append("})).get())")
+                    .append(");");
+        }
+        out.append(TrustedPojo.class.getCanonicalName())
+                .append(prefix).append(TrustedPojo.class.getSimpleName()).append(suffix)
+                .append(" = ")
+                .append(prefix).append(trustedPojo.name)
+                .append(";");
+        return out.toString();
+    }
+
+    @Test
+    public void testCustomInlineTrustedObject() {
+        TrustedPojo pojo = new TrustedPojo("a", 1)
+                .withNext(new TrustedPojo("b", 2));
+        assertResult(new StringBuilder()
+                .append(expectedCustomInlinedTrustedPojo(pojo, "$$javapoet$", ""))
+                .append("return $$javapoet$").append(TrustedPojo.class.getSimpleName()).append(";")
+                .toString(), pojo, inliner -> inliner.trustExactTypes(TrustedPojo.class)
+                .addTypeInliner(new RecursiveInliner()));
+    }
+
+    @Test
+    public void testCustomInlineTrustedObjectWithSelfReference() {
+        TrustedPojo pojo = new TrustedPojo("a", 1);
+        pojo.setNext(pojo);
+        assertThrows("Cannot serialize an object of type ("
+                + TrustedPojo.class.getCanonicalName() + ") because it contains a circular reference.", pojo,
+                inliner -> inliner.trustExactTypes(TrustedPojo.class)
+                .addTypeInliner(new RecursiveInliner()));
+    }
+
+    public static class PairPojo {
+        private PairPojo left;
+        private PairPojo right;
+
+        public PairPojo(PairPojo left, PairPojo right) {
+            this.left = left;
+            this.right = right;
+        }
+
+        public PairPojo getLeft() {
+            return left;
+        }
+
+        public PairPojo getRight() {
+            return right;
+        }
+    }
+
+    private static class PairPojoInliner implements TypeInliner {
+
+        @Override
+        public boolean canInline(Object object) {
+            return object instanceof PairPojo;
+        }
+
+        @Override
+        public String inline(ObjectEmitter emitter, Object instance)  {
+            PairPojo pair = (PairPojo) instance;
+            return CodeBlock.of("new $T($V, $V)",
+                    PairPojo.class,
+                    emitter.inlined(pair.getLeft()),
+                    emitter.inlined(pair.getRight())).toString();
+        }
+    }
+
+    private String expectedCustomInlinedPairPojo(PairPojo pairPojo, String prefix, String suffix) {
+        StringBuilder out = new StringBuilder()
+                .append(PairPojo.class.getCanonicalName())
+                .append(" ")
+                .append(prefix).append(PairPojo.class.getSimpleName()).append(suffix)
+                .append(" = new ")
+                .append(PairPojo.class.getCanonicalName())
+                .append("(");
+
+        if (pairPojo.left == null) {
+            out.append("null");
+        } else {
+            out.append("((").append(PairPojo.class.getCanonicalName()).append(")((")
+                    .append(Supplier.class.getCanonicalName()).append(")(()->{");
+            out.append(expectedCustomInlinedPairPojo(pairPojo.left, prefix, suffix + "_"))
+                    .append("return ").append(prefix).append(PairPojo.class.getSimpleName()).append(suffix).append("_");
+            out.append(";})).get())");
+        }
+
+        out.append(", ");
+
+        if (pairPojo.right == null) {
+            out.append("null");
+        } else {
+            out.append("((").append(PairPojo.class.getCanonicalName()).append(")((")
+                    .append(Supplier.class.getCanonicalName()).append(")(()->{");
+            out.append(expectedCustomInlinedPairPojo(pairPojo.right, prefix, suffix + "_"))
+                    .append("return ").append(prefix).append(PairPojo.class.getSimpleName()).append(suffix).append("_");
+            out.append(";})).get())");
+        }
+
+        out.append(");");
+
+
+        return out.toString();
+    }
+
+    @Test
+    public void testCustomInlineTrustedObjectWithSiblingReference() {
+        PairPojo common = new PairPojo(null, null);
+        PairPojo root = new PairPojo(common, common);
+        // Make sure the sibling emitters do not try to share common, since
+        // they cannot access each other's variables
+        assertResult(new StringBuilder()
+                        .append(expectedCustomInlinedPairPojo(root, "$$javapoet$", ""))
+                        .append("return $$javapoet$").append(PairPojo.class.getSimpleName()).append(";")
+                        .toString(),
+                root,
+                inliner -> inliner.trustExactTypes(PairPojo.class)
+                        .addTypeInliner(new PairPojoInliner()));
     }
 }

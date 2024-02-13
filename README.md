@@ -452,6 +452,7 @@ You can register custom inliners for types not covered by the above using `TypeI
 
 ```java
 import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.ObjectEmitter;
 import com.squareup.javapoet.TypeInliner;
 import com.squareup.javapoet.ObjectInliner;
 
@@ -462,14 +463,14 @@ private MethodSpec computeSomething(String name, MyComplexConfig config) {
          .trustEverything()
          .addTypeInliner(new TypeInliner() {
           @Override
-          public boolean canInline(Class<?> type) {
-           return type.equals(Duration.class);
+          public boolean canInline(Object object) {
+           return object instanceof Duration;
           }
 
           @Override
-          public String inline(ObjectInliner inliner, Object instance) {
+          public String inline(ObjectEmitter emitter, Object instance) {
            Duration duration = (Duration) instance;
-           return CodeBlock.of("$T.ofNanos($V);", Duration.class, duration.toNanos()).toString();
+           return CodeBlock.of("$T.ofNanos($V);", Duration.class, emitter.inlined(duration.toNanos())).toString();
           }
          });
  return MethodSpec.methodBuilder(name)
