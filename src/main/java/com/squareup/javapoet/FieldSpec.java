@@ -17,10 +17,7 @@ package com.squareup.javapoet;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
 
@@ -63,19 +60,40 @@ public final class FieldSpec {
     }
     codeWriter.emit(";\n");
   }
+  //
+  // @Override public boolean equals(Object o) {
+  // if (this == o) return true;
+  // if (o == null) return false;
+  // if (getClass() != o.getClass()) return false;
+  // return toString().equals(o.toString());
+  // }
+  //
+  // @Override public int hashCode() {
+  // return toString().hashCode();
+  // }
 
-  @Override public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null) return false;
-    if (getClass() != o.getClass()) return false;
-    return toString().equals(o.toString());
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    FieldSpec fieldSpec = (FieldSpec) o;
+    return Objects.equals(type, fieldSpec.type) &&
+        Objects.equals(name, fieldSpec.name) &&
+        Objects.equals(javadoc, fieldSpec.javadoc) &&
+        Objects.equals(annotations, fieldSpec.annotations) &&
+        Objects.equals(modifiers, fieldSpec.modifiers) &&
+        Objects.equals(initializer, fieldSpec.initializer);
   }
 
-  @Override public int hashCode() {
-    return toString().hashCode();
+  @Override
+  public int hashCode() {
+    return Objects.hash(type, name, javadoc, annotations, modifiers, initializer);
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     StringBuilder out = new StringBuilder();
     try {
       CodeWriter codeWriter = new CodeWriter(out);
@@ -172,4 +190,5 @@ public final class FieldSpec {
       return new FieldSpec(this);
     }
   }
+
 }
