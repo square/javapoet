@@ -669,6 +669,20 @@ public final class JavaFileTest {
         + "}\n");
   }
 
+  @Test public void clearFileComment() throws Exception {
+    String source = JavaFile.builder("com.squareup.tacos",
+        TypeSpec.classBuilder("Taco").build())
+        .addFileComment("\nGENERATED FILE:\n\nDO NOT EDIT!\n")
+        .clearFileComment()
+        .build()
+        .toString();
+    assertThat(source).isEqualTo(""
+        + "package com.squareup.tacos;\n"
+        + "\n"
+        + "class Taco {\n"
+        + "}\n");
+  }
+
   @Test public void packageClassConflictsWithNestedClass() throws Exception {
     String source = JavaFile.builder("com.squareup.tacos",
         TypeSpec.classBuilder("Taco")

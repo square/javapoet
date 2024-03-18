@@ -292,6 +292,11 @@ public final class JavaFile {
       return this;
     }
 
+    public Builder clearFileComment() {
+      this.fileComment.clear();
+      return this;
+    }
+
     public Builder addStaticImport(Enum<?> constant) {
       return addStaticImport(ClassName.get(constant.getDeclaringClass()), constant.name());
     }
