@@ -16,21 +16,25 @@
 package com.squareup.javapoet;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.io.FileOutputStream;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Scanner;
 import java.util.TreeSet;
 import javax.annotation.processing.Filer;
 import javax.lang.model.element.Element;
@@ -55,23 +59,26 @@ public final class JavaFile {
       return this;
     }
   };
-
+  public boolean write;
   public final CodeBlock fileComment;
   public final String packageName;
   public final TypeSpec typeSpec;
   public final boolean skipJavaLangImports;
+  public final List<AnnotationSpec> packageAnnotations;
+  public final List<String> packageInfo;
   private final Set<String> staticImports;
   private final Set<String> alwaysQualify;
   private final String indent;
-
   private JavaFile(Builder builder) {
     this.fileComment = builder.fileComment.build();
     this.packageName = builder.packageName;
     this.typeSpec = builder.typeSpec;
+    this.packageAnnotations = Util.immutableList(builder.annotations);
     this.skipJavaLangImports = builder.skipJavaLangImports;
     this.staticImports = Util.immutableSet(builder.staticImports);
     this.indent = builder.indent;
-
+    this.packageInfo = new ArrayList<>();
+    this.write = false;
     Set<String> alwaysQualifiedNames = new LinkedHashSet<>();
     fillAlwaysQualifiedNames(builder.typeSpec, alwaysQualifiedNames);
     this.alwaysQualify = Util.immutableSet(alwaysQualifiedNames);
@@ -137,12 +144,11 @@ public final class JavaFile {
       }
       Files.createDirectories(outputDirectory);
     }
-
     Path outputPath = outputDirectory.resolve(typeSpec.name + ".java");
     try (Writer writer = new OutputStreamWriter(Files.newOutputStream(outputPath), charset)) {
       writeTo(writer);
     }
-
+    writeToPackageInfo(this, outputDirectory);
     return outputPath;
   }
 
@@ -177,6 +183,100 @@ public final class JavaFile {
       }
       throw e;
     }
+  }
+  /**
+   * Writes previous content in {@code contents} using BufferedWriter {@code out}.
+   * The String {@code types} indicates the content type.
+   * Boolean {@code write} decides whether to write to a file or not.
+   * Returns the current {@code index} in contents.
+   */
+  public int writePrevInfo(String types, List<String> contents,
+                           OutputStreamWriter out, int index, boolean write) throws IOException {
+    if (contents != null) {
+      for (int i = index; i < contents.size(); i++) {
+        if (!contents.get(i).startsWith(types)) {
+          if (write)
+            out.write(contents.get(i) + "\n");
+          packageInfo.add(contents.get(i) + "\n");
+          index++;
+        } else {
+          break;
+        }
+      }
+    }
+    return index;
+  }
+
+
+  /** Writes package-info.java to {@code outputDirectory}. */
+  public void writeToPackageInfo(JavaFile javaFile,
+                                 Path outputDirectory) throws IOException {
+    Path packageInfoPath = outputDirectory.resolve("package-info.java");
+    List<String> contents = readFromPackageInfo(outputDirectory);
+    OutputStreamWriter out = null;
+    if (javaFile.write) {
+      FileOutputStream fos = new FileOutputStream(packageInfoPath.toString());
+      out = new OutputStreamWriter(fos, UTF_8);
+    }
+
+    String[] fileComments = String.valueOf(javaFile.fileComment).split("\n");
+    for (String subFileComment : fileComments) {
+      if (javaFile.write) {
+        assert out != null;
+        out.write("//" + subFileComment + "\n");
+      }
+      packageInfo.add("//" + subFileComment + "\n");
+    }
+    int index = 0;
+    index = writePrevInfo("package", contents, out, index, write);
+
+    for (AnnotationSpec annotation : javaFile.packageAnnotations) {
+      String[] annotations = annotation.toString().split("\\.");
+      if (javaFile.write) {
+        assert out != null;
+        out.write("@" + annotations[annotations.length - 1] + "\n");
+      }
+      packageInfo.add("@" + annotations[annotations.length - 1] + "\n");
+    }
+
+    if (javaFile.write) {
+      assert out != null;
+      out.write("package " + javaFile.packageName + ";\n");
+    }
+    packageInfo.add("package " + javaFile.packageName + ";\n");
+    index = writePrevInfo("import", contents, out, index + 1, write);
+
+    for (AnnotationSpec annotation : javaFile.packageAnnotations) {
+      String[] withAnnotations = annotation.toString().split("@");
+      if (javaFile.write) {
+        assert out != null;
+        out.write("import " + withAnnotations[withAnnotations.length - 1] + ";\n");
+      }
+      packageInfo.add("import " + withAnnotations[withAnnotations.length - 1] + ";\n");
+    }
+    writePrevInfo("@", contents, out, index, write);
+    if (out != null)
+      out.close();
+  }
+
+  /** Read package-info.java from {@code outputDirectory}. */
+  public List<String> readFromPackageInfo(Path outputDirectory) {
+    Path packageInfoPath = outputDirectory.resolve("package-info.java");
+    List<String> contents = new ArrayList<>();
+    try {
+      File file = new File(packageInfoPath.toString());
+      if (file.exists()) {
+        Scanner scanner = new Scanner(file, "utf-8");
+        while (scanner.hasNextLine()) {
+          contents.add(scanner.nextLine());
+        }
+      } else {
+        contents = null;
+      }
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    }
+    return contents;
   }
 
   private void emit(CodeWriter codeWriter) throws IOException {
@@ -279,7 +379,7 @@ public final class JavaFile {
     private final CodeBlock.Builder fileComment = CodeBlock.builder();
     private boolean skipJavaLangImports;
     private String indent = "  ";
-
+    public final List<AnnotationSpec> annotations = new ArrayList<>();
     public final Set<String> staticImports = new TreeSet<>();
 
     private Builder(String packageName, TypeSpec typeSpec) {
@@ -331,6 +431,28 @@ public final class JavaFile {
 
     public JavaFile build() {
       return new JavaFile(this);
+    }
+
+    public Builder addPackageAnnotations(Iterable<AnnotationSpec> annotationSpecs) {
+      checkArgument(annotationSpecs != null, "annotationSpecs == null");
+      for (AnnotationSpec annotationSpec : annotationSpecs) {
+        this.annotations.add(annotationSpec);
+      }
+      return this;
+    }
+
+    public Builder addPackageAnnotation(AnnotationSpec annotationSpec) {
+      checkNotNull(annotationSpec, "annotationSpec == null");
+      this.annotations.add(annotationSpec);
+      return this;
+    }
+
+    public Builder addPackageAnnotation(ClassName annotation) {
+      return addPackageAnnotation(AnnotationSpec.builder(annotation).build());
+    }
+
+    public Builder addPackageAnnotation(Class<?> annotation) {
+      return addPackageAnnotation(ClassName.get(annotation));
     }
   }
 }
