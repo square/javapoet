@@ -16,16 +16,14 @@
 package com.squareup.javapoet;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.StreamSupport;
-import javax.lang.model.element.Element;
-import javax.lang.model.type.TypeMirror;
 
 import static com.squareup.javapoet.Util.checkArgument;
 
@@ -64,7 +62,7 @@ import static com.squareup.javapoet.Util.checkArgument;
  */
 public final class CodeBlock {
   private static final Pattern NAMED_ARGUMENT =
-      Pattern.compile("\\$(?<argumentName>[\\w_]+):(?<typeChar>[\\w]).*");
+          Pattern.compile("\\$(?<argumentName>[\\w_]+):(?<typeChar>[\\w]).*");
   private static final Pattern LOWERCASE = Pattern.compile("[a-z]+[\\w_]*");
 
   /** A heterogeneous list containing string literals and value placeholders. */
@@ -121,10 +119,10 @@ public final class CodeBlock {
    */
   public static Collector<CodeBlock, ?, CodeBlock> joining(String separator) {
     return Collector.of(
-        () -> new CodeBlockJoiner(separator, builder()),
-        CodeBlockJoiner::add,
-        CodeBlockJoiner::merge,
-        CodeBlockJoiner::join);
+            () -> new CodeBlockJoiner(separator, builder()),
+            CodeBlockJoiner::add,
+            CodeBlockJoiner::merge,
+            CodeBlockJoiner::join);
   }
 
   /**
@@ -133,16 +131,16 @@ public final class CodeBlock {
    * {@code int i} using {@code ", "} would produce {@code String s, Object o, int i}.
    */
   public static Collector<CodeBlock, ?, CodeBlock> joining(
-      String separator, String prefix, String suffix) {
+          String separator, String prefix, String suffix) {
     Builder builder = builder().add("$N", prefix);
     return Collector.of(
-        () -> new CodeBlockJoiner(separator, builder),
-        CodeBlockJoiner::add,
-        CodeBlockJoiner::merge,
-        joiner -> {
-            builder.add(CodeBlock.of("$N", suffix));
-            return joiner.join();
-        });
+            () -> new CodeBlockJoiner(separator, builder),
+            CodeBlockJoiner::add,
+            CodeBlockJoiner::merge,
+            joiner -> {
+              builder.add(CodeBlock.of("$N", suffix));
+              return joiner.join();
+            });
   }
 
   public static Builder builder() {
@@ -183,7 +181,7 @@ public final class CodeBlock {
 
       for (String argument : arguments.keySet()) {
         checkArgument(LOWERCASE.matcher(argument).matches(),
-            "argument '%s' must start with a lowercase character", argument);
+                "argument '%s' must start with a lowercase character", argument);
       }
 
       while (p < format.length()) {
@@ -207,7 +205,7 @@ public final class CodeBlock {
         if (matcher != null && matcher.lookingAt()) {
           String argumentName = matcher.group("argumentName");
           checkArgument(arguments.containsKey(argumentName), "Missing named argument for $%s",
-              argumentName);
+                  argumentName);
           char formatChar = matcher.group("typeChar").charAt(0);
           addArgument(format, formatChar, arguments.get(argumentName));
           formatParts.add("$" + formatChar);
@@ -215,7 +213,7 @@ public final class CodeBlock {
         } else {
           checkArgument(p < format.length() - 1, "dangling $ at end");
           checkArgument(isNoArgPlaceholder(format.charAt(p + 1)),
-              "unknown format $%s at %s in '%s'", format.charAt(p + 1), p + 1, format);
+                  "unknown format $%s at %s in '%s'", format.charAt(p + 1), p + 1, format);
           formatParts.add(format.substring(p, p + 2));
           p += 2;
         }
@@ -265,7 +263,7 @@ public final class CodeBlock {
         // If 'c' doesn't take an argument, we're done.
         if (isNoArgPlaceholder(c)) {
           checkArgument(
-              indexStart == indexEnd, "$$, $>, $<, $[, $], $W, and $Z may not have an index");
+                  indexStart == indexEnd, "$$, $>, $<, $[, $], $W, and $Z may not have an index");
           formatParts.add("$" + c);
           continue;
         }
@@ -285,8 +283,8 @@ public final class CodeBlock {
         }
 
         checkArgument(index >= 0 && index < args.length,
-            "index %d for '%s' not in range (received %s arguments)",
-            index + 1, format.substring(indexStart - 1, indexEnd + 1), args.length);
+                "index %d for '%s' not in range (received %s arguments)",
+                index + 1, format.substring(indexStart - 1, indexEnd + 1), args.length);
         checkArgument(!hasIndexed || !hasRelative, "cannot mix indexed and positional parameters");
 
         addArgument(format, c, args[index]);
@@ -296,7 +294,7 @@ public final class CodeBlock {
 
       if (hasRelative) {
         checkArgument(relativeParameterCount >= args.length,
-            "unused arguments: expected %s, received %s", relativeParameterCount, args.length);
+                "unused arguments: expected %s, received %s", relativeParameterCount, args.length);
       }
       if (hasIndexed) {
         List<String> unused = new ArrayList<>();
@@ -315,49 +313,25 @@ public final class CodeBlock {
       return c == '$' || c == '>' || c == '<' || c == '[' || c == ']' || c == 'W' || c == 'Z';
     }
 
-    private void addArgument(String format, char c, Object arg) {
-      switch (c) {
-        case 'N':
-          this.args.add(argToName(arg));
-          break;
-        case 'L':
-          this.args.add(argToLiteral(arg));
-          break;
-        case 'S':
-          this.args.add(argToString(arg));
-          break;
-        case 'T':
-          this.args.add(argToType(arg));
-          break;
-        default:
-          throw new IllegalArgumentException(
-              String.format("invalid format string: '%s'", format));
-      }
-    }
+    // Refactor: Replacing Condtional with Polymorphism
 
-    private String argToName(Object o) {
-      if (o instanceof CharSequence) return o.toString();
-      if (o instanceof ParameterSpec) return ((ParameterSpec) o).name;
-      if (o instanceof FieldSpec) return ((FieldSpec) o).name;
-      if (o instanceof MethodSpec) return ((MethodSpec) o).name;
-      if (o instanceof TypeSpec) return ((TypeSpec) o).name;
-      throw new IllegalArgumentException("expected name but was " + o);
+    private void addArgument(String format, char c, Object arg) {
+      Map<Character, ArgumentAdder> adders = new HashMap<>();
+      adders.put('N', new NameArgumentAdder());
+      adders.put('L', new LiteralArgumentAdder());
+      adders.put('S', new StringArgumentAdder());
+      adders.put('T', new TypeArgumentAdder());
+
+      ArgumentAdder adder = adders.get(c);
+      if (adder != null) {
+        adder.addArgument(this, arg);
+      } else {
+        throw new IllegalArgumentException(String.format("invalid format string: '%s'", format));
+      }
     }
 
     private Object argToLiteral(Object o) {
       return o;
-    }
-
-    private String argToString(Object o) {
-      return o != null ? String.valueOf(o) : null;
-    }
-
-    private TypeName argToType(Object o) {
-      if (o instanceof TypeName) return (TypeName) o;
-      if (o instanceof TypeMirror) return TypeName.get((TypeMirror) o);
-      if (o instanceof Element) return TypeName.get(((Element) o).asType());
-      if (o instanceof Type) return TypeName.get((Type) o);
-      throw new IllegalArgumentException("expected type but was " + o);
     }
 
     /**
