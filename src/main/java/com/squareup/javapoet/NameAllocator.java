@@ -109,7 +109,7 @@ public final class NameAllocator implements Cloneable {
     checkNotNull(suggestion, "suggestion");
     checkNotNull(tag, "tag");
 
-    suggestion = toJavaIdentifier(suggestion);
+    suggestion = sanitizeIdentifier(suggestion);
 
     while (SourceVersion.isKeyword(suggestion) || !allocatedNames.add(suggestion)) {
       suggestion = suggestion + "_";
@@ -125,7 +125,9 @@ public final class NameAllocator implements Cloneable {
     return suggestion;
   }
 
-  public static String toJavaIdentifier(String suggestion) {
+  // Renaming Method to Something more meaningful
+
+  public static String sanitizeIdentifier(String suggestion) {
     StringBuilder result = new StringBuilder();
     for (int i = 0; i < suggestion.length(); ) {
       int codePoint = suggestion.codePointAt(i);
