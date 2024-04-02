@@ -46,22 +46,25 @@ final class CodeWriter {
   private static final String NO_PACKAGE = new String();
   private static final Pattern LINE_BREAKING_PATTERN = Pattern.compile("\\R");
 
-  private final String indent;
-  private final LineWrapper out;
-  private int indentLevel;
+  // Remove implementation smell magic number by refactoring to introduce explaining variable
+  private static final int MAX_LINE_LENGTH = 100; // Maximum line length before wrapping occurs.
 
-  private boolean javadoc = false;
-  private boolean comment = false;
+  protected final String indent;
+  protected final LineWrapper out;
+  protected int indentLevel;
+
+  protected boolean javadoc = false;
+  protected boolean comment = false;
   private String packageName = NO_PACKAGE;
   private final List<TypeSpec> typeSpecStack = new ArrayList<>();
-  private final Set<String> staticImportClassNames;
+  protected final Set<String> staticImportClassNames;
   private final Set<String> staticImports;
   private final Set<String> alwaysQualify;
   private final Map<String, ClassName> importedTypes;
   private final Map<String, ClassName> importableTypes = new LinkedHashMap<>();
   private final Set<String> referencedNames = new LinkedHashSet<>();
-  private final Multiset<String> currentTypeVariables = new Multiset<>();
-  private boolean trailingNewline;
+  protected final Multiset<String> currentTypeVariables = new Multiset<>();
+  protected boolean trailingNewline;
 
   /**
    * When emitting a statement, this is the line of the statement currently being written. The first
@@ -83,7 +86,7 @@ final class CodeWriter {
       Map<String, ClassName> importedTypes,
       Set<String> staticImports,
       Set<String> alwaysQualify) {
-    this.out = new LineWrapper(out, indent, 100);
+    this.out = new LineWrapper(out, indent, MAX_LINE_LENGTH);
     this.indent = checkNotNull(indent, "indent == null");
     this.importedTypes = checkNotNull(importedTypes, "importedTypes == null");
     this.staticImports = checkNotNull(staticImports, "staticImports == null");
@@ -150,26 +153,6 @@ final class CodeWriter {
     }
   }
 
-  public void emitJavadoc(CodeBlock javadocCodeBlock) throws IOException {
-    if (javadocCodeBlock.isEmpty()) return;
-
-    emit("/**\n");
-    javadoc = true;
-    try {
-      emit(javadocCodeBlock, true);
-    } finally {
-      javadoc = false;
-    }
-    emit(" */\n");
-  }
-
-  public void emitAnnotations(List<AnnotationSpec> annotations, boolean inline) throws IOException {
-    for (AnnotationSpec annotationSpec : annotations) {
-      annotationSpec.emit(this, inline);
-      emit(inline ? " " : "\n");
-    }
-  }
-
   /**
    * Emits {@code modifiers} in the standard order. Modifiers in {@code implicitModifiers} will not
    * be emitted.
@@ -201,7 +184,7 @@ final class CodeWriter {
     boolean firstTypeVariable = true;
     for (TypeVariableName typeVariable : typeVariables) {
       if (!firstTypeVariable) emit(", ");
-      emitAnnotations(typeVariable.annotations, true);
+      Emit.emitAnnotations(this, typeVariable.annotations, true);
       emit("$L", typeVariable.name);
       boolean firstBound = true;
       for (TypeName bound : typeVariable.bounds) {
