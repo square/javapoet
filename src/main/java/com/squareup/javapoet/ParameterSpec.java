@@ -51,8 +51,8 @@ public final class ParameterSpec {
   }
 
   void emit(CodeWriter codeWriter, boolean varargs) throws IOException {
-    codeWriter.emitAnnotations(annotations, true);
-    codeWriter.emitModifiers(modifiers);
+    Emit.emitAnnotations(codeWriter, annotations, true);
+    Emit.emitModifiers(codeWriter, modifiers);
     if (varargs) {
       TypeName.asArray(type).emit(codeWriter, true);
     } else {

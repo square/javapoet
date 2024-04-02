@@ -192,8 +192,9 @@ public final class TypeSpec {
 
     try {
       if (enumName != null) {
-        codeWriter.emitJavadoc(javadoc);
-        codeWriter.emitAnnotations(annotations, false);
+
+        Emit.emitJavadoc(codeWriter, javadoc);
+        Emit.emitAnnotations(codeWriter, annotations, false);
         codeWriter.emit("$L", enumName);
         if (!anonymousTypeArguments.formatParts.isEmpty()) {
           codeWriter.emit("(");
@@ -213,9 +214,10 @@ public final class TypeSpec {
         // Push an empty type (specifically without nested types) for type-resolution.
         codeWriter.pushType(new TypeSpec(this));
 
-        codeWriter.emitJavadoc(javadoc);
-        codeWriter.emitAnnotations(annotations, false);
-        codeWriter.emitModifiers(modifiers, Util.union(implicitModifiers, kind.asMemberModifiers));
+        Emit.emitJavadoc(codeWriter, javadoc);
+        Emit.emitAnnotations(codeWriter, annotations, false);
+        Emit.emitModifiers(codeWriter, modifiers, Util.union(implicitModifiers, kind.asMemberModifiers));
+
         if (kind == Kind.ANNOTATION) {
           codeWriter.emit("$L $L", "@interface", name);
         } else {

@@ -82,9 +82,9 @@ public final class MethodSpec {
 
   void emit(CodeWriter codeWriter, String enclosingName, Set<Modifier> implicitModifiers)
       throws IOException {
-    codeWriter.emitJavadoc(javadocWithParameters());
-    codeWriter.emitAnnotations(annotations, false);
-    codeWriter.emitModifiers(modifiers, implicitModifiers);
+    Emit.emitJavadoc(codeWriter, javadocWithParameters());
+    Emit.emitAnnotations(codeWriter, annotations, false);
+    Emit.emitModifiers(codeWriter, modifiers, implicitModifiers);
 
     if (!typeVariables.isEmpty()) {
       codeWriter.emitTypeVariables(typeVariables);

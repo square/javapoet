@@ -17,7 +17,12 @@ package com.squareup.javapoet;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.ArrayList;
+
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Modifier;
 
@@ -50,9 +55,9 @@ public final class FieldSpec {
   }
 
   void emit(CodeWriter codeWriter, Set<Modifier> implicitModifiers) throws IOException {
-    codeWriter.emitJavadoc(javadoc);
-    codeWriter.emitAnnotations(annotations, false);
-    codeWriter.emitModifiers(modifiers, implicitModifiers);
+    Emit.emitJavadoc(codeWriter, javadoc);
+    Emit.emitAnnotations(codeWriter, annotations, false);
+    Emit.emitModifiers(codeWriter, modifiers, implicitModifiers);
     codeWriter.emit("$T $L", type, name);
     if (!initializer.isEmpty()) {
       codeWriter.emit(" = ");
@@ -79,12 +84,12 @@ public final class FieldSpec {
     if (o == null || getClass() != o.getClass())
       return false;
     FieldSpec fieldSpec = (FieldSpec) o;
-    return Objects.equals(type, fieldSpec.type) &&
-        Objects.equals(name, fieldSpec.name) &&
-        Objects.equals(javadoc, fieldSpec.javadoc) &&
-        Objects.equals(annotations, fieldSpec.annotations) &&
-        Objects.equals(modifiers, fieldSpec.modifiers) &&
-        Objects.equals(initializer, fieldSpec.initializer);
+    return Objects.equals(type, fieldSpec.type)
+            && Objects.equals(name, fieldSpec.name)
+            && Objects.equals(javadoc, fieldSpec.javadoc)
+            && Objects.equals(annotations, fieldSpec.annotations)
+            && Objects.equals(modifiers, fieldSpec.modifiers)
+            && Objects.equals(initializer, fieldSpec.initializer);
   }
 
   @Override
