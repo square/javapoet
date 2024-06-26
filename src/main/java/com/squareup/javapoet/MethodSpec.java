@@ -531,6 +531,11 @@ public final class MethodSpec {
       return this;
     }
 
+    public Builder clearCode() {
+      code.clear();
+      return this;
+    }
+
     public MethodSpec build() {
       return new MethodSpec(this);
     }
