@@ -15,6 +15,7 @@
  */
 package com.squareup.javapoet;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
@@ -33,7 +34,7 @@ public class UtilTest {
     assertEquals("\\r", Util.characterLiteralWithoutSingleQuotes('\r'));
     assertEquals("\"", Util.characterLiteralWithoutSingleQuotes('"'));
     assertEquals("\\'", Util.characterLiteralWithoutSingleQuotes('\''));
-    assertEquals("\\\\", Util.characterLiteralWithoutSingleQuotes('\\'));
+    assertEquals("\\", Util.characterLiteralWithoutSingleQuotes('\\'));
     // octal escapes
     assertEquals("\\u0000", Util.characterLiteralWithoutSingleQuotes('\0'));
     assertEquals("\\u0007", Util.characterLiteralWithoutSingleQuotes('\7'));
@@ -62,7 +63,7 @@ public class UtilTest {
     stringLiteral("€\\t@\\t$", "€\t@\t$", " ");
     stringLiteral("abc();\\n\"\n  + \"def();", "abc();\ndef();", " ");
     stringLiteral("This is \\\"quoted\\\"!", "This is \"quoted\"!", " ");
-    stringLiteral("e^{i\\\\pi}+1=0", "e^{i\\pi}+1=0", " ");
+    stringLiteral("e^{i\\pi}+1=0", "e^{i\\pi}+1=0", " ");
   }
 
   void stringLiteral(String string) {
@@ -71,5 +72,41 @@ public class UtilTest {
 
   void stringLiteral(String expected, String value, String indent) {
     assertEquals("\"" + expected + "\"", Util.stringLiteralWithDoubleQuotes(value, indent));
+  }
+
+  @Test public void newLineAsStringStatement() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+            .returns(void.class)
+            .addStatement("System.out.println($S)", "Newline as string\\n.")
+            .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+            + "void method() {\n"
+            + "  System.out.println(\"Newline as string\\n.\");\n"
+            + "}\n");
+  }
+
+  @Test public void newLineAsStringCommentWithout$S() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+            .returns(void.class)
+            .addComment("The result of\\nissue \\\\n#604!")
+            .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+            + "void method() {\n"
+            + "  // The result of\\nissue \\\\n#604!\n"
+            + "}\n");
+  }
+
+  @Test public void newLineAsStringCommentWith$S() {
+    MethodSpec methodSpec = MethodSpec.methodBuilder("method")
+            .returns(void.class)
+            .addComment("The result is: $S", "fixed\\nissue \\\\n#604!")
+            .build();
+
+    assertThat(methodSpec.toString()).isEqualTo(""
+            + "void method() {\n"
+            + "  // The result is: \"fixed\\nissue \\\\n#604!\"\n"
+            + "}\n");
   }
 }
