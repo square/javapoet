@@ -22,7 +22,7 @@
 
     <java.version>1.8</java.version>
     <junit.version>4.13.2</junit.version>
-    <truth.version>1.4.3</truth.version>
+    <truth.version>1.4.4</truth.version>
     <compile-testing.version>0.21.0</compile-testing.version>
   </properties>
 
