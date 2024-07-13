@@ -132,6 +132,15 @@ public final class TypeSpec {
     return classBuilder(checkNotNull(className, "className == null").simpleName());
   }
 
+  public static Builder recordBuilder(String name) {
+    return new Builder(Kind.RECORD, checkNotNull(name, "name == null"), null);
+  }
+
+  public static Builder recordBuilder(ClassName className) {
+    return recordBuilder(checkNotNull(className, "className == null").simpleName());
+  }
+
+
   public static Builder interfaceBuilder(String name) {
     return new Builder(Kind.INTERFACE, checkNotNull(name, "name == null"), null);
   }
@@ -228,6 +237,26 @@ public final class TypeSpec {
         if (kind == Kind.INTERFACE) {
           extendsTypes = superinterfaces;
           implementsTypes = Collections.emptyList();
+        } else if (kind == Kind.RECORD) {
+          extendsTypes = Collections.emptyList();
+          implementsTypes = superinterfaces;
+
+          // Record constructor
+          boolean firstParameter = true;
+          codeWriter.emit("(");
+          int fieldSpecsLength = fieldSpecs.size();
+          for (int i = 0; i < fieldSpecsLength; i++) {
+            FieldSpec fieldSpec = fieldSpecs.get(i);
+
+            if (fieldSpec.hasModifier(Modifier.STATIC))
+              continue;
+            ParameterSpec parameter = ParameterSpec.builder(fieldSpec.type, fieldSpec.name).build();
+            if (!firstParameter)
+              codeWriter.emit(",").emitWrappingSpace();
+            parameter.emit(codeWriter, !(i < fieldSpecsLength));
+            firstParameter = false;
+          }
+          codeWriter.emit(")");
         } else {
           extendsTypes = superclass.equals(ClassName.OBJECT)
               ? Collections.emptyList()
@@ -295,11 +324,16 @@ public final class TypeSpec {
       }
 
       // Non-static fields.
-      for (FieldSpec fieldSpec : fieldSpecs) {
-        if (fieldSpec.hasModifier(Modifier.STATIC)) continue;
-        if (!firstMember) codeWriter.emit("\n");
-        fieldSpec.emit(codeWriter, kind.implicitFieldModifiers);
-        firstMember = false;
+      // If kind RECORD, ignore generate Non-static field
+      if (!(Kind.RECORD == kind)) {
+        for (FieldSpec fieldSpec : fieldSpecs) {
+          if (fieldSpec.hasModifier(Modifier.STATIC))
+            continue;
+          if (!firstMember)
+            codeWriter.emit("\n");
+          fieldSpec.emit(codeWriter, kind.implicitFieldModifiers);
+          firstMember = false;
+        }
       }
 
       // Initializer block.
@@ -372,6 +406,9 @@ public final class TypeSpec {
         Collections.emptySet(),
         Collections.emptySet(),
         Collections.emptySet(),
+        Collections.emptySet()),
+
+    RECORD(Collections.emptySet(), Collections.emptySet(), Collections.emptySet(),
         Collections.emptySet()),
 
     INTERFACE(
