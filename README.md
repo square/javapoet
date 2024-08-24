@@ -52,6 +52,30 @@ In this case we write the file to `System.out`, but we could also get it as a st
 
 The [Javadoc][javadoc] catalogs the complete JavaPoet API, which we explore below.
 
+### Record
+
+From Java 14, support new type for creating object is Record (`record`)
+
+There is how JavaPoet API support record:
+
+```java
+JavaFile javaFile = JavaFile.builder("com.squareup.tacos", TypeSpec
+  .recordBuilder("Taco")
+  .addField(FieldSpec.builder(String.class, "name").build())
+  .addField(FieldSpec.builder(Integer.class, "code").build())
+  .skipJavaLangImports(true)
+  .build());
+```
+
+Which generates:
+
+```java
+package com.squareup.tacos;
+
+record Taco(String name, Integer code) {
+}
+``` 
+
 ### Code & Control Flow
 
 Most of JavaPoet's API uses plain old immutable Java objects. There's also builders, method chaining
