@@ -55,10 +55,13 @@ public final class TypeSpec {
   public final List<TypeVariableName> typeVariables;
   public final TypeName superclass;
   public final List<TypeName> superinterfaces;
+  public final List<ParameterSpec> recordComponents;
+  public final boolean varargs;
   public final Map<String, TypeSpec> enumConstants;
   public final List<FieldSpec> fieldSpecs;
   public final CodeBlock staticBlock;
   public final CodeBlock initializerBlock;
+  public final MethodSpec compactConstructor;
   public final List<MethodSpec> methodSpecs;
   public final List<TypeSpec> typeSpecs;
   final Set<String> nestedTypesSimpleNames;
@@ -75,10 +78,13 @@ public final class TypeSpec {
     this.typeVariables = Util.immutableList(builder.typeVariables);
     this.superclass = builder.superclass;
     this.superinterfaces = Util.immutableList(builder.superinterfaces);
+    this.recordComponents = Util.immutableList(builder.recordComponents);
+    this.varargs = builder.varargs;
     this.enumConstants = Util.immutableMap(builder.enumConstants);
     this.fieldSpecs = Util.immutableList(builder.fieldSpecs);
     this.staticBlock = builder.staticBlock.build();
     this.initializerBlock = builder.initializerBlock.build();
+    this.compactConstructor = builder.compactConstructor;
     this.methodSpecs = Util.immutableList(builder.methodSpecs);
     this.typeSpecs = Util.immutableList(builder.typeSpecs);
     this.alwaysQualifiedNames = Util.immutableSet(builder.alwaysQualifiedNames);
@@ -109,10 +115,13 @@ public final class TypeSpec {
     this.typeVariables = Collections.emptyList();
     this.superclass = null;
     this.superinterfaces = Collections.emptyList();
+    this.recordComponents = Collections.emptyList();
+    this.varargs = false;
     this.enumConstants = Collections.emptyMap();
     this.fieldSpecs = Collections.emptyList();
     this.staticBlock = type.staticBlock;
     this.initializerBlock = type.initializerBlock;
+    this.compactConstructor = null;
     this.methodSpecs = Collections.emptyList();
     this.typeSpecs = Collections.emptyList();
     this.originatingElements = Collections.emptyList();
@@ -148,6 +157,14 @@ public final class TypeSpec {
     return enumBuilder(checkNotNull(className, "className == null").simpleName());
   }
 
+  public static Builder recordBuilder(String name) {
+    return new Builder(Kind.RECORD, checkNotNull(name, "name == null"), null);
+  }
+
+  public static Builder recordBuilder(ClassName className) {
+    return recordBuilder(checkNotNull(className, "className == null").simpleName());
+  }
+
   public static Builder anonymousClassBuilder(String typeArgumentsFormat, Object... args) {
     return anonymousClassBuilder(CodeBlock.of(typeArgumentsFormat, args));
   }
@@ -172,7 +189,10 @@ public final class TypeSpec {
     builder.typeVariables.addAll(typeVariables);
     builder.superclass = superclass;
     builder.superinterfaces.addAll(superinterfaces);
+    builder.recordComponents.addAll(recordComponents);
+    builder.varargs = varargs;
     builder.enumConstants.putAll(enumConstants);
+    builder.compactConstructor = compactConstructor;
     builder.fieldSpecs.addAll(fieldSpecs);
     builder.methodSpecs.addAll(methodSpecs);
     builder.typeSpecs.addAll(typeSpecs);
@@ -183,81 +203,100 @@ public final class TypeSpec {
     return builder;
   }
 
-  void emit(CodeWriter codeWriter, String enumName, Set<Modifier> implicitModifiers)
-      throws IOException {
-    // Nested classes interrupt wrapped line indentation. Stash the current wrapping state and put
+  /**
+   * Emits the header of the type spec and returns if the body should be emitted.
+   */
+  private boolean emitHeader(CodeWriter codeWriter, String enumName,
+      Set<Modifier> implicitModifiers) throws IOException {
+    if (enumName != null) {
+      codeWriter.emitJavadoc(javadoc);
+      codeWriter.emitAnnotations(annotations, false);
+      codeWriter.emit("$L", enumName);
+      if (!anonymousTypeArguments.formatParts.isEmpty()) {
+        codeWriter.emit("(");
+        codeWriter.emit(anonymousTypeArguments);
+        codeWriter.emit(")");
+      }
+      if (fieldSpecs.isEmpty() && methodSpecs.isEmpty() && typeSpecs.isEmpty()) {
+        return false; // Avoid unnecessary braces "{}".
+      }
+      codeWriter.emit(" {\n");
+    } else if (anonymousTypeArguments != null) {
+      TypeName supertype = !superinterfaces.isEmpty() ? superinterfaces.get(0) : superclass;
+      codeWriter.emit("new $T(", supertype);
+      codeWriter.emit(anonymousTypeArguments);
+      codeWriter.emit(") {\n");
+    } else {
+      // Push an empty type (specifically without nested types) for type-resolution.
+      codeWriter.pushType(new TypeSpec(this));
+
+      codeWriter.emitJavadoc(kind == Kind.RECORD
+          ? MethodSpec.makeJavadocWithParameters(javadoc, recordComponents) : javadoc);
+      codeWriter.emitAnnotations(annotations, false);
+      codeWriter.emitModifiers(modifiers, Util.union(implicitModifiers, kind.asMemberModifiers));
+      if (kind == Kind.ANNOTATION) {
+        codeWriter.emit("$L $L", "@interface", name);
+      } else {
+        codeWriter.emit("$L $L", kind.name().toLowerCase(Locale.US), name);
+      }
+      codeWriter.emitTypeVariables(typeVariables);
+
+      // Record components.
+      if (kind == Kind.RECORD) {
+        MethodSpec.emitParameters(codeWriter, recordComponents, varargs);
+      }
+
+      List<TypeName> extendsTypes;
+      List<TypeName> implementsTypes;
+      if (kind == Kind.INTERFACE) {
+        extendsTypes = superinterfaces;
+        implementsTypes = Collections.emptyList();
+      } else {
+        extendsTypes = superclass.equals(ClassName.OBJECT)
+            ? Collections.emptyList()
+            : Collections.singletonList(superclass);
+        implementsTypes = superinterfaces;
+      }
+
+      if (!extendsTypes.isEmpty()) {
+        codeWriter.emit(" extends");
+        boolean firstType = true;
+        for (TypeName type : extendsTypes) {
+          if (!firstType) codeWriter.emit(",");
+          codeWriter.emit(" $T", type);
+          firstType = false;
+        }
+      }
+
+      if (!implementsTypes.isEmpty()) {
+        codeWriter.emit(" implements");
+        boolean firstType = true;
+        for (TypeName type : implementsTypes) {
+          if (!firstType) codeWriter.emit(",");
+          codeWriter.emit(" $T", type);
+          firstType = false;
+        }
+      }
+
+      codeWriter.popType();
+
+      codeWriter.emit(" {\n");
+    }
+
+    return true;
+  }
+
+  void emit(CodeWriter codeWriter, String enumName,
+      Set<Modifier> implicitModifiers) throws IOException {
+    // Nested classes interrupt wrapped line indentation.
+    // Stash the current wrapping state and put
     // it back afterwards when this type is complete.
     int previousStatementLine = codeWriter.statementLine;
     codeWriter.statementLine = -1;
 
     try {
-      if (enumName != null) {
-        codeWriter.emitJavadoc(javadoc);
-        codeWriter.emitAnnotations(annotations, false);
-        codeWriter.emit("$L", enumName);
-        if (!anonymousTypeArguments.formatParts.isEmpty()) {
-          codeWriter.emit("(");
-          codeWriter.emit(anonymousTypeArguments);
-          codeWriter.emit(")");
-        }
-        if (fieldSpecs.isEmpty() && methodSpecs.isEmpty() && typeSpecs.isEmpty()) {
-          return; // Avoid unnecessary braces "{}".
-        }
-        codeWriter.emit(" {\n");
-      } else if (anonymousTypeArguments != null) {
-        TypeName supertype = !superinterfaces.isEmpty() ? superinterfaces.get(0) : superclass;
-        codeWriter.emit("new $T(", supertype);
-        codeWriter.emit(anonymousTypeArguments);
-        codeWriter.emit(") {\n");
-      } else {
-        // Push an empty type (specifically without nested types) for type-resolution.
-        codeWriter.pushType(new TypeSpec(this));
-
-        codeWriter.emitJavadoc(javadoc);
-        codeWriter.emitAnnotations(annotations, false);
-        codeWriter.emitModifiers(modifiers, Util.union(implicitModifiers, kind.asMemberModifiers));
-        if (kind == Kind.ANNOTATION) {
-          codeWriter.emit("$L $L", "@interface", name);
-        } else {
-          codeWriter.emit("$L $L", kind.name().toLowerCase(Locale.US), name);
-        }
-        codeWriter.emitTypeVariables(typeVariables);
-
-        List<TypeName> extendsTypes;
-        List<TypeName> implementsTypes;
-        if (kind == Kind.INTERFACE) {
-          extendsTypes = superinterfaces;
-          implementsTypes = Collections.emptyList();
-        } else {
-          extendsTypes = superclass.equals(ClassName.OBJECT)
-              ? Collections.emptyList()
-              : Collections.singletonList(superclass);
-          implementsTypes = superinterfaces;
-        }
-
-        if (!extendsTypes.isEmpty()) {
-          codeWriter.emit(" extends");
-          boolean firstType = true;
-          for (TypeName type : extendsTypes) {
-            if (!firstType) codeWriter.emit(",");
-            codeWriter.emit(" $T", type);
-            firstType = false;
-          }
-        }
-
-        if (!implementsTypes.isEmpty()) {
-          codeWriter.emit(" implements");
-          boolean firstType = true;
-          for (TypeName type : implementsTypes) {
-            if (!firstType) codeWriter.emit(",");
-            codeWriter.emit(" $T", type);
-            firstType = false;
-          }
-        }
-
-        codeWriter.popType();
-
-        codeWriter.emit(" {\n");
+      if (!emitHeader(codeWriter, enumName, implicitModifiers)) {
+        return;
       }
 
       codeWriter.pushType(this);
@@ -309,11 +348,18 @@ public final class TypeSpec {
         firstMember = false;
       }
 
+      // Compact constructor.
+      if (compactConstructor != null) {
+        if (!firstMember) codeWriter.emit("\n");
+        compactConstructor.emit(codeWriter, name, kind.implicitMethodModifiers, true);
+        firstMember = false;
+      }
+
       // Constructors.
       for (MethodSpec methodSpec : methodSpecs) {
         if (!methodSpec.isConstructor()) continue;
         if (!firstMember) codeWriter.emit("\n");
-        methodSpec.emit(codeWriter, name, kind.implicitMethodModifiers);
+        methodSpec.emit(codeWriter, name, kind.implicitMethodModifiers, false);
         firstMember = false;
       }
 
@@ -321,7 +367,7 @@ public final class TypeSpec {
       for (MethodSpec methodSpec : methodSpecs) {
         if (methodSpec.isConstructor()) continue;
         if (!firstMember) codeWriter.emit("\n");
-        methodSpec.emit(codeWriter, name, kind.implicitMethodModifiers);
+        methodSpec.emit(codeWriter, name, kind.implicitMethodModifiers, false);
         firstMember = false;
       }
 
@@ -390,7 +436,13 @@ public final class TypeSpec {
         Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)),
         Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.ABSTRACT)),
         Util.immutableSet(Arrays.asList(Modifier.PUBLIC, Modifier.STATIC)),
-        Util.immutableSet(Collections.singletonList(Modifier.STATIC)));
+        Util.immutableSet(Collections.singletonList(Modifier.STATIC))),
+
+    RECORD(
+        Collections.emptySet(),
+        Collections.emptySet(),
+        Collections.emptySet(),
+        Collections.singleton(Modifier.STATIC));
 
     private final Set<Modifier> implicitFieldModifiers;
     private final Set<Modifier> implicitMethodModifiers;
@@ -417,8 +469,11 @@ public final class TypeSpec {
     private TypeName superclass = ClassName.OBJECT;
     private final CodeBlock.Builder staticBlock = CodeBlock.builder();
     private final CodeBlock.Builder initializerBlock = CodeBlock.builder();
+    private MethodSpec compactConstructor;
 
     public final Map<String, TypeSpec> enumConstants = new LinkedHashMap<>();
+    public final List<ParameterSpec> recordComponents = new ArrayList<>();
+    public boolean varargs;
     public final List<AnnotationSpec> annotations = new ArrayList<>();
     public final List<Modifier> modifiers = new ArrayList<>();
     public final List<TypeVariableName> typeVariables = new ArrayList<>();
@@ -576,6 +631,58 @@ public final class TypeSpec {
             (TypeElement) ((DeclaredType) superinterface).asElement();
         avoidClashesWithNestedClasses(superInterfaceElement);
       }
+      return this;
+    }
+
+    public Builder addRecordComponents(Iterable<ParameterSpec> parameterSpecs) {
+      checkArgument(parameterSpecs != null, "fieldSpecs == null");
+      for (ParameterSpec parameterSpec : parameterSpecs) {
+        addRecordComponent(parameterSpec);
+      }
+      return this;
+    }
+
+    public Builder addRecordComponent(ParameterSpec parameterSpec) {
+      recordComponents.add(parameterSpec);
+      return this;
+    }
+
+    public Builder varargs() {
+      return varargs(true);
+    }
+
+    public Builder varargs(boolean varargs) {
+      this.varargs = varargs;
+      return this;
+    }
+
+    /**
+     * Sets the compact constructor for this builder. Its parameters are solely used for javadoc
+     * generation.
+     */
+    public Builder compactConstructor(MethodSpec methodSpec) {
+      if (kind != Kind.RECORD) {
+        throw new UnsupportedOperationException(kind + " can't have compact constructors");
+      }
+
+      checkState(compactConstructor == null,
+          "%s already has a compact constructor", name);
+
+      checkState(methodSpec.name.equals(MethodSpec.CONSTRUCTOR),
+          "compact constructor is not a constructor");
+      EnumSet<Modifier> possibleModifiers = EnumSet.of(Modifier.PUBLIC, Modifier.PROTECTED,
+          Modifier.PRIVATE);
+      checkState(possibleModifiers.containsAll(methodSpec.modifiers),
+          "compact constructor has non-access modifiers");
+      checkState(methodSpec.modifiers.size() <= 1,
+          "compact constructor has too many access modifiers");
+      checkState(methodSpec.typeVariables.isEmpty(),
+          "compact constructor has type variables");
+      checkState(methodSpec.exceptions.isEmpty(),
+          "compact constructor has exceptions");
+      checkState(methodSpec.defaultValue == null,
+          "compact constructor has a default value");
+      compactConstructor = methodSpec;
       return this;
     }
 
@@ -763,6 +870,10 @@ public final class TypeSpec {
         for (Modifier modifier : modifiers) {
           checkArgument(modifier != null, "modifiers contain null");
         }
+
+        if (kind == Kind.RECORD) {
+          checkState(!modifiers.contains(Modifier.ABSTRACT), "abstract record");
+        }
       }
 
       for (TypeName superinterface : superinterfaces) {
@@ -784,12 +895,26 @@ public final class TypeSpec {
         checkArgument(SourceVersion.isName(name), "not a valid enum constant: %s", name);
       }
 
+      if (!recordComponents.isEmpty()) {
+        checkState(kind == Kind.RECORD, "%s is not record", this.name);
+
+        for (ParameterSpec recordComponent : recordComponents) {
+          checkState(recordComponent != null, "recordComponents contain null");
+          checkState(recordComponent.modifiers.isEmpty(), "recordComponents has modifier");
+        }
+      }
+
       for (FieldSpec fieldSpec : fieldSpecs) {
         if (kind == Kind.INTERFACE || kind == Kind.ANNOTATION) {
           requireExactlyOneOf(fieldSpec.modifiers, Modifier.PUBLIC, Modifier.PRIVATE);
           Set<Modifier> check = EnumSet.of(Modifier.STATIC, Modifier.FINAL);
           checkState(fieldSpec.modifiers.containsAll(check), "%s %s.%s requires modifiers %s",
               kind, name, fieldSpec.name, check);
+        }
+
+        if (kind == Kind.RECORD) {
+          checkState(fieldSpec.modifiers.contains(Modifier.STATIC), "%s %s.%s must be static",
+              kind, name, fieldSpec.name);
         }
       }
 
@@ -818,6 +943,10 @@ public final class TypeSpec {
           checkState(!methodSpec.hasModifier(Modifier.DEFAULT), "%s %s.%s cannot be default",
               kind, name, methodSpec.name);
         }
+        if (kind == Kind.RECORD) {
+          checkState(!methodSpec.hasModifier(Modifier.NATIVE), "%s %s.%s cannot be native",
+              kind, name, methodSpec.name);
+        }
       }
 
       for (TypeSpec typeSpec : typeSpecs) {
@@ -826,7 +955,8 @@ public final class TypeSpec {
             kind.implicitTypeModifiers);
       }
 
-      boolean isAbstract = modifiers.contains(Modifier.ABSTRACT) || kind != Kind.CLASS;
+      boolean isAbstract = modifiers.contains(Modifier.ABSTRACT)
+          || (kind != Kind.CLASS && kind != Kind.RECORD);
       for (MethodSpec methodSpec : methodSpecs) {
         checkArgument(isAbstract || !methodSpec.hasModifier(Modifier.ABSTRACT),
             "non-abstract type %s cannot declare abstract method %s", name, methodSpec.name);
