@@ -34,7 +34,7 @@ sed -i "" \
 
 And you might need to track some API changes where fields became functions:
 
-```
+```diff
 - javaFile.packageName
 + javaFile.packageName()
 ```
