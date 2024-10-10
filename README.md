@@ -21,7 +21,7 @@ To switch to that project, you'll need new Maven coordinates:
 
 ```diff
 - javapoet = { module = "com.squareup:javapoet", version = "1.13.0" }
-+ javapoet = { module = "com.palantir.javapoet:javapoet", version.ref = "javapoet" }
++ javapoet = { module = "com.palantir.javapoet:javapoet", version = "0.5.0" }
 ```
 
 And new imports:
