@@ -8,6 +8,37 @@ with metadata files (e.g., database schemas, protocol formats). By generating co
 the need to write boilerplate while also keeping a single source of truth for the metadata.
 
 
+Deprecated
+----------
+
+As of 2020-10-10, Square's JavaPoet project is deprecated. We're proud of our work but we haven't
+kept up on maintaining it.
+
+If you'd like an alternative that supports the latest Java language features, one option is
+[Palantir's JavaPoet](https://github.com/palantir/javapoet).
+
+To switch to that project, you'll need new Maven coordinates:
+
+```diff
+- javapoet = { module = "com.squareup:javapoet", version = "1.13.0" }
++ javapoet = { module = "com.palantir.javapoet:javapoet", version.ref = "javapoet" }
+```
+
+And new imports:
+
+```
+sed -i "" \
+  's/com.squareup.javapoet.\([A-Za-z]*\)/com.palantir.javapoet.\1/g' \
+  `find . -name "*.kt" -or -name "*.java"`
+```
+
+And you might need to track some API changes where fields became functions:
+
+```
+- javaFile.packageName
++ javaFile.packageName()
+```
+
 ### Example
 
 Here's a (boring) `HelloWorld` class:
